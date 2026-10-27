@@ -1,0 +1,17 @@
+{
+  "name": "境界の召喚士",
+  "short_name": "境界の召喚士",
+  "description": "神話・幻想・機械の英雄を呼び出して戦う、1対1のカードゲーム",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0f1c",
+  "theme_color": "#0d0f1c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

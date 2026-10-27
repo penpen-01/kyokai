@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>カード工房</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d0f1c">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>カード工房</h1>
+      <span class="sub">境界の召喚士 ・ オーナー用</span>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div class="top-actions">
+      <button type="button" class="btn" data-act="playtest">この内容で試遊</button>
+      <button type="button" class="btn primary" data-act="export">書き出す</button>
+      <button type="button" class="btn" data-act="more" aria-haspopup="true" aria-expanded="false" id="moreBtn">その他</button>
+      <div class="more" id="more" hidden>
+        <button type="button" data-act="import">ファイルを読み込む</button>
+        <button type="button" data-act="revert">公開中のデータに戻す</button>
+      </div>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" class="tab" data-tab="cards" aria-selected="true">カード</button>
+    <button type="button" role="tab" class="tab" data-tab="rules" aria-selected="false">ルール設定</button>
+  </nav>
+</header>
+
+<main id="main">
+  <section id="tab-cards" class="cards-tab">
+    <div class="listcol">
+      <div class="summary" id="summary"></div>
+      <div class="listbar">
+        <div class="seg" id="filter">
+          <button type="button" data-filter="all" aria-pressed="true">すべて</button>
+          <button type="button" data-filter="char" aria-pressed="false">キャラ</button>
+          <button type="button" data-filter="spell" aria-pressed="false">魔法</button>
+        </div>
+        <button type="button" class="btn primary sm" data-act="new">＋ 新しいカード</button>
+      </div>
+      <ul class="list" id="list"></ul>
+    </div>
+    <div class="editcol" id="editor"></div>
+  </section>
+
+  <section id="tab-rules" class="rules-tab" hidden></section>
+</main>
+
+<div class="modal" id="modal" hidden></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<input type="file" id="artFile" accept="image/*" hidden>
+
+<script src="js/shared.js"></script>
+<script src="js/editor.js"></script>
+</body>
+</html>
