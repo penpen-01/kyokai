@@ -1,37 +1,470 @@
 {
-  "version": 1,
-  "updated": "2026-10-28",
-  "config": {
-    "PLAYER_HP": 20,
-    "START_HAND": 6,
-    "ENERGY_MAX": 8,
-    "FIELD_MAX": 4,
-    "HAND_MAX": 8,
-    "FATIGUE": 2
+ "version": 2,
+ "updated": "2026-10-28",
+ "config": {
+  "PLAYER_HP": 20,
+  "START_HAND": 6,
+  "ENERGY_MAX": 8,
+  "FIELD_MAX": 4,
+  "HAND_MAX": 8,
+  "FATIGUE": 2
+ },
+ "cards": [
+  {
+   "id": "squire",
+   "name": "見習い剣士",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "剣",
+   "copies": 4,
+   "keywords": [],
+   "effects": []
   },
-  "cards": [
-    { "id": "squire",    "name": "見習い剣士",   "world": "fan",  "type": "char",  "cost": 1, "atk": 1, "hp": 2, "glyph": "剣", "copies": 4, "keywords": [], "effects": [] },
-    { "id": "eye",       "name": "偵察機アイ",   "world": "mech", "type": "char",  "cost": 1, "atk": 1, "hp": 1, "glyph": "眼", "copies": 4, "keywords": [], "effects": [{ "kind": "draw", "n": 1 }] },
-    { "id": "pegasus",   "name": "天馬の騎士",   "world": "myth", "type": "char",  "cost": 2, "atk": 3, "hp": 1, "glyph": "馬", "copies": 3, "keywords": [], "effects": [] },
-    { "id": "archer",    "name": "森の射手",     "world": "fan",  "type": "char",  "cost": 2, "atk": 2, "hp": 2, "glyph": "弓", "copies": 3, "keywords": [], "effects": [{ "kind": "dmgRandom", "n": 1 }] },
-    { "id": "turret",    "name": "砲台ユニット", "world": "mech", "type": "char",  "cost": 2, "atk": 1, "hp": 2, "glyph": "砲", "copies": 3, "keywords": [], "effects": [{ "kind": "dmgFace", "n": 2 }] },
-    { "id": "thunder",   "name": "雷霆の戦士",   "world": "myth", "type": "char",  "cost": 3, "atk": 3, "hp": 2, "glyph": "雷", "copies": 3, "keywords": ["haste"], "effects": [] },
-    { "id": "sentinel",  "name": "鋼鉄の番兵",   "world": "mech", "type": "char",  "cost": 3, "atk": 1, "hp": 5, "glyph": "盾", "copies": 3, "keywords": [], "effects": [] },
-    { "id": "shadow",    "name": "夜影の刺客",   "world": "fan",  "type": "char",  "cost": 3, "atk": 2, "hp": 2, "glyph": "影", "copies": 3, "keywords": ["pierce"], "effects": [] },
-    { "id": "sage",      "name": "知識の神官",   "world": "myth", "type": "char",  "cost": 3, "atk": 2, "hp": 3, "glyph": "智", "copies": 3, "keywords": [], "effects": [{ "kind": "draw", "n": 1 }] },
-    { "id": "priestess", "name": "世界樹の巫女", "world": "fan",  "type": "char",  "cost": 4, "atk": 2, "hp": 4, "glyph": "樹", "copies": 3, "keywords": [], "effects": [{ "kind": "ramp", "n": 1 }] },
-    { "id": "berserker", "name": "獣王の狂戦士", "world": "myth", "type": "char",  "cost": 4, "atk": 5, "hp": 3, "glyph": "獣", "copies": 3, "keywords": [], "effects": [] },
-    { "id": "dragon",    "name": "炎竜",         "world": "fan",  "type": "char",  "cost": 5, "atk": 4, "hp": 5, "glyph": "竜", "copies": 2, "keywords": [], "effects": [{ "kind": "dmgAll", "n": 1 }] },
-    { "id": "garm",      "name": "強襲機ガルム", "world": "mech", "type": "char",  "cost": 5, "atk": 5, "hp": 4, "glyph": "機", "copies": 2, "keywords": ["haste"], "effects": [] },
-    { "id": "wargod",    "name": "戦神の化身",   "world": "myth", "type": "char",  "cost": 6, "atk": 6, "hp": 6, "glyph": "神", "copies": 2, "keywords": [], "effects": [] },
-    { "id": "endragon",  "name": "終焉の龍神",   "world": "myth", "type": "char",  "cost": 8, "atk": 8, "hp": 8, "glyph": "龍", "copies": 1, "keywords": [], "effects": [{ "kind": "dmgAll", "n": 3 }] },
-    { "id": "omega",     "name": "機神オメガ",   "world": "mech", "type": "char",  "cost": 8, "atk": 7, "hp": 7, "glyph": "極", "copies": 1, "keywords": ["haste", "pierce"], "effects": [] },
-    { "id": "rally",     "name": "戦意高揚",     "world": "myth", "type": "spell", "cost": 1, "glyph": "昂", "copies": 3, "keywords": [], "effects": [{ "kind": "buffAtk", "n": 2 }] },
-    { "id": "stargaze",  "name": "星読みの占術", "world": "fan",  "type": "spell", "cost": 1, "glyph": "星", "copies": 3, "keywords": [], "effects": [{ "kind": "draw", "n": 1 }] },
-    { "id": "bolt",      "name": "雷撃",         "world": "myth", "type": "spell", "cost": 2, "glyph": "撃", "copies": 3, "keywords": [], "effects": [{ "kind": "dmgTarget", "n": 3 }] },
-    { "id": "spring",    "name": "癒しの泉",     "world": "fan",  "type": "spell", "cost": 2, "glyph": "泉", "copies": 3, "keywords": [], "effects": [{ "kind": "heal", "n": 4 }] },
-    { "id": "crystal",   "name": "魔力結晶",     "world": "mech", "type": "spell", "cost": 2, "glyph": "晶", "copies": 2, "keywords": [], "effects": [{ "kind": "ramp", "n": 1 }] },
-    { "id": "quantum",   "name": "量子演算",     "world": "mech", "type": "spell", "cost": 3, "glyph": "量", "copies": 3, "keywords": [], "effects": [{ "kind": "draw", "n": 2 }] },
-    { "id": "judgment",  "name": "天罰の光",     "world": "myth", "type": "spell", "cost": 4, "glyph": "罰", "copies": 2, "keywords": [], "effects": [{ "kind": "dmgFace", "n": 4 }] }
-  ]
+  {
+   "id": "eye",
+   "name": "偵察機アイ",
+   "world": "mech",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "眼",
+   "copies": 4,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "pegasus",
+   "name": "天馬の騎士",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 3,
+   "hp": 2,
+   "glyph": "馬",
+   "copies": 3,
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "archer",
+   "name": "森の射手",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "弓",
+   "copies": 4,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "turret",
+   "name": "砲台ユニット",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "砲",
+   "copies": 3,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgFace",
+     "n": 3
+    }
+   ]
+  },
+  {
+   "id": "thunder",
+   "name": "雷霆の戦士",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 2,
+   "glyph": "雷",
+   "copies": 3,
+   "keywords": [
+    "haste"
+   ],
+   "effects": []
+  },
+  {
+   "id": "sentinel",
+   "name": "鋼鉄の番兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 1,
+   "hp": 5,
+   "glyph": "盾",
+   "copies": 3,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "shadow",
+   "name": "夜影の刺客",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "影",
+   "copies": 3,
+   "keywords": [
+    "pierce"
+   ],
+   "effects": []
+  },
+  {
+   "id": "sage",
+   "name": "知識の神官",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "智",
+   "copies": 3,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "priestess",
+   "name": "世界樹の巫女",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "樹",
+   "copies": 3,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "ramp",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "berserker",
+   "name": "獣王の狂戦士",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "獣",
+   "copies": 3,
+   "keywords": [
+    "haste"
+   ],
+   "effects": [
+    {
+     "kind": "buffAtk",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "dragon",
+   "name": "炎竜",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "竜",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgAll",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "garm",
+   "name": "強襲機ガルム",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 5,
+   "hp": 4,
+   "glyph": "機",
+   "copies": 2,
+   "keywords": [
+    "haste"
+   ],
+   "effects": []
+  },
+  {
+   "id": "wargod",
+   "name": "戦神の化身",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 6,
+   "hp": 6,
+   "glyph": "神",
+   "copies": 2,
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "endragon",
+   "name": "終焉の龍神",
+   "world": "myth",
+   "type": "char",
+   "cost": 8,
+   "atk": 8,
+   "hp": 8,
+   "glyph": "龍",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgAll",
+     "n": 5
+    }
+   ]
+  },
+  {
+   "id": "omega",
+   "name": "機神オメガ",
+   "world": "mech",
+   "type": "char",
+   "cost": 8,
+   "atk": 6,
+   "hp": 7,
+   "glyph": "極",
+   "copies": 2,
+   "keywords": [
+    "haste",
+    "pierce"
+   ],
+   "effects": []
+  },
+  {
+   "id": "rally",
+   "name": "戦意高揚",
+   "world": "myth",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "昂",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "buffAtk",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "stargaze",
+   "name": "星読みの占術",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "星",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "bolt",
+   "name": "雷撃",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "撃",
+   "copies": 3,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgTarget",
+     "n": 4
+    }
+   ]
+  },
+  {
+   "id": "spring",
+   "name": "癒しの泉",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "泉",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 5
+    }
+   ]
+  },
+  {
+   "id": "crystal",
+   "name": "魔力結晶",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "晶",
+   "copies": 4,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "ramp",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "quantum",
+   "name": "量子演算",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "量",
+   "copies": 3,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "judgment",
+   "name": "天罰の光",
+   "world": "myth",
+   "type": "spell",
+   "cost": 6,
+   "glyph": "罰",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 2
+    },
+    {
+     "kind": "dmgRandom",
+     "n": 2
+    },
+    {
+     "kind": "dmgRandom",
+     "n": 2
+    },
+    {
+     "kind": "dmgRandom",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "cmvr35s2x5dv",
+   "name": "童姫アリス",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 3,
+   "glyph": "童",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgAll",
+     "n": 3
+    }
+   ]
+  },
+  {
+   "id": "cmvr3jwcugk8",
+   "name": "大賢者スール",
+   "world": "fan",
+   "type": "char",
+   "cost": 7,
+   "atk": 3,
+   "hp": 9,
+   "glyph": "賢",
+   "copies": 2,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 5
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    },
+    {
+     "kind": "buffHp",
+     "n": 3
+    }
+   ]
+  },
+  {
+   "id": "cmvr3qeaobf2",
+   "name": "超新星",
+   "world": "myth",
+   "type": "spell",
+   "cost": 8,
+   "glyph": "星",
+   "copies": 1,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 5
+    },
+    {
+     "kind": "dmgFace",
+     "n": 5
+    },
+    {
+     "kind": "buffAtk",
+     "n": 5
+    }
+   ]
+  }
+ ]
 }
