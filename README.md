@@ -11,6 +11,9 @@
 | --- | --- |
 | `game-data.json` | カードとルールの数値。カード工房で書き出して上書きする |
 | `index.html` / `js/game.js` / `css/game.css` | 対戦画面とCPU |
+| `js/online.js` / `js/net.js` | 対人戦（部屋の作成・参加・同期）。`net.js` に Firebase の接続情報 |
+| `vendor/` | Firebase の SDK（npm の firebase@10.12.2 から取り出したもの） |
+| `database.rules.json` | Firebase Realtime Database のルール（Firebaseの画面に貼り付けて使う） |
 | `editor.html` / `js/editor.js` / `css/editor.css` | カード工房 |
 | `js/shared.js` / `css/base.css` | 両方で使う定義（効果の種類、カードの見た目） |
 | `manifest.webmanifest` / `sw.js` / `icons/` | アプリ化（PWA）用 |
@@ -23,3 +26,10 @@
 4. GitHub で `game-data.json` を上書きアップロードする（1〜2分でサイトに反映）
 
 カード工房での編集は、書き出してアップロードするまで遊ぶ人には反映されません。
+
+## 対人戦のしくみ
+
+- 部屋を作った人（ホスト）の端末が対戦処理をすべて行い、盤面を Firebase に書き込む
+- 参加した人（ゲスト）は操作を Firebase 経由でホストに送り、盤面を受け取って表示する
+- 盤面データは2人とも読めるので、詳しい人なら相手の手札を見ることはできる（友達同士で遊ぶ前提）
+- ホストの接続が切れている間、対戦は止まる。ページを開き直すと「前回の対戦に戻る」から再開できる

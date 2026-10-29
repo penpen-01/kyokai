@@ -1,6 +1,10 @@
 /* =========================================================
-   境界の召喚士 — 対戦画面
-   カードとルールの数値は game-data.json（編集ページで作成）から読み込みます。
+   境界の召喚士 — 対戦画面（CPU戦・対人戦共通）
+   カードとルールの数値は game-data.json（カード工房で作成）から読み込みます。
+
+   視点：ME が自分のプレイヤー番号、OP が相手。CPU戦は常に ME=0。
+   対人戦では部屋を作った人（ホスト）が 0 で、対戦処理もホストが行う。
+   参加した人（ゲスト）は 1 で、操作をホストに送り、結果の盤面を受け取る。
    ========================================================= */
 
 const CPU_DELAY = 700; // CPUの行動間隔（ミリ秒）
@@ -8,12 +12,15 @@ const CPU_DELAY = 700; // CPUの行動間隔（ミリ秒）
 let CONFIG = { ...DEFAULT_CONFIG };
 let CARDS = [];
 let DEF = {};
-let DATA_INFO = { updated: "", draft: false };
+let DATA_INFO = { updated: "", version: 0, draft: false };
 
 const $ = s => document.querySelector(s);
 const app = $("#app");
-let S = null, uidN = 0, busy = false;
+let S = null, busy = false;
+let MODE = "cpu";          // "cpu" | "online"
+let ME = 0, OP = 1;
 let ui = { sel: null, mode: null };
+let resultShown = false;
 let overlayFrom = "start";
 
 const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -21,57 +28,65 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const opp = i => 1 - i;
 const playerSel = pi => `[data-player="${pi}"]`;
 const unitSel = uid => `[data-uid="${uid}"]`;
-const cname = id => esc(DEF[id].name);
+const cname = id => esc(DEF[id] ? DEF[id].name : "？");
+const pname = pi => esc(S.players[pi].name);
+
+function setPerspective(me) { ME = me; OP = 1 - me; }
 
 /* ---------- データ読み込み ---------- */
-async function boot() {
+async function loadCardData() {
   const wantDraft = new URLSearchParams(location.search).has("draft");
   let raw = null;
   if (wantDraft) {
     raw = readDraft();
     if (raw) DATA_INFO.draft = true;
   }
-  if (!raw) {
-    try { raw = await fetchPublished(); }
-    catch (e) {
-      openOverlay(`<div class="panel"><h1 class="title sm">読み込みエラー</h1>
-        <p class="lead">カードデータを読み込めませんでした。通信状態を確認して、ページを再読み込みしてください。</p>
-        <p class="lead">${esc(e.message)}</p></div>`, "start", true);
-      return;
-    }
-  }
+  if (!raw) raw = await fetchPublished();
   const data = normalizeData(raw);
   CONFIG = data.config;
   CARDS = data.cards;
   DEF = Object.fromEntries(CARDS.map(c => [c.id, c]));
   DATA_INFO.updated = data.updated;
-  showStart();
+  DATA_INFO.version = data.version;
 }
+const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 
-/* ---------- ゲーム進行 ---------- */
-function newGame() {
+/* ---------- ゲーム進行（ここから下の処理は、CPU戦とホストだけが実行する） ---------- */
+function newGame(names, opts = {}) {
   const pile = [];
   CARDS.forEach(c => { for (let i = 0; i < c.copies; i++) pile.push(c.id); });
   shuffle(pile);
-  S = { pile, discard: [], players: [mkPlayer("あなた"), mkPlayer("CPU")], turn: 0, turnNo: 0, over: false, result: null, log: [] };
+  S = {
+    pile, discard: [], players: [mkPlayer(names[0]), mkPlayer(names[1])],
+    turn: 0, turnNo: 0, over: false, winner: null, log: [], uidN: 0, seq: 0
+  };
   ui = { sel: null, mode: null };
   busy = false;
+  resultShown = false;
   const first = Math.random() < 0.5 ? 0 : 1;
   for (let i = 0; i < CONFIG.START_HAND; i++) { draw(0, true); draw(1, true); }
   S.log.push({ sep: true, msg: "対戦開始" });
-  log(first === 0 ? "あなたの先攻です。" : "CPUの先攻です。");
+  log(`${pname(first)}の先攻です。`);
   startTurn(first, true);
 }
 function mkPlayer(name) { return { name, hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [] }; }
 
-function log(msg) { S.log.push({ msg, who: S.turn }); if (S.log.length > 400) S.log.shift(); }
+/* priv を付けると、その番号のプレイヤーにだけ pmsg が見える（引いたカード名など） */
+function log(msg, priv) {
+  const e = { msg, who: S.turn };
+  if (priv) { e.priv = priv.pi; e.pmsg = priv.msg; }
+  S.log.push(e);
+  const max = MODE === "online" ? 160 : 400;
+  if (S.log.length > max) S.log.splice(0, S.log.length - max);
+}
+const logText = l => (l.priv != null && l.priv === ME ? l.pmsg : l.msg);
 
 function draw(pi, silent) {
   const p = S.players[pi];
   if (!S.pile.length) {
     if (CONFIG.FATIGUE > 0) {
       p.hp -= CONFIG.FATIGUE;
-      log(`山札切れ！${p.name}に${CONFIG.FATIGUE}ダメージ。`);
+      log(`山札切れ！${pname(pi)}に${CONFIG.FATIGUE}ダメージ。`);
       fx(playerSel(pi), "-" + CONFIG.FATIGUE, "dmg");
     }
     return;
@@ -79,11 +94,11 @@ function draw(pi, silent) {
   const id = S.pile.pop();
   if (p.hand.length >= CONFIG.HAND_MAX) {
     S.discard.push(id);
-    if (!silent) log(`${p.name}の手札があふれ、${cname(id)}は捨て札へ。`);
+    if (!silent) log(`${pname(pi)}の手札があふれ、${cname(id)}は捨て札へ。`);
     return;
   }
   p.hand.push(id);
-  if (!silent) log(pi === 0 ? `あなたは${cname(id)}を引いた。` : "CPUはカードを1枚引いた。");
+  if (!silent) log(`${pname(pi)}はカードを1枚引いた。`, { pi, msg: `${pname(pi)}は${cname(id)}を引いた。` });
 }
 
 function startTurn(pi, skipDraw) {
@@ -93,16 +108,16 @@ function startTurn(pi, skipDraw) {
   p.maxE = Math.min(CONFIG.ENERGY_MAX, p.maxE + 1);
   p.e = p.maxE;
   p.field.forEach(u => u.ready = true);
-  S.log.push({ sep: true, msg: `ターン${S.turnNo}：${p.name}（エナジー${p.e}）` });
+  S.log.push({ sep: true, msg: `ターン${S.turnNo}：${pname(pi)}（エナジー${p.e}）` });
   if (!skipDraw) draw(pi);
   if (checkWin()) return;
   render();
-  if (pi === 1) cpuTurn();
+  if (pi === 1 && MODE === "cpu") cpuTurn();
 }
 
 function endTurn(pi) {
   if (S.over || S.turn !== pi) return;
-  ui = { sel: null, mode: null };
+  if (pi === ME) ui = { sel: null, mode: null };
   startTurn(opp(pi), false);
 }
 
@@ -119,7 +134,7 @@ function canPlay(pi, idx) {
   return { ok: true };
 }
 
-/* 対象を選ぶ必要があるか（キャラで対象がいない場合は選ばずに出す） */
+/* 対象を選ぶ必要があるか（返り値は対象がいる側のプレイヤー番号。いなければ null） */
 function needsTarget(pi, d) {
   const t = cardTarget(d);
   if (!t) return null;
@@ -129,20 +144,20 @@ function needsTarget(pi, d) {
 
 function playCard(pi, idx, targetUid) {
   const p = S.players[pi], id = p.hand[idx], d = DEF[id];
-  if (!canPlay(pi, idx).ok) return;
+  if (!d || !canPlay(pi, idx).ok) return false;
+  const tside = needsTarget(pi, d);
+  if (tside != null && !S.players[tside].field.some(u => u.uid === targetUid)) return false;
   p.hand.splice(idx, 1);
   p.e -= d.cost;
   let tName = "";
-  const t = cardTarget(d);
-  if (t && targetUid != null) {
-    const side = t === "enemyUnit" ? S.players[opp(pi)] : p;
-    const u = side.field.find(x => x.uid === targetUid);
+  if (tside != null) {
+    const u = S.players[tside].field.find(x => x.uid === targetUid);
     if (u) tName = `（対象：${cname(u.id)}）`;
   }
-  log(`${p.name}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tName}。`);
+  log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tName}。`);
   let newUnit = null;
   if (d.type === "char") {
-    newUnit = { uid: ++uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") };
+    newUnit = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") };
     p.field.push(newUnit);
   } else {
     S.discard.push(id);
@@ -150,6 +165,7 @@ function playCard(pi, idx, targetUid) {
   d.effects.forEach(e => effect(pi, e, targetUid, newUnit));
   cleanup();
   if (!checkWin()) render();
+  return true;
 }
 
 function effect(pi, e, target, self) {
@@ -165,12 +181,12 @@ function effect(pi, e, target, self) {
       break;
     case "dmgAll": if (en.field.length) { log(`相手キャラ全体に${n}ダメージ。`); en.field.forEach(u => hitUnit(u, n)); } break;
     case "dmgTarget": { const u = en.field.find(x => x.uid === target); if (u) hitUnit(u, n); break; }
-    case "dmgFace": log(`${en.name}に${n}ダメージ。`); hitPlayer(opp(pi), n); break;
-    case "heal": me.hp += n; log(`${me.name}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); break;
+    case "dmgFace": log(`${pname(opp(pi))}に${n}ダメージ。`); hitPlayer(opp(pi), n); break;
+    case "heal": me.hp += n; log(`${pname(pi)}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); break;
     case "ramp": {
       const before = me.maxE;
       me.maxE = Math.min(CONFIG.ENERGY_MAX, me.maxE + n);
-      if (me.maxE > before) { log(`${me.name}のエナジー最大値が${me.maxE}に。`); fx(playerSel(pi), `エナジー+${me.maxE - before}`, "heal"); }
+      if (me.maxE > before) { log(`${pname(pi)}のエナジー最大値が${me.maxE}に。`); fx(playerSel(pi), `エナジー+${me.maxE - before}`, "heal"); }
       break;
     }
     case "buffAtk": {
@@ -190,35 +206,35 @@ function hitUnit(u, n) { u.hp -= n; fx(unitSel(u.uid), "-" + n, "dmg"); }
 function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); }
 
 function cleanup() {
-  S.players.forEach(p => {
+  S.players.forEach((p, pi) => {
     p.field = p.field.filter(u => {
       if (u.hp > 0) return true;
       S.discard.push(u.id);
-      log(`${p.name}の${cname(u.id)}は倒れた。`);
+      log(`${pname(pi)}の${cname(u.id)}は倒れた。`);
       return false;
     });
   });
 }
 
 /* 相手の場にキャラがいる間は、相手プレイヤーを直接攻撃できない（直撃を持つキャラは例外） */
-function canAttackPlayer(pi, u) { return S.players[opp(pi)].field.length === 0 || !!(u && DEF[u.id].keywords.includes("pierce")); }
+function canAttackPlayer(pi, u) { return S.players[opp(pi)].field.length === 0 || !!(u && DEF[u.id] && DEF[u.id].keywords.includes("pierce")); }
 function selectedUnit() {
   return ui.sel && ui.sel.kind === "unit" ? S.players[ui.sel.owner].field.find(u => u.uid === ui.sel.uid) : null;
 }
 
 function attack(pi, uid, target) {
-  if (S.over || S.turn !== pi) return;
+  if (S.over || S.turn !== pi) return false;
   const me = S.players[pi], en = S.players[opp(pi)];
   const a = me.field.find(u => u.uid === uid);
-  if (!a || !a.ready) return;
+  if (!a || !a.ready) return false;
   if (target === "player") {
-    if (!canAttackPlayer(pi, a)) return;
+    if (!canAttackPlayer(pi, a)) return false;
     a.ready = false;
-    log(`${cname(a.id)}が${en.name}に${a.atk}ダメージ！`);
+    log(`${cname(a.id)}が${pname(opp(pi))}に${a.atk}ダメージ！`);
     hitPlayer(opp(pi), a.atk);
   } else {
     const d = en.field.find(u => u.uid === target);
-    if (!d) return;
+    if (!d) return false;
     a.ready = false;
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
     hitUnit(d, a.atk);
@@ -226,19 +242,45 @@ function attack(pi, uid, target) {
   }
   cleanup();
   if (!checkWin()) render();
+  return true;
+}
+
+/* 降参・退出による決着 */
+function forfeit(pi, reason) {
+  if (!S || S.over) return;
+  S.over = true;
+  S.winner = opp(pi);
+  S.log.push({ sep: true, msg: `決着：${pname(pi)}が${reason}。${pname(opp(pi))}の勝利` });
+  finishGame();
 }
 
 function checkWin() {
   const [a, b] = S.players;
   if (a.hp > 0 && b.hp > 0) return false;
   S.over = true;
-  ui = { sel: null, mode: null };
-  const res = a.hp <= 0 && b.hp <= 0 ? "draw" : a.hp <= 0 ? "lose" : "win";
-  S.log.push({ sep: true, msg: `決着：${{ win: "あなたの勝利", lose: "CPUの勝利", draw: "引き分け" }[res]}` });
-  render();
-  const g = S;
-  setTimeout(() => { if (S !== g) return; S.result = res; render(); showResult(res); }, 700);
+  S.winner = a.hp <= 0 && b.hp <= 0 ? "draw" : a.hp <= 0 ? 1 : 0;
+  S.log.push({ sep: true, msg: `決着：${S.winner === "draw" ? "引き分け" : pname(S.winner) + "の勝利"}` });
+  finishGame();
   return true;
+}
+
+function finishGame() {
+  ui = { sel: null, mode: null };
+  busy = false;
+  render();
+  scheduleResult();
+}
+
+/* 自分から見た勝敗 */
+function myResult() {
+  if (!S || !S.over) return null;
+  return S.winner === "draw" ? "draw" : S.winner === ME ? "win" : "lose";
+}
+let resultTimer = null;
+function scheduleResult() {
+  clearTimeout(resultTimer);
+  const g = S;
+  resultTimer = setTimeout(() => { if (S !== g || !S.over) return; resultShown = true; render(); showResult(myResult()); }, 700);
 }
 
 /* ---------- CPU ---------- */
@@ -318,10 +360,7 @@ function cpuChoosePlay() {
 
 function cpuChooseAttack(u) {
   const en = S.players[0];
-  if (canAttackPlayer(1, u)) {
-    // 直撃持ちでも、相手を倒せないならまず有利な相打ちを狙う…ではなく、本体を殴る方針
-    return "player";
-  }
+  if (canAttackPlayer(1, u)) return "player";
   const kills = en.field.filter(t => u.atk >= t.hp);
   const safe = kills.filter(t => t.atk < u.hp).sort((a, b) => b.atk - a.atk);
   if (safe.length) return safe[0].uid;
@@ -332,36 +371,58 @@ function cpuChooseAttack(u) {
   return null;
 }
 
+/* ---------- 自分の操作（CPU戦・ホストはその場で処理、ゲストはホストに送る） ---------- */
+function canAct() {
+  return S && !S.over && S.turn === ME && !busy && !(typeof Online !== "undefined" && Online.blocked());
+}
+function doPlay(idx, target) {
+  if (!canAct()) return;
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "play", idx, target: target ?? null, hand: S.players[ME].hand[idx] });
+  playCard(ME, idx, target);
+}
+function doAttack(uid, target) {
+  if (!canAct()) return;
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "attack", uid, target });
+  attack(ME, uid, target);
+}
+function doEnd() {
+  if (!canAct()) return;
+  ui = { sel: null, mode: null };
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "end" });
+  endTurn(ME);
+}
+
 /* ---------- 描画 ---------- */
 function pbarHTML(pi) {
   const p = S.players[pi];
-  const tgt = ui.mode === "attack" && pi === 1 && canAttackPlayer(0, selectedUnit());
+  const tgt = ui.mode === "attack" && pi === OP && canAttackPlayer(ME, selectedUnit());
   let pips = "";
   for (let i = 0; i < CONFIG.ENERGY_MAX; i++) {
     pips += `<span class="pip ${i < p.e ? "on" : i < p.maxE ? "used" : ""}"></span>`;
   }
-  const side = pi === 1
+  const status = typeof Online !== "undefined" && MODE === "online" && pi === OP ? Online.oppStatusHTML() : "";
+  const side = pi === OP
     ? `<div class="side"><button type="button" class="chip" data-act="menu">メニュー</button><span>手札 ${p.hand.length}</span></div>`
     : `<div class="side">${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</span></div>`;
   return `<div class="pbar ${S.turn === pi && !S.over ? "active" : ""}">
-    <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${p.name}の体力 ${p.hp}">
+    <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${p.hp}">
       <span class="hpv">${Math.max(0, p.hp)}</span><span class="hpl">体力</span></button>
-    <div class="pinfo"><div class="pname">${p.name}${S.turn === pi && !S.over ? "<small>行動中</small>" : ""}</div>
+    <div class="pinfo"><div class="pname">${esc(p.name)}${S.turn === pi && !S.over ? "<small>行動中</small>" : ""}${status}</div>
       <div class="pips">${pips}<span class="etext">${p.e}/${p.maxE}</span></div></div>
     ${side}</div>`;
 }
 
 function fieldHTML(pi) {
   const p = S.players[pi];
-  const myTurn = S.turn === 0 && !S.over;
-  const tgtSide = ui.mode === "attack" ? 1 : ui.mode === "spell" ? ui.spellSide : -1;
+  const myTurn = S.turn === ME && !S.over;
+  const tgtSide = ui.mode === "attack" ? OP : ui.mode === "spell" ? ui.spellSide : -1;
   let s = "";
   for (let i = 0; i < CONFIG.FIELD_MAX; i++) {
     const u = p.field[i];
     if (!u) { s += `<div class="slot"><span class="empty"></span></div>`; continue; }
     const cls = [
-      pi === 0 && myTurn && !busy && u.ready ? "ready" : "",
-      pi === 0 && myTurn && !u.ready ? "rest" : "",
+      pi === ME && myTurn && canAct() && u.ready ? "ready" : "",
+      pi === ME && myTurn && !u.ready ? "rest" : "",
       pi === tgtSide ? "tgt" : "",
       ui.sel && ui.sel.kind === "unit" && ui.sel.uid === u.uid ? "sel" : ""
     ].join(" ");
@@ -370,29 +431,39 @@ function fieldHTML(pi) {
   return `<div class="field" data-zone="${pi}" style="--cols:${CONFIG.FIELD_MAX}">${s}</div>`;
 }
 
+function endButtonHTML() {
+  if (S.over && resultShown) return `<button type="button" class="endbtn" data-act="showResult">結果画面へ</button>`;
+  if (S.over) return `<button type="button" class="endbtn" disabled>決着</button>`;
+  if (S.turn !== ME) {
+    const label = MODE === "cpu" ? "CPU行動中" : "相手のターン";
+    return `<button type="button" class="endbtn" disabled>${label}</button>`;
+  }
+  if (typeof Online !== "undefined" && Online.blocked()) return `<button type="button" class="endbtn" disabled>送信中…</button>`;
+  return `<button type="button" class="endbtn" data-act="end" ${canAct() ? "" : "disabled"}>ターン終了</button>`;
+}
+
 function render() {
   if (!S) return;
+  if (MODE === "online" && Online.role === "host") Online.publish();
   hidePreview();
-  const me = S.players[0];
-  const canEnd = S.turn === 0 && !S.over && !busy;
+  const me = S.players[ME];
   const lines = S.log.filter(l => !l.sep).slice(-2);
   app.innerHTML = `
-    ${pbarHTML(1)}
-    ${fieldHTML(1)}
+    ${pbarHTML(OP)}
+    ${fieldHTML(OP)}
     <div class="mid">
       <div class="pile" aria-label="共通山札"><b>${S.pile.length}</b><span>山札</span></div>
-      <button type="button" class="log" data-act="log" aria-label="プレイログを開く">${lines.map((l, i) => `<div class="${i < lines.length - 1 ? "old" : ""}">${l.msg}</div>`).join("")}</button>
-      ${S.over && S.result
-        ? `<button type="button" class="endbtn" data-act="showResult">結果画面へ</button>`
-        : `<button type="button" class="endbtn" data-act="end" ${canEnd ? "" : "disabled"}>${busy ? "CPU行動中" : "ターン終了"}</button>`}
+      <button type="button" class="log" data-act="log" aria-label="プレイログを開く">${lines.map((l, i) => `<div class="${i < lines.length - 1 ? "old" : ""}">${logText(l)}</div>`).join("")}</button>
+      ${endButtonHTML()}
     </div>
-    ${fieldHTML(0)}
-    ${pbarHTML(0)}
+    ${fieldHTML(ME)}
+    ${pbarHTML(ME)}
     <div class="hand">${me.hand.map((id, i) => {
-      const dim = S.turn !== 0 || DEF[id].cost > me.e;
+      const dim = S.turn !== ME || !DEF[id] || DEF[id].cost > me.e;
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
       return cardHTML(DEF[id], { cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
-    }).join("")}</div>`;
+    }).join("")}</div>
+    ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   layoutHand();
   renderSheet();
 }
@@ -410,7 +481,7 @@ function layoutHand() {
 function detailHTML(id, unit, owner) {
   const d = DEF[id];
   const statLine = d.type === "char"
-    ? `<div class="sh-stats">攻撃 ${unit ? unit.atk : d.atk} ／ 体力 ${unit ? `${unit.hp}/${unit.maxHp}` : d.hp}${unit && !unit.ready && owner === 0 ? "（このターンは攻撃できません）" : ""}</div>`
+    ? `<div class="sh-stats">攻撃 ${unit ? unit.atk : d.atk} ／ 体力 ${unit ? `${unit.hp}/${unit.maxHp}` : d.hp}${unit && !unit.ready && owner === ME ? "（このターンは攻撃できません）" : ""}</div>`
     : "";
   return `
     <div class="sheet-card">${cardHTML(d, { unit, static: true })}</div>
@@ -427,12 +498,13 @@ function renderSheet() {
   if (ui.mode) {
     let msg;
     if (ui.mode === "spell") {
-      const d = DEF[S.players[0].hand[ui.sel.idx]];
-      msg = `${esc(d.name)}の対象にする${ui.spellSide === 1 ? "相手" : "自分"}のキャラをタップしてください`;
+      const d = DEF[S.players[ME].hand[ui.sel.idx]];
+      if (!d) { ui = { sel: null, mode: null }; el.hidden = true; return; }
+      msg = `${esc(d.name)}の対象にする${ui.spellSide === OP ? "相手" : "自分"}のキャラをタップしてください`;
     } else {
       const u = selectedUnit();
-      msg = !S.players[1].field.length ? "相手の体力（上の丸）をタップして直接攻撃"
-        : canAttackPlayer(0, u) ? "直撃：相手キャラか、相手の体力（上の丸）をタップ"
+      msg = !S.players[OP].field.length ? "相手の体力（上の丸）をタップして直接攻撃"
+        : canAttackPlayer(ME, u) ? "直撃：相手キャラか、相手の体力（上の丸）をタップ"
         : "攻撃する相手キャラをタップしてください";
     }
     el.className = "sheet banner";
@@ -442,9 +514,9 @@ function renderSheet() {
   }
   let id, unit = null, playable = null;
   if (ui.sel.kind === "hand") {
-    id = S.players[0].hand[ui.sel.idx];
+    id = S.players[ME].hand[ui.sel.idx];
     if (!id) { ui.sel = null; el.hidden = true; return; }
-    playable = busy ? { ok: false, reason: "CPUの行動中です" } : canPlay(0, ui.sel.idx);
+    playable = !canAct() ? { ok: false, reason: S.turn === ME ? "送信中です" : "相手のターンです" } : canPlay(ME, ui.sel.idx);
   } else {
     unit = S.players[ui.sel.owner].field.find(u => u.uid === ui.sel.uid);
     if (!unit) { ui.sel = null; el.hidden = true; return; }
@@ -463,7 +535,7 @@ function renderSheet() {
 /* ---------- ホバー（PC）／長押し（スマホ）で効果を表示 ---------- */
 function cardInfoFromEl(card) {
   if (!S) return null;
-  if (card.dataset.hand != null) { const id = S.players[0].hand[+card.dataset.hand]; return id ? { id, unit: null, owner: 0 } : null; }
+  if (card.dataset.hand != null) { const id = S.players[ME].hand[+card.dataset.hand]; return id ? { id, unit: null, owner: ME } : null; }
   if (card.dataset.uid != null) {
     const owner = +card.dataset.owner;
     const unit = S.players[owner].field.find(u => u.uid === +card.dataset.uid);
@@ -473,7 +545,7 @@ function cardInfoFromEl(card) {
 }
 function showPreview(card) {
   const info = cardInfoFromEl(card);
-  if (!info) return;
+  if (!info || !DEF[info.id]) return;
   const p = $("#preview");
   p.innerHTML = detailHTML(info.id, info.unit, info.owner) + "</div>";
   p.hidden = false;
@@ -508,11 +580,11 @@ document.addEventListener("pointerdown", e => {
       if (press && !(drag && drag.started)) { press.shown = true; showPreview(card); }
     }, 380);
   }
-  if (S.turn !== 0 || busy) return;
+  if (!canAct()) return;
   if (card.dataset.hand != null) {
     drag = { kind: "hand", idx: +card.dataset.hand, el: card, sx: e.clientX, sy: e.clientY, started: false };
-  } else if (card.dataset.owner === "0") {
-    const u = S.players[0].field.find(x => x.uid === +card.dataset.uid);
+  } else if (+card.dataset.owner === ME) {
+    const u = S.players[ME].field.find(x => x.uid === +card.dataset.uid);
     if (u && u.ready) drag = { kind: "unit", uid: u.uid, el: card, sx: e.clientX, sy: e.clientY, started: false };
   }
 });
@@ -550,7 +622,7 @@ function blockClick() { suppressClick = true; setTimeout(() => suppressClick = f
 /* 手札をドラッグしたときに、どこへ落とせば使えるか */
 function handDropSide(d) {
   if (d.type === "char") return { field: true };
-  const side = needsTarget(0, d);
+  const side = needsTarget(ME, d);
   return side == null ? { field: true } : { units: side };
 }
 
@@ -561,9 +633,10 @@ function startDrag() {
   renderSheet();
   const zones = [];
   if (drag.kind === "hand") {
-    const d = DEF[S.players[0].hand[drag.idx]];
+    const d = DEF[S.players[ME].hand[drag.idx]];
+    if (!d) { drag = null; return; }
     const z = handDropSide(d);
-    if (z.field) zones.push(app.querySelector('.field[data-zone="0"]'));
+    if (z.field) zones.push(app.querySelector(`.field[data-zone="${ME}"]`));
     else app.querySelectorAll(`[data-owner="${z.units}"]`).forEach(el => zones.push(el));
     const r = drag.el.getBoundingClientRect();
     const g = drag.el.cloneNode(true);
@@ -574,9 +647,9 @@ function startDrag() {
     drag.ghost = g;
     drag.el.classList.add("lifted");
   } else {
-    app.querySelectorAll('[data-owner="1"]').forEach(el => zones.push(el));
-    const u = S.players[0].field.find(x => x.uid === drag.uid);
-    if (canAttackPlayer(0, u)) zones.push(app.querySelector('[data-player="1"]'));
+    app.querySelectorAll(`[data-owner="${OP}"]`).forEach(el => zones.push(el));
+    const u = S.players[ME].field.find(x => x.uid === drag.uid);
+    if (canAttackPlayer(ME, u)) zones.push(app.querySelector(`[data-player="${OP}"]`));
     const r = drag.el.getBoundingClientRect();
     drag.ox = r.left + r.width / 2; drag.oy = r.top + r.height / 2;
     const ns = "http://www.w3.org/2000/svg";
@@ -593,6 +666,7 @@ function startDrag() {
 }
 
 function moveDrag(x, y) {
+  if (!drag) return;
   if (drag.ghost) { drag.ghost.style.left = x + "px"; drag.ghost.style.top = y + "px"; }
   if (drag.svg) { const l = drag.svg.querySelector("line"); l.setAttribute("x2", x); l.setAttribute("y2", y); }
   const el = document.elementFromPoint(x, y);
@@ -616,27 +690,27 @@ function dropAction(x, y) {
   if (!el) return null;
   const unitEl = el.closest("[data-uid]"), plEl = el.closest("[data-player]"), fieldEl = el.closest(".field");
   if (drag.kind === "hand") {
-    const idx = drag.idx, d = DEF[S.players[0].hand[idx]], chk = canPlay(0, idx);
+    const idx = drag.idx, d = DEF[S.players[ME].hand[idx]], chk = canPlay(ME, idx);
     const z = handDropSide(d);
     if (z.units != null) {
       if (!unitEl || +unitEl.dataset.owner !== z.units) return null;
       if (!chk.ok) return () => toast(chk.reason);
       const uid = +unitEl.dataset.uid;
-      return () => playCard(0, idx, uid);
+      return () => doPlay(idx, uid);
     }
-    if (!fieldEl || fieldEl.dataset.zone !== "0") return null;
+    if (!fieldEl || +fieldEl.dataset.zone !== ME) return null;
     if (!chk.ok) return () => toast(chk.reason);
     // 対象付きの効果を持つキャラ：場に置いたあと対象を選ぶ
-    const side = needsTarget(0, d);
-    if (side != null) return () => { ui = { sel: { kind: "hand", idx }, mode: "spell" }; ui.spellSide = side; render(); };
-    return () => playCard(0, idx);
+    const side = needsTarget(ME, d);
+    if (side != null) return () => { ui = { sel: { kind: "hand", idx }, mode: "spell", spellSide: side }; render(); };
+    return () => doPlay(idx);
   }
   const uid = drag.uid;
-  if (unitEl && unitEl.dataset.owner === "1") { const t = +unitEl.dataset.uid; return () => attack(0, uid, t); }
-  if (plEl && plEl.dataset.player === "1") {
-    const u = S.players[0].field.find(x => x.uid === uid);
-    if (!canAttackPlayer(0, u)) return () => toast("相手の場にキャラがいるので、直接攻撃できません");
-    return () => attack(0, uid, "player");
+  if (unitEl && +unitEl.dataset.owner === OP) { const t = +unitEl.dataset.uid; return () => doAttack(uid, t); }
+  if (plEl && +plEl.dataset.player === OP) {
+    const u = S.players[ME].field.find(x => x.uid === uid);
+    if (!canAttackPlayer(ME, u)) return () => toast("相手の場にキャラがいるので、直接攻撃できません");
+    return () => doAttack(uid, "player");
   }
   return null;
 }
@@ -648,7 +722,12 @@ function toast(msg) {
   setTimeout(() => t.remove(), 1800);
 }
 
+/* 演出。対人戦のホストでは、相手の画面でも同じ演出を出すために記録しておく */
 function fx(sel, text, cls) {
+  if (MODE === "online" && Online.role === "host") Online.queueFx(sel, text, cls);
+  playFx(sel, text, cls);
+}
+function playFx(sel, text, cls) {
   const el = document.querySelector(sel);
   if (!el) return;
   const r = el.getBoundingClientRect();
@@ -713,20 +792,22 @@ function openOverlay(html, from, solid) {
 }
 function goBack() {
   if (overlayFrom === "menu") showMenu();
-  else if (overlayFrom === "result" && S && S.result) showResult(S.result);
+  else if (overlayFrom === "result" && S && S.over) showResult(myResult());
   else if (overlayFrom === "game") $("#overlay").hidden = true;
+  else if (overlayFrom === "lobby" && typeof Online !== "undefined") Online.showLobby();
   else showStart();
 }
 
 function showStart() {
   const info = DATA_INFO.draft
-    ? `<p class="datainfo">編集中のカードデータで試遊しています</p>`
+    ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>`
     : DATA_INFO.updated ? `<p class="datainfo">カードデータ更新日：${esc(DATA_INFO.updated)}</p>` : "";
   openOverlay(`<div class="panel">
-    <h1 class="title"><small>試作版 0.4</small>境界の召喚士</h1>
+    <h1 class="title"><small>試作版 0.5</small>境界の召喚士</h1>
     <p class="lead">神話・幻想・機械。崩れた世界の境界から英雄を呼び出し、相手の召喚士を倒せ。</p>
     <div class="worlds"><span class="w-myth">神話</span><span class="w-fan">幻想</span><span class="w-mech">機械</span></div>
     <button type="button" class="btn primary" data-act="start">CPUと対戦する</button>
+    ${DATA_INFO.draft ? "" : `<button type="button" class="btn primary ghostish" data-act="online">友達と対戦する</button>`}
     <button type="button" class="btn" data-act="cards">カード一覧</button>
     <button type="button" class="btn" data-act="rules">ルールを読む</button>
     ${info}
@@ -734,14 +815,18 @@ function showStart() {
 }
 
 function showMenu() {
+  const online = MODE === "online";
   openOverlay(`<div class="panel">
     <h2 class="title sm">メニュー</h2>
+    ${online ? `<p class="lead">部屋の合言葉：<b class="roomcode-inline">${esc(Online.code || "")}</b></p>` : ""}
     <div class="menu">
       <button type="button" class="btn primary" data-act="closeOverlay">対戦に戻る</button>
       <button type="button" class="btn" data-act="log">プレイログ</button>
       <button type="button" class="btn" data-act="cards">カード一覧</button>
       <button type="button" class="btn" data-act="rules">ルール</button>
-      <button type="button" class="btn" data-act="toTitle">タイトルに戻る（この対戦は終了します）</button>
+      ${online && S && !S.over
+        ? `<button type="button" class="btn danger" data-act="surrender">降参してタイトルに戻る</button>`
+        : `<button type="button" class="btn" data-act="toTitle">タイトルに戻る（この対戦は終了します）</button>`}
     </div>
   </div>`, "game");
   overlayFrom = "menu";
@@ -785,7 +870,7 @@ function showLog() {
   if (!S) return;
   const rows = S.log.map(l => l.sep
     ? `<div class="sep">${l.msg}</div>`
-    : `<div class="${l.who === 1 ? "cpu" : ""}">${l.msg}</div>`).join("");
+    : `<div class="${l.who === OP ? "cpu" : ""}">${logText(l)}</div>`).join("");
   openOverlay(`<div class="panel wide">
     <h2 class="title sm">プレイログ</h2>
     <div class="loglist" id="loglist">${rows}</div>
@@ -795,59 +880,76 @@ function showLog() {
 }
 
 function showResult(res) {
+  if (!res) return;
   const label = { win: "勝利", lose: "敗北", draw: "引分" }[res];
+  const online = MODE === "online";
   openOverlay(`<div class="panel">
     <p class="result ${res}">${label}</p>
-    <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 あなた ${Math.max(0, S.players[0].hp)} ／ CPU ${Math.max(0, S.players[1].hp)}</p>
-    <button type="button" class="btn primary" data-act="start">もう一度対戦する</button>
+    <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
+    ${online
+      ? (Online.role === "host" ? `<button type="button" class="btn primary" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
+      : `<button type="button" class="btn primary" data-act="start">もう一度対戦する</button>`}
     <button type="button" class="btn" data-act="log">プレイログを見る</button>
     <button type="button" class="btn" data-act="closeOverlay">盤面を見る</button>
-    <button type="button" class="btn" data-act="toTitle">タイトルに戻る</button>
+    <button type="button" class="btn" data-act="toTitle">${online ? "部屋を出てタイトルに戻る" : "タイトルに戻る"}</button>
   </div>`, "result");
 }
 
 function toTitle() {
+  if (MODE === "online") Online.leave();
+  MODE = "cpu"; setPerspective(0);
   S = null; busy = false; ui = { sel: null, mode: null };
+  clearTimeout(resultTimer);
   app.innerHTML = "";
   $("#sheet").hidden = true;
   hidePreview();
   showStart();
 }
 
+function startCpuGame() {
+  MODE = "cpu"; setPerspective(0);
+  $("#overlay").hidden = true;
+  newGame(["あなた", "CPU"]);
+}
+
 /* ---------- 入力（タップ操作） ---------- */
-function handleAct(act) {
+function handleAct(act, el) {
   switch (act) {
-    case "start": $("#overlay").hidden = true; newGame(); break;
-    case "rules": if (!S) overlayFrom = "start"; else if (overlayFrom !== "menu" && overlayFrom !== "result") overlayFrom = "game"; showRules(); break;
+    case "start": startCpuGame(); break;
+    case "online": Online.showLobby(); break;
+    case "rules": if (!S) overlayFrom = overlayFrom === "lobby" ? "lobby" : "start"; else if (overlayFrom !== "menu" && overlayFrom !== "result") overlayFrom = "game"; showRules(); break;
     case "cards": if (!S) overlayFrom = "start"; showCardList(); break;
     case "log": if ($("#overlay").hidden) overlayFrom = "game"; showLog(); break;
     case "back": goBack(); break;
     case "menu": showMenu(); break;
     case "toTitle": toTitle(); break;
+    case "surrender": Online.surrender(); break;
     case "closeOverlay": $("#overlay").hidden = true; break;
-    case "showResult": if (S && S.result) showResult(S.result); break;
+    case "showResult": if (S && S.over) showResult(myResult()); break;
     case "cancel": ui = { sel: null, mode: null }; render(); break;
-    case "end": if (S && S.turn === 0 && !busy) endTurn(0); break;
+    case "end": doEnd(); break;
     case "play": {
-      if (!ui.sel || ui.sel.kind !== "hand" || busy) return;
+      if (!ui.sel || ui.sel.kind !== "hand" || !canAct()) return;
       const idx = ui.sel.idx;
-      if (!canPlay(0, idx).ok) return;
-      const d = DEF[S.players[0].hand[idx]];
-      const side = needsTarget(0, d);
+      if (!canPlay(ME, idx).ok) return;
+      const d = DEF[S.players[ME].hand[idx]];
+      const side = needsTarget(ME, d);
       if (side != null) { ui.mode = "spell"; ui.spellSide = side; render(); return; }
       ui = { sel: null, mode: null };
-      playCard(0, idx);
+      doPlay(idx);
       break;
     }
+    default:
+      if (typeof Online !== "undefined") Online.handleAct(act, el);
   }
 }
 
 document.addEventListener("click", e => {
   if (suppressClick) { suppressClick = false; return; }
   const act = e.target.closest("[data-act]");
-  if (act) { if (!act.disabled) handleAct(act.dataset.act); return; }
+  if (act) { if (!act.disabled) handleAct(act.dataset.act, act); return; }
   if (!S || S.over) return;
-  const myTurn = S.turn === 0 && !busy;
+  const myTurn = canAct();
 
   const h = e.target.closest("[data-hand]");
   if (h) { hidePreview(); ui = { sel: { kind: "hand", idx: +h.dataset.hand }, mode: null }; render(); return; }
@@ -855,19 +957,17 @@ document.addEventListener("click", e => {
   const c = e.target.closest("[data-uid]");
   if (c) {
     const uid = +c.dataset.uid, owner = +c.dataset.owner;
-    if (myTurn && ui.mode === "attack" && owner === 1) { const a = ui.sel.uid; ui = { sel: null, mode: null }; attack(0, a, uid); return; }
-    if (myTurn && ui.mode === "spell" && owner === ui.spellSide) { const i = ui.sel.idx; ui = { sel: null, mode: null }; playCard(0, i, uid); return; }
+    if (myTurn && ui.mode === "attack" && owner === OP) { const a = ui.sel.uid; ui = { sel: null, mode: null }; doAttack(a, uid); return; }
+    if (myTurn && ui.mode === "spell" && owner === ui.spellSide) { const i = ui.sel.idx; ui = { sel: null, mode: null }; doPlay(i, uid); return; }
     const u = S.players[owner].field.find(x => x.uid === uid);
-    if (myTurn && owner === 0 && u && u.ready) { ui = { sel: { kind: "unit", owner, uid }, mode: "attack" }; render(); return; }
+    if (myTurn && owner === ME && u && u.ready) { ui = { sel: { kind: "unit", owner, uid }, mode: "attack" }; render(); return; }
     ui = { sel: { kind: "unit", owner, uid }, mode: null }; render(); return;
   }
 
   const pl = e.target.closest("[data-player]");
-  if (pl && myTurn && ui.mode === "attack" && +pl.dataset.player === 1 && canAttackPlayer(0, selectedUnit())) {
-    const a = ui.sel.uid; ui = { sel: null, mode: null }; attack(0, a, "player");
+  if (pl && myTurn && ui.mode === "attack" && +pl.dataset.player === OP && canAttackPlayer(ME, selectedUnit())) {
+    const a = ui.sel.uid; ui = { sel: null, mode: null }; doAttack(a, "player");
   }
 });
 
 window.addEventListener("resize", () => { if (S && !(drag && drag.started)) render(); });
-registerSW();
-boot();
