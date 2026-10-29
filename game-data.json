@@ -1,5 +1,5 @@
 {
- "version": 7,
+ "version": 8,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -265,7 +265,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/squire-7c000c1f75.webp"
   },
   {
    "id": "eye",
