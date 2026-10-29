@@ -448,7 +448,7 @@ function render() {
   if (MODE === "online" && Online.role === "host") Online.publish();
   // ドラッグ中に盤面を作り直すと、指の下のカードが消えて指を離した合図が届かなくなる（iPhoneなど）。
   // そのためドラッグが終わるまで描き直しを待つ
-  if (drag && drag.started) { renderDeferred = true; return; }
+  if ((drag && drag.started) || (press && press.shown)) { renderDeferred = true; return; }
   renderDeferred = false;
   clearDragLeftovers();
   hidePreview();
@@ -559,7 +559,10 @@ function showPreview(card) {
   const top = r.top > innerHeight / 2 ? r.top - ph - 14 : r.bottom + 14;
   p.style.top = Math.max(8, Math.min(innerHeight - ph - 8, top)) + "px";
 }
-function hidePreview() { const p = $("#preview"); if (p) p.hidden = true; hoverEl = null; }
+function hidePreview() {
+  const p = $("#preview"); if (p) p.hidden = true; hoverEl = null;
+  document.querySelectorAll("#app .card.peek").forEach(c => c.classList.remove("peek"));
+}
 
 let hoverEl = null;
 document.addEventListener("pointerover", e => {
@@ -574,17 +577,31 @@ document.addEventListener("pointerout", e => {
 });
 
 /* ---------- ドラッグ＆ドロップ ---------- */
-let drag = null, press = null, suppressClick = false;
+let drag = null, press = null, suppressClickUntil = 0;
+const LONG_PRESS = 350;
+
+/* 長押しで効果を見る（スマホ）。見ている間に指を滑らせると、指の下のカードの効果に切り替わる */
+function peekAt(card) {
+  if (!card || card === press.card) return;
+  press.card = card;
+  document.querySelectorAll("#app .card.peek").forEach(c => c.classList.remove("peek"));
+  card.classList.add("peek");
+  showPreview(card);
+}
 
 document.addEventListener("pointerdown", e => {
   if (!S || S.over || e.button > 0) return;
   const card = e.target.closest("#app .card");
   if (!card) return;
   if (e.pointerType !== "mouse") {
-    press = { x: e.clientX, y: e.clientY, shown: false };
+    press = { x: e.clientX, y: e.clientY, shown: false, card: null };
     press.timer = setTimeout(() => {
-      if (press && !(drag && drag.started)) { press.shown = true; showPreview(card); }
-    }, 380);
+      if (!press || (drag && drag.started)) return;
+      press.shown = true;
+      drag = null; // 効果を見始めたら、このタッチではカードを動かさない
+      ui = { sel: null, mode: null }; renderSheet();
+      peekAt(card);
+    }, LONG_PRESS);
   }
   if (!canAct()) return;
   if (card.dataset.hand != null) {
@@ -596,7 +613,15 @@ document.addEventListener("pointerdown", e => {
 });
 
 document.addEventListener("pointermove", e => {
-  if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 8) clearTimeout(press.timer);
+  if (press) {
+    if (press.shown) {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const c = el && el.closest("#app .card");
+      if (c) peekAt(c);
+      return;
+    }
+    if (Math.hypot(e.clientX - press.x, e.clientY - press.y) > 8) { clearTimeout(press.timer); press = null; }
+  }
   if (!drag) return;
   if (!drag.started) {
     if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 8) return;
@@ -612,8 +637,9 @@ document.addEventListener("pointercancel", e => finishPointer(e, false));
 function finishPointer(e, commit) {
   if (press) {
     clearTimeout(press.timer);
-    if (press.shown) { hidePreview(); blockClick(); }
+    const wasPeek = press.shown;
     press = null;
+    if (wasPeek) { hidePreview(); blockClick(); if (renderDeferred) render(); }
   }
   if (drag && drag.started) {
     const action = commit ? dropAction(e.clientX, e.clientY) : null;
@@ -635,10 +661,12 @@ function cancelDrag() {
   drag = null;
   if (press) { clearTimeout(press.timer); press = null; }
   hidePreview();
+  if (renderDeferred) render();
 }
 document.addEventListener("visibilitychange", () => { if (document.hidden) cancelDrag(); });
 window.addEventListener("blur", cancelDrag);
-function blockClick() { suppressClick = true; setTimeout(() => suppressClick = false, 0); }
+/* 指を離した直後に届く「タップ」を無視する（iPhoneは少し遅れて届くので時間で判断する） */
+function blockClick() { suppressClickUntil = Date.now() + 450; }
 
 /* 手札をドラッグしたときに、どこへ落とせば使えるか */
 function handDropSide(d) {
@@ -967,7 +995,7 @@ function handleAct(act, el) {
 }
 
 document.addEventListener("click", e => {
-  if (suppressClick) { suppressClick = false; return; }
+  if (Date.now() < suppressClickUntil) { e.preventDefault(); return; }
   const act = e.target.closest("[data-act]");
   if (act) { if (!act.disabled) handleAct(act.dataset.act, act); return; }
   if (!S || S.over) return;

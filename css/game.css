@@ -9,6 +9,7 @@ body{
   user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;
 }
 #app{
+  position:relative;isolation:isolate;
   height:100%;max-width:520px;margin:0 auto;
   display:flex;flex-direction:column;gap:6px;
   padding-left:max(16px, env(safe-area-inset-left, 0px));
@@ -85,7 +86,9 @@ body{
 /* ---- 手札（8枚すべて見えるよう重ねて並べる） ---- */
 .hand{flex:none;height:122px;display:flex;padding-top:14px;position:relative}
 .hand .card{height:100%;flex:none}
-.hand .card:hover,.hand .card.sel{transform:translateY(-12px);z-index:50!important}
+.hand .card.sel{transform:translateY(-12px);z-index:50!important}
+@media (hover:hover){ .hand .card:hover{transform:translateY(-12px);z-index:50!important} }
+.card.peek{box-shadow:0 0 0 3px var(--fg)!important;z-index:50!important}
 
 /* ---- 盤面のカード状態 ---- */
 #app .card{touch-action:none}
