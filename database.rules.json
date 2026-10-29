@@ -39,6 +39,41 @@
           }
         }
       }
+    },
+    "feedback": {
+      "$season": {
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['cat', 'text', 'ts']) && $season.length <= 40",
+          "cat": {
+            ".validate": "newData.isString() && newData.val().length <= 10"
+          },
+          "text": {
+            ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 1000"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 10"
+          },
+          "ts": {
+            ".validate": "newData.isNumber()"
+          },
+          "season": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "data": {
+            ".validate": "newData.isString() && newData.val().length <= 40"
+          },
+          "acct": {
+            ".validate": "newData.isString() && newData.val().length <= 16"
+          },
+          "ua": {
+            ".validate": "newData.isString() && newData.val().length <= 200"
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
+      }
     }
   }
 }

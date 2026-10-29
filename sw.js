@@ -1,10 +1,10 @@
 /* オフラインでも遊べるようにするためのサービスワーカー。
    通信できるときは常に最新を取りに行き（ネットワーク優先）、
    通信できないときだけ保存しておいた内容を使う。 */
-const CACHE = "kyokai-v10";
+const CACHE = "kyokai-v11";
 const SHELL = [
   "./", "index.html", "game-data.json",
-  "css/base.css", "css/game.css", "js/shared.js", "js/net.js", "js/sound.js", "js/game.js", "js/account.js", "js/pack.js", "js/deck.js", "js/online.js",
+  "css/base.css", "css/game.css", "js/shared.js", "js/net.js", "js/sound.js", "js/game.js", "js/account.js", "js/pack.js", "js/deck.js", "js/feedback.js", "js/online.js",
   "vendor/firebase-app-compat.js", "vendor/firebase-auth-compat.js", "vendor/firebase-database-compat.js",
   "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png"
 ];

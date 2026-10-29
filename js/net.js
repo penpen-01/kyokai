@@ -46,6 +46,8 @@ const FirebaseNet = {
   update(path, v) { return this.ref(path).update(v); },
   remove(path) { return this.ref(path).remove(); },
   push(path, v) { return this.ref(path).push(v).key; },
+  // 書き込みがサーバーに届くまで待つ（ご意見フォーム用）
+  async pushWait(path, v) { const r = this.ref(path).push(); await r.set(v); return r.key; },
   on(path, cb) {
     const r = this.ref(path), f = s => cb(s.exists() ? s.val() : null);
     r.on("value", f);

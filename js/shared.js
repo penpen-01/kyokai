@@ -216,12 +216,16 @@ function deckProblems(deck, cardsById, config, owned) {
   Object.entries(deck.cards || {}).forEach(([id, n]) => {
     const c = cardsById[id];
     if (!c || c.limit <= 0) probs.push("今は使えないカードが入っています");
-    else if (n > Math.min(c.limit, config.COPY_MAX)) probs.push(`${c.name}は${Math.min(c.limit, config.COPY_MAX)}枚までです`);
+    else if (n > cardLimit(c, config, deck)) probs.push(`${c.name}は${cardLimit(c, config, deck)}枚までです`);
     else if (owned && n > owned(id)) probs.push(`${c.name}を${n}枚持っていません（所持${owned(id)}枚）`);
   });
   return [...new Set(probs)];
 }
-function cardLimit(c, config) { return Math.min(c.limit, config.COPY_MAX); }
+function cardLimit(c, config, deck) {
+  // サンプルデッキでは、カードごとの上限に関係なく「同じカードを入れられる上限」まで入れられる
+  if (deck && deck.free && config.SAMPLE_DECKS) return config.COPY_MAX;
+  return Math.min(c.limit, config.COPY_MAX);
+}
 
 function readDraft() {
   try { const s = localStorage.getItem(DRAFT_KEY); return s ? JSON.parse(s) : null; } catch { return null; }

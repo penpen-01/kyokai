@@ -409,9 +409,14 @@ body{
 .diag{margin:0;padding:10px 12px 10px 28px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12.5px;line-height:1.8}
 
 /* ---- 画面上部の戻るボタン（スクロールしても上に残る） ---- */
+/* 戻るボタンがある画面は、上の余白をなくしてバーを画面のいちばん上に貼りつける。
+   バーの背景は画面の端から端まで塗り、スクロールした文字が上や横から透けないようにする */
+.overlay:has(.topbar){padding-top:0;background:var(--bg)}
+.panel:has(> .topbar){margin-top:0}
 .topbar{
-  position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:12px;
-  padding:10px 0;background:var(--bg);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;flex-shrink:0;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 0 10px;background:var(--bg);border-bottom:1px solid var(--line);
+  box-shadow:0 0 0 100vmax var(--bg);clip-path:inset(0 -100vmax);
 }
 .topbar b{flex:1;font-family:var(--f-display);font-size:20px;min-width:0}
 .topbar .goldtag{font-size:16px;padding:2px 10px}
@@ -436,3 +441,19 @@ body{
 .dtile.maxed .dbadge.in{background:var(--heal);border-color:var(--heal)}
 .dtile.pulse .card{animation:pulse2 .5s ease-out}
 @keyframes pulse2{0%{box-shadow:0 0 0 0 var(--gold)}100%{box-shadow:0 0 0 10px transparent}}
+
+/* ---- ご意見・感想フォーム ---- */
+.fbbtn{display:flex;flex-direction:column;gap:2px;align-items:center;border-style:dashed}
+.fbbtn small{font-size:11px;color:var(--muted);font-weight:400}
+.fbcats{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.fbcats legend{font-size:13px;color:var(--muted);margin-bottom:6px;padding:0}
+.fbcat{cursor:pointer}
+.fbcat input{position:absolute;opacity:0;pointer-events:none}
+.fbcat span{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:999px;font-size:13px;background:var(--panel)}
+.fbcat input:checked + span{border-color:var(--gold);color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,var(--panel))}
+.fbcat input:focus-visible + span{outline:2px solid var(--fg)}
+.fbhint{margin:-6px 0 0;font-size:12px;color:var(--muted)}
+.fblabel{font-size:13px;color:var(--muted);margin-bottom:-8px}
+.fbtext{width:100%;box-sizing:border-box;resize:vertical;min-height:140px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);font:inherit;font-size:16px;line-height:1.6}
+.fbtext:focus{outline:2px solid var(--gold);outline-offset:1px}
+.fbcount{margin:-8px 0 0;text-align:right;font-size:11px;color:var(--muted)}

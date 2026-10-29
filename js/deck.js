@@ -36,7 +36,7 @@ const Decks = {
   owned(id) { return Account.owned(id); },
   problems(deck) { return deckProblems(deck, DEF, CONFIG, this.unbound(deck) ? null : id => this.owned(id)); },
   isValid(deck) { return !!deck && this.problems(deck).length === 0; },
-  maxFor(c, deck) { return this.unbound(deck) ? cardLimit(c, CONFIG) : Math.min(cardLimit(c, CONFIG), this.owned(c.id)); },
+  maxFor(c, deck) { return this.unbound(deck) ? cardLimit(c, CONFIG, deck) : Math.min(cardLimit(c, CONFIG, deck), this.owned(c.id)); },
 
   selectedId() { try { return localStorage.getItem(DECK_SEL_KEY); } catch { return null; } },
   select(id) { try { localStorage.setItem(DECK_SEL_KEY, id); } catch {} },
@@ -260,13 +260,13 @@ const Decks = {
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
           <p class="dm-text">${esc(cardText(c))}</p>
-          <span class="pmeta">${unb ? "" : `所持 ${this.owned(c.id)}枚 ・ `}1デッキに${cardLimit(c, CONFIG)}枚まで</span>
+          <span class="pmeta">${unb ? "" : `所持 ${this.owned(c.id)}枚 ・ `}1デッキに${cardLimit(c, CONFIG, ed)}枚まで</span>
           ${editable ? `<div class="dm-step">
             <button type="button" class="btn" data-act="deckDec" data-id="${esc(c.id)}" ${k ? "" : "disabled"}>−</button>
             <span class="dm-k">デッキに <b>${k}</b> 枚</span>
             <button type="button" class="btn primary" data-act="deckInc" data-id="${esc(c.id)}" ${k >= max ? "disabled" : ""}>＋</button>
           </div>
-          ${k >= max && max < cardLimit(c, CONFIG) ? `<span class="hint">持っている枚数までしか入れられません。</span>` : ""}` : ""}
+          ${k >= max && max < cardLimit(c, CONFIG, ed) ? `<span class="hint">持っている枚数までしか入れられません。</span>` : ""}` : ""}
           <button type="button" class="btn" data-act="deckDetailClose">閉じる</button>
         </div>
       </div>
@@ -281,9 +281,9 @@ const Decks = {
     if (k >= max) {
       if (quick) {
         const own = this.owned(id);
-        toast(!this.unbound(ed) && own <= k && k < cardLimit(c, CONFIG)
+        toast(!this.unbound(ed) && own <= k && k < cardLimit(c, CONFIG, ed)
           ? (own ? `${c.name}は${own}枚しか持っていません` : `${c.name}はまだ持っていません`)
-          : `${c.name}は1デッキに${cardLimit(c, CONFIG)}枚までです`);
+          : `${c.name}は1デッキに${cardLimit(c, CONFIG, ed)}枚までです`);
       }
       return;
     }

@@ -1225,6 +1225,7 @@ function showStart() {
       <button type="button" class="btn" data-act="account">アカウント</button>
       <button type="button" class="btn" data-act="soundPanel">音：${Sound.on ? "オン" : "オフ"}</button>
     </div>
+    ${DATA_INFO.draft ? "" : `<button type="button" class="btn fbbtn" data-act="fbOpen">ご意見・感想を送る<small>改善案・不具合・良かった所・いまいちな所など</small></button>`}
     ${info}
     <p class="datainfo">ベータ版のカードやGは、正式公開のときにリセットされます。</p>
   </div>`, "start", true);
@@ -1396,6 +1397,7 @@ function handleAct(act, el) {
     case "soundLoud": Sound.toggleLoud(); Sound.showPanel(); break;
     default:
       if (Account.handleAct(act, el)) return;
+      if (Feedback.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);
