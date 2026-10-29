@@ -99,8 +99,9 @@ const Publish = {
     const np = normalizeData(out);
     if (JSON.stringify(np.packs) !== JSON.stringify(pub.packs)) lines.push(`パックの設定を変更（${np.packs.map(p => p.name + (p.open ? "" : "・停止中")).join("、")}）`);
     if (JSON.stringify(np.decks) !== JSON.stringify(pub.decks)) lines.push("CPU・スターターのデッキを変更");
-    const cfgDiff = Object.keys(np.config).filter(k => k !== "SEASON" && np.config[k] !== pub.config[k]);
+    const cfgDiff = Object.keys(np.config).filter(k => !["SEASON", "SAMPLE_DECKS"].includes(k) && np.config[k] !== pub.config[k]);
     if (cfgDiff.length) lines.push(`数値の設定を変更：${cfgDiff.map(k => `${(CONFIG_INFO[k] && CONFIG_INFO[k].label) || k} ${pub.config[k]}→${np.config[k]}`).join("、")}`);
+    if (np.config.SAMPLE_DECKS !== pub.config.SAMPLE_DECKS) lines.push(np.config.SAMPLE_DECKS ? "サンプルデッキ（全カード）を使えるようにする" : "サンプルデッキ（全カード）を終了する");
     if (!lines.length) lines.push("公開中の内容と同じです（変更はありません）。");
     return lines;
   },
@@ -126,13 +127,47 @@ const Publish = {
     </div>`);
   },
 
+  /* イラストは game-data.json に埋め込まず、art/ フォルダに別ファイルとして置く（データを軽く保つため） */
+  async uploadArts(out) {
+    let done = {};
+    try { done = JSON.parse(localStorage.getItem(PUB_KEY + "-arts") || "{}"); } catch {}
+    const list = out.cards.filter(c => c.art && c.art.startsWith("data:image/"));
+    let n = 0;
+    for (const c of list) {
+      const m = c.art.match(/^data:image\/(webp|jpeg|png);base64,(.+)$/);
+      if (!m) continue;
+      const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(m[2]));
+      const hash = [...new Uint8Array(buf)].slice(0, 5).map(b => b.toString(16).padStart(2, "0")).join("");
+      const path = `art/${c.id}-${hash}.${m[1] === "jpeg" ? "jpg" : m[1]}`;
+      if (!done[path]) {
+        n++;
+        this.progress(`イラストを送っています…（${n}/${list.length}）`);
+        const r = await this.api(`/contents/${path}`, {
+          method: "PUT", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: `イラスト：${c.name}`, content: m[2], branch: this.cfg.branch })
+        });
+        // 422 は「同じファイルがもうある」なので成功扱い
+        if (!r.ok && r.status !== 422) throw { status: r.status };
+        done[path] = 1;
+        try { localStorage.setItem(PUB_KEY + "-arts", JSON.stringify(done)); } catch {}
+      }
+      c.art = path;
+    }
+  },
+
   async go() {
     if (this.busy) return;
     this.busy = true;
     const note = ($("#pub-note") && $("#pub-note").value.trim()) || "カード工房から更新";
     const out = exportJSON();
-    const text = JSON.stringify(out, null, 1) + "\n";
     this.progress("GitHubに送っています…");
+    try {
+      await this.uploadArts(out);
+    } catch (e) {
+      this.busy = false;
+      return this.progress(e && e.status ? this.errText(e.status) : "イラストを送れませんでした。", true);
+    }
+    const text = JSON.stringify(out, null, 1) + "\n";
     try {
       let ok = false, status = 0;
       for (let attempt = 0; attempt < 2 && !ok; attempt++) {

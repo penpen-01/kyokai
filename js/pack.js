@@ -49,6 +49,7 @@ const Packs = {
     Account.data.gold -= pack.price;
     Account.addCards(ids);
     this.last = { pack, cards, flipped: cards.map(() => false) };
+    this.detailId = null;
     return { ok: true };
   },
 
@@ -59,7 +60,7 @@ const Packs = {
       : Account.status === "free" ? `<p class="onl-msg">試遊モードではパックを開けません（すべてのカードを使えます）。</p>`
       : `<p class="onl-msg">アカウントを読み込めていません。通信状態を確認して、開き直してください。</p>`;
     openOverlay(`<div class="panel wide">
-      <div class="shophead"><h2 class="title sm">パック</h2><span class="goldtag">${Account.gold}G</span></div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>パック</b><span class="goldtag">${Account.gold}G</span></div>
       ${acctNote}
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
       <div class="packs">${open.length ? open.map(p => {
@@ -89,11 +90,11 @@ const Packs = {
     const all = L.flipped.every(Boolean);
     openOverlay(`<div class="panel wide">
       <div class="shophead"><h2 class="title sm">${esc(L.pack.name)}</h2><span class="goldtag">${Account.gold}G</span></div>
-      <p class="lead">${all ? "開封結果" : "カードをタップしてめくってください"}</p>
+      <p class="lead">${all ? "開封結果（カードをタップすると効果を見られます）" : "カードをタップしてめくってください。めくったカードはタップで効果を見られます"}</p>
       <div class="opened">${L.cards.map((x, i) => {
         const c = DEF[x.id];
         return L.flipped[i]
-          ? `<div class="oslot up r-${c.rarity}"><span class="rtag">${RARITY_SHORT[c.rarity]}</span>${x.isNew ? `<span class="newtag">NEW</span>` : ""}${cardHTML(c, { static: true })}</div>`
+          ? `<button type="button" class="oslot up r-${c.rarity}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}の効果を見る"><span class="rtag">${RARITY_SHORT[c.rarity]}</span>${x.isNew ? `<span class="newtag">NEW</span>` : ""}${cardHTML(c, { static: true })}</button>`
           : `<button type="button" class="oslot down" data-act="packFlip" data-i="${i}" aria-label="${i + 1}枚目をめくる"><span>${i === L.cards.length - 1 ? "レア以上" : ""}</span></button>`;
       }).join("")}</div>
       ${all ? `<ul class="olist">${L.cards.map(x => { const c = DEF[x.id]; return `<li><span class="rtag r-${c.rarity}">${RARITY_SHORT[c.rarity]}</span>${esc(c.name)}${x.isNew ? ` <b class="newtxt">NEW</b>` : ` <small>（所持${Account.owned(x.id)}枚）</small>`}</li>`; }).join("")}</ul>` : ""}
@@ -103,7 +104,26 @@ const Packs = {
               : `<button type="button" class="btn primary" data-act="packFlipAll">すべてめくる</button>
                  <span></span>`}
       </div>
+      ${this.detailHTML()}
     </div>`, "start", true);
+  },
+
+  showDetail(id) { this.detailId = id; this.showOpening(); },
+  detailHTML() {
+    const c = this.detailId && DEF[this.detailId];
+    if (!c) return "";
+    return `<div class="dmodal" data-act="packDetailClose">
+      <div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}" data-act="noop">
+        <div class="dmodal-card">${cardHTML(c, { static: true })}</div>
+        <div class="dmodal-body">
+          <b class="dm-name">${esc(c.name)}</b>
+          <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
+          <p class="dm-text">${esc(cardText(c))}</p>
+          <span class="pmeta">所持 ${Account.owned(c.id)}枚 ・ 1デッキに${cardLimit(c, CONFIG)}枚まで</span>
+          <button type="button" class="btn" data-act="packDetailClose">閉じる</button>
+        </div>
+      </div>
+    </div>`;
   },
 
   flip(i) {
@@ -127,6 +147,8 @@ const Packs = {
         return true;
       }
       case "packFlip": this.flip(+el.dataset.i); return true;
+      case "packDetail": this.showDetail(el.dataset.id); return true;
+      case "packDetailClose": this.detailId = null; this.showOpening(); return true;
       case "packFlipAll": {
         const L = this.last; if (!L) return true;
         let best = 0;

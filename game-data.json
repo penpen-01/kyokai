@@ -16,7 +16,8 @@
   "REWARD_HARD": 150,
   "REWARD_ONLINE": 80,
   "SEASON": "beta",
-  "STARTER_DECK": "starter"
+  "STARTER_DECK": "starter",
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {

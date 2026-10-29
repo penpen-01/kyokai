@@ -56,7 +56,8 @@ const DEFAULT_CONFIG = {
   PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3,
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
-  SEASON: "beta", STARTER_DECK: "starter"
+  SEASON: "beta", STARTER_DECK: "starter",
+  SAMPLE_DECKS: true   // ベータ用：所持に関係なく全カードで組める「サンプルデッキ」を許可
 };
 
 /* レア度（パック開封で使う） */
@@ -147,7 +148,7 @@ function cardHTML(card, o = {}) {
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
   const guard = card.type === "char" && (card.keywords || []).includes("guard");
-  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} ${card.type} ${card.art ? "has-art" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
+  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art ? "has-art" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}">${cost}</span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
@@ -191,6 +192,7 @@ function normalizeData(data) {
     },
     open: x.open !== false
   }));
+  config.SAMPLE_DECKS = config.SAMPLE_DECKS !== false;
   config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";
   return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs };
 }
@@ -205,6 +207,10 @@ function cleanDeckCards(cards) {
 function deckCount(deck) { return Object.values(deck.cards || {}).reduce((s, n) => s + n, 0); }
 function deckProblems(deck, cardsById, config, owned) {
   const probs = [];
+  if (deck.free) {
+    if (!config.SAMPLE_DECKS) probs.push("サンプルデッキは今は使えません（ベータ期間が終わりました）");
+    owned = null; // サンプルデッキは所持数を問わない
+  }
   const total = deckCount(deck);
   if (total !== config.DECK_SIZE) probs.push(`${config.DECK_SIZE}枚ちょうどにしてください（今 ${total}枚）`);
   Object.entries(deck.cards || {}).forEach(([id, n]) => {

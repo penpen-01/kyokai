@@ -62,7 +62,14 @@ const Sound = {
   },
 
   play(name, level = 0) {
-    if (!this.on || !this.ctx || this.ctx.state !== "running") return;
+    if (!this.on) return;
+    if (!this.ctx) { this.unlock(); if (!this.ctx) return; }
+    if (this.ctx.state !== "running") {
+      // まだ準備中なら、準備ができ次第鳴らす（すぐに鳴らせないときはあきらめる）
+      const t0 = performance.now();
+      try { this.ctx.resume().then(() => { if (performance.now() - t0 < 400 && this.ctx.state === "running") this.play(name, level); }).catch(() => {}); } catch {}
+      return;
+    }
     // 同じ音が一度にたくさん重ならないように
     const now = performance.now();
     if (now - (this.lastAt[name] || 0) < 60) return;
@@ -94,4 +101,37 @@ const Sound = {
 };
 
 // スマホでは「指を離したとき」でないと音の準備ができないため、複数の合図で準備する
-["pointerdown", "pointerup", "touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => { if (Sound.on) Sound.unlock(); }, { passive: true, capture: true }));
+["pointerdown", "pointerup", "touchstart", "touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => { if (Sound.on) Sound.unlock(); }, { passive: true, capture: true }));
+
+/* ボタンを押したときの音（独自の音があるものは除く） */
+const SILENT_ACTS = new Set(["packOpen", "packFlip", "packFlipAll", "deckTapAdd", "deckTapDec", "deckInc", "deckDec", "sound", "soundTest", "noop"]);
+document.addEventListener("click", e => {
+  const b = e.target.closest("button, .btn, [data-act]");
+  if (!b || b.disabled) return;
+  if (b.dataset && SILENT_ACTS.has(b.dataset.act)) return;
+  if (e.target.closest("#app .card")) return; // 盤面のカードは対戦の音に任せる
+  Sound.play("click");
+}, true);
+
+/* 音の設定とテスト（鳴らないときに状態を確認するため） */
+Sound.diag = function () {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const standalone = window.navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+  return [
+    `音の機能：${AC ? "あり" : "なし"}`,
+    `状態：${this.ctx ? { running: "再生できる", suspended: "停止中（タップ待ち）", interrupted: "中断中（他のアプリが音を使用中）", closed: "終了" }[this.ctx.state] || this.ctx.state : "未準備"}`,
+    `マナーモード中の再生：${navigator.audioSession ? (navigator.audioSession.type === "playback" ? "鳴らす設定" : "鳴らさない設定") : "この端末は設定不可（マナーモード中は鳴りません）"}`,
+    `起動方法：${standalone ? "ホーム画面のアイコン" : "ブラウザ"}`,
+    `音量の設定：${this.on ? "オン" : "オフ"}`
+  ];
+};
+Sound.showPanel = function () {
+  openOverlay(`<div class="panel">
+    <h2 class="title sm">音の設定</h2>
+    <button type="button" class="btn ${this.on ? "primary" : ""}" data-act="sound">${this.on ? "音：オン（押すとオフ）" : "音：オフ（押すとオン）"}</button>
+    <button type="button" class="btn" data-act="soundTest">テスト音を鳴らす</button>
+    <ul class="diag">${this.diag().map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+    <p class="lead small">テスト音が聞こえないときは、本体の音量ボタンで音量を上げて、もう一度押してください。それでも鳴らないときは、この画面のスクリーンショットを送ってください。</p>
+    <button type="button" class="btn" data-act="back">戻る</button>
+  </div>`, "start", true);
+};

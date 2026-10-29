@@ -84,6 +84,10 @@ const Admin = {
         <p class="hint">負けたときは0Gです。「始めたときに配るG」は、新しく始めた人にだけ配られます。</p>
       </div>
       <div class="fgroup">
+        <span class="gl">サンプルデッキ（ベータ用）</span>
+        <label class="check" style="max-width:560px"><input type="checkbox" data-admin="sample" ${cfg.SAMPLE_DECKS ? "checked" : ""}><span><b>全カードで組める「サンプルデッキ」を許可する</b><span>オンの間は、遊ぶ人が持っていないカードも使ってデッキを組めます（カードの調整用）。オフにすると、サンプルデッキは対戦に使えなくなります（所持カード・Gには影響しません）。</span></span></label>
+      </div>
+      <div class="fgroup">
         <span class="gl">スターターデッキ（新しく始めた人に配るカード）</span>
         <select class="txt" data-admin="starter" aria-label="スターターデッキ">
           ${decks.map(d => `<option value="${esc(d.id)}" ${cfg.STARTER_DECK === d.id ? "selected" : ""}>${esc(d.name)}（${deckCount(d)}枚）</option>`).join("")}
@@ -221,5 +225,6 @@ document.addEventListener("change", e => {
   const k = t.dataset && t.dataset.admin;
   if (k === "pk-open") { Admin.pack().open = t.checked; Admin.touch(Admin.renderPacks); }
   if (k === "starter") { DATA.config.STARTER_DECK = t.value; Admin.touch(Admin.renderEco); }
+  if (k === "sample") { DATA.config.SAMPLE_DECKS = t.checked; Admin.touch(Admin.renderEco); }
   if (k === "deck-level") { const d = DATA.decks.find(x => x.id === t.dataset.id); if (d) { d.level = t.value; Admin.touch(); } }
 });

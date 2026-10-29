@@ -754,18 +754,26 @@ function pregameHTML() {
     </div>`;
   let body = "";
   const last = S.rps.last;
-  const lastLine = last ? `<p class="pre-last">${esc(me.name)}：${RPS[last.hands[ME]]} ／ ${esc(op.name)}：${RPS[last.hands[OP]]}
-      ${last.winner == null ? " → あいこ！もう一度" : last.winner === ME ? " → あなたの勝ち！" : " → 相手の勝ち"}</p>` : "";
+  // じゃんけんの結果：お互いの手を並べて、勝ち・負け・あいこを大きく出す
+  const lastLine = last ? (() => {
+    const v = last.winner == null ? "tie" : last.winner === ME ? "win" : "lose";
+    const side = (pi, who) => `<div class="rp ${last.winner === pi ? "won" : last.winner == null ? "" : "lost"}">
+        <span class="rp-who">${who}</span>${RPS_ICON[last.hands[pi]]}<b>${RPS[last.hands[pi]]}</b></div>`;
+    return `<div class="rpsres ${v}">
+        ${side(ME, "あなた")}<span class="rp-vs">VS</span>${side(OP, esc(op.name))}
+      </div>
+      <p class="rpsverdict ${v}">${v === "tie" ? "あいこ！ もう一度" : v === "win" ? "あなたの勝ち！" : "相手の勝ち"}</p>`;
+  })() : "";
   if (S.phase === "rps") {
     const mine = S.rps.picks[ME];
     body = `<h2 class="pre-title">じゃんけん</h2>
-      <p class="lead">勝った人が、先攻か後攻かを選べます。</p>
+      ${last ? "" : `<p class="lead">勝った人が、先攻か後攻かを選べます。</p>`}
       ${lastLine}
       ${mine ? `<p class="pre-wait">${RPS[mine] ? `あなたは${RPS[mine]}。` : "選びました。"}相手を待っています…</p>` : `
       <div class="rps">${Object.entries(RPS).map(([k, v]) => `<button type="button" class="rpsbtn" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${RPS_ICON[k]}<span>${v}</span></button>`).join("")}</div>`}
       ${S.rps.picks[OP] ? `<p class="datainfo">相手は選び終わっています</p>` : ""}`;
   } else if (S.phase === "choose") {
-    body = `<h2 class="pre-title">${S.rpsWinner === ME ? "じゃんけんに勝ちました" : "じゃんけんに負けました"}</h2>
+    body = `<h2 class="pre-title">じゃんけんの結果</h2>
       ${lastLine}
       ${S.rpsWinner === ME ? `
         <p class="lead">先攻か後攻かを選んでください。先攻は最初のターンにカードを引きません。</p>
@@ -1215,7 +1223,7 @@ function showStart() {
       <button type="button" class="btn" data-act="cards">カード一覧</button>
       <button type="button" class="btn" data-act="rules">ルール</button>
       <button type="button" class="btn" data-act="account">アカウント</button>
-      <button type="button" class="btn" data-act="sound" aria-pressed="${Sound.on}">音：${Sound.on ? "オン" : "オフ"}</button>
+      <button type="button" class="btn" data-act="soundPanel">音：${Sound.on ? "オン" : "オフ"}</button>
     </div>
     ${info}
     <p class="datainfo">ベータ版のカードやGは、正式公開のときにリセットされます。</p>
@@ -1241,7 +1249,7 @@ function showMenu() {
 }
 
 function showRules() {
-  openOverlay(`<div class="panel"><h2 class="title sm">ルール</h2>${RULES_HTML()}
+  openOverlay(`<div class="panel"><div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ルール</b></div>${RULES_HTML()}
     <button type="button" class="btn primary" data-act="back">戻る</button></div>`, null, !S);
 }
 
@@ -1262,7 +1270,7 @@ function showCardList() {
         </div>`).join("")}</div>`;
   };
   openOverlay(`<div class="panel wide">
-    <h2 class="title sm">カード一覧</h2>
+    <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>カード一覧</b></div>
     <div class="totals"><span>全<b>${usable.length}</b>種</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
     ${group("char", "キャラクター")}
     ${group("spell", "魔法")}
@@ -1276,7 +1284,7 @@ function showLog() {
     ? `<div class="sep">${l.msg}</div>`
     : `<div class="${l.who === OP ? "cpu" : ""}">${logText(l)}</div>`).join("");
   openOverlay(`<div class="panel wide">
-    <h2 class="title sm">プレイログ</h2>
+    <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>プレイログ</b></div>
     <div class="loglist" id="loglist">${rows}</div>
     <button type="button" class="btn primary" data-act="back">戻る</button>
   </div>`);
@@ -1335,9 +1343,9 @@ function showCpuSelect() {
     <p class="lead">使うデッキ：${esc(Decks.selected().name)}</p>
     <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
       <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}">
-        <b>${v.label}</b><span>${v.desc}</span>
+        <b>${v.label}</b><span>${v.desc}</span><em class="lvl-g">勝利で ${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}G</em>
       </button>`).join("")}</div>
-    <p class="datainfo">勝ったときの報酬（G）は、パック開封と一緒に次の更新で入ります。</p>
+    <p class="datainfo">負けたときは0Gです。${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</p>
     <button type="button" class="btn" data-act="back">戻る</button>
   </div>`, "start", true);
 }
@@ -1382,7 +1390,9 @@ function handleAct(act, el) {
       break;
     }
     case "account": Account.showScreen(); break;
-    case "sound": Sound.toggle(); showStart(); break;
+    case "soundPanel": Sound.showPanel(); break;
+    case "sound": Sound.toggle(); Sound.showPanel(); break;
+    case "soundTest": Sound.unlock(); Sound.play("win"); setTimeout(() => Sound.showPanel(), 300); break;
     default:
       if (Account.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;

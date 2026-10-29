@@ -104,3 +104,27 @@ img{max-width:100%}
   color:#dff3ff;background:rgba(40,90,140,.75);padding:1.5cqw 4cqw;border-radius:2cqw;
 }
 .cost.down{background:var(--heal)!important}
+
+/* ---- レア度ごとの枠 ----
+   コモン：世界の色の細い枠 / レア：銀の枠 / スーパーレア：金の枠と淡い光
+   ウルトラレア：虹色に流れる枠 / レジェンド：太い金の二重枠と、ときどき光が走る */
+.card.rar-rare{border-color:#c9d3e2;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--wc) 60%,transparent)}
+.card.rar-sr{border:2px solid #e3c06a;box-shadow:0 0 8px rgba(227,192,106,.45),inset 0 0 0 1px rgba(255,236,170,.5)}
+.card.rar-ur{border-color:transparent}
+.card.rar-ur::after{
+  content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;padding:2px;
+  background:conic-gradient(from 0deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff,#ff6b9b);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+  animation:urhue 4s linear infinite;
+}
+@keyframes urhue{to{filter:hue-rotate(360deg)}}
+.card.rar-legend{border:3px double #f2cd6b;box-shadow:0 0 12px rgba(242,205,107,.55),inset 0 0 10px rgba(242,205,107,.35)}
+.card.rar-legend::after{
+  content:"";position:absolute;inset:-40%;z-index:4;pointer-events:none;
+  background:linear-gradient(115deg,transparent 42%,rgba(255,244,200,.55) 50%,transparent 58%);
+  transform:translateX(-60%);animation:legendsweep 3.6s ease-in-out infinite;
+}
+@keyframes legendsweep{0%,55%{transform:translateX(-60%)}85%,100%{transform:translateX(60%)}}
+/* 盤面のカードが選ばれている・攻撃できる表示は、枠の光より優先して見せる */
+.card.ready,.card.tgt,.card.sel,.card.over{z-index:1}

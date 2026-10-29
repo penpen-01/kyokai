@@ -56,7 +56,7 @@ const Account = {
     return {
       gold: Math.max(0, Math.floor(+d.gold || 0)),
       cards: cleanDeckCards(d.cards),
-      decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards) })),
+      decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}) })),
       created: d.created || Date.now()
     };
   },
@@ -133,7 +133,7 @@ const Account = {
   showScreen(msg) {
     const st = { ready: "", offline: "（オフライン：通信できるようになったら保存されます）", none: "", free: "" }[this.status] || "";
     openOverlay(`<div class="panel">
-      <h2 class="title sm">アカウント</h2>
+      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>アカウント</b></div>
       ${this.status === "free" ? `<p class="lead">試遊モードでは、すべてのカードを使えます。アカウントは使いません。</p>`
         : !this.code ? `<p class="lead">サーバーに接続できないため、アカウントを読み込めませんでした。通信状態を確認して、開き直してください。</p>`
         : `${this.codeBoxHTML()}
