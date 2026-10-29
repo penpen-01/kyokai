@@ -12,18 +12,30 @@ const Sound = {
   lastAt: {},
 
   unlock() {
-    if (this.ctx) { if (this.ctx.state === "suspended") this.ctx.resume(); return; }
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    this.ctx = new AC();
-    this.master = this.ctx.createGain();
-    this.master.gain.value = 0.35;
-    this.master.connect(this.ctx.destination);
+    // iPhone：音をオンにしているときは、マナーモード（消音スイッチ）中でも鳴らす（対応している機種のみ）
+    try { if (navigator.audioSession) navigator.audioSession.type = this.on ? "playback" : "ambient"; } catch {}
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.35;
+      this.master.connect(this.ctx.destination);
+    }
+    if (this.ctx.state !== "running") {
+      try { this.ctx.resume(); } catch {}
+      // iPhone は、指を離したタイミングで無音を1回鳴らすと音が出せるようになる
+      try {
+        const b = this.ctx.createBuffer(1, 1, 22050), s = this.ctx.createBufferSource();
+        s.buffer = b; s.connect(this.ctx.destination); s.start(0);
+      } catch {}
+    }
   },
   toggle() {
     this.on = !this.on;
     try { localStorage.setItem(SOUND_KEY, this.on ? "on" : "off"); } catch {}
-    if (this.on) { this.unlock(); this.play("click"); }
+    try { if (navigator.audioSession) navigator.audioSession.type = this.on ? "playback" : "ambient"; } catch {}
+    if (this.on) { this.unlock(); setTimeout(() => this.play("click"), 50); }
   },
 
   tone(freq, start, dur, type = "sine", vol = 0.5, slideTo) {
@@ -81,4 +93,5 @@ const Sound = {
   }
 };
 
-["pointerdown", "keydown"].forEach(ev => document.addEventListener(ev, () => { if (Sound.on) Sound.unlock(); }, { passive: true }));
+// スマホでは「指を離したとき」でないと音の準備ができないため、複数の合図で準備する
+["pointerdown", "pointerup", "touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => { if (Sound.on) Sound.unlock(); }, { passive: true, capture: true }));
