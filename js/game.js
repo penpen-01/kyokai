@@ -1393,6 +1393,7 @@ function handleAct(act, el) {
     case "soundPanel": Sound.showPanel(); break;
     case "sound": Sound.toggle(); Sound.showPanel(); break;
     case "soundTest": Sound.unlock(); Sound.play("win"); setTimeout(() => Sound.showPanel(), 300); break;
+    case "soundLoud": Sound.toggleLoud(); Sound.showPanel(); break;
     default:
       if (Account.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;

@@ -9,11 +9,14 @@ const Sound = {
   ctx: null,
   master: null,
   on: (() => { try { return localStorage.getItem(SOUND_KEY) !== "off"; } catch { return true; } })(),
+  // マナーモード中も鳴らすか（オンにすると、iPhoneのロック画面に「再生中」の表示が出る）
+  loud: (() => { try { return localStorage.getItem(SOUND_KEY + "-loud") === "on"; } catch { return false; } })(),
+  sessionType() { return this.on && this.loud ? "playback" : "ambient"; },
   lastAt: {},
 
   unlock() {
-    // iPhone：音をオンにしているときは、マナーモード（消音スイッチ）中でも鳴らす（対応している機種のみ）
-    try { if (navigator.audioSession) navigator.audioSession.type = this.on ? "playback" : "ambient"; } catch {}
+    // iPhone：通常はゲームの効果音として扱う（マナーモードでは鳴らず、ロック画面に再生表示も出ない）
+    try { if (navigator.audioSession) navigator.audioSession.type = this.sessionType(); } catch {}
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
@@ -34,8 +37,13 @@ const Sound = {
   toggle() {
     this.on = !this.on;
     try { localStorage.setItem(SOUND_KEY, this.on ? "on" : "off"); } catch {}
-    try { if (navigator.audioSession) navigator.audioSession.type = this.on ? "playback" : "ambient"; } catch {}
+    try { if (navigator.audioSession) navigator.audioSession.type = this.sessionType(); } catch {}
     if (this.on) { this.unlock(); setTimeout(() => this.play("click"), 50); }
+  },
+  toggleLoud() {
+    this.loud = !this.loud;
+    try { localStorage.setItem(SOUND_KEY + "-loud", this.loud ? "on" : "off"); } catch {}
+    try { if (navigator.audioSession) navigator.audioSession.type = this.sessionType(); } catch {}
   },
 
   tone(freq, start, dur, type = "sine", vol = 0.5, slideTo) {
@@ -104,7 +112,7 @@ const Sound = {
 ["pointerdown", "pointerup", "touchstart", "touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => { if (Sound.on) Sound.unlock(); }, { passive: true, capture: true }));
 
 /* ボタンを押したときの音（独自の音があるものは除く） */
-const SILENT_ACTS = new Set(["packOpen", "packFlip", "packFlipAll", "deckTapAdd", "deckTapDec", "deckInc", "deckDec", "sound", "soundTest", "noop"]);
+const SILENT_ACTS = new Set(["soundLoud", "packOpen", "packFlip", "packFlipAll", "deckTapAdd", "deckTapDec", "deckInc", "deckDec", "sound", "soundTest", "noop"]);
 document.addEventListener("click", e => {
   const b = e.target.closest("button, .btn, [data-act]");
   if (!b || b.disabled) return;
@@ -120,7 +128,7 @@ Sound.diag = function () {
   return [
     `音の機能：${AC ? "あり" : "なし"}`,
     `状態：${this.ctx ? { running: "再生できる", suspended: "停止中（タップ待ち）", interrupted: "中断中（他のアプリが音を使用中）", closed: "終了" }[this.ctx.state] || this.ctx.state : "未準備"}`,
-    `マナーモード中の再生：${navigator.audioSession ? (navigator.audioSession.type === "playback" ? "鳴らす設定" : "鳴らさない設定") : "この端末は設定不可（マナーモード中は鳴りません）"}`,
+    `マナーモード中の再生：${navigator.audioSession ? (navigator.audioSession.type === "playback" ? "鳴らす" : "鳴らさない") : "この端末は設定できません（マナーモード中は鳴りません）"}`,
     `起動方法：${standalone ? "ホーム画面のアイコン" : "ブラウザ"}`,
     `音量の設定：${this.on ? "オン" : "オフ"}`
   ];
@@ -130,8 +138,16 @@ Sound.showPanel = function () {
     <h2 class="title sm">音の設定</h2>
     <button type="button" class="btn ${this.on ? "primary" : ""}" data-act="sound">${this.on ? "音：オン（押すとオフ）" : "音：オフ（押すとオン）"}</button>
     <button type="button" class="btn" data-act="soundTest">テスト音を鳴らす</button>
+    ${navigator.audioSession ? `<button type="button" class="btn" data-act="soundLoud">マナーモード中も鳴らす：${this.loud ? "オン" : "オフ"}</button>
+    <p class="lead small">オンにすると、マナーモード中でも音が出ますが、iPhoneのロック画面やコントロールセンターに「再生中」の表示が出ます。</p>` : ""}
     <ul class="diag">${this.diag().map(x => `<li>${esc(x)}</li>`).join("")}</ul>
     <p class="lead small">テスト音が聞こえないときは、本体の音量ボタンで音量を上げて、もう一度押してください。それでも鳴らないときは、この画面のスクリーンショットを送ってください。</p>
     <button type="button" class="btn" data-act="back">戻る</button>
   </div>`, "start", true);
 };
+
+/* アプリを閉じた・裏に回したときは音を止める（ロック画面に再生表示が残らないように） */
+document.addEventListener("visibilitychange", () => {
+  if (!Sound.ctx) return;
+  try { document.hidden ? Sound.ctx.suspend() : (Sound.on && Sound.ctx.resume()); } catch {}
+});
