@@ -88,3 +88,19 @@ img{max-width:100%}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition:none!important}
 }
+
+/* ---- 能力の印・状態 ---- */
+.card .marks{position:absolute;top:2.5cqw;right:2.5cqw;display:flex;flex-direction:column;gap:1.5cqw;align-items:flex-end}
+.card .mk{
+  font-style:normal;font-weight:700;font-size:9.5cqw;line-height:1;padding:1.5cqw 2.2cqw;border-radius:2cqw;
+  background:rgba(8,9,18,.82);color:#f3f0f8;border:1px solid color-mix(in srgb,var(--wc) 70%,transparent);
+}
+.card .mk-guard{background:#e9dcb4;color:#2a2108;border-color:#e9dcb4}
+.card .mk-armor{background:#8aa0b8;color:#0e1520;border-color:#8aa0b8}
+.card.guard{box-shadow:inset 0 0 0 2px color-mix(in srgb,#e9dcb4 70%,transparent)}
+.card.frozen .art{filter:saturate(.3) brightness(1.1) hue-rotate(160deg)}
+.card .frz{
+  position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-weight:800;font-size:13cqw;letter-spacing:.1em;
+  color:#dff3ff;background:rgba(40,90,140,.75);padding:1.5cqw 4cqw;border-radius:2cqw;
+}
+.cost.down{background:var(--heal)!important}

@@ -36,8 +36,9 @@ const Decks = {
     if (pr.length) { onFail(`「${d.name}」はまだ使えません：${pr[0]}`); return null; }
     return { name: d.name, cards: { ...d.cards } };
   },
-  randomPreset() {
-    const ok = PRESETS.filter(p => this.isValid(p));
+  randomPreset(level) {
+    let ok = PRESETS.filter(p => this.isValid(p) && (!level || p.level === level));
+    if (!ok.length) ok = PRESETS.filter(p => this.isValid(p));
     return ok.length ? ok[Math.floor(Math.random() * ok.length)] : null;
   },
 

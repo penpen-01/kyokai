@@ -1,6 +1,6 @@
 {
- "version": 3,
- "updated": "2026-10-29",
+ "version": 4,
+ "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 6,
@@ -12,6 +12,24 @@
   "COPY_MAX": 3
  },
  "decks": [
+  {
+   "id": "starter",
+   "name": "スターターデッキ",
+   "level": "easy",
+   "cards": {
+    "st-recruit": 3,
+    "squire": 3,
+    "st-golem": 3,
+    "st-guard": 3,
+    "st-infantry": 3,
+    "st-wolf": 3,
+    "st-rockman": 3,
+    "st-knight": 3,
+    "st-giant": 2,
+    "st-spark": 2,
+    "st-water": 2
+   }
+  },
   {
    "id": "p-myth",
    "name": "神話の進軍",
@@ -28,7 +46,8 @@
     "squire": 3,
     "archer": 3,
     "turret": 3
-   }
+   },
+   "level": "normal"
   },
   {
    "id": "p-mech",
@@ -46,7 +65,8 @@
     "archer": 1,
     "sage": 2,
     "wargod": 2
-   }
+   },
+   "level": "normal"
   },
   {
    "id": "p-fan",
@@ -65,6 +85,67 @@
     "eye": 2,
     "sentinel": 2,
     "bolt": 1
+   },
+   "level": "normal"
+  },
+  {
+   "id": "h-gods",
+   "name": "神々の軍勢",
+   "level": "hard",
+   "cards": {
+    "m-prayer": 3,
+    "m-shield": 3,
+    "m-valkyrie": 3,
+    "pegasus": 2,
+    "m-phoenix": 3,
+    "m-oracle": 2,
+    "m-order": 2,
+    "m-anthem": 2,
+    "m-hammer": 2,
+    "bolt": 3,
+    "wargod": 2,
+    "m-titan": 2,
+    "m-sungod": 1
+   }
+  },
+  {
+   "id": "h-frost",
+   "name": "永久凍土",
+   "level": "hard",
+   "cards": {
+    "f-twins": 2,
+    "f-healer": 2,
+    "f-thief": 3,
+    "f-icewitch": 3,
+    "f-curse": 3,
+    "f-treeguard": 3,
+    "f-blizzard": 2,
+    "f-horn": 3,
+    "f-unicorn": 2,
+    "cmvr35s2x5dv": 2,
+    "f-spring": 2,
+    "f-dragonwake": 2,
+    "f-spirit": 1
+   }
+  },
+  {
+   "id": "h-steel",
+   "name": "鋼鉄の軍団",
+   "level": "hard",
+   "cards": {
+    "x-drone": 3,
+    "x-rush": 3,
+    "x-armored": 3,
+    "x-jammer": 3,
+    "x-repair": 3,
+    "x-overcharge": 2,
+    "x-emp": 2,
+    "x-tank": 2,
+    "x-executor": 2,
+    "garm": 2,
+    "quantum": 2,
+    "x-gigas": 1,
+    "turret": 2
    }
   }
  ],
@@ -203,7 +284,7 @@
    ],
    "effects": [],
    "limit": 3,
-   "rarity": "common"
+   "rarity": "rare"
   },
   {
    "id": "sage",
@@ -241,7 +322,7 @@
     }
    ],
    "limit": 3,
-   "rarity": "common"
+   "rarity": "rare"
   },
   {
    "id": "berserker",
@@ -262,7 +343,7 @@
     }
    ],
    "limit": 3,
-   "rarity": "common"
+   "rarity": "rare"
   },
   {
    "id": "dragon",
@@ -311,7 +392,7 @@
    "keywords": [],
    "effects": [],
    "limit": 2,
-   "rarity": "rare"
+   "rarity": "sr"
   },
   {
    "id": "endragon",
@@ -398,7 +479,7 @@
     }
    ],
    "limit": 3,
-   "rarity": "common"
+   "rarity": "rare"
   },
   {
    "id": "spring",
@@ -449,7 +530,7 @@
     }
    ],
    "limit": 3,
-   "rarity": "common"
+   "rarity": "rare"
   },
   {
    "id": "judgment",
@@ -478,7 +559,7 @@
     }
    ],
    "limit": 2,
-   "rarity": "rare"
+   "rarity": "sr"
   },
   {
    "id": "cmvr35s2x5dv",
@@ -497,7 +578,7 @@
     }
    ],
    "limit": 2,
-   "rarity": "rare"
+   "rarity": "sr"
   },
   {
    "id": "cmvr3jwcugk8",
@@ -524,7 +605,7 @@
     }
    ],
    "limit": 2,
-   "rarity": "legend"
+   "rarity": "ur"
   },
   {
    "id": "cmvr3qeaobf2",
@@ -549,7 +630,959 @@
     }
    ],
    "limit": 1,
-   "rarity": "legend"
+   "rarity": "ur"
+  },
+  {
+   "id": "st-recruit",
+   "name": "見習い兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "兵",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-golem",
+   "name": "訓練用ゴーレム",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "塊",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-guard",
+   "name": "村の衛兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "衛",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-infantry",
+   "name": "鉄の歩兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "歩",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-wolf",
+   "name": "森の狼",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 2,
+   "glyph": "狼",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-rockman",
+   "name": "岩の巨兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "岩",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-knight",
+   "name": "若き騎士",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 4,
+   "hp": 3,
+   "glyph": "騎",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-giant",
+   "name": "丘の巨人",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "巨",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "st-spark",
+   "name": "小さな火花",
+   "world": "myth",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "火",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgTarget",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "st-water",
+   "name": "癒しの水",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "水",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "m-prayer",
+   "name": "祈りの巫女",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "祈",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "buffHp",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "m-shield",
+   "name": "聖盾の守り手",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "聖",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": []
+  },
+  {
+   "id": "m-valkyrie",
+   "name": "戦乙女",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 2,
+   "glyph": "乙",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "trample"
+   ],
+   "effects": []
+  },
+  {
+   "id": "m-phoenix",
+   "name": "不死鳥の騎士",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "鳳",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "haste",
+    "trample"
+   ],
+   "effects": []
+  },
+  {
+   "id": "m-oracle",
+   "name": "神託の語り部",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "託",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 1
+    },
+    {
+     "kind": "buffAllAtk",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "m-titan",
+   "name": "巨神兵タロス",
+   "world": "myth",
+   "type": "char",
+   "cost": 7,
+   "atk": 7,
+   "hp": 7,
+   "glyph": "巨",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "armor": 1
+  },
+  {
+   "id": "m-sungod",
+   "name": "太陽神の化身",
+   "world": "myth",
+   "type": "char",
+   "cost": 9,
+   "atk": 8,
+   "hp": 8,
+   "glyph": "陽",
+   "limit": 1,
+   "rarity": "legend",
+   "keywords": [
+    "guard",
+    "trample"
+   ],
+   "effects": [
+    {
+     "kind": "debuffAll",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "m-demonlord",
+   "name": "混沌の魔王",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 7,
+   "hp": 7,
+   "glyph": "魔",
+   "limit": 2,
+   "rarity": "ur",
+   "keywords": [
+    "trample"
+   ],
+   "effects": [
+    {
+     "kind": "discard",
+     "n": 2
+    }
+   ],
+   "pay": {
+    "kind": "life",
+    "n": 5
+   }
+  },
+  {
+   "id": "m-order",
+   "name": "軍神の号令",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "令",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "buffAllAtk",
+     "n": 1
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "m-anthem",
+   "name": "英雄の凱歌",
+   "world": "myth",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "歌",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "buffAllBoth",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "m-hammer",
+   "name": "雷神の槌",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "槌",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "destroyTarget",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "m-pact",
+   "name": "冥府の契約",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "契",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 3
+    }
+   ],
+   "pay": {
+    "kind": "life",
+    "n": 3
+   }
+  },
+  {
+   "id": "m-altar",
+   "name": "生贄の祭壇",
+   "world": "myth",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "祭",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgTarget",
+     "n": 6
+    }
+   ],
+   "pay": {
+    "kind": "sacrifice",
+    "n": 1
+   }
+  },
+  {
+   "id": "m-ragnarok",
+   "name": "ラグナロク",
+   "world": "myth",
+   "type": "spell",
+   "cost": 7,
+   "glyph": "終",
+   "limit": 2,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "destroyAll",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "m-inferno",
+   "name": "終末の業火",
+   "world": "myth",
+   "type": "spell",
+   "cost": 6,
+   "glyph": "業",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgAllBoth",
+     "n": 4
+    }
+   ]
+  },
+  {
+   "id": "f-healer",
+   "name": "森の癒し手",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "癒",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "healUnits",
+     "n": 2
+    },
+    {
+     "kind": "heal",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-twins",
+   "name": "双子の妖精",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "妖",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "energyNow",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-thief",
+   "name": "月光の盗賊",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "盗",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "discard",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-icewitch",
+   "name": "氷結の魔女",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "氷",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "freezeTarget",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-treeguard",
+   "name": "大樹の守護者",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 2,
+   "hp": 7,
+   "glyph": "樹",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "armor": 1
+  },
+  {
+   "id": "f-abyss",
+   "name": "深淵の取引者",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 6,
+   "hp": 5,
+   "glyph": "淵",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [],
+   "pay": {
+    "kind": "sacrifice",
+    "n": 1
+   }
+  },
+  {
+   "id": "f-spirit",
+   "name": "森羅の大精霊",
+   "world": "fan",
+   "type": "char",
+   "cost": 8,
+   "atk": 6,
+   "hp": 8,
+   "glyph": "霊",
+   "limit": 1,
+   "rarity": "legend",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 6
+    },
+    {
+     "kind": "healUnits",
+     "n": 3
+    },
+    {
+     "kind": "ramp",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-unicorn",
+   "name": "聖獣ユニコーン",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "角",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [
+    "haste"
+   ],
+   "effects": [
+    {
+     "kind": "buffBoth",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "f-whisper",
+   "name": "妖精の囁き",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "囁",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "discount",
+     "n": 2
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-curse",
+   "name": "魔女の呪い",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "呪",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "debuffTarget",
+     "n": 3
+    }
+   ]
+  },
+  {
+   "id": "f-spring",
+   "name": "生命の泉",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "命",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 4
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-blizzard",
+   "name": "吹雪",
+   "world": "fan",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "雪",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "freezeAll",
+     "n": 1
+    },
+    {
+     "kind": "dmgAll",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "f-horn",
+   "name": "召喚の角笛",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "笛",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "summon",
+     "n": 4
+    }
+   ]
+  },
+  {
+   "id": "f-dragonwake",
+   "name": "竜王の目覚め",
+   "world": "fan",
+   "type": "spell",
+   "cost": 6,
+   "glyph": "醒",
+   "limit": 2,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "summon",
+     "n": 9
+    }
+   ]
+  },
+  {
+   "id": "x-drone",
+   "name": "防衛ドローン",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "防",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": []
+  },
+  {
+   "id": "x-armored",
+   "name": "装甲兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "甲",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "armor": 1
+  },
+  {
+   "id": "x-rush",
+   "name": "突撃ドローン",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 3,
+   "hp": 1,
+   "glyph": "突",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "trample"
+   ],
+   "effects": []
+  },
+  {
+   "id": "x-jammer",
+   "name": "妨害機エコー",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "妨",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "discard",
+     "n": 1
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "x-tank",
+   "name": "重装戦車",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 5,
+   "hp": 6,
+   "glyph": "車",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [],
+   "armor": 2
+  },
+  {
+   "id": "x-executor",
+   "name": "処刑機兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "刑",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "destroyTarget",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "x-factory",
+   "name": "量産工場",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 0,
+   "hp": 5,
+   "glyph": "工",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "summon",
+     "n": 3
+    }
+   ]
+  },
+  {
+   "id": "x-gigas",
+   "name": "機甲要塞ギガス",
+   "world": "mech",
+   "type": "char",
+   "cost": 9,
+   "atk": 7,
+   "hp": 10,
+   "glyph": "塞",
+   "limit": 1,
+   "rarity": "legend",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "armor": 2
+  },
+  {
+   "id": "x-repair",
+   "name": "ナノ修復",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "修",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "buffBoth",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "x-reboot",
+   "name": "再起動プロトコル",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "再",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "refresh",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "x-overcharge",
+   "name": "過充電",
+   "world": "mech",
+   "type": "spell",
+   "cost": 0,
+   "glyph": "充",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "energyNow",
+     "n": 2
+    }
+   ],
+   "pay": {
+    "kind": "life",
+    "n": 2
+   }
+  },
+  {
+   "id": "x-emp",
+   "name": "EMPパルス",
+   "world": "mech",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "電",
+   "limit": 2,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "debuffAll",
+     "n": 1
+    },
+    {
+     "kind": "dmgAll",
+     "n": 1
+    },
+    {
+     "kind": "freezeAll",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "x-warp",
+   "name": "時空の歪み",
+   "world": "mech",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "歪",
+   "limit": 2,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "discard",
+     "n": 2
+    },
+    {
+     "kind": "draw",
+     "n": 2
+    }
+   ]
   }
  ]
 }

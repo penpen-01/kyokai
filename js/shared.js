@@ -7,28 +7,56 @@ const TYPES = { char: "キャラクター", spell: "魔法" };
 
 /* キャラクターの能力（キーワード） */
 const KEYWORDS = {
-  haste:  { label: "速攻", text: "場に出したターンから攻撃できる。" },
-  pierce: { label: "直撃", text: "相手の場にキャラがいても、相手プレイヤーを攻撃できる。" }
+  haste:   { label: "速攻", short: "速", text: "場に出したターンから攻撃できる。" },
+  pierce:  { label: "直撃", short: "直", text: "相手の場にキャラがいても、相手プレイヤーを攻撃できる（守護がいるときは除く）。" },
+  trample: { label: "貫通", short: "貫", text: "キャラを攻撃して倒したとき、余ったダメージを相手プレイヤーに与える。" },
+  guard:   { label: "守護", short: "守", text: "このキャラがいる間、相手は守護を持つキャラしか攻撃できない。" }
+};
+/* 装甲は数値つきの能力（card.armor） */
+const ARMOR_TEXT = n => `装甲${n}：受けるダメージを${n}減らす。`;
+
+/* 代償（card.pay）：使うときに支払う */
+const PAYS = {
+  life:      { label: "自分の体力を払う", text: n => `代償：自分の体力を${n}払う。` },
+  sacrifice: { label: "自分のキャラ1体を破壊する", text: () => "代償：自分のキャラ1体を選んで破壊する。" }
 };
 
 /* 効果の種類。キャラは「登場時」、魔法は「使ったとき」に発動する。
-   target があるものは、使うときに対象のキャラを選ぶ（1枚につき1つまで）。 */
+   target があるものは、使うときに対象のキャラを選ぶ（相手側と自分側を1体ずつまで）。
+   noN は数値を使わない効果、min は数値の下限。 */
 const EFFECTS = {
-  draw:      { label: "カードを引く",                 text: n => `カードを${n}枚引く。` },
-  dmgTarget: { label: "選んだ相手キャラにダメージ",   text: n => `相手キャラ1体に${n}ダメージ。`, target: "enemyUnit" },
-  dmgRandom: { label: "ランダムな相手キャラにダメージ", text: n => `ランダムな相手キャラ1体に${n}ダメージ。` },
-  dmgAll:    { label: "相手キャラ全体にダメージ",     text: n => `相手キャラ全体に${n}ダメージ。` },
-  dmgFace:   { label: "相手プレイヤーにダメージ",     text: n => `相手プレイヤーに${n}ダメージ。` },
-  heal:      { label: "自分の体力を回復",             text: n => `自分の体力を${n}回復する。` },
-  ramp:      { label: "エナジー最大値を増やす",       text: n => `エナジーの最大値を${n}増やす（上限まで）。` },
-  buffAtk:   { label: "自分のキャラの攻撃力を上げる", text: n => `自分のキャラ1体の攻撃力を+${n}する。`, target: "ownUnit" },
-  buffHp:    { label: "自分のキャラの体力を上げる",   text: n => `自分のキャラ1体の体力を+${n}する。`, target: "ownUnit" }
+  draw:        { group: "ドロー", label: "カードを引く",                  text: n => `カードを${n}枚引く。` },
+  refresh:     { group: "ドロー", label: "手札を入れ替える",              text: n => n ? `手札をすべて山札に戻して切り直し、その枚数より${n}枚多く引く。` : "手札をすべて山札に戻して切り直し、同じ枚数を引く。", min: 0 },
+  discard:     { group: "妨害",   label: "相手の手札を捨てさせる",        text: n => `相手の手札をランダムに${n}枚捨てさせる。` },
+  dmgTarget:   { group: "ダメージ", label: "選んだ相手キャラにダメージ",  text: n => `相手キャラ1体に${n}ダメージ。`, target: "enemyUnit" },
+  dmgRandom:   { group: "ダメージ", label: "ランダムな相手キャラにダメージ", text: n => `ランダムな相手キャラ1体に${n}ダメージ。` },
+  dmgAll:      { group: "ダメージ", label: "相手キャラ全体にダメージ",    text: n => `相手キャラ全体に${n}ダメージ。` },
+  dmgAllBoth:  { group: "ダメージ", label: "全キャラにダメージ（自分側も）", text: n => `すべてのキャラ（自分のキャラも含む）に${n}ダメージ。` },
+  dmgFace:     { group: "ダメージ", label: "相手プレイヤーにダメージ",    text: n => `相手プレイヤーに${n}ダメージ。` },
+  destroyTarget: { group: "除去", label: "選んだ相手キャラを破壊",       text: () => "相手キャラ1体を破壊する。", target: "enemyUnit", noN: true },
+  destroyAll:  { group: "除去",   label: "全キャラを破壊（自分側も）",    text: () => "すべてのキャラ（自分のキャラも含む）を破壊する。", noN: true },
+  freezeTarget:{ group: "妨害",   label: "選んだ相手キャラを行動不能に",  text: () => "相手キャラ1体は、次の相手のターンに攻撃できない。", target: "enemyUnit", noN: true },
+  freezeAll:   { group: "妨害",   label: "相手キャラ全体を行動不能に",    text: () => "相手キャラ全体は、次の相手のターンに攻撃できない。", noN: true },
+  debuffTarget:{ group: "妨害",   label: "選んだ相手キャラの攻撃力を下げる", text: n => `相手キャラ1体の攻撃力を-${n}する。`, target: "enemyUnit" },
+  debuffAll:   { group: "妨害",   label: "相手キャラ全体の攻撃力を下げる", text: n => `相手キャラ全体の攻撃力を-${n}する。` },
+  buffAtk:     { group: "強化",   label: "自分のキャラの攻撃力を上げる",  text: n => `自分のキャラ1体の攻撃力を+${n}する。`, target: "ownUnit" },
+  buffHp:      { group: "強化",   label: "自分のキャラの体力を上げる",    text: n => `自分のキャラ1体の体力を+${n}する。`, target: "ownUnit" },
+  buffBoth:    { group: "強化",   label: "自分のキャラを+N/+N",           text: n => `自分のキャラ1体を+${n}/+${n}する。`, target: "ownUnit" },
+  buffAllAtk:  { group: "強化",   label: "自分のキャラ全体の攻撃力を上げる", text: n => `自分のキャラ全体の攻撃力を+${n}する。` },
+  buffAllBoth: { group: "強化",   label: "自分のキャラ全体を+N/+N",       text: n => `自分のキャラ全体を+${n}/+${n}する。` },
+  heal:        { group: "回復",   label: "自分の体力を回復",              text: n => `自分の体力を${n}回復する。` },
+  healUnits:   { group: "回復",   label: "自分のキャラ全体を回復",        text: n => `自分のキャラ全体の体力を${n}回復する。` },
+  ramp:        { group: "エナジー", label: "エナジー最大値を増やす",      text: n => `エナジーの最大値を${n}増やす（上限まで）。` },
+  energyNow:   { group: "エナジー", label: "このターンのエナジーを増やす", text: n => `このターンだけ、エナジーを${n}得る。` },
+  discount:    { group: "エナジー", label: "次に使うカードのコストを下げる", text: n => `次に使うカード1枚のコストを${n}下げる。` },
+  summon:      { group: "召喚",   label: "山札からキャラを無料で出す",    text: n => `山札からコスト${n}以下のキャラをランダムに1体、コストを払わずに出す。` }
 };
 
 const DEFAULT_CONFIG = { PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3 };
 
-/* レア度（パック開封で使う予定） */
-const RARITY = { common: "コモン", rare: "レア", legend: "レジェンド" };
+/* レア度（パック開封で使う） */
+const RARITY = { common: "コモン", rare: "レア", sr: "スーパーレア", ur: "ウルトラレア", legend: "レジェンド" };
+const RARITY_SHORT = { common: "C", rare: "R", sr: "SR", ur: "UR", legend: "L" };
 
 const CONFIG_INFO = {
   PLAYER_HP:  { label: "プレイヤーの体力",           min: 1, max: 99 },
@@ -45,23 +73,35 @@ const DRAFT_KEY = "kyokai-draft-v1";
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-/* カードの対象（最初に見つかった対象付き効果で決まる） */
+/* カードの対象（効果のうち、最初に見つかった対象付きのもの） */
 function cardTarget(card) {
   for (const e of card.effects || []) { const t = EFFECTS[e.kind] && EFFECTS[e.kind].target; if (t) return t; }
   return null;
 }
+/* カードを使うときに選ぶ対象の並び：代償で破壊する自分のキャラ → 相手キャラ → 自分のキャラ */
+function cardTargetRoles(card) {
+  const roles = [];
+  const sac = card.pay && card.pay.kind === "sacrifice";
+  if (sac) roles.push("sacrifice");
+  const kinds = (card.effects || []).map(e => EFFECTS[e.kind] && EFFECTS[e.kind].target).filter(Boolean);
+  if (kinds.includes("enemyUnit")) roles.push("enemy");
+  if (kinds.includes("ownUnit") && !sac) roles.push("own");
+  return roles;
+}
 
 /* 効果テキストを自動で作る */
+function effectsText(card) {
+  return (card.effects || []).filter(e => EFFECTS[e.kind]).map(e => EFFECTS[e.kind].text(e.n)).join("");
+}
 function cardTextLines(card) {
   const lines = [];
   if (card.type === "char") {
     (card.keywords || []).forEach(k => KEYWORDS[k] && lines.push(`${KEYWORDS[k].label}：${KEYWORDS[k].text}`));
-    const eff = (card.effects || []).filter(e => EFFECTS[e.kind]).map(e => EFFECTS[e.kind].text(e.n)).join("");
-    if (eff) lines.push(`登場時：${eff}`);
-  } else {
-    const eff = (card.effects || []).filter(e => EFFECTS[e.kind]).map(e => EFFECTS[e.kind].text(e.n)).join("");
-    if (eff) lines.push(eff);
+    if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
+  if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
+  const eff = effectsText(card);
+  if (eff) lines.push(card.type === "char" ? `登場時：${eff}` : eff);
   if (card.note) lines.push(card.note);
   return lines;
 }
@@ -85,9 +125,17 @@ function cardHTML(card, o = {}) {
     stats = `<span class="stats spelltag">魔法</span>`;
   }
   const tag = o.static ? "div" : "button";
-  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} ${card.type} ${card.art ? "has-art" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
+  const marks = card.type === "char"
+    ? (card.keywords || []).filter(k => KEYWORDS[k]).map(k => `<i class="mk mk-${k}">${KEYWORDS[k].short}</i>`).join("")
+      + (card.armor ? `<i class="mk mk-armor">甲${card.armor}</i>` : "")
+    : "";
+  const cost = o.cost != null ? o.cost : card.cost;
+  const guard = card.type === "char" && (card.keywords || []).includes("guard");
+  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} ${card.type} ${card.art ? "has-art" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
-    ${o.showCost === false ? "" : `<span class="cost">${card.cost}</span>`}
+    ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}">${cost}</span>`}
+    ${marks ? `<span class="marks">${marks}</span>` : ""}
+    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}
     <span class="foot"><span class="nm">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
@@ -108,12 +156,15 @@ function normalizeData(data) {
     limit: Math.max(0, c.limit != null ? +c.limit || 0 : c.copies != null ? Math.min(3, +c.copies || 0) : 3),
     rarity: RARITY[c.rarity] ? c.rarity : (+c.cost >= 7 ? "legend" : +c.cost >= 5 ? "rare" : "common"),
     keywords: Array.isArray(c.keywords) ? c.keywords.filter(k => KEYWORDS[k]) : [],
-    effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => ({ kind: e.kind, n: Math.max(1, +e.n || 1) })) : [],
+    armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
+    pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
+    effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => ({ kind: e.kind, n: Math.max(EFFECTS[e.kind].min ?? 1, +e.n || 0) })) : [],
     note: c.note ? String(c.note) : "",
     art: c.art ? String(c.art) : ""
   })).filter(c => c.id);
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
-    id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards)
+    id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
+    level: ["easy", "normal", "hard"].includes(x.level) ? x.level : "normal"
   }));
   return { version: +d.version || 1, updated: d.updated || "", config, cards, decks };
 }

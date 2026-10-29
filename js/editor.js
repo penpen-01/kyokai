@@ -174,7 +174,6 @@ function renderEditor() {
   const el = $("#editor");
   if (!c) { el.innerHTML = `<div class="empty-ed">左の一覧からカードを選ぶか、「新しいカード」を作ってください。</div>`; return; }
   const isChar = c.type === "char";
-  const targets = c.effects.filter(e => EFFECTS[e.kind].target).length;
   el.innerHTML = `
     <div class="ed">
       <div class="ed-preview" id="edPreview"></div>
@@ -230,21 +229,36 @@ function renderEditor() {
           <div class="checks">
             ${Object.entries(KEYWORDS).map(([k, v]) => `<label class="check"><input type="checkbox" data-kw="${k}" ${c.keywords.includes(k) ? "checked" : ""}><span><b>${v.label}</b><span>${v.text}</span></span></label>`).join("")}
           </div>
+          <div class="frow">
+            <div class="field"><span class="lab">装甲（受けるダメージを減らす。0でなし）</span>${stepper("armor", c.armor || 0, "装甲")}</div>
+          </div>
         </div>` : ""}
+
+        <div class="fgroup">
+          <span class="gl">代償</span>
+          <p class="hint">カードを使うときに支払う追加のコストです。コストの割に強い効果をつけるときに使います。</p>
+          <div class="frow">
+            <div class="seg wide" role="group" aria-label="代償の種類" style="flex:1;min-width:240px">
+              <button type="button" data-pay="" aria-pressed="${!c.pay}">なし</button>
+              ${Object.entries(PAYS).map(([k, v]) => `<button type="button" data-pay="${k}" aria-pressed="${!!c.pay && c.pay.kind === k}">${v.label}</button>`).join("")}
+            </div>
+            ${c.pay && c.pay.kind === "life" ? `<div class="field"><span class="lab">払う体力</span>${stepper("pay", c.pay.n, "払う体力")}</div>` : ""}
+          </div>
+        </div>
 
         <div class="fgroup">
           <span class="gl">効果</span>
           <p class="hint">${isChar ? "キャラの効果は、場に出たとき（登場時）に1回だけ発動します。" : "魔法の効果は、使ったときに発動します。"}上から順に発動します。</p>
           <div class="effects">
-            ${c.effects.map((e, i) => `<div class="eff">
+            ${c.effects.map((e, i) => { const def = EFFECTS[e.kind]; return `<div class="eff">
               <select data-eff-kind="${i}" aria-label="効果${i + 1}の種類" id="ef-k-${i}">
-                ${Object.entries(EFFECTS).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${v.label}${v.target ? "（対象を選ぶ）" : ""}</option>`).join("")}
+                ${[...new Set(Object.values(EFFECTS).map(v => v.group))].map(g => `<optgroup label="${g}">${Object.entries(EFFECTS).filter(([, v]) => v.group === g).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${v.label}${v.target ? "（対象を選ぶ）" : ""}</option>`).join("")}</optgroup>`).join("")}
               </select>
-              ${stepper("eff-" + i, e.n, `効果${i + 1}の数値`)}
+              ${def.noN ? "" : stepper("eff-" + i, e.n, `効果${i + 1}の数値`)}
               <button type="button" class="iconbtn" data-eff-del="${i}" aria-label="効果${i + 1}を削除">✕</button>
-            </div>`).join("")}
+            </div>`; }).join("")}
           </div>
-          ${targets > 1 ? `<p class="warn">対象を選ぶ効果が${targets}つあります。対象は1回しか選べないので、同じキャラに全部かかります。</p>` : ""}
+          ${targetWarn(c)}
           <div><button type="button" class="btn sm" data-act="addEff">＋ 効果を追加</button></div>
           <div class="field">
             <label for="f-note">補足テキスト（任意・ゲームの処理には影響しません）</label>
@@ -288,6 +302,15 @@ function renderRules() {
     <div><button type="button" class="btn sm" data-act="cfgReset">すべて初期値に戻す</button></div>`;
 }
 
+function targetWarn(c) {
+  const sides = c.effects.map(e => EFFECTS[e.kind].target).filter(Boolean);
+  const msgs = [];
+  if (sides.filter(x => x === "enemyUnit").length > 1) msgs.push("相手キャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
+  if (sides.filter(x => x === "ownUnit").length > 1) msgs.push("自分のキャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
+  if (c.pay && c.pay.kind === "sacrifice" && sides.includes("ownUnit")) msgs.push("代償でキャラを破壊するカードでは、「自分のキャラを選ぶ効果」は発動しません。");
+  return msgs.map(m => `<p class="warn">${m}</p>`).join("");
+}
+
 /* ---------- 値の変更 ---------- */
 function clamp(v, lo, hi) { v = Math.round(+v); if (!isFinite(v)) v = lo; return Math.min(hi, Math.max(lo, v)); }
 
@@ -305,9 +328,11 @@ function setNum(name, value) {
   let v;
   if (name.startsWith("eff-")) {
     const i = +name.slice(4);
-    v = c.effects[i].n = clamp(value, 1, 20);
+    v = c.effects[i].n = clamp(value, EFFECTS[c.effects[i].kind].min ?? 1, 20);
   } else if (name === "cost") v = c.cost = clamp(value, 0, 15);
   else if (name === "atk") v = c.atk = clamp(value, 0, 30);
+  else if (name === "armor") v = c.armor = clamp(value, 0, 9);
+  else if (name === "pay") v = c.pay.n = clamp(value, 1, 30);
   else if (name === "hp") v = c.hp = clamp(value, 1, 30);
   else if (name === "limit") {
     const was = c.limit;
@@ -376,11 +401,13 @@ document.addEventListener("click", e => {
     if (c.type !== nt) {
       c.type = nt;
       if (nt === "char") { c.atk = c.atk ?? 2; c.hp = c.hp ?? 2; }
-      else { c.keywords = []; }
+      else { c.keywords = []; c.armor = 0; }
       changed(); renderEditor();
     }
     return;
   }
+  const py = t.closest("[data-pay]");
+  if (py) { const k = py.dataset.pay; const c = curCard(); c.pay = k ? { kind: k, n: c.pay && c.pay.n || 2 } : null; changed(); renderEditor(); return; }
   const rr = t.closest("[data-rarity]");
   if (rr) { curCard().rarity = rr.dataset.rarity; changed(); renderEditor(); return; }
   const w = t.closest("[data-world]");
@@ -411,7 +438,7 @@ document.addEventListener("change", e => {
     c.keywords = t.checked ? [...new Set([...c.keywords, k])] : c.keywords.filter(x => x !== k);
     changed(); return;
   }
-  if (t.dataset.effKind != null) { curCard().effects[+t.dataset.effKind].kind = t.value; changed(); renderEditor(); return; }
+  if (t.dataset.effKind != null) { const e = curCard().effects[+t.dataset.effKind]; e.kind = t.value; e.n = Math.max(EFFECTS[e.kind].min ?? 1, e.n); changed(); renderEditor(); return; }
   if (t.dataset.text === "name" || t.dataset.text === "glyph") {
     const c = curCard();
     if (!c[t.dataset.text].trim()) { c[t.dataset.text] = t.dataset.text === "name" ? "名前なし" : "？"; t.value = c[t.dataset.text]; changed(); }
@@ -497,6 +524,8 @@ function exportJSON() {
     const o = { id: c.id, name: c.name, world: c.world, type: c.type, cost: c.cost };
     if (c.type === "char") { o.atk = c.atk; o.hp = c.hp; }
     Object.assign(o, { glyph: c.glyph, limit: c.limit, rarity: c.rarity, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });
+    if (c.type === "char" && c.armor) o.armor = c.armor;
+    if (c.pay) o.pay = c.pay;
     if (c.note) o.note = c.note;
     if (c.art) o.art = c.art;
     return o;

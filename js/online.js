@@ -292,7 +292,7 @@ const Online = {
         let idx = a.idx;
         const hand = S.players[1].hand;
         if (hand[idx] !== a.hand) idx = hand.indexOf(a.hand);
-        if (idx >= 0) done = playCard(1, idx, a.target ?? undefined);
+        if (idx >= 0) done = playCard(1, idx, a.targets && typeof a.targets === "object" ? a.targets : (a.target ?? {}));
       } else if (a.t === "attack") {
         done = attack(1, a.uid, a.target);
       } else if (a.t === "end") {

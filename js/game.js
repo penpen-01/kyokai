@@ -149,7 +149,7 @@ function cpuPreGame() {
     setTimeout(() => { if (S === g) chooseOrder(1, true); }, 900);
   } else if (S.phase === "mulligan" && S.mull[1] == null) {
     const cheap = S.players[1].hand.filter(id => DEF[id].cost <= 3).length;
-    mulligan(1, cheap < 2);
+    mulligan(1, CPU_LEVEL !== "easy" && cheap < 2);
   }
 }
 
@@ -188,7 +188,8 @@ function startTurn(pi, skipDraw) {
   const p = S.players[pi];
   p.maxE = Math.min(CONFIG.ENERGY_MAX, p.maxE + 1);
   p.e = p.maxE;
-  p.field.forEach(u => u.ready = true);
+  // 行動不能のキャラは、このターンだけ攻撃できない
+  p.field.forEach(u => { if (u.frozen) { u.ready = false; u.frozen = false; } else u.ready = true; });
   S.log.push({ sep: true, msg: `ターン${S.turnNo}：${pname(pi)}（エナジー${p.e}）` });
   if (!skipDraw) draw(pi);
   if (checkWin()) return;
@@ -202,56 +203,103 @@ function endTurn(pi) {
   startTurn(opp(pi), false);
 }
 
+/* ---------- カードを使う ---------- */
+const kw = (u, k) => !!(DEF[u.id] && DEF[u.id].keywords.includes(k));
+const armorOf = u => (DEF[u.id] && DEF[u.id].armor) || 0;
+function effCost(pi, d) { return Math.max(0, d.cost - (S.players[pi].discount || 0)); }
+
+/* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか */
+function roleSide(pi, role) { return role === "enemy" ? opp(pi) : pi; }
+/* 実際に選ぶ必要がある対象（キャラで、その側にキャラがいない効果は選ばずに空振り） */
+function neededRoles(pi, d) {
+  return cardTargetRoles(d).filter(r => S.players[roleSide(pi, r)].field.length > 0);
+}
+
 function canPlay(pi, idx) {
   const p = S.players[pi], d = DEF[p.hand[idx]];
   if (!d) return { ok: false, reason: "そのカードはありません" };
   if (S.over || S.phase !== "play" || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
-  if (d.cost > p.e) return { ok: false, reason: "エナジーが足りません" };
-  if (d.type === "char" && p.field.length >= CONFIG.FIELD_MAX) return { ok: false, reason: "場がいっぱいです" };
-  const t = cardTarget(d);
-  // 魔法は対象がいないと使えない。キャラは対象がいなくても出せる（効果だけ空振り）
-  if (d.type === "spell" && t === "enemyUnit" && !S.players[opp(pi)].field.length) return { ok: false, reason: "対象の相手キャラがいません" };
-  if (d.type === "spell" && t === "ownUnit" && !p.field.length) return { ok: false, reason: "対象の自分のキャラがいません" };
+  if (effCost(pi, d) > p.e) return { ok: false, reason: "エナジーが足りません" };
+  const sac = d.pay && d.pay.kind === "sacrifice";
+  if (sac && !p.field.length) return { ok: false, reason: "代償にする自分のキャラがいません" };
+  if (d.pay && d.pay.kind === "life" && p.hp <= d.pay.n) return { ok: false, reason: "代償の体力が足りません" };
+  if (d.type === "char" && p.field.length >= CONFIG.FIELD_MAX && !sac) return { ok: false, reason: "場がいっぱいです" };
+  // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
+  if (d.type === "spell") {
+    for (const r of cardTargetRoles(d)) {
+      if (!S.players[roleSide(pi, r)].field.length) return { ok: false, reason: r === "enemy" ? "対象の相手キャラがいません" : "対象の自分のキャラがいません" };
+    }
+  }
   return { ok: true };
 }
 
-/* 対象を選ぶ必要があるか（返り値は対象がいる側のプレイヤー番号。いなければ null） */
-function needsTarget(pi, d) {
-  const t = cardTarget(d);
-  if (!t) return null;
-  const side = t === "enemyUnit" ? opp(pi) : pi;
-  return S.players[side].field.length ? side : null;
+/* 古い形式（対象のuidだけ）も受け付ける */
+function normTargets(pi, d, t) {
+  if (t && typeof t === "object") return t;
+  const roles = neededRoles(pi, d);
+  return t == null || !roles.length ? {} : { [roles[0]]: t };
 }
 
-function playCard(pi, idx, targetUid) {
+function playCard(pi, idx, targetsIn) {
   const p = S.players[pi], id = p.hand[idx], d = DEF[id];
   if (!d || !canPlay(pi, idx).ok) return false;
-  const tside = needsTarget(pi, d);
-  if (tside != null && !S.players[tside].field.some(u => u.uid === targetUid)) return false;
+  const targets = normTargets(pi, d, targetsIn);
+  const roles = neededRoles(pi, d);
+  for (const r of roles) {
+    if (!S.players[roleSide(pi, r)].field.some(u => u.uid === targets[r])) return false;
+  }
+  const cost = effCost(pi, d);
   p.hand.splice(idx, 1);
-  p.e -= d.cost;
-  let tName = "";
-  if (tside != null) {
-    const u = S.players[tside].field.find(x => x.uid === targetUid);
-    if (u) tName = `（対象：${cname(u.id)}）`;
+  p.e -= cost;
+  p.discount = 0;
+  const tnames = roles.filter(r => r !== "sacrifice").map(r => { const u = S.players[roleSide(pi, r)].field.find(x => x.uid === targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
+  log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
+  // 代償
+  if (d.pay && d.pay.kind === "life") { p.hp -= d.pay.n; log(`代償として${pname(pi)}の体力を${d.pay.n}払った。`); fx(playerSel(pi), "-" + d.pay.n, "dmg"); }
+  if (d.pay && d.pay.kind === "sacrifice") {
+    const u = p.field.find(x => x.uid === targets.sacrifice);
+    if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); }
   }
-  log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tName}。`);
-  let newUnit = null;
-  if (d.type === "char") {
-    newUnit = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") };
-    p.field.push(newUnit);
-  } else {
-  }
-  d.effects.forEach(e => effect(pi, e, targetUid, newUnit));
+  let self = null;
+  if (d.type === "char") self = addUnit(pi, id);
+  runEffects(pi, d, targets, self);
   cleanup();
   if (!checkWin()) render();
   return true;
 }
 
-function effect(pi, e, target, self) {
+function addUnit(pi, id) {
+  const d = DEF[id];
+  const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") };
+  S.players[pi].field.push(u);
+  return u;
+}
+
+function runEffects(pi, d, targets, self) {
+  d.effects.forEach(e => effect(pi, e, targets, self));
+}
+
+function effect(pi, e, targets, self) {
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;
+  const enemyT = () => en.field.find(x => x.uid === targets.enemy);
+  const ownT = () => me.field.find(x => x.uid === targets.own && x !== self);
   switch (e.kind) {
     case "draw": for (let i = 0; i < n; i++) draw(pi); break;
+    case "refresh": {
+      const k = me.hand.length;
+      me.deck.push(...me.hand); me.hand = []; shuffle(me.deck);
+      for (let i = 0; i < k + n; i++) draw(pi, true);
+      log(`${pname(pi)}は手札を入れ替えた（${me.hand.length}枚）。`);
+      break;
+    }
+    case "discard": {
+      for (let i = 0; i < n && en.hand.length; i++) {
+        const [id] = en.hand.splice(Math.floor(Math.random() * en.hand.length), 1);
+        log(`${pname(opp(pi))}は${cname(id)}を捨てさせられた。`);
+      }
+      break;
+    }
+    case "dmgTarget": { const u = enemyT(); if (u) hitUnit(u, n); break; }
     case "dmgRandom":
       if (en.field.length) {
         const u = en.field[Math.floor(Math.random() * en.field.length)];
@@ -260,43 +308,87 @@ function effect(pi, e, target, self) {
       }
       break;
     case "dmgAll": if (en.field.length) { log(`相手キャラ全体に${n}ダメージ。`); en.field.forEach(u => hitUnit(u, n)); } break;
-    case "dmgTarget": { const u = en.field.find(x => x.uid === target); if (u) hitUnit(u, n); break; }
+    case "dmgAllBoth": log(`すべてのキャラに${n}ダメージ。`); [...en.field, ...me.field].forEach(u => hitUnit(u, n)); break;
     case "dmgFace": log(`${pname(opp(pi))}に${n}ダメージ。`); hitPlayer(opp(pi), n); break;
+    case "destroyTarget": { const u = enemyT(); if (u) destroyUnit(u); break; }
+    case "destroyAll": log("すべてのキャラが破壊された。"); [...en.field, ...me.field].forEach(destroyUnit); break;
+    case "freezeTarget": { const u = enemyT(); if (u) freezeUnit(u); break; }
+    case "freezeAll": en.field.forEach(freezeUnit); break;
+    case "debuffTarget": { const u = enemyT(); if (u) debuff(u, n); break; }
+    case "debuffAll": en.field.forEach(u => debuff(u, n)); break;
+    case "buffAtk": { const u = ownT(); if (u) buff(u, n, 0); break; }
+    case "buffHp": { const u = ownT(); if (u) buff(u, 0, n); break; }
+    case "buffBoth": { const u = ownT(); if (u) buff(u, n, n); break; }
+    case "buffAllAtk": me.field.forEach(u => buff(u, n, 0)); break;
+    case "buffAllBoth": me.field.forEach(u => buff(u, n, n)); break;
     case "heal": me.hp += n; log(`${pname(pi)}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); break;
+    case "healUnits": me.field.forEach(u => { const h = Math.min(n, u.maxHp - u.hp); if (h > 0) { u.hp += h; fx(unitSel(u.uid), "+" + h, "heal"); } }); break;
     case "ramp": {
       const before = me.maxE;
       me.maxE = Math.min(CONFIG.ENERGY_MAX, me.maxE + n);
       if (me.maxE > before) { log(`${pname(pi)}のエナジー最大値が${me.maxE}に。`); fx(playerSel(pi), `エナジー+${me.maxE - before}`, "heal"); }
       break;
     }
-    case "buffAtk": {
-      const u = me.field.find(x => x.uid === target && x !== self);
-      if (u) { u.atk += n; log(`${cname(u.id)}の攻撃力+${n}。`); fx(unitSel(u.uid), `攻撃+${n}`, "heal"); }
-      break;
-    }
-    case "buffHp": {
-      const u = me.field.find(x => x.uid === target && x !== self);
-      if (u) { u.hp += n; u.maxHp += n; log(`${cname(u.id)}の体力+${n}。`); fx(unitSel(u.uid), `体力+${n}`, "heal"); }
+    case "energyNow": me.e += n; log(`${pname(pi)}はエナジーを${n}得た。`); fx(playerSel(pi), `エナジー+${n}`, "heal"); break;
+    case "discount": me.discount = (me.discount || 0) + n; log(`${pname(pi)}の次のカードのコストが${n}下がる。`); break;
+    case "summon": {
+      if (me.field.length >= CONFIG.FIELD_MAX) { log("場がいっぱいで、キャラを出せなかった。"); break; }
+      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && DEF[x.id].cost <= n);
+      if (!cands.length) { log("条件に合うキャラが山札にいなかった。"); break; }
+      const pick = cands[Math.floor(Math.random() * cands.length)];
+      me.deck.splice(pick.i, 1);
+      const u = addUnit(pi, pick.id);
+      log(`山札から${cname(pick.id)}が現れた！`);
+      // 出てきたキャラの登場時効果は、対象をランダムに選んで発動する
+      const auto = {};
+      if (en.field.length) auto.enemy = en.field[Math.floor(Math.random() * en.field.length)].uid;
+      const others = me.field.filter(x => x !== u);
+      if (others.length) auto.own = others[Math.floor(Math.random() * others.length)].uid;
+      DEF[pick.id].effects.filter(x => x.kind !== "summon").forEach(x => effect(pi, x, auto, u));
       break;
     }
   }
 }
 
-function hitUnit(u, n) { u.hp -= n; fx(unitSel(u.uid), "-" + n, "dmg"); }
+function hitUnit(u, n) {
+  const dmg = Math.max(0, n - armorOf(u));
+  u.hp -= dmg;
+  fx(unitSel(u.uid), dmg < n ? `-${dmg}（装甲）` : "-" + dmg, "dmg");
+  return dmg;
+}
 function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); }
+function destroyUnit(u) { u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); }
+function freezeUnit(u) { u.frozen = true; u.ready = false; fx(unitSel(u.uid), "凍結", "heal"); }
+function debuff(u, n) { const b = u.atk; u.atk = Math.max(0, u.atk - n); fx(unitSel(u.uid), `攻撃-${b - u.atk}`, "dmg"); }
+function buff(u, a, h) {
+  u.atk += a; u.hp += h; u.maxHp += h;
+  fx(unitSel(u.uid), a && h ? `+${a}/+${h}` : a ? `攻撃+${a}` : `体力+${h}`, "heal");
+}
 
 function cleanup() {
   S.players.forEach((p, pi) => {
     p.field = p.field.filter(u => {
       if (u.hp > 0) return true;
-      log(`${pname(pi)}の${cname(u.id)}は倒れた。`);
+      log(`${pname(pi)}の${cname(u.id)}は${u.destroyed ? "破壊された" : "倒れた"}。`);
       return false;
     });
   });
 }
 
-/* 相手の場にキャラがいる間は、相手プレイヤーを直接攻撃できない（直撃を持つキャラは例外） */
-function canAttackPlayer(pi, u) { return S.players[opp(pi)].field.length === 0 || !!(u && DEF[u.id] && DEF[u.id].keywords.includes("pierce")); }
+/* ---------- 攻撃 ---------- */
+const guards = pi => S.players[pi].field.filter(u => kw(u, "guard"));
+/* 相手の場にキャラがいる間は、相手プレイヤーを直接攻撃できない（直撃は例外。ただし守護がいると不可） */
+function canAttackPlayer(pi, u) {
+  const en = S.players[opp(pi)];
+  if (!en.field.length) return true;
+  if (guards(opp(pi)).length) return false;
+  return !!(u && kw(u, "pierce"));
+}
+/* 守護がいる間は、守護を持つキャラしか攻撃できない */
+function canAttackUnit(pi, target) {
+  const g = guards(opp(pi));
+  return !g.length || g.includes(target);
+}
 function selectedUnit() {
   return ui.sel && ui.sel.kind === "unit" ? S.players[ui.sel.owner].field.find(u => u.uid === ui.sel.uid) : null;
 }
@@ -313,10 +405,16 @@ function attack(pi, uid, target) {
     hitPlayer(opp(pi), a.atk);
   } else {
     const d = en.field.find(u => u.uid === target);
-    if (!d) return false;
+    if (!d || !canAttackUnit(pi, d)) return false;
     a.ready = false;
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
-    hitUnit(d, a.atk);
+    const before = d.hp;
+    const dealt = hitUnit(d, a.atk);
+    if (kw(a, "trample") && dealt > before && before > 0) {
+      const over = dealt - before;
+      log(`貫通！${pname(opp(pi))}に${over}ダメージ。`);
+      hitPlayer(opp(pi), over);
+    }
     hitUnit(a, d.atk);
   }
   cleanup();
@@ -338,6 +436,7 @@ function checkWin() {
   if (a.hp > 0 && b.hp > 0) return false;
   S.over = true;
   S.winner = a.hp <= 0 && b.hp <= 0 ? "draw" : a.hp <= 0 ? 1 : 0;
+  if (SIM) return true;
   S.log.push({ sep: true, msg: `決着：${S.winner === "draw" ? "引き分け" : pname(S.winner) + "の勝利"}` });
   finishGame();
   return true;
@@ -362,27 +461,141 @@ function scheduleResult() {
   resultTimer = setTimeout(() => { if (S !== g || !S.over) return; resultShown = true; render(); showResult(myResult()); }, 700);
 }
 
-/* ---------- CPU ---------- */
+/* ---------- CPU ----------
+   強さは3段階。中級・上級は「その手を打ったら盤面がどうなるか」を実際に試算して、一番よい手を選ぶ。
+   初級はおおざっぱに、出せるカードを出して適当に攻撃する。 */
+let SIM = false;      // 試算中は演出・描画・ログの確定をしない
+let CPU_LEVEL = "normal";
+const CPU_LEVELS = {
+  easy:   { label: "初級", desc: "のんびり遊べる相手" },
+  normal: { label: "中級", desc: "それなりに考えて戦う" },
+  hard:   { label: "上級", desc: "先を読んで最善手を狙う" }
+};
+
+function simulate(fn) {
+  const real = S, wasSim = SIM;
+  const clone = JSON.parse(JSON.stringify({ ...real, log: [] }));
+  S = clone; SIM = true;
+  try { fn(); } catch (e) { console.error(e); }
+  const result = S;
+  S = real; SIM = wasSim;
+  return result;
+}
+
+/* 盤面の評価（pi から見て大きいほど有利） */
+function unitValue(u) {
+  const d = DEF[u.id]; if (!d) return 0;
+  let v = u.atk * 1.2 + Math.max(0, u.hp) * 0.9 + 1;
+  if (d.keywords.includes("guard")) v += 1.5 + u.hp * 0.2;
+  if (d.keywords.includes("pierce")) v += u.atk * 0.4;
+  if (d.keywords.includes("trample")) v += 0.5;
+  v += (d.armor || 0) * 1.5;
+  if (u.frozen) v -= u.atk * 0.6;
+  return v;
+}
+function evaluate(st, pi) {
+  const me = st.players[pi], en = st.players[1 - pi];
+  if (en.hp <= 0 && me.hp > 0) return 100000;
+  if (me.hp <= 0) return -100000;
+  let s = 0;
+  s += me.hp * 1.0 - en.hp * 1.6;
+  s += me.field.reduce((a, u) => a + unitValue(u), 0) - en.field.reduce((a, u) => a + unitValue(u), 0) * 1.1;
+  s += Math.min(me.hand.length, 7) * 0.7 - en.hand.length * 0.35;
+  s += me.maxE * 0.9;
+  // 相手の次の攻撃で負けそうなら大きく減点
+  // 相手の次のターンに本体へ届きそうなダメージ（守護がいれば防げる）
+  const myGuard = me.field.some(u => DEF[u.id] && DEF[u.id].keywords.includes("guard"));
+  const reach = myGuard ? 0 : en.field.reduce((a, u) => a + ((!me.field.length || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) && !u.frozen ? u.atk : 0), 0);
+  if (reach >= me.hp) s -= 60;
+  else s -= reach * 0.4;
+  // 自分の次のターンに届くダメージ（とどめを狙う）
+  const enGuard = en.field.some(u => DEF[u.id] && DEF[u.id].keywords.includes("guard"));
+  const myReach = enGuard ? 0 : me.field.reduce((a, u) => a + ((!en.field.length || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) ? u.atk : 0), 0);
+  if (myReach >= en.hp) s += 25;
+  return s;
+}
+
+/* 打てる手をすべて挙げる */
+function legalActions(pi) {
+  const acts = [];
+  const me = S.players[pi], en = S.players[opp(pi)];
+  me.hand.forEach((id, idx) => {
+    if (!canPlay(pi, idx).ok) return;
+    const roles = neededRoles(pi, DEF[id]);
+    let combos = [{}];
+    roles.forEach(r => {
+      const opts = S.players[roleSide(pi, r)].field.map(u => u.uid);
+      combos = combos.flatMap(c => opts.map(o => ({ ...c, [r]: o })));
+    });
+    combos.slice(0, 24).forEach(t => acts.push({ t: "play", idx, id, targets: t }));
+  });
+  me.field.forEach(u => {
+    if (!u.ready) return;
+    if (canAttackPlayer(pi, u)) acts.push({ t: "attack", uid: u.uid, target: "player" });
+    en.field.forEach(d => { if (canAttackUnit(pi, d)) acts.push({ t: "attack", uid: u.uid, target: d.uid }); });
+  });
+  return acts;
+}
+function applyAction(pi, a) {
+  return a.t === "play" ? playCard(pi, a.idx, a.targets) : attack(pi, a.uid, a.target);
+}
+
+function cpuChoose(pi) {
+  const acts = legalActions(pi);
+  if (!acts.length) return null;
+  if (CPU_LEVEL === "easy") {
+    // 出せるカードがあれば7割の確率で出す。攻撃は対象を適当に選ぶ
+    const plays = acts.filter(a => a.t === "play"), atks = acts.filter(a => a.t === "attack");
+    if (plays.length && Math.random() < 0.7) return plays[Math.floor(Math.random() * plays.length)];
+    if (atks.length) {
+      const face = atks.find(a => a.target === "player");
+      return face && Math.random() < 0.6 ? face : atks[Math.floor(Math.random() * atks.length)];
+    }
+    return null;
+  }
+  const base = evaluate(S, pi);
+  const hard = CPU_LEVEL === "hard";
+  const tries = hard ? 2 : 1; // ランダムな効果があるので、上級は複数回試して平均をとる
+  // 上級は「この手のあとに続けて打てる一番よい手」まで読む（2手先）
+  const look = st => {
+    let best = evaluate(st, pi);
+    if (!hard || st.over) return best;
+    const real = S, wasSim = SIM; S = st; SIM = true;
+    try {
+      legalActions(pi).slice(0, 40).forEach(b => {
+        const st2 = simulate(() => applyAction(pi, b));
+        best = Math.max(best, evaluate(st2, pi));
+      });
+    } finally { S = real; SIM = wasSim; }
+    return best;
+  };
+  const scored = acts.map(a => {
+    let sum = 0;
+    for (let i = 0; i < tries; i++) {
+      const st = simulate(() => applyAction(pi, a));
+      sum += look(st);
+    }
+    return { a, v: sum / tries };
+  }).sort((x, y) => y.v - x.v);
+  if (CPU_LEVEL === "normal") {
+    // 中級：ときどき2番目以降の手を選ぶ
+    const ok = scored.filter(x => x.v > base - 0.5);
+    if (!ok.length) return null;
+    if (ok.length > 1 && Math.random() < 0.3) return ok[1 + Math.floor(Math.random() * Math.min(2, ok.length - 1))].a;
+    return ok[0].v > base + 0.05 ? ok[0].a : null;
+  }
+  return scored[0].v > base + 0.05 ? scored[0].a : null;
+}
+
 async function cpuTurn() {
   const g = S;
   busy = true; render();
   await sleep(CPU_DELAY);
   if (S !== g) return;
-  const me = S.players[1];
-  for (let guard = 0; guard < 20 && !S.over; guard++) {
-    const c = cpuChoosePlay();
-    if (!c) break;
-    playCard(1, c.idx, c.target);
-    await sleep(CPU_DELAY);
-    if (S !== g) return;
-  }
-  for (const u of [...me.field]) {
-    if (S.over) break;
-    const cur = me.field.find(x => x.uid === u.uid);
-    if (!cur || !cur.ready) continue;
-    const t = cpuChooseAttack(cur);
-    if (t == null) continue;
-    attack(1, cur.uid, t);
+  for (let guard = 0; guard < 30 && !S.over; guard++) {
+    const a = cpuChoose(1);
+    if (!a) break;
+    if (!applyAction(1, a)) break;
     await sleep(CPU_DELAY);
     if (S !== g) return;
   }
@@ -390,74 +603,14 @@ async function cpuTurn() {
   if (!S.over) endTurn(1);
 }
 
-/* 効果1つぶんの価値と、選ぶ対象を見積もる */
-function cpuEffectValue(e, isChar) {
-  const me = S.players[1], en = S.players[0], n = e.n;
-  switch (e.kind) {
-    case "draw": return { v: me.hand.length <= 4 ? 4 * n : n };
-    case "dmgRandom": return { v: en.field.length ? 3 * Math.min(n, 3) : 0 };
-    case "dmgAll": {
-      let v = 0;
-      en.field.forEach(u => { v += u.hp <= n ? 5 + DEF[u.id].cost : 1; });
-      return { v };
-    }
-    case "dmgTarget": {
-      const kill = en.field.filter(u => u.hp <= n).sort((a, b) => DEF[b.id].cost - DEF[a.id].cost || b.atk - a.atk)[0];
-      if (kill) return { v: 12 + DEF[kill.id].cost, t: kill.uid };
-      const any = en.field.slice().sort((a, b) => b.atk - a.atk)[0];
-      return any ? { v: isChar ? 2 : -1, t: any.uid } : { v: isChar ? 0 : -1 };
-    }
-    case "dmgFace": return { v: en.hp <= n ? 100 : 2 * n };
-    case "heal": return { v: me.hp <= CONFIG.PLAYER_HP - 6 ? 3 * n + 3 : isChar ? 0 : -1 };
-    case "ramp": return { v: me.maxE <= CONFIG.ENERGY_MAX - 3 ? 6 * n : 0 };
-    case "buffAtk": case "buffHp": {
-      const t = me.field.slice().sort((a, b) => (b.ready - a.ready) || (b.atk - a.atk))[0];
-      return t ? { v: (t.ready ? 3 : 2) * n, t: t.uid } : { v: isChar ? 0 : -1 };
-    }
-  }
-  return { v: 0 };
-}
-
-function cpuChoosePlay() {
-  const me = S.players[1];
-  const best = { s: 0 };
-  me.hand.forEach((id, idx) => {
-    if (!canPlay(1, idx).ok) return;
-    const d = DEF[id], isChar = d.type === "char";
-    let s = isChar ? 10 + d.cost * 2 : 0, target, bad = false;
-    d.effects.forEach(e => {
-      const r = cpuEffectValue(e, isChar);
-      if (r.v < 0) bad = true;
-      s += Math.max(0, r.v);
-      if (r.t != null && target == null) target = r.t;
-    });
-    if (bad || (!isChar && s < 5)) return;
-    if (s > best.s) Object.assign(best, { s, idx, target });
-  });
-  return best.idx === undefined ? null : best;
-}
-
-function cpuChooseAttack(u) {
-  const en = S.players[0];
-  if (canAttackPlayer(1, u)) return "player";
-  const kills = en.field.filter(t => u.atk >= t.hp);
-  const safe = kills.filter(t => t.atk < u.hp).sort((a, b) => b.atk - a.atk);
-  if (safe.length) return safe[0].uid;
-  const trades = kills.filter(t => DEF[t.id].cost >= DEF[u.id].cost - 1).sort((a, b) => DEF[b.id].cost - DEF[a.id].cost);
-  if (trades.length) return trades[0].uid;
-  const chip = en.field.filter(t => t.atk < u.hp).sort((a, b) => a.hp - b.hp);
-  if (chip.length) return chip[0].uid;
-  return null;
-}
-
 /* ---------- 自分の操作（CPU戦・ホストはその場で処理、ゲストはホストに送る） ---------- */
 function canAct() {
   return S && !S.over && S.phase === "play" && S.turn === ME && !busy && !(typeof Online !== "undefined" && Online.blocked());
 }
-function doPlay(idx, target) {
+function doPlay(idx, targets) {
   if (!canAct()) return;
-  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "play", idx, target: target ?? null, hand: S.players[ME].hand[idx] });
-  playCard(ME, idx, target);
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "play", idx, targets: targets || {}, hand: S.players[ME].hand[idx] });
+  playCard(ME, idx, targets || {});
 }
 function doAttack(uid, target) {
   if (!canAct()) return;
@@ -491,10 +644,34 @@ function pbarHTML(pi) {
     ${side}</div>`;
 }
 
+/* 対象選択中の「今選んでいる役割」 */
+function curRole() { return ui.mode === "target" ? ui.roles[Object.keys(ui.picked).length] : null; }
+function isTargetable(pi, u) {
+  if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u);
+  const r = curRole();
+  return !!r && roleSide(ME, r) === pi;
+}
+/* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
+function beginPlay(idx) {
+  const d = DEF[S.players[ME].hand[idx]];
+  const roles = neededRoles(ME, d);
+  if (roles.length) { ui = { sel: { kind: "hand", idx }, mode: "target", roles, picked: {} }; render(); return; }
+  ui = { sel: null, mode: null };
+  doPlay(idx, {});
+}
+function pickTarget(uid) {
+  const r = curRole(); if (!r) return;
+  ui.picked[r] = uid;
+  if (Object.keys(ui.picked).length >= ui.roles.length) {
+    const idx = ui.sel.idx, t = ui.picked;
+    ui = { sel: null, mode: null };
+    doPlay(idx, t);
+  } else render();
+}
+
 function fieldHTML(pi) {
   const p = S.players[pi];
   const myTurn = S.turn === ME && !S.over;
-  const tgtSide = ui.mode === "attack" ? OP : ui.mode === "spell" ? ui.spellSide : -1;
   let s = "";
   for (let i = 0; i < CONFIG.FIELD_MAX; i++) {
     const u = p.field[i];
@@ -502,7 +679,8 @@ function fieldHTML(pi) {
     const cls = [
       pi === ME && myTurn && canAct() && u.ready ? "ready" : "",
       pi === ME && myTurn && !u.ready ? "rest" : "",
-      pi === tgtSide ? "tgt" : "",
+      ui.mode && isTargetable(pi, u) ? "tgt" : "",
+      ui.mode === "target" && Object.values(ui.picked).includes(u.uid) ? "sel" : "",
       ui.sel && ui.sel.kind === "unit" && ui.sel.uid === u.uid ? "sel" : ""
     ].join(" ");
     s += `<div class="slot">${cardHTML(DEF[u.id], { unit: u, cls, showCost: false, attrs: `data-uid="${u.uid}" data-owner="${pi}"` })}</div>`;
@@ -523,7 +701,7 @@ function endButtonHTML() {
 
 let renderDeferred = false;
 function render() {
-  if (!S) return;
+  if (!S || SIM) return;
   if (MODE === "online" && Online.role === "host") Online.publish();
   // ドラッグ中に盤面を作り直すと、指の下のカードが消えて指を離した合図が届かなくなる（iPhoneなど）。
   // そのためドラッグが終わるまで描き直しを待つ
@@ -545,9 +723,9 @@ function render() {
     ${fieldHTML(ME)}
     ${pbarHTML(ME)}
     <div class="hand">${me.hand.map((id, i) => {
-      const dim = S.turn !== ME || !DEF[id] || DEF[id].cost > me.e;
+      const dim = S.turn !== ME || !DEF[id] || effCost(ME, DEF[id]) > me.e;
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
-      return cardHTML(DEF[id], { cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
+      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id]) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
     }).join("")}</div>
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   layoutHand();
@@ -634,7 +812,7 @@ function layoutHand() {
 function detailHTML(id, unit, owner) {
   const d = DEF[id];
   const statLine = d.type === "char"
-    ? `<div class="sh-stats">攻撃 ${unit ? unit.atk : d.atk} ／ 体力 ${unit ? `${unit.hp}/${unit.maxHp}` : d.hp}${unit && !unit.ready && owner === ME ? "（このターンは攻撃できません）" : ""}</div>`
+    ? `<div class="sh-stats">攻撃 ${unit ? unit.atk : d.atk} ／ 体力 ${unit ? `${unit.hp}/${unit.maxHp}` : d.hp}${unit && unit.frozen ? "（凍結：次のターンは攻撃できません）" : unit && !unit.ready && owner === ME ? "（このターンは攻撃できません）" : ""}</div>`
     : "";
   return `
     <div class="sheet-card">${cardHTML(d, { unit, static: true })}</div>
@@ -650,13 +828,16 @@ function renderSheet() {
   if (!S || !ui.sel || S.over) { el.hidden = true; return; }
   if (ui.mode) {
     let msg;
-    if (ui.mode === "spell") {
+    if (ui.mode === "target") {
       const d = DEF[S.players[ME].hand[ui.sel.idx]];
       if (!d) { ui = { sel: null, mode: null }; el.hidden = true; return; }
-      msg = `${esc(d.name)}の対象にする${ui.spellSide === OP ? "相手" : "自分"}のキャラをタップしてください`;
+      const r = curRole();
+      msg = r === "sacrifice" ? `${esc(d.name)}：代償として破壊する自分のキャラをタップしてください`
+        : `${esc(d.name)}の対象にする${r === "enemy" ? "相手" : "自分"}のキャラをタップしてください`;
     } else {
       const u = selectedUnit();
       msg = !S.players[OP].field.length ? "相手の体力（上の丸）をタップして直接攻撃"
+        : guards(OP).length ? "守護を持つ相手キャラをタップしてください（守護がいる間は、ほかを攻撃できません）"
         : canAttackPlayer(ME, u) ? "直撃：相手キャラか、相手の体力（上の丸）をタップ"
         : "攻撃する相手キャラをタップしてください";
     }
@@ -817,9 +998,10 @@ function blockClick() { suppressClickUntil = Date.now() + 450; }
 
 /* 手札をドラッグしたときに、どこへ落とせば使えるか */
 function handDropSide(d) {
-  if (d.type === "char") return { field: true };
-  const side = needsTarget(ME, d);
-  return side == null ? { field: true } : { units: side };
+  const roles = neededRoles(ME, d);
+  // 対象が1つだけの魔法は、対象のキャラに直接落とす。それ以外は自分の場に落として、必要なら対象を選ぶ
+  if (d.type === "spell" && roles.length === 1) return { units: roleSide(ME, roles[0]), role: roles[0] };
+  return { field: true };
 }
 
 function startDrag() {
@@ -893,20 +1075,22 @@ function dropAction(x, y) {
       if (!unitEl || +unitEl.dataset.owner !== z.units) return null;
       if (!chk.ok) return () => toast(chk.reason);
       const uid = +unitEl.dataset.uid;
-      return () => doPlay(idx, uid);
+      return () => doPlay(idx, { [z.role]: uid });
     }
     if (!fieldEl || +fieldEl.dataset.zone !== ME) return null;
     if (!chk.ok) return () => toast(chk.reason);
-    // 対象付きの効果を持つキャラ：場に置いたあと対象を選ぶ
-    const side = needsTarget(ME, d);
-    if (side != null) return () => { ui = { sel: { kind: "hand", idx }, mode: "spell", spellSide: side }; render(); };
-    return () => doPlay(idx);
+    // 対象（や代償）が必要なカード：場に置いたあと対象を選ぶ
+    return () => beginPlay(idx);
   }
   const uid = drag.uid;
-  if (unitEl && +unitEl.dataset.owner === OP) { const t = +unitEl.dataset.uid; return () => doAttack(uid, t); }
+  if (unitEl && +unitEl.dataset.owner === OP) {
+    const t = +unitEl.dataset.uid, tu = S.players[OP].field.find(x => x.uid === t);
+    if (tu && !canAttackUnit(ME, tu)) return () => toast("守護を持つキャラを先に攻撃してください");
+    return () => doAttack(uid, t);
+  }
   if (plEl && +plEl.dataset.player === OP) {
     const u = S.players[ME].field.find(x => x.uid === uid);
-    if (!canAttackPlayer(ME, u)) return () => toast("相手の場にキャラがいるので、直接攻撃できません");
+    if (!canAttackPlayer(ME, u)) return () => toast(guards(OP).length ? "守護を持つキャラがいるので、直接攻撃できません" : "相手の場にキャラがいるので、直接攻撃できません");
     return () => doAttack(uid, "player");
   }
   return null;
@@ -921,6 +1105,7 @@ function toast(msg) {
 
 /* 演出。対人戦のホストでは、相手の画面でも同じ演出を出すために記録しておく */
 function fx(sel, text, cls) {
+  if (SIM) return;
   if (MODE === "online" && Online.role === "host") Online.queueFx(sel, text, cls);
   playFx(sel, text, cls);
 }
@@ -1005,7 +1190,7 @@ function showStart() {
     ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>`
     : DATA_INFO.updated ? `<p class="datainfo">カードデータ更新日：${esc(DATA_INFO.updated)}</p>` : "";
   openOverlay(`<div class="panel">
-    <h1 class="title"><small>試作版 0.6</small>境界の召喚士</h1>
+    <h1 class="title"><small>ベータ版 0.7</small>境界の召喚士</h1>
     <p class="lead">神話・幻想・機械。崩れた世界の境界から英雄を呼び出し、相手の召喚士を倒せ。</p>
     <div class="worlds"><span class="w-myth">神話</span><span class="w-fan">幻想</span><span class="w-mech">機械</span></div>
     <button type="button" class="btn primary" data-act="start">CPUと対戦する</button>
@@ -1087,7 +1272,8 @@ function showResult(res) {
     <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
     ${online
       ? (Online.role === "host" ? `<button type="button" class="btn primary" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
-      : `<button type="button" class="btn primary" data-act="start">もう一度対戦する</button>`}
+      : `<button type="button" class="btn primary" data-act="cpuAgain">同じ強さでもう一度</button>
+         <button type="button" class="btn" data-act="start">強さを選び直す</button>`}
     <button type="button" class="btn" data-act="log">プレイログを見る</button>
     <button type="button" class="btn" data-act="closeOverlay">盤面を見る</button>
     <button type="button" class="btn" data-act="toTitle">${online ? "部屋を出てタイトルに戻る" : "タイトルに戻る"}</button>
@@ -1105,20 +1291,37 @@ function toTitle() {
   showStart();
 }
 
-function startCpuGame() {
+function showCpuSelect() {
+  if (!Decks.readyDeck(msg => Decks.showList(msg))) return;
+  openOverlay(`<div class="panel">
+    <h2 class="title sm">CPUの強さ</h2>
+    <p class="lead">使うデッキ：${esc(Decks.selected().name)}</p>
+    <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
+      <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}">
+        <b>${v.label}</b><span>${v.desc}</span>
+      </button>`).join("")}</div>
+    <p class="datainfo">勝ったときの報酬（G）は、パック開封と一緒に次の更新で入ります。</p>
+    <button type="button" class="btn" data-act="back">戻る</button>
+  </div>`, "start", true);
+}
+
+function startCpuGame(level) {
   const mine = Decks.readyDeck(msg => Decks.showList(msg));
   if (!mine) return;
-  const cpu = Decks.randomPreset();
+  CPU_LEVEL = CPU_LEVELS[level] ? level : "normal";
+  const cpu = Decks.randomPreset(CPU_LEVEL);
   if (!cpu) return Decks.showList("CPU用のサンプルデッキがありません");
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
-  newGame(["あなた", "CPU"], [mine, { name: cpu.name, cards: cpu.cards }]);
+  newGame(["あなた", `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [mine, { name: cpu.name, cards: cpu.cards }]);
 }
 
 /* ---------- 入力（タップ操作） ---------- */
 function handleAct(act, el) {
   switch (act) {
-    case "start": startCpuGame(); break;
+    case "start": showCpuSelect(); break;
+    case "cpuLevel": startCpuGame(el && el.dataset.v); break;
+    case "cpuAgain": startCpuGame(CPU_LEVEL); break;
     case "online": Online.showLobby(); break;
     case "rules": if (!S) overlayFrom = overlayFrom === "lobby" ? "lobby" : "start"; else if (overlayFrom !== "menu" && overlayFrom !== "result") overlayFrom = "game"; showRules(); break;
     case "cards": if (!S) overlayFrom = "start"; showCardList(); break;
@@ -1138,11 +1341,7 @@ function handleAct(act, el) {
       if (!ui.sel || ui.sel.kind !== "hand" || !canAct()) return;
       const idx = ui.sel.idx;
       if (!canPlay(ME, idx).ok) return;
-      const d = DEF[S.players[ME].hand[idx]];
-      const side = needsTarget(ME, d);
-      if (side != null) { ui.mode = "spell"; ui.spellSide = side; render(); return; }
-      ui = { sel: null, mode: null };
-      doPlay(idx);
+      beginPlay(idx);
       break;
     }
     default:
@@ -1164,8 +1363,16 @@ document.addEventListener("click", e => {
   const c = e.target.closest("[data-uid]");
   if (c) {
     const uid = +c.dataset.uid, owner = +c.dataset.owner;
-    if (myTurn && ui.mode === "attack" && owner === OP) { const a = ui.sel.uid; ui = { sel: null, mode: null }; doAttack(a, uid); return; }
-    if (myTurn && ui.mode === "spell" && owner === ui.spellSide) { const i = ui.sel.idx; ui = { sel: null, mode: null }; doPlay(i, uid); return; }
+    if (myTurn && ui.mode === "attack" && owner === OP) {
+      const tu = S.players[OP].field.find(x => x.uid === uid);
+      if (tu && !canAttackUnit(ME, tu)) { toast("守護を持つキャラを先に攻撃してください"); return; }
+      const a = ui.sel.uid; ui = { sel: null, mode: null }; doAttack(a, uid); return;
+    }
+    if (myTurn && ui.mode === "target") {
+      const r = curRole();
+      if (r && owner === roleSide(ME, r)) { pickTarget(uid); return; }
+      return;
+    }
     const u = S.players[owner].field.find(x => x.uid === uid);
     if (myTurn && owner === ME && u && u.ready) { ui = { sel: { kind: "unit", owner, uid }, mode: "attack" }; render(); return; }
     ui = { sel: { kind: "unit", owner, uid }, mode: null }; render(); return;
