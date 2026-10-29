@@ -1,5 +1,5 @@
 {
- "version": 6,
+ "version": 7,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -11,10 +11,10 @@
   "DECK_SIZE": 30,
   "COPY_MAX": 3,
   "STARTING_GOLD": 300,
-  "REWARD_EASY": 50,
-  "REWARD_NORMAL": 80,
-  "REWARD_HARD": 150,
-  "REWARD_ONLINE": 80,
+  "REWARD_EASY": 100,
+  "REWARD_NORMAL": 200,
+  "REWARD_HARD": 300,
+  "REWARD_ONLINE": 150,
   "SEASON": "beta",
   "STARTER_DECK": "starter",
   "SAMPLE_DECKS": true
