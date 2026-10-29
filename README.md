@@ -15,7 +15,8 @@
 | `vendor/` | Firebase の SDK（npm の firebase@10.12.2 から取り出したもの） |
 | `database.rules.json` | Firebase Realtime Database のルール（Firebaseの画面に貼り付けて使う） |
 | `editor.html` / `js/editor.js` / `css/editor.css` | カード工房 |
-| `js/shared.js` / `css/base.css` | 両方で使う定義（効果の種類、カードの見た目） |
+| `js/deck.js` | デッキ編成（自分のデッキはその端末のブラウザに保存） |
+| `js/shared.js` / `css/base.css` | 両方で使う定義（効果の種類、カードの見た目、デッキのルール） |
 | `manifest.webmanifest` / `sw.js` / `icons/` | アプリ化（PWA）用 |
 
 ## カードを更新する流れ
@@ -33,3 +34,10 @@
 - 参加した人（ゲスト）は操作を Firebase 経由でホストに送り、盤面を受け取って表示する
 - 盤面データは2人とも読めるので、詳しい人なら相手の手札を見ることはできる（友達同士で遊ぶ前提）
 - ホストの接続が切れている間、対戦は止まる。ページを開き直すと「前回の対戦に戻る」から再開できる
+
+## デッキ構築ルール（v0.6〜）
+
+- 各自が組んだデッキ（`DECK_SIZE` 枚、同名 `COPY_MAX` 枚まで。カードごとの `limit` がそれより少なければそちら）で戦う
+- 開始時：じゃんけん → 勝った人が先攻・後攻を選ぶ → お互い `START_HAND` 枚引き、1回だけ全部引き直せる（マリガン）
+- 先攻は最初のターンにカードを引かない
+- `game-data.json` の `decks` はサンプルデッキ（CPUもここから選ぶ）

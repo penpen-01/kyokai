@@ -25,7 +25,10 @@ const EFFECTS = {
   buffHp:    { label: "自分のキャラの体力を上げる",   text: n => `自分のキャラ1体の体力を+${n}する。`, target: "ownUnit" }
 };
 
-const DEFAULT_CONFIG = { PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 8, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2 };
+const DEFAULT_CONFIG = { PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3 };
+
+/* レア度（パック開封で使う予定） */
+const RARITY = { common: "コモン", rare: "レア", legend: "レジェンド" };
 
 const CONFIG_INFO = {
   PLAYER_HP:  { label: "プレイヤーの体力",           min: 1, max: 99 },
@@ -33,7 +36,9 @@ const CONFIG_INFO = {
   ENERGY_MAX: { label: "エナジー上限",               min: 1, max: 15 },
   FIELD_MAX:  { label: "場に置けるキャラの数",       min: 1, max: 6 },
   HAND_MAX:   { label: "手札の上限",                 min: 1, max: 12 },
-  FATIGUE:    { label: "山札切れで引けないときのダメージ", min: 0, max: 20 }
+  FATIGUE:    { label: "山札切れで引けないときのダメージ", min: 0, max: 20 },
+  DECK_SIZE:  { label: "デッキの枚数",               min: 10, max: 60 },
+  COPY_MAX:   { label: "同じカードを入れられる上限", min: 1, max: 10 }
 };
 
 const DRAFT_KEY = "kyokai-draft-v1";
@@ -99,14 +104,40 @@ function normalizeData(data) {
     atk: c.type === "spell" ? undefined : (+c.atk || 0),
     hp: c.type === "spell" ? undefined : Math.max(1, +c.hp || 1),
     glyph: String(c.glyph || "？"),
-    copies: Math.max(0, +c.copies || 0),
+    // 1デッキに入れられる上限（0なら使えない）。古い形式の copies（共通山札の枚数）からも読める
+    limit: Math.max(0, c.limit != null ? +c.limit || 0 : c.copies != null ? Math.min(3, +c.copies || 0) : 3),
+    rarity: RARITY[c.rarity] ? c.rarity : (+c.cost >= 7 ? "legend" : +c.cost >= 5 ? "rare" : "common"),
     keywords: Array.isArray(c.keywords) ? c.keywords.filter(k => KEYWORDS[k]) : [],
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => ({ kind: e.kind, n: Math.max(1, +e.n || 1) })) : [],
     note: c.note ? String(c.note) : "",
     art: c.art ? String(c.art) : ""
   })).filter(c => c.id);
-  return { version: +d.version || 1, updated: d.updated || "", config, cards };
+  const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
+    id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards)
+  }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks };
 }
+
+function cleanDeckCards(cards) {
+  const o = {};
+  Object.entries(cards || {}).forEach(([k, v]) => { v = Math.floor(+v || 0); if (v > 0) o[String(k)] = v; });
+  return o;
+}
+
+/* デッキの枚数とルール違反を調べる。cardsById は id→カード */
+function deckCount(deck) { return Object.values(deck.cards || {}).reduce((s, n) => s + n, 0); }
+function deckProblems(deck, cardsById, config) {
+  const probs = [];
+  const total = deckCount(deck);
+  if (total !== config.DECK_SIZE) probs.push(`${config.DECK_SIZE}枚ちょうどにしてください（今 ${total}枚）`);
+  Object.entries(deck.cards || {}).forEach(([id, n]) => {
+    const c = cardsById[id];
+    if (!c || c.limit <= 0) probs.push("今は使えないカードが入っています");
+    else if (n > Math.min(c.limit, config.COPY_MAX)) probs.push(`${c.name}は${Math.min(c.limit, config.COPY_MAX)}枚までです`);
+  });
+  return [...new Set(probs)];
+}
+function cardLimit(c, config) { return Math.min(c.limit, config.COPY_MAX); }
 
 function readDraft() {
   try { const s = localStorage.getItem(DRAFT_KEY); return s ? JSON.parse(s) : null; } catch { return null; }

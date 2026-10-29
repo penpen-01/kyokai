@@ -84,7 +84,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   border-left:1px solid var(--line);border-right:1px solid var(--line);
 }
 .stepper input:focus-visible{background:var(--panel2)}
-.stepper.copies input{color:var(--gold)}
+.stepper.limit input,.limit .stepper input{color:var(--gold)}
 
 /* ---- 編集フォーム ---- */
 .editcol{min-width:0}

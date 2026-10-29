@@ -46,30 +46,112 @@ async function loadCardData() {
   CONFIG = data.config;
   CARDS = data.cards;
   DEF = Object.fromEntries(CARDS.map(c => [c.id, c]));
+  PRESETS = data.decks;
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
+let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
-/* ---------- ゲーム進行（ここから下の処理は、CPU戦とホストだけが実行する） ---------- */
-function newGame(names, opts = {}) {
+/* デッキ（{id: 枚数}）を、シャッフルした山札（idの並び）にする */
+function buildPile(deck) {
   const pile = [];
-  CARDS.forEach(c => { for (let i = 0; i < c.copies; i++) pile.push(c.id); });
-  shuffle(pile);
+  Object.entries(deck.cards).forEach(([id, n]) => { if (DEF[id]) for (let i = 0; i < n; i++) pile.push(id); });
+  return shuffle(pile);
+}
+
+/* ---------- ゲーム進行（ここから下の処理は、CPU戦とホストだけが実行する） ----------
+   流れ：じゃんけん（rps）→ 勝った人が先攻・後攻を選ぶ（choose）→ マリガン（mulligan）→ 対戦（play） */
+function newGame(names, decks) {
   S = {
-    pile, discard: [], players: [mkPlayer(names[0]), mkPlayer(names[1])],
+    phase: "rps",
+    players: [mkPlayer(names[0], decks[0]), mkPlayer(names[1], decks[1])],
+    rps: { picks: [null, null], round: 1, last: null }, rpsWinner: null, first: null, mull: [null, null],
+    decks: [{ name: decks[0].name, cards: decks[0].cards }, { name: decks[1].name, cards: decks[1].cards }],
     turn: 0, turnNo: 0, over: false, winner: null, log: [], uidN: 0, seq: 0
   };
   ui = { sel: null, mode: null };
   busy = false;
   resultShown = false;
-  const first = Math.random() < 0.5 ? 0 : 1;
-  for (let i = 0; i < CONFIG.START_HAND; i++) { draw(0, true); draw(1, true); }
   S.log.push({ sep: true, msg: "対戦開始" });
-  log(`${pname(first)}の先攻です。`);
-  startTurn(first, true);
+  log(`${pname(0)}のデッキ：${esc(decks[0].name)} ／ ${pname(1)}のデッキ：${esc(decks[1].name)}`);
+  render();
+  if (MODE === "cpu") cpuPreGame();
 }
-function mkPlayer(name) { return { name, hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [] }; }
+function mkPlayer(name, deck) {
+  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [] };
+}
+
+const RPS = { g: "グー", c: "チョキ", p: "パー" };
+const RPS_WIN = { g: "c", c: "p", p: "g" };
+
+function rpsPick(pi, hand) {
+  if (!S || S.phase !== "rps" || !RPS[hand] || S.rps.picks[pi]) return false;
+  S.rps.picks[pi] = hand;
+  const [a, b] = S.rps.picks;
+  if (a && b) {
+    if (a === b) {
+      S.rps.last = { hands: [a, b], winner: null };
+      log(`じゃんけん：${pname(0)} ${RPS[a]}、${pname(1)} ${RPS[b]}。あいこ`);
+      S.rps.picks = [null, null]; S.rps.round++;
+    } else {
+      const w = RPS_WIN[a] === b ? 0 : 1;
+      S.rps.last = { hands: [a, b], winner: w };
+      S.rpsWinner = w; S.phase = "choose";
+      log(`じゃんけん：${pname(0)} ${RPS[a]}、${pname(1)} ${RPS[b]}。${pname(w)}の勝ち`);
+    }
+  }
+  render();
+  if (MODE === "cpu") cpuPreGame();
+  return true;
+}
+
+function chooseOrder(pi, goFirst) {
+  if (!S || S.phase !== "choose" || S.rpsWinner !== pi) return false;
+  S.first = goFirst ? pi : opp(pi);
+  log(`${pname(pi)}が${goFirst ? "先攻" : "後攻"}を選んだ。${pname(S.first)}の先攻です。`);
+  for (let i = 0; i < CONFIG.START_HAND; i++) { draw(0, true); draw(1, true); }
+  S.phase = "mulligan";
+  render();
+  if (MODE === "cpu") cpuPreGame();
+  return true;
+}
+
+/* マリガン：最初の手札を全部山札に戻して引き直すか、1回だけ選べる */
+function mulligan(pi, redraw) {
+  if (!S || S.phase !== "mulligan" || S.mull[pi] != null) return false;
+  const p = S.players[pi];
+  if (redraw) {
+    p.deck.push(...p.hand); p.hand = [];
+    shuffle(p.deck);
+    for (let i = 0; i < CONFIG.START_HAND; i++) draw(pi, true);
+  }
+  S.mull[pi] = !!redraw;
+  log(`${pname(pi)}は${redraw ? "手札を引き直した" : "手札をそのまま使う"}。`);
+  if (S.mull[0] != null && S.mull[1] != null) {
+    S.phase = "play";
+    startTurn(S.first, true);
+  } else {
+    render();
+    if (MODE === "cpu") cpuPreGame();
+  }
+  return true;
+}
+
+/* CPU の開始前の判断 */
+function cpuPreGame() {
+  if (!S || MODE !== "cpu") return;
+  if (S.phase === "rps" && !S.rps.picks[1]) {
+    const g = S;
+    setTimeout(() => { if (S === g) rpsPick(1, "gcp"[Math.floor(Math.random() * 3)]); }, 250);
+  } else if (S.phase === "choose" && S.rpsWinner === 1) {
+    const g = S;
+    setTimeout(() => { if (S === g) chooseOrder(1, true); }, 900);
+  } else if (S.phase === "mulligan" && S.mull[1] == null) {
+    const cheap = S.players[1].hand.filter(id => DEF[id].cost <= 3).length;
+    mulligan(1, cheap < 2);
+  }
+}
 
 /* priv を付けると、その番号のプレイヤーにだけ pmsg が見える（引いたカード名など） */
 function log(msg, priv) {
@@ -83,17 +165,16 @@ const logText = l => (l.priv != null && l.priv === ME ? l.pmsg : l.msg);
 
 function draw(pi, silent) {
   const p = S.players[pi];
-  if (!S.pile.length) {
+  if (!p.deck.length) {
     if (CONFIG.FATIGUE > 0) {
       p.hp -= CONFIG.FATIGUE;
-      log(`山札切れ！${pname(pi)}に${CONFIG.FATIGUE}ダメージ。`);
+      log(`${pname(pi)}の山札切れ！${CONFIG.FATIGUE}ダメージ。`);
       fx(playerSel(pi), "-" + CONFIG.FATIGUE, "dmg");
     }
     return;
   }
-  const id = S.pile.pop();
+  const id = p.deck.pop();
   if (p.hand.length >= CONFIG.HAND_MAX) {
-    S.discard.push(id);
     if (!silent) log(`${pname(pi)}の手札があふれ、${cname(id)}は捨て札へ。`);
     return;
   }
@@ -116,7 +197,7 @@ function startTurn(pi, skipDraw) {
 }
 
 function endTurn(pi) {
-  if (S.over || S.turn !== pi) return;
+  if (S.over || S.phase !== "play" || S.turn !== pi) return;
   if (pi === ME) ui = { sel: null, mode: null };
   startTurn(opp(pi), false);
 }
@@ -124,7 +205,7 @@ function endTurn(pi) {
 function canPlay(pi, idx) {
   const p = S.players[pi], d = DEF[p.hand[idx]];
   if (!d) return { ok: false, reason: "そのカードはありません" };
-  if (S.over || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
+  if (S.over || S.phase !== "play" || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
   if (d.cost > p.e) return { ok: false, reason: "エナジーが足りません" };
   if (d.type === "char" && p.field.length >= CONFIG.FIELD_MAX) return { ok: false, reason: "場がいっぱいです" };
   const t = cardTarget(d);
@@ -160,7 +241,6 @@ function playCard(pi, idx, targetUid) {
     newUnit = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") };
     p.field.push(newUnit);
   } else {
-    S.discard.push(id);
   }
   d.effects.forEach(e => effect(pi, e, targetUid, newUnit));
   cleanup();
@@ -209,7 +289,6 @@ function cleanup() {
   S.players.forEach((p, pi) => {
     p.field = p.field.filter(u => {
       if (u.hp > 0) return true;
-      S.discard.push(u.id);
       log(`${pname(pi)}の${cname(u.id)}は倒れた。`);
       return false;
     });
@@ -223,7 +302,7 @@ function selectedUnit() {
 }
 
 function attack(pi, uid, target) {
-  if (S.over || S.turn !== pi) return false;
+  if (S.over || S.phase !== "play" || S.turn !== pi) return false;
   const me = S.players[pi], en = S.players[opp(pi)];
   const a = me.field.find(u => u.uid === uid);
   if (!a || !a.ready) return false;
@@ -373,7 +452,7 @@ function cpuChooseAttack(u) {
 
 /* ---------- 自分の操作（CPU戦・ホストはその場で処理、ゲストはホストに送る） ---------- */
 function canAct() {
-  return S && !S.over && S.turn === ME && !busy && !(typeof Online !== "undefined" && Online.blocked());
+  return S && !S.over && S.phase === "play" && S.turn === ME && !busy && !(typeof Online !== "undefined" && Online.blocked());
 }
 function doPlay(idx, target) {
   if (!canAct()) return;
@@ -402,7 +481,7 @@ function pbarHTML(pi) {
   }
   const status = typeof Online !== "undefined" && MODE === "online" && pi === OP ? Online.oppStatusHTML() : "";
   const side = pi === OP
-    ? `<div class="side"><button type="button" class="chip" data-act="menu">メニュー</button><span>手札 ${p.hand.length}</span></div>`
+    ? `<div class="side"><button type="button" class="chip" data-act="menu">メニュー</button><span>手札 ${p.hand.length} ・ 山札 ${p.deck.length}</span></div>`
     : `<div class="side">${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</span></div>`;
   return `<div class="pbar ${S.turn === pi && !S.over ? "active" : ""}">
     <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${p.hp}">
@@ -452,13 +531,14 @@ function render() {
   renderDeferred = false;
   clearDragLeftovers();
   hidePreview();
+  if (S.phase !== "play") { app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
   const me = S.players[ME];
   const lines = S.log.filter(l => !l.sep).slice(-2);
   app.innerHTML = `
     ${pbarHTML(OP)}
     ${fieldHTML(OP)}
     <div class="mid">
-      <div class="pile" aria-label="共通山札"><b>${S.pile.length}</b><span>山札</span></div>
+      <div class="pile" aria-label="自分の山札"><b>${me.deck.length}</b><span>山札</span></div>
       <button type="button" class="log" data-act="log" aria-label="プレイログを開く">${lines.map((l, i) => `<div class="${i < lines.length - 1 ? "old" : ""}">${logText(l)}</div>`).join("")}</button>
       ${endButtonHTML()}
     </div>
@@ -472,6 +552,73 @@ function render() {
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   layoutHand();
   renderSheet();
+}
+
+/* ---------- 対戦前の画面（じゃんけん・先攻後攻・マリガン） ---------- */
+const RPS_ICON = {
+  g: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="15"/></svg>',
+  c: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 40 L20 8 M32 40 L28 8"/><circle cx="24" cy="36" r="7"/></svg>',
+  p: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="10" width="28" height="30" rx="6"/></svg>'
+};
+function pregameHTML() {
+  const me = S.players[ME], op = S.players[OP];
+  const wait = typeof Online !== "undefined" && MODE === "online" && Online.blocked();
+  const head = `<div class="pre-head">
+      <div class="pre-p op"><b>${esc(op.name)}</b><span>${esc(op.deckName || "")}</span></div>
+      <span class="pre-vs">VS</span>
+      <div class="pre-p me"><b>${esc(me.name)}</b><span>${esc(me.deckName || "")}</span></div>
+    </div>`;
+  let body = "";
+  const last = S.rps.last;
+  const lastLine = last ? `<p class="pre-last">${esc(me.name)}：${RPS[last.hands[ME]]} ／ ${esc(op.name)}：${RPS[last.hands[OP]]}
+      ${last.winner == null ? " → あいこ！もう一度" : last.winner === ME ? " → あなたの勝ち！" : " → 相手の勝ち"}</p>` : "";
+  if (S.phase === "rps") {
+    const mine = S.rps.picks[ME];
+    body = `<h2 class="pre-title">じゃんけん</h2>
+      <p class="lead">勝った人が、先攻か後攻かを選べます。</p>
+      ${lastLine}
+      ${mine ? `<p class="pre-wait">${RPS[mine] ? `あなたは${RPS[mine]}。` : "選びました。"}相手を待っています…</p>` : `
+      <div class="rps">${Object.entries(RPS).map(([k, v]) => `<button type="button" class="rpsbtn" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${RPS_ICON[k]}<span>${v}</span></button>`).join("")}</div>`}
+      ${S.rps.picks[OP] ? `<p class="datainfo">相手は選び終わっています</p>` : ""}`;
+  } else if (S.phase === "choose") {
+    body = `<h2 class="pre-title">${S.rpsWinner === ME ? "じゃんけんに勝ちました" : "じゃんけんに負けました"}</h2>
+      ${lastLine}
+      ${S.rpsWinner === ME ? `
+        <p class="lead">先攻か後攻かを選んでください。先攻は最初のターンにカードを引きません。</p>
+        <div class="pre-btns">
+          <button type="button" class="btn primary" data-act="choose" data-v="1" ${wait ? "disabled" : ""}>先攻をとる</button>
+          <button type="button" class="btn" data-act="choose" data-v="0" ${wait ? "disabled" : ""}>後攻をとる</button>
+        </div>` : `<p class="pre-wait">相手が先攻・後攻を選んでいます…</p>`}`;
+  } else if (S.phase === "mulligan") {
+    const done = S.mull[ME];
+    body = `<h2 class="pre-title">最初の手札</h2>
+      <p class="lead">あなたは<b>${S.first === ME ? "先攻" : "後攻"}</b>です。${done == null ? "この手札で始めるか、1回だけ全部引き直せます。" : ""}</p>
+      <div class="mull-hand">${me.hand.map((id, i) => cardHTML(DEF[id], { static: true, attrs: `data-hand="${i}"` })).join("")}</div>
+      ${done == null ? `
+        <div class="pre-btns">
+          <button type="button" class="btn primary" data-act="mull" data-v="0" ${wait ? "disabled" : ""}>このまま始める</button>
+          <button type="button" class="btn" data-act="mull" data-v="1" ${wait ? "disabled" : ""}>全部引き直す</button>
+        </div>
+        <p class="datainfo">引き直すと、手札をすべて山札に戻して切り直し、${CONFIG.START_HAND}枚引きます。</p>`
+      : `<p class="pre-wait">${done ? "引き直しました。" : "この手札で始めます。"}相手を待っています…</p>`}`;
+  }
+  const net = typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : "";
+  return `<div class="pre">
+    <div class="pre-top"><button type="button" class="chip" data-act="menu">メニュー</button></div>
+    ${head}<div class="pre-body">${body}</div>${net}</div>`;
+}
+
+function doRps(v) {
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "rps", v });
+  rpsPick(ME, v);
+}
+function doChoose(first) {
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "choose", first });
+  chooseOrder(ME, first);
+}
+function doMull(redraw) {
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "mull", redraw });
+  mulligan(ME, redraw);
 }
 
 /* 手札が多いときはカードを重ねて、全部が手札の幅に収まるようにする */
@@ -803,7 +950,12 @@ function playFx(sel, text, cls) {
 const RULES_HTML = () => `
   <div class="rules">
     <h3>勝利条件</h3><p>相手の体力（初期${CONFIG.PLAYER_HP}）を0にすれば勝ち。</p>
-    <h3>山札</h3><p>2人で1つの共通山札から引きます。強いカードが相手に渡ることもあります。山札が尽きたら、引くたびに${CONFIG.FATIGUE}ダメージ。</p>
+    <h3>デッキ</h3><p>それぞれが自分で組んだ${CONFIG.DECK_SIZE}枚のデッキで戦います。同じカードは${CONFIG.COPY_MAX}枚まで（カードによってはそれより少ない）。山札が尽きたら、引くたびに${CONFIG.FATIGUE}ダメージ。</p>
+    <h3>対戦の始め方</h3>
+    <ul>
+      <li>じゃんけんをして、勝った人が先攻か後攻かを選ぶ</li>
+      <li>お互い${CONFIG.START_HAND}枚引く。1回だけ、手札を全部山札に戻して引き直せる（マリガン）</li>
+    </ul>
     <h3>ターンの流れ</h3>
     <ul>
       <li>エナジーが1増えて全回復（上限${CONFIG.ENERGY_MAX}）</li>
@@ -853,11 +1005,12 @@ function showStart() {
     ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>`
     : DATA_INFO.updated ? `<p class="datainfo">カードデータ更新日：${esc(DATA_INFO.updated)}</p>` : "";
   openOverlay(`<div class="panel">
-    <h1 class="title"><small>試作版 0.5</small>境界の召喚士</h1>
+    <h1 class="title"><small>試作版 0.6</small>境界の召喚士</h1>
     <p class="lead">神話・幻想・機械。崩れた世界の境界から英雄を呼び出し、相手の召喚士を倒せ。</p>
     <div class="worlds"><span class="w-myth">神話</span><span class="w-fan">幻想</span><span class="w-mech">機械</span></div>
     <button type="button" class="btn primary" data-act="start">CPUと対戦する</button>
     ${DATA_INFO.draft ? "" : `<button type="button" class="btn primary ghostish" data-act="online">友達と対戦する</button>`}
+    <button type="button" class="btn deckbtn" data-act="decks"><span>デッキ編成</span><small>使用中：${esc(Decks.selected() ? Decks.selected().name : "なし")}</small></button>
     <button type="button" class="btn" data-act="cards">カード一覧</button>
     <button type="button" class="btn" data-act="rules">ルールを読む</button>
     ${info}
@@ -888,28 +1041,24 @@ function showRules() {
 }
 
 function showCardList() {
-  const inDeck = CARDS.filter(c => c.copies > 0);
+  const usable = CARDS.filter(c => c.limit > 0);
   const byCost = (a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja");
-  const total = inDeck.reduce((n, c) => n + c.copies, 0);
   const group = (type, label) => {
-    const list = inDeck.filter(c => c.type === type).sort(byCost);
-    const n = list.reduce((s, c) => s + c.copies, 0);
-    return `<h3 class="sec">${label}（${list.length}種・${n}枚）</h3>
+    const list = usable.filter(c => c.type === type).sort(byCost);
+    return `<h3 class="sec">${label}（${list.length}種）</h3>
       <div class="clist">${list.map(c => `
         <div class="citem">
           ${cardHTML(c, { static: true })}
           <div class="cbody">
-            <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount">×${c.copies}</span></div>
-            <div class="cmeta">${WORLDS[c.world]} ・ コスト${c.cost}${c.type === "char" ? ` ・ 攻撃${c.atk} ／ 体力${c.hp}` : ""}</div>
+            <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount" title="1デッキに入れられる枚数">上限${cardLimit(c, CONFIG)}</span></div>
+            <div class="cmeta">${WORLDS[c.world]} ・ ${RARITY[c.rarity]} ・ コスト${c.cost}${c.type === "char" ? ` ・ 攻撃${c.atk} ／ 体力${c.hp}` : ""}</div>
             <div class="ctext">${esc(cardText(c))}</div>
           </div>
         </div>`).join("")}</div>`;
   };
-  const worldCount = w => inDeck.filter(c => c.world === w).reduce((s, c) => s + c.copies, 0);
   openOverlay(`<div class="panel wide">
     <h2 class="title sm">カード一覧</h2>
-    <div class="totals"><span>共通山札 <b>${inDeck.length}</b>種・<b>${total}</b>枚</span>
-      <span>神話 <b>${worldCount("myth")}</b>枚</span><span>幻想 <b>${worldCount("fan")}</b>枚</span><span>機械 <b>${worldCount("mech")}</b>枚</span></div>
+    <div class="totals"><span>全<b>${usable.length}</b>種</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
     ${group("char", "キャラクター")}
     ${group("spell", "魔法")}
     <button type="button" class="btn primary" data-act="back">戻る</button>
@@ -957,9 +1106,13 @@ function toTitle() {
 }
 
 function startCpuGame() {
+  const mine = Decks.readyDeck(msg => Decks.showList(msg));
+  if (!mine) return;
+  const cpu = Decks.randomPreset();
+  if (!cpu) return Decks.showList("CPU用のサンプルデッキがありません");
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
-  newGame(["あなた", "CPU"]);
+  newGame(["あなた", "CPU"], [mine, { name: cpu.name, cards: cpu.cards }]);
 }
 
 /* ---------- 入力（タップ操作） ---------- */
@@ -978,6 +1131,9 @@ function handleAct(act, el) {
     case "showResult": if (S && S.over) showResult(myResult()); break;
     case "cancel": ui = { sel: null, mode: null }; render(); break;
     case "end": doEnd(); break;
+    case "rps": if (S && el) doRps(el.dataset.v); break;
+    case "choose": if (S && el) doChoose(el.dataset.v === "1"); break;
+    case "mull": if (S && el) doMull(el.dataset.v === "1"); break;
     case "play": {
       if (!ui.sel || ui.sel.kind !== "hand" || !canAct()) return;
       const idx = ui.sel.idx;
@@ -990,6 +1146,7 @@ function handleAct(act, el) {
       break;
     }
     default:
+      if (Decks.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);
   }
 }

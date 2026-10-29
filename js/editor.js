@@ -14,6 +14,7 @@ let saveState = "ok";     // ok | err
 let exportedSnap = "";    // 最後に書き出した（または公開版の）内容
 let confirmDelete = false;
 let saveTimer = null;
+let notice = "";
 
 const today = () => {
   const d = new Date();
@@ -28,9 +29,16 @@ const fmtBytes = n => n > 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1
 async function boot() {
   let published = null;
   try { published = normalizeData(await fetchPublished()); } catch { /* オフライン等 */ }
-  const draft = readDraft();
+  let draft = readDraft();
+  // サイトのデータのほうが新しい場合は、そちらを読み込む（古い編集内容は控えに残して「その他」から戻せる）
+  if (draft && published && (+draft.version || 0) < published.version) {
+    try { localStorage.setItem(DRAFT_KEY + "-backup", JSON.stringify(draft)); localStorage.removeItem(DRAFT_KEY); } catch {}
+    draft = null;
+    notice = "サイトのカードデータが新しくなっていたため、そちらを読み込みました。前の編集内容は「その他」→「以前の編集内容に戻す」で戻せます。";
+  }
   if (draft) {
     DATA = normalizeData(draft);
+    if (!DATA.decks.length && published) DATA.decks = published.decks;
     exportedSnap = draft._exportedSnap || (published ? JSON.stringify({ config: published.config, cards: published.cards }) : "");
   } else if (published) {
     DATA = published;
@@ -79,44 +87,44 @@ function renderStatus() {
     ${saveState === "err"
       ? `<span class="dot err">ブラウザに自動保存できませんでした。早めに書き出してください</span>`
       : `<span class="dot ${dirty ? "dirty" : ""}">${dirty ? "未書き出しの変更あり（このブラウザには自動保存済み）" : "書き出し済みの内容と同じです"}</span>`}
-    <span>データ ${fmtBytes(size)}</span>`;
+    <span>データ ${fmtBytes(size)}</span>
+    ${notice ? `<span class="dot dirty">${esc(notice)}</span>` : ""}`;
 }
 
-function deckStats() {
-  const inDeck = DATA.cards.filter(c => c.copies > 0);
-  const total = inDeck.reduce((s, c) => s + c.copies, 0);
-  const sum = f => inDeck.filter(f).reduce((s, c) => s + c.copies, 0);
+function poolStats() {
+  const usable = DATA.cards.filter(c => c.limit > 0);
+  const kinds = f => usable.filter(f).length;
   const curve = Array(9).fill(0);
-  inDeck.forEach(c => { curve[Math.min(8, Math.max(0, c.cost))] += c.copies; });
+  usable.forEach(c => { curve[Math.min(8, Math.max(0, c.cost))]++; });
   return {
-    kinds: inDeck.length, total,
-    chars: sum(c => c.type === "char"), spells: sum(c => c.type === "spell"),
-    myth: sum(c => c.world === "myth"), fan: sum(c => c.world === "fan"), mech: sum(c => c.world === "mech"),
+    kinds: usable.length, all: DATA.cards.length,
+    chars: kinds(c => c.type === "char"), spells: kinds(c => c.type === "spell"),
+    myth: kinds(c => c.world === "myth"), fan: kinds(c => c.world === "fan"), mech: kinds(c => c.world === "mech"),
+    common: kinds(c => c.rarity === "common"), rare: kinds(c => c.rarity === "rare"), legend: kinds(c => c.rarity === "legend"),
     curve
   };
 }
 
 function renderSummary() {
-  const s = deckStats();
+  const s = poolStats();
   const max = Math.max(1, ...s.curve);
-  const turnsGuess = Math.floor((s.total - DATA.config.START_HAND * 2) / 2);
   $("#summary").innerHTML = `
     <div class="sum-row">
-      <span class="big">山札 <b>${s.total}</b>枚</span>
-      <span>${s.kinds}種 ・ キャラ <b>${s.chars}</b> ・ 魔法 <b>${s.spells}</b></span>
+      <span class="big">使えるカード <b>${s.kinds}</b>種</span>
+      <span>キャラ <b>${s.chars}</b> ・ 魔法 <b>${s.spells}</b>${s.all > s.kinds ? ` ・ 使用不可 <b>${s.all - s.kinds}</b>` : ""}</span>
     </div>
     <div class="sum-row">
-      <span class="w-myth" style="color:var(--w-myth)">神話 <b>${s.myth}</b></span>
+      <span style="color:var(--w-myth)">神話 <b>${s.myth}</b></span>
       <span style="color:var(--w-fan)">幻想 <b>${s.fan}</b></span>
       <span style="color:var(--w-mech)">機械 <b>${s.mech}</b></span>
-      <span title="初期手札を配ったあと、1ターン1枚ずつ引いた場合">山札切れまで 各自 約<b>${Math.max(0, turnsGuess)}</b>ターン</span>
+      <span>コモン <b>${s.common}</b> ・ レア <b>${s.rare}</b> ・ レジェンド <b>${s.legend}</b></span>
     </div>
     <div>
-      <div class="curve" aria-label="コスト別の枚数">
-        ${s.curve.map((n, i) => `<div class="bar"><span class="n">${n || ""}</span><span class="fill" style="height:${(n / max) * 52}px"></span></div>`).join("")}
+      <div class="curve" aria-label="コスト別の種類数">
+        ${s.curve.map(n => `<div class="bar"><span class="n">${n || ""}</span><span class="fill" style="height:${(n / max) * 52}px"></span></div>`).join("")}
       </div>
       <div class="curve" style="height:auto">${s.curve.map((_, i) => `<div class="bar">${i === 8 ? "8+" : i}</div>`).join("")}</div>
-      <div class="curve-cap"><span>コスト別の枚数</span></div>
+      <div class="curve-cap"><span>コスト別の種類数</span><span>デッキ${DATA.config.DECK_SIZE}枚・同名${DATA.config.COPY_MAX}枚まで</span></div>
     </div>`;
 }
 
@@ -125,16 +133,16 @@ function renderList() {
     .filter(c => filter === "all" || c.type === filter)
     .slice().sort((a, b) => a.cost - b.cost || (a.type > b.type ? 1 : a.type < b.type ? -1 : 0) || a.name.localeCompare(b.name, "ja"));
   $("#list").innerHTML = list.length ? list.map(c => `
-    <li class="row ${c.id === curId ? "cur" : ""} ${c.copies ? "" : "out"} w-${c.world}" data-pick="${esc(c.id)}">
+    <li class="row ${c.id === curId ? "cur" : ""} ${c.limit ? "" : "out"} w-${c.world}" data-pick="${esc(c.id)}">
       ${cardHTML(c, { static: true })}
       <div class="row-main">
         <span class="row-name">${esc(c.name)}</span>
-        <span class="row-meta">コスト${c.cost} ・ <span class="w">${WORLDS[c.world]}</span> ・ ${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}${c.copies ? "" : " ・ 山札に入れない"}</span>
+        <span class="row-meta">コスト${c.cost} ・ <span class="w">${WORLDS[c.world]}</span> ・ ${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}${c.limit ? "" : " ・ 使用不可"}</span>
       </div>
-      <div class="stepper copies" aria-label="${esc(c.name)}の枚数">
-        <button type="button" data-copies="-1" data-id="${esc(c.id)}" aria-label="1枚減らす">−</button>
-        <input type="text" inputmode="numeric" value="${c.copies}" data-copies-in="${esc(c.id)}" id="cp-${esc(c.id)}" aria-label="枚数">
-        <button type="button" data-copies="1" data-id="${esc(c.id)}" aria-label="1枚増やす">＋</button>
+      <div class="stepper limit" aria-label="${esc(c.name)}の投入上限">
+        <button type="button" data-limit="-1" data-id="${esc(c.id)}" aria-label="上限を1減らす">−</button>
+        <input type="text" inputmode="numeric" value="${c.limit}" data-limit-in="${esc(c.id)}" id="cp-${esc(c.id)}" aria-label="投入上限">
+        <button type="button" data-limit="1" data-id="${esc(c.id)}" aria-label="上限を1増やす">＋</button>
       </div>
     </li>`).join("") : `<li class="hint" style="padding:12px">カードがありません。「新しいカード」から作れます。</li>`;
 }
@@ -206,9 +214,15 @@ function renderEditor() {
             <div class="field"><span class="lab">コスト</span>${stepper("cost", c.cost, "コスト")}</div>
             ${isChar ? `<div class="field"><span class="lab">攻撃力</span>${stepper("atk", c.atk, "攻撃力")}</div>
             <div class="field"><span class="lab">体力</span>${stepper("hp", c.hp, "体力")}</div>` : ""}
-            <div class="field"><span class="lab">山札の枚数</span><div class="copies">${stepper("copies", c.copies, "山札の枚数")}</div></div>
+            <div class="field"><span class="lab">1デッキの投入上限</span><div class="limit">${stepper("limit", c.limit, "投入上限")}</div></div>
           </div>
-          ${c.copies === 0 ? `<p class="hint">枚数が0のカードは、データには残りますが山札には入りません。</p>` : ""}
+          <p class="hint">投入上限は、1つのデッキに何枚まで入れられるか。ルール設定の「同じカードを入れられる上限」（今は${DATA.config.COPY_MAX}枚）より大きくしても、そちらが優先されます。0にすると、データには残りますがデッキに入れられなくなります。</p>
+          <div class="field grow">
+            <span class="lab">レア度（パック開封で使う予定）</span>
+            <div class="seg wide" role="group" aria-label="レア度">
+              ${Object.entries(RARITY).map(([k, v]) => `<button type="button" data-rarity="${k}" aria-pressed="${c.rarity === k}">${v}</button>`).join("")}
+            </div>
+          </div>
         </div>
 
         ${isChar ? `<div class="fgroup">
@@ -295,9 +309,9 @@ function setNum(name, value) {
   } else if (name === "cost") v = c.cost = clamp(value, 0, 15);
   else if (name === "atk") v = c.atk = clamp(value, 0, 30);
   else if (name === "hp") v = c.hp = clamp(value, 1, 30);
-  else if (name === "copies") {
-    const was = c.copies;
-    v = c.copies = clamp(value, 0, 20);
+  else if (name === "limit") {
+    const was = c.limit;
+    v = c.limit = clamp(value, 0, 10);
     if ((was === 0) !== (v === 0)) { changed(); renderEditor(); return; }
   }
   const inp = document.getElementById("f-" + name);
@@ -308,7 +322,7 @@ function setNum(name, value) {
 function setCopies(id, value) {
   const c = DATA.cards.find(x => x.id === id);
   if (!c) return;
-  c.copies = clamp(value, 0, 20);
+  c.limit = clamp(value, 0, 10);
   changed();
   if (id === curId) renderEditor();
 }
@@ -334,9 +348,9 @@ document.addEventListener("click", e => {
   const f = t.closest("[data-filter]");
   if (f) { filter = f.dataset.filter; $$("[data-filter]").forEach(b => b.setAttribute("aria-pressed", b === f)); renderList(); return; }
 
-  const cp = t.closest("[data-copies]");
-  if (cp) { const c = DATA.cards.find(x => x.id === cp.dataset.id); setCopies(cp.dataset.id, c.copies + +cp.dataset.copies); return; }
-  if (t.closest("[data-copies-in]")) return;
+  const cp = t.closest("[data-limit]");
+  if (cp) { const c = DATA.cards.find(x => x.id === cp.dataset.id); setCopies(cp.dataset.id, c.limit + +cp.dataset.limit); return; }
+  if (t.closest("[data-limit-in]")) return;
   const pick = t.closest("[data-pick]");
   if (pick) { select(pick.dataset.pick); return; }
 
@@ -350,7 +364,7 @@ document.addEventListener("click", e => {
       if (name === "cost") inp.value = c.cost;
       if (name === "atk") inp.value = c.atk;
       if (name === "hp") inp.value = c.hp;
-      if (name === "copies") inp.value = c.copies;
+      if (name === "limit") inp.value = c.limit;
       if (name.startsWith("eff-")) inp.value = c.effects[+name.slice(4)].n;
     }
     return;
@@ -367,6 +381,8 @@ document.addEventListener("click", e => {
     }
     return;
   }
+  const rr = t.closest("[data-rarity]");
+  if (rr) { curCard().rarity = rr.dataset.rarity; changed(); renderEditor(); return; }
   const w = t.closest("[data-world]");
   if (w) { curCard().world = w.dataset.world; changed(); renderEditor(); return; }
 
@@ -389,7 +405,7 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   const t = e.target;
   if (t.dataset.num) { setNum(t.dataset.num, t.value); return; }
-  if (t.dataset.copiesIn) { setCopies(t.dataset.copiesIn, t.value); return; }
+  if (t.dataset.limitIn) { setCopies(t.dataset.limitIn, t.value); return; }
   if (t.dataset.kw) {
     const c = curCard(), k = t.dataset.kw;
     c.keywords = t.checked ? [...new Set([...c.keywords, k])] : c.keywords.filter(x => x !== k);
@@ -406,7 +422,7 @@ document.addEventListener("change", e => {
 
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") { toggleMore(false); if (!$("#modal").hidden && !cropState) closeModal(); else if (cropState) closeModal(); }
-  if (e.key === "Enter" && e.target.matches("input[data-num],input[data-copies-in]")) e.target.blur();
+  if (e.key === "Enter" && e.target.matches("input[data-num],input[data-limit-in]")) e.target.blur();
 });
 
 function toggleMore(open) {
@@ -419,7 +435,7 @@ function act(name) {
   switch (name) {
     case "more": toggleMore($("#more").hidden); break;
     case "new": {
-      const card = normalizeData({ cards: [{ id: newId(), name: "新しいカード", world: "fan", type: "char", cost: 2, atk: 2, hp: 2, glyph: "新", copies: 2 }] }).cards[0];
+      const card = normalizeData({ cards: [{ id: newId(), name: "新しいカード", world: "fan", type: "char", cost: 2, atk: 2, hp: 2, glyph: "新", limit: 3 }] }).cards[0];
       DATA.cards.push(card);
       if (filter === "spell") { filter = "all"; $$("[data-filter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.filter === "all")); }
       changed(); select(card.id);
@@ -449,6 +465,17 @@ function act(name) {
     case "export": doExport(); break;
     case "import": toggleMore(false); $("#importFile").click(); break;
     case "revert": toggleMore(false); confirmRevert(); break;
+    case "restoreBackup": {
+      toggleMore(false);
+      let b = null; try { b = JSON.parse(localStorage.getItem(DRAFT_KEY + "-backup")); } catch {}
+      if (!b) { notice = "戻せる編集内容はありません。"; renderStatus(); break; }
+      pendingImport = normalizeData(b);
+      if (!pendingImport.decks.length) pendingImport.decks = DATA.decks;
+      openModal(`<div class="dialog" role="dialog"><h3>以前の編集内容に戻しますか？</h3>
+        <p>今の内容は、以前このブラウザで編集していた内容（${pendingImport.cards.length}種）で置き換わります。古い形式のデータは、新しい形式（投入上限・レア度）に変換されます。</p>
+        <div class="acts"><button type="button" class="btn" data-act="closeModal">やめる</button><button type="button" class="btn primary" data-act="importYes">戻す</button></div></div>`);
+      break;
+    }
     case "closeModal": closeModal(); break;
     case "cropOk": finishCrop(); break;
     case "revertYes": revert(); break;
@@ -466,10 +493,10 @@ function flushSave() {
 
 /* ---------- 書き出し・読み込み ---------- */
 function exportJSON() {
-  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, cards: DATA.cards.map(c => {
+  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, decks: DATA.decks || [], cards: DATA.cards.map(c => {
     const o = { id: c.id, name: c.name, world: c.world, type: c.type, cost: c.cost };
     if (c.type === "char") { o.atk = c.atk; o.hp = c.hp; }
-    Object.assign(o, { glyph: c.glyph, copies: c.copies, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });
+    Object.assign(o, { glyph: c.glyph, limit: c.limit, rarity: c.rarity, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });
     if (c.note) o.note = c.note;
     if (c.art) o.art = c.art;
     return o;

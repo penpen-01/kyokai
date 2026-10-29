@@ -1,14 +1,73 @@
 {
- "version": 2,
- "updated": "2026-10-28",
+ "version": 3,
+ "updated": "2026-10-29",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 6,
-  "ENERGY_MAX": 8,
+  "ENERGY_MAX": 10,
   "FIELD_MAX": 4,
   "HAND_MAX": 8,
-  "FATIGUE": 2
+  "FATIGUE": 2,
+  "DECK_SIZE": 30,
+  "COPY_MAX": 3
  },
+ "decks": [
+  {
+   "id": "p-myth",
+   "name": "神話の進軍",
+   "cards": {
+    "pegasus": 3,
+    "thunder": 3,
+    "sage": 3,
+    "berserker": 3,
+    "wargod": 2,
+    "endragon": 1,
+    "rally": 2,
+    "bolt": 3,
+    "judgment": 1,
+    "squire": 3,
+    "archer": 3,
+    "turret": 3
+   }
+  },
+  {
+   "id": "p-mech",
+   "name": "機械の要塞",
+   "cards": {
+    "eye": 3,
+    "turret": 3,
+    "sentinel": 3,
+    "garm": 2,
+    "omega": 2,
+    "crystal": 3,
+    "quantum": 3,
+    "bolt": 3,
+    "squire": 3,
+    "archer": 1,
+    "sage": 2,
+    "wargod": 2
+   }
+  },
+  {
+   "id": "p-fan",
+   "name": "幻想の森",
+   "cards": {
+    "squire": 3,
+    "archer": 3,
+    "shadow": 3,
+    "priestess": 3,
+    "dragon": 2,
+    "cmvr35s2x5dv": 2,
+    "cmvr3jwcugk8": 2,
+    "stargaze": 2,
+    "spring": 2,
+    "crystal": 3,
+    "eye": 2,
+    "sentinel": 2,
+    "bolt": 1
+   }
+  }
+ ],
  "cards": [
   {
    "id": "squire",
@@ -19,9 +78,10 @@
    "atk": 1,
    "hp": 2,
    "glyph": "剣",
-   "copies": 4,
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "eye",
@@ -32,14 +92,15 @@
    "atk": 1,
    "hp": 1,
    "glyph": "眼",
-   "copies": 4,
    "keywords": [],
    "effects": [
     {
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "pegasus",
@@ -50,9 +111,10 @@
    "atk": 3,
    "hp": 2,
    "glyph": "馬",
-   "copies": 3,
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "archer",
@@ -63,14 +125,15 @@
    "atk": 2,
    "hp": 2,
    "glyph": "弓",
-   "copies": 4,
    "keywords": [],
    "effects": [
     {
      "kind": "dmgRandom",
      "n": 1
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "turret",
@@ -81,14 +144,15 @@
    "atk": 1,
    "hp": 2,
    "glyph": "砲",
-   "copies": 3,
    "keywords": [],
    "effects": [
     {
      "kind": "dmgFace",
      "n": 3
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "thunder",
@@ -99,11 +163,12 @@
    "atk": 3,
    "hp": 2,
    "glyph": "雷",
-   "copies": 3,
    "keywords": [
     "haste"
    ],
-   "effects": []
+   "effects": [],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "sentinel",
@@ -114,14 +179,15 @@
    "atk": 1,
    "hp": 5,
    "glyph": "盾",
-   "copies": 3,
    "keywords": [],
    "effects": [
     {
      "kind": "heal",
      "n": 1
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "shadow",
@@ -132,11 +198,12 @@
    "atk": 2,
    "hp": 2,
    "glyph": "影",
-   "copies": 3,
    "keywords": [
     "pierce"
    ],
-   "effects": []
+   "effects": [],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "sage",
@@ -147,14 +214,15 @@
    "atk": 2,
    "hp": 3,
    "glyph": "智",
-   "copies": 3,
    "keywords": [],
    "effects": [
     {
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "priestess",
@@ -165,14 +233,15 @@
    "atk": 2,
    "hp": 4,
    "glyph": "樹",
-   "copies": 3,
    "keywords": [],
    "effects": [
     {
      "kind": "ramp",
      "n": 1
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "berserker",
@@ -183,7 +252,6 @@
    "atk": 3,
    "hp": 3,
    "glyph": "獣",
-   "copies": 3,
    "keywords": [
     "haste"
    ],
@@ -192,7 +260,9 @@
      "kind": "buffAtk",
      "n": 1
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "dragon",
@@ -203,14 +273,15 @@
    "atk": 4,
    "hp": 5,
    "glyph": "竜",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
      "kind": "dmgAll",
      "n": 1
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "rare"
   },
   {
    "id": "garm",
@@ -221,11 +292,12 @@
    "atk": 5,
    "hp": 4,
    "glyph": "機",
-   "copies": 2,
    "keywords": [
     "haste"
    ],
-   "effects": []
+   "effects": [],
+   "limit": 2,
+   "rarity": "rare"
   },
   {
    "id": "wargod",
@@ -236,9 +308,10 @@
    "atk": 6,
    "hp": 6,
    "glyph": "神",
-   "copies": 2,
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "limit": 2,
+   "rarity": "rare"
   },
   {
    "id": "endragon",
@@ -249,14 +322,15 @@
    "atk": 8,
    "hp": 8,
    "glyph": "龍",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
      "kind": "dmgAll",
      "n": 5
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "legend"
   },
   {
    "id": "omega",
@@ -267,12 +341,13 @@
    "atk": 6,
    "hp": 7,
    "glyph": "極",
-   "copies": 2,
    "keywords": [
     "haste",
     "pierce"
    ],
-   "effects": []
+   "effects": [],
+   "limit": 2,
+   "rarity": "legend"
   },
   {
    "id": "rally",
@@ -281,14 +356,15 @@
    "type": "spell",
    "cost": 1,
    "glyph": "昂",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
      "kind": "buffAtk",
      "n": 2
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "common"
   },
   {
    "id": "stargaze",
@@ -297,14 +373,15 @@
    "type": "spell",
    "cost": 1,
    "glyph": "星",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "common"
   },
   {
    "id": "bolt",
@@ -313,14 +390,15 @@
    "type": "spell",
    "cost": 2,
    "glyph": "撃",
-   "copies": 3,
    "keywords": [],
    "effects": [
     {
      "kind": "dmgTarget",
      "n": 4
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "spring",
@@ -329,14 +407,15 @@
    "type": "spell",
    "cost": 2,
    "glyph": "泉",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
      "kind": "heal",
      "n": 5
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "common"
   },
   {
    "id": "crystal",
@@ -345,14 +424,15 @@
    "type": "spell",
    "cost": 2,
    "glyph": "晶",
-   "copies": 4,
    "keywords": [],
    "effects": [
     {
      "kind": "ramp",
      "n": 1
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "quantum",
@@ -361,14 +441,15 @@
    "type": "spell",
    "cost": 3,
    "glyph": "量",
-   "copies": 3,
    "keywords": [],
    "effects": [
     {
      "kind": "draw",
      "n": 2
     }
-   ]
+   ],
+   "limit": 3,
+   "rarity": "common"
   },
   {
    "id": "judgment",
@@ -377,7 +458,6 @@
    "type": "spell",
    "cost": 6,
    "glyph": "罰",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
@@ -396,7 +476,9 @@
      "kind": "dmgRandom",
      "n": 2
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "rare"
   },
   {
    "id": "cmvr35s2x5dv",
@@ -407,14 +489,15 @@
    "atk": 4,
    "hp": 3,
    "glyph": "童",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
      "kind": "dmgAll",
      "n": 3
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "rare"
   },
   {
    "id": "cmvr3jwcugk8",
@@ -425,7 +508,6 @@
    "atk": 3,
    "hp": 9,
    "glyph": "賢",
-   "copies": 2,
    "keywords": [],
    "effects": [
     {
@@ -440,7 +522,9 @@
      "kind": "buffHp",
      "n": 3
     }
-   ]
+   ],
+   "limit": 2,
+   "rarity": "legend"
   },
   {
    "id": "cmvr3qeaobf2",
@@ -449,7 +533,6 @@
    "type": "spell",
    "cost": 8,
    "glyph": "星",
-   "copies": 1,
    "keywords": [],
    "effects": [
     {
@@ -464,7 +547,9 @@
      "kind": "buffAtk",
      "n": 5
     }
-   ]
+   ],
+   "limit": 1,
+   "rarity": "legend"
   }
  ]
 }

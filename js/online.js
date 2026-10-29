@@ -134,6 +134,8 @@ const Online = {
   /* ---------- 部屋を作る（ホスト） ---------- */
   async create() {
     const name = this.readName();
+    const deck = Decks.readyDeck(m => this.lobbyMsg(m));
+    if (!deck) return;
     this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
     this.reset();
@@ -149,7 +151,7 @@ const Online = {
       console.error(e);
       return this.lobbyMsg("部屋を作れませんでした（サーバーの設定を確認してください）。");
     }
-    this.role = "host"; this.code = code;
+    this.role = "host"; this.code = code; this.myDeck = deck; this.guestDeck = null;
     store.set(ROOM_KEY, { code, role: "host" });
     this.watchRoom();
     this.showWaiting();
@@ -160,6 +162,8 @@ const Online = {
     const name = this.readName();
     const code = (codeArg || ($("#onl-code") ? $("#onl-code").value : "")).toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (code.length !== 4) return this.lobbyMsg("合言葉は4文字です。");
+    const deck = Decks.readyDeck(m => this.lobbyMsg(m));
+    if (!deck) return;
     this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
     this.reset();
@@ -176,6 +180,8 @@ const Online = {
     }
     this.role = "guest"; this.code = code;
     store.set(ROOM_KEY, { code, role: "guest" });
+    // 自分のデッキをホストに送る（対戦処理はホストが行うため）
+    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, by: this.uid, at: Date.now() });
     this.watchRoom();
     this.showConnecting("対戦を準備しています");
   },
@@ -215,7 +221,7 @@ const Online = {
     const netChanged = netKey !== this.netKey;
     this.netKey = netKey;
     if (this.role === "host") {
-      if (!S && room.guest && room.status === "waiting") return this.startGame();
+      if (!S && room.guest && room.status === "waiting" && this.guestDeck) return this.startGame();
       if (S && this.oppLeft && !prevOppLeft && !S.over) { forfeit(1, "退出した"); return; }
       if (S && netChanged && MODE === "online") render();
     } else {
@@ -225,16 +231,17 @@ const Online = {
   },
 
   startGame() {
+    if (!this.guestDeck || this.guestDeck.by !== this.room.guest || !this.myDeck) return;
     MODE = "online"; setPerspective(0);
     $("#overlay").hidden = true;
-    newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"]);
+    newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], [this.myDeck, this.guestDeck]);
   },
 
   rematch() {
-    if (this.role !== "host" || !this.room || !this.room.guest) return;
+    if (this.role !== "host" || !this.room || !this.room.guest || !S) return;
     if (this.oppLeft) return toast("相手が退出しているため、もう一度対戦できません");
     $("#overlay").hidden = true;
-    newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"]);
+    newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], S.decks);
   },
 
   /* ---------- ホスト：盤面を書き込む ---------- */
@@ -254,7 +261,10 @@ const Online = {
       this.lastBody = body;
       this.pubForce = false;
       S.seq = (S.seq || 0) + 1;
-      const payload = JSON.stringify({ S, fx: this.fxq });
+      // じゃんけんでは、ゲストが選ぶまでホストの手を伏せる
+      let out = S;
+      if (S.phase === "rps" && S.rps.picks[0] && !S.rps.picks[1]) out = { ...S, rps: { ...S.rps, picks: ["?", null] } };
+      const payload = JSON.stringify({ S: out, fx: this.fxq });
       this.fxq = [];
       Net.update(`rooms/${this.code}`, { state: payload, status: S.over ? "over" : "playing" }).catch(e => console.error(e));
     });
@@ -263,9 +273,21 @@ const Online = {
   /* ---------- ホスト：ゲストの操作を処理 ---------- */
   onAction(key, a) {
     Net.remove(`rooms/${this.code}/actions/${key}`);
-    if (!S || !a || !this.room || a.by !== this.room.guest) return;
+    if (!a) return;
+    if (a.t === "deck") {
+      // 参加者のデッキ。知らないカードは除いて受け取る
+      const cards = {};
+      Object.entries(cleanDeckCards(a.cards)).forEach(([id, n]) => { if (DEF[id]) cards[id] = n; });
+      this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by };
+      if (!S && this.room && this.room.guest && this.room.status === "waiting") this.startGame();
+      return;
+    }
+    if (!S || !this.room || a.by !== this.room.guest) return;
     let done = false;
-    if (S.turn === 1 && !S.over) {
+    if (S.phase === "rps" && a.t === "rps") done = rpsPick(1, a.v);
+    else if (S.phase === "choose" && a.t === "choose") done = chooseOrder(1, !!a.first);
+    else if (S.phase === "mulligan" && a.t === "mull") done = mulligan(1, !!a.redraw);
+    else if (S.phase === "play" && S.turn === 1 && !S.over) {
       if (a.t === "play") {
         let idx = a.idx;
         const hand = S.players[1].hand;
