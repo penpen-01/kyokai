@@ -86,6 +86,7 @@ const Sound = {
       switch (name) {
         case "click": this.tone(880, 0, 0.05, "triangle", 0.15); break;
         case "play": this.noise(0, 0.18, 0.25, 900); this.tone(330, 0, 0.18, "triangle", 0.3, 660); break;
+        case "swing": this.noise(0, 0.16, 0.22, 1800); this.tone(520, 0, 0.14, "sine", 0.08, 260); break;
         case "hit": this.noise(0, 0.12, 0.5, 400); this.tone(140, 0, 0.14, "square", 0.18, 70); break;
         case "face": this.noise(0, 0.25, 0.6, 250); this.tone(110, 0, 0.3, "sawtooth", 0.22, 50); break;
         case "heal": [523, 659, 784].forEach((f, i) => this.tone(f, i * 0.06, 0.25, "sine", 0.25)); break;
@@ -135,15 +136,14 @@ Sound.diag = function () {
 };
 Sound.showPanel = function () {
   openOverlay(`<div class="panel">
-    <h2 class="title sm">音の設定</h2>
+    <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>音の設定</b></div>
     <button type="button" class="btn ${this.on ? "primary" : ""}" data-act="sound">${this.on ? "音：オン（押すとオフ）" : "音：オフ（押すとオン）"}</button>
     <button type="button" class="btn" data-act="soundTest">テスト音を鳴らす</button>
     ${navigator.audioSession ? `<button type="button" class="btn" data-act="soundLoud">マナーモード中も鳴らす：${this.loud ? "オン" : "オフ"}</button>
     <p class="lead small">オンにすると、マナーモード中でも音が出ますが、iPhoneのロック画面やコントロールセンターに「再生中」の表示が出ます。</p>` : ""}
     <ul class="diag">${this.diag().map(x => `<li>${esc(x)}</li>`).join("")}</ul>
     <p class="lead small">テスト音が聞こえないときは、本体の音量ボタンで音量を上げて、もう一度押してください。それでも鳴らないときは、この画面のスクリーンショットを送ってください。</p>
-    <button type="button" class="btn" data-act="back">戻る</button>
-  </div>`, "start", true);
+  </div>`, null, true);
 };
 
 /* アプリを閉じた・裏に回したときは音を止める（ロック画面に再生表示が残らないように） */

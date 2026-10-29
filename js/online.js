@@ -330,7 +330,7 @@ const Online = {
     MODE = "online"; setPerspective(1);
     this.pending = false;
     clearTimeout(this.pendingTimer);
-    if (isNewGame) { ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; }
+    if (isNewGame) { Motion.reset(); ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; }
     render();
     if (S.over && !wasOver) scheduleResult();
   },
@@ -402,7 +402,8 @@ showStart = function () {
     const b = document.createElement("button");
     b.type = "button"; b.className = "btn primary"; b.dataset.act = "resume";
     b.textContent = `前回の対戦に戻る（合言葉 ${saved.code}）`;
-    panel.insertBefore(b, panel.querySelector('[data-act="start"]'));
+    const host = panel.querySelector(".homemain") || panel;
+    host.insertBefore(b, host.querySelector(".battles"));
   }
 };
 
@@ -424,8 +425,11 @@ async function boot() {
       <p class="lead">${esc(e.message)}</p></div>`, "start", true);
     return;
   }
+  // 試遊（カード工房から）のときは起動画面を出さずにすぐ始める
+  if (!DATA_INFO.draft) Splash.show();
   await Account.init();
-  if (Account.isNew) Account.showWelcome(); else showStart();
+  const next = () => (Account.isNew ? Account.showWelcome() : showStart());
+  if (Splash.shown) Splash.setReady(next); else next();
 }
 registerSW();
 boot();

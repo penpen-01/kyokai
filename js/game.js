@@ -64,6 +64,7 @@ function buildPile(deck) {
 /* ---------- ゲーム進行（ここから下の処理は、CPU戦とホストだけが実行する） ----------
    流れ：じゃんけん（rps）→ 勝った人が先攻・後攻を選ぶ（choose）→ マリガン（mulligan）→ 対戦（play） */
 function newGame(names, decks) {
+  if (!SIM && typeof Motion !== "undefined") Motion.reset();
   S = {
     gid: Math.random().toString(36).slice(2, 10),
     phase: "rps",
@@ -257,6 +258,7 @@ function playCard(pi, idx, targetsIn) {
   const tnames = roles.filter(r => r !== "sacrifice").map(r => { const u = S.players[roleSide(pi, r)].field.find(x => x.uid === targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
   log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
   sfx("play");
+  fx("cast", id, "cast" + pi);
   // 代償
   if (d.pay && d.pay.kind === "life") { p.hp -= d.pay.n; log(`代償として${pname(pi)}の体力を${d.pay.n}払った。`); fx(playerSel(pi), "-" + d.pay.n, "dmg"); }
   if (d.pay && d.pay.kind === "sacrifice") {
@@ -372,6 +374,7 @@ function cleanup() {
   S.players.forEach((p, pi) => {
     p.field = p.field.filter(u => {
       if (u.hp > 0) return true;
+      fx(unitSel(u.uid), "", "die");
       log(`${pname(pi)}の${cname(u.id)}は${u.destroyed ? "破壊された" : "倒れた"}。`);
       return false;
     });
@@ -404,12 +407,14 @@ function attack(pi, uid, target) {
   if (target === "player") {
     if (!canAttackPlayer(pi, a)) return false;
     a.ready = false;
+    fx(unitSel(a.uid), playerSel(opp(pi)), "lunge");
     log(`${cname(a.id)}が${pname(opp(pi))}に${a.atk}ダメージ！`);
     hitPlayer(opp(pi), a.atk);
   } else {
     const d = en.field.find(u => u.uid === target);
     if (!d || !canAttackUnit(pi, d)) return false;
     a.ready = false;
+    fx(unitSel(a.uid), unitSel(d.uid), "lunge");
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
     const before = d.hp;
     const dealt = hitUnit(d, a.atk);
@@ -600,6 +605,7 @@ async function cpuTurn() {
     if (!a) break;
     if (!applyAction(1, a)) break;
     await sleep(CPU_DELAY);
+    await Motion.idle();
     if (S !== g) return;
   }
   busy = false;
@@ -704,18 +710,22 @@ function endButtonHTML() {
 
 let renderDeferred = false;
 let lastTurnKey = "";
+let lastBannerKey = "";
 function render() {
   if (!S || SIM) return;
   if (MODE === "online" && Online.role === "host") Online.publish();
   // ドラッグ中に盤面を作り直すと、指の下のカードが消えて指を離した合図が届かなくなる（iPhoneなど）。
   // そのためドラッグが終わるまで描き直しを待つ
   if ((drag && drag.started) || (press && press.shown)) { renderDeferred = true; return; }
+  // 攻撃の演出中は、ぶつかる瞬間まで盤面を描き直さない
+  if (Motion.holding()) { Motion.renderPending = true; return; }
   renderDeferred = false;
   clearDragLeftovers();
   hidePreview();
   if (S.phase !== "play") { app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
   const tk = `${S.gid}-${S.turnNo}`;
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; Sound.play("turn"); }
+  if (!S.over && tk !== lastBannerKey) { lastBannerKey = tk; Motion.banner(S.turn === ME); }
   const me = S.players[ME];
   const lines = S.log.filter(l => !l.sep).slice(-2);
   app.innerHTML = `
@@ -736,6 +746,7 @@ function render() {
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   layoutHand();
   renderSheet();
+  Motion.afterRender();
 }
 
 /* ---------- 対戦前の画面（じゃんけん・先攻後攻・マリガン） ---------- */
@@ -1126,7 +1137,14 @@ function fx(sel, text, cls) {
 /* 効果音だけを鳴らす（対人戦では相手の画面でも鳴る） */
 function sfx(name) { fx("sfx", name, "sfx"); }
 function playFx(sel, text, cls) {
+  if (Motion.holding()) { Motion.queue.push([sel, text, cls]); return; }
+  runFx(sel, text, cls);
+}
+function runFx(sel, text, cls) {
   if (sel === "sfx") { Sound.play(text); return; }
+  if (cls === "lunge") { Motion.lunge(sel, text); return; }
+  if (sel === "cast") { Motion.cast(text, +cls.slice(4)); return; }
+  if (cls === "die") { const el = document.querySelector(sel); if (el) Motion.shatter(el); return; }
   if (cls === "dmg") Sound.play(text === "破壊" ? "destroy" : sel.startsWith("[data-player") ? "face" : "hit");
   else if (cls === "heal") Sound.play(/^[+＋]\d+$/.test(text) ? "heal" : "buff");
   const el = document.querySelector(sel);
@@ -1140,6 +1158,8 @@ function playFx(sel, text, cls) {
     if (el.classList.contains("avatar")) f.style.borderRadius = "50%";
     layer.appendChild(f);
     setTimeout(() => f.remove(), 500);
+    if (el.classList.contains("avatar")) Motion.shake();
+    else Motion.spark(r);
   }
   const t = document.createElement("span");
   t.className = "float " + cls;
@@ -1201,34 +1221,63 @@ function goBack() {
   else if (overlayFrom === "result" && S && S.over) showResult(myResult());
   else if (overlayFrom === "game") $("#overlay").hidden = true;
   else if (overlayFrom === "lobby" && typeof Online !== "undefined") Online.showLobby();
+  else if (overlayFrom === "options") showOptions();
   else showStart();
 }
 
+/* ホーム画面のアイコン（線画のSVG） */
+const HOME_ICON = {
+  cpu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/><path d="M9.5 6.5 13 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg>',
+  online: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M2.5 19.5c.6-3.4 2.8-5.3 5.5-5.3s4.9 1.9 5.5 5.3M13.6 14.6c.9-.6 1.9-.9 2.9-.9 2.3 0 4.2 1.6 4.8 4.6"/></svg>',
+  decks: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="5" width="11" height="15" rx="1.6"/><path d="M4.5 16.5V4.8c0-.9.7-1.6 1.6-1.6h8.6"/><path d="M10.5 12.5l2 -2.5 2 2.5-2 2.5z"/></svg>',
+  packs: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14l-1.2 13H6.2z"/><path d="M5 7.5 7 3h10l2 4.5M9.5 12.5h5"/></svg>',
+  cards: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
+  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>'
+};
+
 function showStart() {
-  const info = DATA_INFO.draft
-    ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>`
-    : DATA_INFO.updated ? `<p class="datainfo">カードデータ更新日：${esc(DATA_INFO.updated)}</p>` : "";
-  openOverlay(`<div class="panel">
-    <h1 class="title"><small>ベータ版 0.8</small>境界の召喚士</h1>
-    <p class="lead">神話・幻想・機械。崩れた世界の境界から英雄を呼び出し、相手の召喚士を倒せ。</p>
-    <div class="worlds"><span class="w-myth">神話</span><span class="w-fan">幻想</span><span class="w-mech">機械</span></div>
+  const deck = Decks.selected();
+  const goldOK = Account.status !== "none" && Account.status !== "free";
+  openOverlay(`<div class="panel home">
+    <div class="homebar">
+      ${goldOK ? `<span class="goldtag">${Account.gold}G</span>` : `<span></span>`}
+      <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
+    </div>
+    <div class="homemain">
     ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
-    <button type="button" class="btn primary" data-act="start">CPUと対戦する</button>
-    ${DATA_INFO.draft ? "" : `<button type="button" class="btn primary ghostish" data-act="online">友達と対戦する</button>`}
-    <div class="titlegrid">
-      <button type="button" class="btn deckbtn" data-act="decks"><span>デッキ編成</span><small>使用中：${esc(Decks.selected() ? Decks.selected().name : "なし")}</small></button>
-      <button type="button" class="btn deckbtn" data-act="packs"><span>パック</span><small>所持 ${Account.gold}G</small></button>
+    ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
+    <div class="battles">
+      <button type="button" class="battlebtn cpu" data-act="start">
+        <span class="bicon">${HOME_ICON.cpu}</span><span class="btxt"><b>CPUと対戦</b><small>3つの強さ・勝つとGがもらえる</small></span>
+      </button>
+      ${DATA_INFO.draft ? "" : `<button type="button" class="battlebtn online" data-act="online">
+        <span class="bicon">${HOME_ICON.online}</span><span class="btxt"><b>友達と対戦</b><small>合言葉で部屋に入る</small></span>
+      </button>`}
     </div>
-    <div class="titlegrid">
-      <button type="button" class="btn" data-act="cards">カード一覧</button>
-      <button type="button" class="btn" data-act="rules">ルール</button>
-      <button type="button" class="btn" data-act="account">アカウント</button>
-      <button type="button" class="btn" data-act="soundPanel">音：${Sound.on ? "オン" : "オフ"}</button>
+    <div class="hometiles">
+      <button type="button" class="hometile" data-act="decks">${HOME_ICON.decks}<b>デッキ編成</b><small>${esc(deck ? deck.name : "未選択")}</small></button>
+      <button type="button" class="hometile" data-act="packs">${HOME_ICON.packs}<b>パック</b><small>${goldOK ? `所持 ${Account.gold}G` : "開封する"}</small></button>
+      <button type="button" class="hometile" data-act="cards">${HOME_ICON.cards}<b>カード一覧</b><small>全${CARDS.filter(c => c.limit > 0).length}種</small></button>
     </div>
-    ${DATA_INFO.draft ? "" : `<button type="button" class="btn fbbtn" data-act="fbOpen">ご意見・感想を送る<small>改善案・不具合・良かった所・いまいちな所など</small></button>`}
-    ${info}
-    <p class="datainfo">ベータ版のカードやGは、正式公開のときにリセットされます。</p>
+    ${DATA_INFO.draft ? "" : `<button type="button" class="btn fbbtn" data-act="fbOpen"><span class="fbline">${HOME_ICON.mail}ご意見・感想を送る</span><small>改善案・不具合・良かった所・いまいちな所など</small></button>`}
+    </div>
   </div>`, "start", true);
+}
+
+/* 歯車ボタン：ルール・アカウント・音などの事務的なもの */
+function showOptions() {
+  const info = DATA_INFO.updated ? `カードデータ：v${DATA_INFO.version}（${esc(DATA_INFO.updated)} 更新）` : "";
+  openOverlay(`<div class="panel">
+    <div class="topbar"><button type="button" class="btn sm" data-act="optBack">← 戻る</button><b>オプション</b></div>
+    <div class="optlist">
+      <button type="button" class="optrow" data-act="rules"><b>ルール</b><small>遊び方・カードの能力</small></button>
+      <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
+      <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
+    </div>
+    <p class="datainfo">${info}</p>
+    <p class="datainfo">ベータ版のカードやGは、正式公開のときにリセットされます。</p>
+  </div>`, "options", true);
 }
 
 function showMenu() {
@@ -1330,6 +1379,7 @@ function toTitle() {
   if (MODE === "online") Online.leave();
   MODE = "cpu"; setPerspective(0);
   S = null; busy = false; ui = { sel: null, mode: null };
+  Motion.reset();
   clearTimeout(resultTimer);
   app.innerHTML = "";
   $("#sheet").hidden = true;
@@ -1369,7 +1419,7 @@ function handleAct(act, el) {
     case "cpuLevel": startCpuGame(el && el.dataset.v); break;
     case "cpuAgain": startCpuGame(CPU_LEVEL); break;
     case "online": Online.showLobby(); break;
-    case "rules": if (!S) overlayFrom = overlayFrom === "lobby" ? "lobby" : "start"; else if (overlayFrom !== "menu" && overlayFrom !== "result") overlayFrom = "game"; showRules(); break;
+    case "rules": if (!S) { if (overlayFrom !== "lobby" && overlayFrom !== "options") overlayFrom = "start"; } else if (overlayFrom !== "menu" && overlayFrom !== "result") overlayFrom = "game"; showRules(); break;
     case "cards": if (!S) overlayFrom = "start"; showCardList(); break;
     case "log": if ($("#overlay").hidden) overlayFrom = "game"; showLog(); break;
     case "back": goBack(); break;
@@ -1392,10 +1442,13 @@ function handleAct(act, el) {
     }
     case "account": Account.showScreen(); break;
     case "soundPanel": Sound.showPanel(); break;
+    case "options": showOptions(); break;
+    case "optBack": showStart(); break;
     case "sound": Sound.toggle(); Sound.showPanel(); break;
     case "soundTest": Sound.unlock(); Sound.play("win"); setTimeout(() => Sound.showPanel(), 300); break;
     case "soundLoud": Sound.toggleLoud(); Sound.showPanel(); break;
     default:
+      if (Splash.handleAct(act, el)) return;
       if (Account.handleAct(act, el)) return;
       if (Feedback.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;

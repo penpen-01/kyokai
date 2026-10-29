@@ -146,8 +146,7 @@ const Account = {
         <button type="button" class="btn primary" data-act="acctLoad">読み込む</button></div>`}
       <p class="onl-msg" id="acct-msg" role="status">${msg ? esc(msg) : ""}</p>
       <p class="datainfo">シーズン：${esc(CONFIG.SEASON)}</p>
-      <button type="button" class="btn" data-act="back">戻る</button>
-    </div>`, "start", true);
+    </div>`, null, true);
   },
 
   handleAct(act) {
