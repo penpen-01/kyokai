@@ -19,15 +19,20 @@ const Splash = {
     return list[0];
   },
 
-  show() {
-    this.shown = true;
-    const bands = ["myth", "fan", "mech"].map((w, i) => {
+  /* 3つの世界の斜めの帯（ホーム画面の背景にも使う） */
+  bandsHTML() {
+    return ["myth", "fan", "mech"].map((w, i) => {
       const c = this.pick(w);
       const inner = c && c.art
         ? `<img src="${esc(c.art)}" alt="" draggable="false">`
         : `<span class="sp-glyph">${esc(c ? c.glyph : WORLDS[w][0])}</span>`;
       return `<div class="sp-band sp-b${i} w-${w}"><div class="sp-art">${inner}</div><span class="sp-wname">${WORLDS[w]}</span></div>`;
     }).join("");
+  },
+
+  show() {
+    this.shown = true;
+    const bands = this.bandsHTML();
     let motes = "";
     for (let i = 0; i < 14; i++) {
       motes += `<i style="left:${(i * 37) % 100}%;animation-delay:${(i * 0.7) % 6}s;animation-duration:${6 + (i % 5)}s"></i>`;

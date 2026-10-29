@@ -832,6 +832,10 @@ function layoutHand() {
   const w = cs[0].getBoundingClientRect().width, box = h.clientWidth, gap = 6;
   const step = n > 1 ? Math.min(w + gap, (box - w) / (n - 1)) : 0;
   cs.forEach((c, i) => { c.style.marginLeft = i ? (step - w) + "px" : "0"; c.style.zIndex = i + 1; });
+  // 重なりが大きいときは、見えている左端の帯に名前（縦書き）・コスト・攻撃/体力を寄せる
+  const tight = n > 1 && step < w * 0.78;
+  h.classList.toggle("tight", tight);
+  h.style.setProperty("--strip", Math.max(30, Math.min(w, step - 1)) + "px");
 }
 
 function detailHTML(id, unit, owner) {
@@ -1239,12 +1243,14 @@ const HOME_ICON = {
 function showStart() {
   const deck = Decks.selected();
   const goldOK = Account.status !== "none" && Account.status !== "free";
-  openOverlay(`<div class="panel home">
+  openOverlay(`<div class="homebg" aria-hidden="true"><div class="sp-bg">${Splash.bandsHTML()}</div><div class="homeshade"></div></div>
+  <div class="panel home">
     <div class="homebar">
       ${goldOK ? `<span class="goldtag">${Account.gold}G</span>` : `<span></span>`}
       <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
     </div>
     <div class="homemain">
+    <div class="homelogo"><small>神話 ・ 幻想 ・ 機械</small><b>境界の召喚士</b></div>
     ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
     ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
     <div class="battles">
