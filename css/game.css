@@ -84,10 +84,11 @@ body{
 .endbtn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
 /* ---- 手札（8枚すべて見えるよう重ねて並べる） ---- */
-.hand{flex:none;height:122px;display:flex;padding-top:14px;position:relative}
-.hand .card{height:100%;flex:none}
-.hand .card.sel{transform:translateY(-12px);z-index:50!important}
-@media (hover:hover){ .hand .card:hover{transform:translateY(-12px);z-index:50!important} }
+.hand{flex:none;height:128px;display:flex;justify-content:center;padding-top:16px;position:relative}
+/* 扇形：--rot（傾き）と --dy（下げる量）は layoutHand() で決める。選んだカードはまっすぐ持ち上げる */
+.hand .card{height:100%;flex:none;transform-origin:50% 92%;transform:translateY(var(--dy,0px)) rotate(var(--rot,0deg));transition:transform .18s ease, filter .15s}
+.hand .card.sel{transform:translateY(calc(var(--dy,0px) - 18px)) rotate(0deg) scale(1.06);z-index:50!important}
+@media (hover:hover){ .hand .card:hover{transform:translateY(calc(var(--dy,0px) - 14px)) rotate(0deg);z-index:50!important} }
 .card.peek{box-shadow:0 0 0 3px var(--fg)!important;z-index:50!important}
 
 /* ---- 盤面のカード状態 ---- */
@@ -95,9 +96,8 @@ body{
 .card.ready{box-shadow:0 0 0 2px var(--gold), 0 0 12px color-mix(in srgb,var(--gold) 55%,transparent)}
 .card.rest{filter:saturate(.45) brightness(.8)}
 /* 半透明にすると重なった隣のカードが透けて読めなくなるので、暗くするだけにする */
-.card.dim .art{filter:saturate(.3) brightness(.45)}
-.card.dim .cost{background:#7d7a73}
-.card.dim .nm{color:#b9b6c2}
+/* 使えないカード：カード全体を白っぽく色あせさせる（透明にはしない） */
+.card.dim{filter:grayscale(.85) brightness(.62) contrast(.85)}
 .card.sel{box-shadow:0 0 0 2px var(--fg)}
 .slot .card.sel{transform:translateY(-6px)}
 .card.tgt{box-shadow:0 0 0 2px var(--danger);animation:pulse 1s ease-in-out infinite}
@@ -597,28 +597,6 @@ body{
   .sp-band,.sp-logo,.sp-sub,.sp-tap,.sp-art img,.sp-glyph,.sp-motes i{animation:none!important}
 }
 
-/* ---- 手札が重なるとき（.hand.tight）：左端の見えている帯に情報を集める ---- */
-.hand.tight .card .foot{
-  top:0;bottom:0;right:auto;width:var(--strip);padding:0;justify-content:flex-end;
-  background:linear-gradient(to right, rgba(8,9,18,.92) 70%, rgba(8,9,18,0));
-}
-.hand.tight .card .nm{
-  position:absolute;top:28cqw;left:0;width:var(--strip);height:calc(100% - 28cqw - 26cqw);box-sizing:border-box;padding:0;
-  writing-mode:vertical-rl;text-orientation:upright;display:block;text-align:start;
-  font-size:13.5cqw;letter-spacing:-.02em;line-height:var(--strip);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.hand.tight .card .stats{justify-content:flex-start;gap:1.5cqw;padding:0 0 3cqw 2.5cqw;font-size:12cqw}
-.hand.tight .card .atk,.hand.tight .card .hp{width:20cqw;height:20cqw}
-.hand.tight .card .stats.spelltag{padding:0 0 5cqw;width:var(--strip);justify-content:center;font-size:10cqw;letter-spacing:0;min-height:20cqw;align-items:flex-end}
-.hand.tight .card .marks{right:auto;left:calc(var(--strip) + 1px);display:none}
-/* いちばん右（重なっていない）カードと、選んだカードは普段どおりの見た目 */
-.hand.tight .card:last-child .foot,.hand.tight .card.sel .foot{top:auto;width:auto;right:0;padding-top:14cqw;background:linear-gradient(to bottom, transparent, rgba(8,9,18,.78) 38%, rgba(8,9,18,.94))}
-.hand.tight .card:last-child .nm,.hand.tight .card.sel .nm{position:static;writing-mode:horizontal-tb;width:auto;max-height:none;display:block;font-size:11.5cqw;padding:0 3cqw;letter-spacing:0}
-.hand.tight .card:last-child .stats,.hand.tight .card.sel .stats{justify-content:space-between;padding:2cqw 4cqw 4cqw;font-size:14cqw}
-.hand.tight .card:last-child .atk,.hand.tight .card:last-child .hp,.hand.tight .card.sel .atk,.hand.tight .card.sel .hp{width:23cqw;height:23cqw}
-.hand.tight .card:last-child .stats.spelltag,.hand.tight .card.sel .stats.spelltag{writing-mode:horizontal-tb;width:auto;padding-block:3cqw 6cqw;font-size:11cqw;letter-spacing:.2em}
-.hand.tight .card:last-child .marks,.hand.tight .card.sel .marks{display:flex;left:auto;right:2.5cqw}
 
 /* ---- ホームの背景（起動画面の帯を薄く）とロゴ ---- */
 .homebg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}

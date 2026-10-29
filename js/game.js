@@ -738,8 +738,10 @@ function render() {
     </div>
     ${fieldHTML(ME)}
     ${pbarHTML(ME)}
-    <div class="hand">${me.hand.map((id, i) => {
-      const dim = S.turn !== ME || !DEF[id] || effCost(ME, DEF[id]) > me.e;
+    <div class="hand">${handOrder(me).map(i => {
+      const id = me.hand[i];
+      // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
+      const dim = !DEF[id] || (S.turn === ME && !S.over && !canPlay(ME, i).ok);
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
       return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id]) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
     }).join("")}</div>
@@ -825,17 +827,32 @@ function doMull(redraw) {
 }
 
 /* 手札が多いときはカードを重ねて、全部が手札の幅に収まるようにする */
+/* 手札はコストの安い順に表示する（実際の手札の順番は変えない。data-hand は元の位置） */
+function handOrder(p) {
+  const key = id => DEF[id] ? effCost(ME, DEF[id]) : 99;
+  return p.hand.map((id, i) => i).sort((a, b) => {
+    const A = p.hand[a], B = p.hand[b];
+    return key(A) - key(B) || (DEF[A] && DEF[B] ? (DEF[A].type === DEF[B].type ? 0 : DEF[A].type === "char" ? -1 : 1) || DEF[A].name.localeCompare(DEF[B].name, "ja") : 0) || a - b;
+  });
+}
+
 function layoutHand() {
   const h = app.querySelector(".hand");
   if (!h || !h.children.length) return;
   const cs = [...h.children], n = cs.length;
-  const w = cs[0].getBoundingClientRect().width, box = h.clientWidth, gap = 6;
-  const step = n > 1 ? Math.min(w + gap, (box - w) / (n - 1)) : 0;
-  cs.forEach((c, i) => { c.style.marginLeft = i ? (step - w) + "px" : "0"; c.style.zIndex = i + 1; });
-  // 重なりが大きいときは、見えている左端の帯に名前（縦書き）・コスト・攻撃/体力を寄せる
-  const tight = n > 1 && step < w * 0.78;
-  h.classList.toggle("tight", tight);
-  h.style.setProperty("--strip", Math.max(30, Math.min(w, step - 1)) + "px");
+  const w = cs[0].offsetWidth, box = h.clientWidth, gap = 6;
+  // 扇形に並べる：横の間隔を決め、中央から離れるほど傾けて少し下げる
+  // 傾けると端のカードが外に少しはみ出すので、その分だけ内側に詰める
+  const step = n > 1 ? Math.min(w + gap, (box - w - 24) / (n - 1)) : 0;
+  const fan = step < w; // 重なるときだけ扇にする
+  const per = fan && n > 1 ? Math.min(4.5, 26 / (n - 1)) : 0;
+  cs.forEach((c, i) => {
+    const t = i - (n - 1) / 2;
+    c.style.marginLeft = i ? (step - w) + "px" : "0";
+    c.style.zIndex = i + 1;
+    c.style.setProperty("--rot", (t * per).toFixed(2) + "deg");
+    c.style.setProperty("--dy", (fan ? Math.abs(t) * Math.abs(t) * 1.3 : 0).toFixed(1) + "px");
+  });
 }
 
 function detailHTML(id, unit, owner) {
@@ -1050,7 +1067,7 @@ function startDrag() {
     const g = drag.el.cloneNode(true);
     g.classList.remove("dim", "sel");
     g.classList.add("ghost");
-    g.style.width = r.width + "px"; g.style.height = r.height + "px"; g.style.margin = "0";
+    g.style.width = drag.el.offsetWidth + "px"; g.style.height = drag.el.offsetHeight + "px"; g.style.margin = "0";
     $("#fx").appendChild(g);
     drag.ghost = g;
     drag.el.classList.add("lifted");
