@@ -89,7 +89,8 @@ function renderStatus() {
   $("#status").innerHTML = `
     ${saveState === "err"
       ? `<span class="dot err">ブラウザに自動保存できませんでした。早めに書き出してください</span>`
-      : `<span class="dot ${dirty ? "dirty" : ""}">${dirty ? "未書き出しの変更あり（このブラウザには自動保存済み）" : "書き出し済みの内容と同じです"}</span>`}
+      : `<span class="dot ${dirty ? "dirty" : ""}">${dirty ? "未公開の変更あり（このブラウザには自動保存済み）" : "公開中の内容と同じです"}</span>`}
+    ${Publish.ready() ? "" : `<button type="button" class="linkbtn" data-act="pubSettings">公開設定がまだです</button>`}
     <span>データ ${fmtBytes(size)}</span>
     ${notice ? `<span class="dot dirty">${esc(notice)}</span>` : ""}`;
 }
@@ -463,7 +464,9 @@ function toggleMore(open) {
 }
 
 function act(name, el) {
+  if (["pubSettings", "pubHistory", "export", "import", "revert", "restoreBackup"].includes(name)) toggleMore(false);
   if (Admin.act(name, el)) return;
+  if (Publish.act(name, el)) return;
   const c = curCard();
   switch (name) {
     case "more": toggleMore($("#more").hidden); break;

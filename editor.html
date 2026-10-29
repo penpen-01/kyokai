@@ -23,9 +23,12 @@
     <div class="status" id="status" aria-live="polite"></div>
     <div class="top-actions">
       <button type="button" class="btn" data-act="playtest">この内容で試遊</button>
-      <button type="button" class="btn primary" data-act="export">書き出す</button>
+      <button type="button" class="btn primary" data-act="publish">公開する</button>
       <button type="button" class="btn" data-act="more" aria-haspopup="true" aria-expanded="false" id="moreBtn">その他</button>
       <div class="more" id="more" hidden>
+        <button type="button" data-act="pubSettings">公開設定（GitHubの鍵）</button>
+        <button type="button" data-act="pubHistory">公開履歴・以前の内容に戻す</button>
+        <button type="button" data-act="export">ファイルに書き出す</button>
         <button type="button" data-act="import">ファイルを読み込む</button>
         <button type="button" data-act="revert">公開中のデータに戻す</button>
         <button type="button" data-act="restoreBackup">以前の編集内容に戻す</button>
@@ -68,6 +71,7 @@
 
 <script src="js/shared.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/publish.js"></script>
 <script src="js/editor.js"></script>
 </body>
 </html>

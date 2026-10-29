@@ -188,3 +188,16 @@ textarea.txt{min-height:64px;line-height:1.6;white-space:pre-wrap}
 .ok{color:var(--heal)} .bad{color:var(--danger)} .small{font-size:12px}
 .tagS{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--gold);color:#1a1408}
 select.txt{appearance:auto;-webkit-appearance:auto}
+
+/* ---- 公開 ---- */
+.dialog.wide{max-width:640px}
+.dialog details summary{cursor:pointer;font-weight:700;font-size:13px}
+.dialog details ol{margin-top:8px}
+.linkbtn{all:unset;cursor:pointer;color:var(--gold);text-decoration:underline;font-size:12px}
+.linkbtn:focus-visible{outline:2px solid var(--fg)}
+.difflist{margin:0;padding-left:1.2em;font-size:13px;line-height:1.7}
+.warnbox{border:1px solid var(--danger);border-radius:8px;padding:10px 12px;color:var(--fg);background:color-mix(in srgb,var(--danger) 12%,transparent)}
+.histlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow-y:auto}
+.histlist li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.histlist li div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.histlist small{color:var(--muted)}
