@@ -220,7 +220,7 @@ const Online = {
       if (S && netChanged && MODE === "online") render();
     } else {
       if (room.state) this.onState(room.state);
-      else if (S) render();
+      if (S && netChanged) render();
     }
   },
 
@@ -300,7 +300,7 @@ const Online = {
     try { p = JSON.parse(str); } catch { return; }
     if (!p || !p.S) return;
     const isNewGame = !S || (S.over && !p.S.over) || p.S.seq < (S.seq || 0);
-    if (S && p.S.seq === S.seq && !isNewGame) { if (this.pending) { this.pending = false; } render(); return; }
+    if (S && p.S.seq === S.seq && !isNewGame) { if (this.pending) { this.pending = false; render(); } return; }
     // 演出は、古い盤面（倒れる前のキャラがまだいる状態）の上で再生する
     if (S && !isNewGame && Array.isArray(p.fx)) p.fx.forEach(f => playFx(f[0], f[1], f[2]));
     const wasOver = S && S.over;

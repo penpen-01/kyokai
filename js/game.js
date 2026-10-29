@@ -442,9 +442,15 @@ function endButtonHTML() {
   return `<button type="button" class="endbtn" data-act="end" ${canAct() ? "" : "disabled"}>ターン終了</button>`;
 }
 
+let renderDeferred = false;
 function render() {
   if (!S) return;
   if (MODE === "online" && Online.role === "host") Online.publish();
+  // ドラッグ中に盤面を作り直すと、指の下のカードが消えて指を離した合図が届かなくなる（iPhoneなど）。
+  // そのためドラッグが終わるまで描き直しを待つ
+  if (drag && drag.started) { renderDeferred = true; return; }
+  renderDeferred = false;
+  clearDragLeftovers();
   hidePreview();
   const me = S.players[ME];
   const lines = S.log.filter(l => !l.sep).slice(-2);
@@ -612,11 +618,26 @@ function finishPointer(e, commit) {
   if (drag && drag.started) {
     const action = commit ? dropAction(e.clientX, e.clientY) : null;
     endDrag();
+    drag = null;
     blockClick();
     if (action) action();
+    if (renderDeferred) render();
   }
   drag = null;
 }
+
+/* ドラッグの途中で取り残された絵（指を離した合図が届かなかった場合など）を片付ける */
+function clearDragLeftovers() {
+  document.querySelectorAll("#fx .ghost, #fx .arrow").forEach(el => el.remove());
+}
+function cancelDrag() {
+  if (drag && drag.started) { endDrag(); drag = null; if (renderDeferred) render(); }
+  drag = null;
+  if (press) { clearTimeout(press.timer); press = null; }
+  hidePreview();
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) cancelDrag(); });
+window.addEventListener("blur", cancelDrag);
 function blockClick() { suppressClick = true; setTimeout(() => suppressClick = false, 0); }
 
 /* 手札をドラッグしたときに、どこへ落とせば使えるか */
@@ -627,6 +648,7 @@ function handDropSide(d) {
 }
 
 function startDrag() {
+  clearDragLeftovers();
   drag.started = true;
   hidePreview();
   ui = { sel: null, mode: null };
