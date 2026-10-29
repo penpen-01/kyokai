@@ -52,7 +52,12 @@ const EFFECTS = {
   summon:      { group: "召喚",   label: "山札からキャラを無料で出す",    text: n => `山札からコスト${n}以下のキャラをランダムに1体、コストを払わずに出す。` }
 };
 
-const DEFAULT_CONFIG = { PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3 };
+const DEFAULT_CONFIG = {
+  PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3,
+  // ここから下はゲームの裏側（報酬・配布）
+  STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
+  SEASON: "beta", STARTER_DECK: "starter"
+};
 
 /* レア度（パック開封で使う） */
 const RARITY = { common: "コモン", rare: "レア", sr: "スーパーレア", ur: "ウルトラレア", legend: "レジェンド" };
@@ -66,7 +71,18 @@ const CONFIG_INFO = {
   HAND_MAX:   { label: "手札の上限",                 min: 1, max: 12 },
   FATIGUE:    { label: "山札切れで引けないときのダメージ", min: 0, max: 20 },
   DECK_SIZE:  { label: "デッキの枚数",               min: 10, max: 60 },
-  COPY_MAX:   { label: "同じカードを入れられる上限", min: 1, max: 10 }
+  COPY_MAX:   { label: "同じカードを入れられる上限", min: 1, max: 10 },
+  STARTING_GOLD: { label: "始めたときに配るG", min: 0, max: 100000, group: "eco", step: 10 },
+  REWARD_EASY:   { label: "CPU初級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
+  REWARD_NORMAL: { label: "CPU中級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
+  REWARD_HARD:   { label: "CPU上級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
+  REWARD_ONLINE: { label: "対人戦に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 }
+};
+
+/* パックの標準の排出率（%）。最後の1枚はレア以上確定 */
+const DEFAULT_ODDS = {
+  normal: { common: 70, rare: 22, sr: 6, ur: 1.5, legend: 0.5 },
+  last:   { common: 0, rare: 70, sr: 20, ur: 7, legend: 3 }
 };
 
 const DRAFT_KEY = "kyokai-draft-v1";
@@ -166,7 +182,17 @@ function normalizeData(data) {
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
     level: ["easy", "normal", "hard"].includes(x.level) ? x.level : "normal"
   }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks };
+  const packs = (Array.isArray(d.packs) ? d.packs : []).filter(x => x && x.id).map(x => ({
+    id: String(x.id), name: String(x.name || "パック"), price: Math.max(0, +x.price || 0), size: Math.max(1, Math.min(10, +x.size || 5)),
+    cards: Array.isArray(x.cards) ? x.cards.map(String) : [],
+    odds: {
+      normal: Object.assign({}, DEFAULT_ODDS.normal, (x.odds && x.odds.normal) || {}),
+      last: Object.assign({}, DEFAULT_ODDS.last, (x.odds && x.odds.last) || {})
+    },
+    open: x.open !== false
+  }));
+  config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs };
 }
 
 function cleanDeckCards(cards) {
@@ -177,7 +203,7 @@ function cleanDeckCards(cards) {
 
 /* デッキの枚数とルール違反を調べる。cardsById は id→カード */
 function deckCount(deck) { return Object.values(deck.cards || {}).reduce((s, n) => s + n, 0); }
-function deckProblems(deck, cardsById, config) {
+function deckProblems(deck, cardsById, config, owned) {
   const probs = [];
   const total = deckCount(deck);
   if (total !== config.DECK_SIZE) probs.push(`${config.DECK_SIZE}枚ちょうどにしてください（今 ${total}枚）`);
@@ -185,6 +211,7 @@ function deckProblems(deck, cardsById, config) {
     const c = cardsById[id];
     if (!c || c.limit <= 0) probs.push("今は使えないカードが入っています");
     else if (n > Math.min(c.limit, config.COPY_MAX)) probs.push(`${c.name}は${Math.min(c.limit, config.COPY_MAX)}枚までです`);
+    else if (owned && n > owned(id)) probs.push(`${c.name}を${n}枚持っていません（所持${owned(id)}枚）`);
   });
   return [...new Set(probs)];
 }
@@ -205,4 +232,16 @@ function registerSW() {
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   }
+}
+
+/* デッキコード（デッキを文字列にして受け渡す） */
+function deckToCode(deck) {
+  const json = JSON.stringify({ n: deck.name, c: deck.cards });
+  return "KYK1:" + btoa(unescape(encodeURIComponent(json)));
+}
+function codeToDeck(code) {
+  const m = String(code || "").trim().match(/^KYK1:([A-Za-z0-9+/=]+)$/);
+  if (!m) return null;
+  try { const o = JSON.parse(decodeURIComponent(escape(atob(m[1])))); return { name: String(o.n || "デッキ").slice(0, 16), cards: cleanDeckCards(o.c) }; }
+  catch { return null; }
 }

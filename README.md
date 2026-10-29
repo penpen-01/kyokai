@@ -15,7 +15,11 @@
 | `vendor/` | Firebase の SDK（npm の firebase@10.12.2 から取り出したもの） |
 | `database.rules.json` | Firebase Realtime Database のルール（Firebaseの画面に貼り付けて使う） |
 | `editor.html` / `js/editor.js` / `css/editor.css` | カード工房 |
-| `js/deck.js` | デッキ編成（自分のデッキはその端末のブラウザに保存） |
+| `js/deck.js` | デッキ編成（絵で一覧・絞り込み・検索・デッキコード） |
+| `js/account.js` | アカウント（引き継ぎコード）。所持カード・G・デッキを `seasons/<シーズン>/accounts/<コード>` に保存 |
+| `js/pack.js` | パック開封 |
+| `js/sound.js` | 効果音（Web Audioでその場で合成） |
+| `js/admin.js` | カード工房の管理者タブ（パック・報酬・CPUデッキ・シーズン） |
 | `js/shared.js` / `css/base.css` | 両方で使う定義（効果の種類、カードの見た目、デッキのルール） |
 | `manifest.webmanifest` / `sw.js` / `icons/` | アプリ化（PWA）用 |
 
@@ -41,3 +45,11 @@
 - 開始時：じゃんけん → 勝った人が先攻・後攻を選ぶ → お互い `START_HAND` 枚引き、1回だけ全部引き直せる（マリガン）
 - 先攻は最初のターンにカードを引かない
 - `game-data.json` の `decks` はサンプルデッキ（CPUもここから選ぶ）
+
+## 所持カードとパック（ベータ版0.8〜）
+
+- 初回起動で16文字の引き継ぎコードを発行し、スターターデッキ一式と `STARTING_GOLD` を配る
+- CPU戦の勝利で `REWARD_EASY/NORMAL/HARD`、対人戦の勝利で `REWARD_ONLINE` のGを獲得（負けは0G）
+- パックは `game-data.json` の `packs`。最後の1枚は `odds.last`（レア以上）で抽選。被りは所持数に加算
+- `config.SEASON` を変えると全員が新規スタート（前のシーズンのデータはFirebaseに残る）
+- カード工房での試遊（`?draft`）は、アカウントを使わず全カードを使える

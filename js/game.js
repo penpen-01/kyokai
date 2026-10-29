@@ -47,6 +47,7 @@ async function loadCardData() {
   CARDS = data.cards;
   DEF = Object.fromEntries(CARDS.map(c => [c.id, c]));
   PRESETS = data.decks;
+  PACKS = data.packs;
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
@@ -64,6 +65,7 @@ function buildPile(deck) {
    流れ：じゃんけん（rps）→ 勝った人が先攻・後攻を選ぶ（choose）→ マリガン（mulligan）→ 対戦（play） */
 function newGame(names, decks) {
   S = {
+    gid: Math.random().toString(36).slice(2, 10),
     phase: "rps",
     players: [mkPlayer(names[0], decks[0]), mkPlayer(names[1], decks[1])],
     rps: { picks: [null, null], round: 1, last: null }, rpsWinner: null, first: null, mull: [null, null],
@@ -254,6 +256,7 @@ function playCard(pi, idx, targetsIn) {
   p.discount = 0;
   const tnames = roles.filter(r => r !== "sacrifice").map(r => { const u = S.players[roleSide(pi, r)].field.find(x => x.uid === targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
   log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
+  sfx("play");
   // 代償
   if (d.pay && d.pay.kind === "life") { p.hp -= d.pay.n; log(`代償として${pname(pi)}の体力を${d.pay.n}払った。`); fx(playerSel(pi), "-" + d.pay.n, "dmg"); }
   if (d.pay && d.pay.kind === "sacrifice") {
@@ -700,6 +703,7 @@ function endButtonHTML() {
 }
 
 let renderDeferred = false;
+let lastTurnKey = "";
 function render() {
   if (!S || SIM) return;
   if (MODE === "online" && Online.role === "host") Online.publish();
@@ -710,6 +714,8 @@ function render() {
   clearDragLeftovers();
   hidePreview();
   if (S.phase !== "play") { app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
+  const tk = `${S.gid}-${S.turnNo}`;
+  if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; Sound.play("turn"); }
   const me = S.players[ME];
   const lines = S.log.filter(l => !l.sep).slice(-2);
   app.innerHTML = `
@@ -734,9 +740,9 @@ function render() {
 
 /* ---------- 対戦前の画面（じゃんけん・先攻後攻・マリガン） ---------- */
 const RPS_ICON = {
-  g: '<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="15"/></svg>',
-  c: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 40 L20 8 M32 40 L28 8"/><circle cx="24" cy="36" r="7"/></svg>',
-  p: '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="10" width="28" height="30" rx="6"/></svg>'
+  g: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 22c0-3 2-5 4.5-5S23 19 23 22v-1c0-3 2-5 4.5-5s4.5 2 4.5 5v1c0-2.5 2-4 4-4s4 1.5 4 4v8c0 7-5 12-12 12h-4c-6 0-11-5-11-11v-6c0-2 1.5-3.5 3.5-3.5"/><path d="M18 17v9M23 21v6M28 20v6M10 30c3-1 7-1 9 2"/></svg>',
+  c: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 27 14 7.5c-.6-2.4 1-4.5 3.2-4.5 1.6 0 2.9 1.1 3.3 2.7L25 22"/><path d="M27 22 31 5.5c.4-1.6 1.8-2.7 3.4-2.5 2.1.3 3.4 2.4 2.8 4.4L32 26"/><path d="M12 30c0-3 2-4.5 4.5-4.5h15c3 0 5 2 5 5v3c0 6-5 11-11 11h-3c-6 0-10.5-4.5-10.5-10.5z"/><path d="M17 33h13"/></svg>',
+  p: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 27V12c0-1.7 1.3-3 3-3s3 1.3 3 3v11M20 22V7c0-1.7 1.3-3 3-3s3 1.3 3 3v15M26 22V8c0-1.7 1.3-3 3-3s3 1.3 3 3v15M32 24v-9c0-1.7 1.3-3 3-3s3 1.3 3 3v15c0 8-6 14-14 14h-1c-5 0-8-2.5-11-6l-5-7c-1-1.5-.6-3.4.9-4.4 1.4-.9 3.2-.6 4.2.7L14 29"/></svg>'
 };
 function pregameHTML() {
   const me = S.players[ME], op = S.players[OP];
@@ -1109,7 +1115,12 @@ function fx(sel, text, cls) {
   if (MODE === "online" && Online.role === "host") Online.queueFx(sel, text, cls);
   playFx(sel, text, cls);
 }
+/* 効果音だけを鳴らす（対人戦では相手の画面でも鳴る） */
+function sfx(name) { fx("sfx", name, "sfx"); }
 function playFx(sel, text, cls) {
+  if (sel === "sfx") { Sound.play(text); return; }
+  if (cls === "dmg") Sound.play(text === "破壊" ? "destroy" : sel.startsWith("[data-player") ? "face" : "hit");
+  else if (cls === "heal") Sound.play(/^[+＋]\d+$/.test(text) ? "heal" : "buff");
   const el = document.querySelector(sel);
   if (!el) return;
   const r = el.getBoundingClientRect();
@@ -1190,15 +1201,24 @@ function showStart() {
     ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>`
     : DATA_INFO.updated ? `<p class="datainfo">カードデータ更新日：${esc(DATA_INFO.updated)}</p>` : "";
   openOverlay(`<div class="panel">
-    <h1 class="title"><small>ベータ版 0.7</small>境界の召喚士</h1>
+    <h1 class="title"><small>ベータ版 0.8</small>境界の召喚士</h1>
     <p class="lead">神話・幻想・機械。崩れた世界の境界から英雄を呼び出し、相手の召喚士を倒せ。</p>
     <div class="worlds"><span class="w-myth">神話</span><span class="w-fan">幻想</span><span class="w-mech">機械</span></div>
+    ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
     <button type="button" class="btn primary" data-act="start">CPUと対戦する</button>
     ${DATA_INFO.draft ? "" : `<button type="button" class="btn primary ghostish" data-act="online">友達と対戦する</button>`}
-    <button type="button" class="btn deckbtn" data-act="decks"><span>デッキ編成</span><small>使用中：${esc(Decks.selected() ? Decks.selected().name : "なし")}</small></button>
-    <button type="button" class="btn" data-act="cards">カード一覧</button>
-    <button type="button" class="btn" data-act="rules">ルールを読む</button>
+    <div class="titlegrid">
+      <button type="button" class="btn deckbtn" data-act="decks"><span>デッキ編成</span><small>使用中：${esc(Decks.selected() ? Decks.selected().name : "なし")}</small></button>
+      <button type="button" class="btn deckbtn" data-act="packs"><span>パック</span><small>所持 ${Account.gold}G</small></button>
+    </div>
+    <div class="titlegrid">
+      <button type="button" class="btn" data-act="cards">カード一覧</button>
+      <button type="button" class="btn" data-act="rules">ルール</button>
+      <button type="button" class="btn" data-act="account">アカウント</button>
+      <button type="button" class="btn" data-act="sound" aria-pressed="${Sound.on}">音：${Sound.on ? "オン" : "オフ"}</button>
+    </div>
     ${info}
+    <p class="datainfo">ベータ版のカードやGは、正式公開のときにリセットされます。</p>
   </div>`, "start", true);
 }
 
@@ -1235,7 +1255,7 @@ function showCardList() {
         <div class="citem">
           ${cardHTML(c, { static: true })}
           <div class="cbody">
-            <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount" title="1デッキに入れられる枚数">上限${cardLimit(c, CONFIG)}</span></div>
+            <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount" title="1デッキに入れられる枚数">${Account.status === "free" ? "" : `所持${Account.owned(c.id)} ・ `}上限${cardLimit(c, CONFIG)}</span></div>
             <div class="cmeta">${WORLDS[c.world]} ・ ${RARITY[c.rarity]} ・ コスト${c.cost}${c.type === "char" ? ` ・ 攻撃${c.atk} ／ 体力${c.hp}` : ""}</div>
             <div class="ctext">${esc(cardText(c))}</div>
           </div>
@@ -1263,12 +1283,29 @@ function showLog() {
   const ll = $("#loglist"); ll.scrollTop = ll.scrollHeight;
 }
 
+/* 勝ったときのG（1試合につき1回だけ） */
+const rewarded = {};
+function giveReward(res) {
+  if (!S || rewarded[S.gid] != null) return rewarded[S && S.gid] || 0;
+  let g = 0;
+  if (res === "win" && Account.status !== "free" && Account.status !== "none") {
+    g = MODE === "online" ? CONFIG.REWARD_ONLINE
+      : { easy: CONFIG.REWARD_EASY, normal: CONFIG.REWARD_NORMAL, hard: CONFIG.REWARD_HARD }[CPU_LEVEL] || 0;
+    if (g) Account.addGold(g);
+  }
+  rewarded[S.gid] = g;
+  Sound.play(res === "win" ? "win" : res === "lose" ? "lose" : "click");
+  return g;
+}
+
 function showResult(res) {
   if (!res) return;
   const label = { win: "勝利", lose: "敗北", draw: "引分" }[res];
   const online = MODE === "online";
+  const g = giveReward(res);
   openOverlay(`<div class="panel">
     <p class="result ${res}">${label}</p>
+    ${g ? `<p class="reward">+${g}G <small>（所持 ${Account.gold}G）</small></p>` : ""}
     <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
     ${online
       ? (Online.role === "host" ? `<button type="button" class="btn primary" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
@@ -1344,7 +1381,11 @@ function handleAct(act, el) {
       beginPlay(idx);
       break;
     }
+    case "account": Account.showScreen(); break;
+    case "sound": Sound.toggle(); showStart(); break;
     default:
+      if (Account.handleAct(act, el)) return;
+      if (Packs.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);
   }

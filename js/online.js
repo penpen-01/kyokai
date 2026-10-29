@@ -424,7 +424,8 @@ async function boot() {
       <p class="lead">${esc(e.message)}</p></div>`, "start", true);
     return;
   }
-  showStart();
+  await Account.init();
+  if (Account.isNew) Account.showWelcome(); else showStart();
 }
 registerSW();
 boot();

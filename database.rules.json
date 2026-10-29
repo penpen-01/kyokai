@@ -18,10 +18,25 @@
           }
         },
         "presence": {
-          "$uid": { ".write": "auth != null && auth.uid === $uid" }
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
         },
         "left": {
-          "$uid": { ".write": "auth != null && auth.uid === $uid" }
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        }
+      }
+    },
+    "seasons": {
+      "$season": {
+        "accounts": {
+          "$code": {
+            ".read": "auth != null && $code.length === 16",
+            ".write": "auth != null && $code.length === 16",
+            ".validate": "newData.child('gold').isNumber() && newData.child('gold').val() >= 0"
+          }
         }
       }
     }

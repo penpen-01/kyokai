@@ -20,7 +20,7 @@ const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-const snap = () => JSON.stringify({ config: DATA.config, cards: DATA.cards });
+const snap = () => JSON.stringify({ config: DATA.config, cards: DATA.cards, packs: DATA.packs, decks: DATA.decks });
 const curCard = () => DATA.cards.find(c => c.id === curId) || null;
 const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const fmtBytes = n => n > 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n / 1024)) + "KB";
@@ -39,6 +39,7 @@ async function boot() {
   if (draft) {
     DATA = normalizeData(draft);
     if (!DATA.decks.length && published) DATA.decks = published.decks;
+    if (!DATA.packs.length && published) DATA.packs = published.packs;
     exportedSnap = draft._exportedSnap || (published ? JSON.stringify({ config: published.config, cards: published.cards }) : "");
   } else if (published) {
     DATA = published;
@@ -78,6 +79,8 @@ function renderAll() {
   renderList();
   renderEditor();
   renderRules();
+  renderPacks();
+  renderEco();
 }
 
 function renderStatus() {
@@ -294,7 +297,7 @@ function renderRules() {
     <h2>ルール設定</h2>
     <p class="hint">対戦の基本となる数値です。変更は「この内容で試遊」ですぐ試せます。</p>
     <div class="cfg">
-      ${Object.entries(CONFIG_INFO).map(([k, v]) => `<div class="item">
+      ${Object.entries(CONFIG_INFO).filter(([, v]) => !v.group).map(([k, v]) => `<div class="item">
         <label for="f-cfg-${k}">${v.label}<small>初期値 ${DEFAULT_CONFIG[k]} ・ ${v.min}〜${v.max}</small></label>
         ${stepper("cfg-" + k, cfg[k], v.label)}
       </div>`).join("")}
@@ -315,12 +318,13 @@ function targetWarn(c) {
 function clamp(v, lo, hi) { v = Math.round(+v); if (!isFinite(v)) v = lo; return Math.min(hi, Math.max(lo, v)); }
 
 function setNum(name, value) {
+  if (Admin.setNum(name, value)) return;
   if (name.startsWith("cfg-")) {
     const k = name.slice(4), info = CONFIG_INFO[k];
     DATA.config[k] = clamp(value, info.min, info.max);
     const inp = document.getElementById("f-" + name);
     if (inp) inp.value = DATA.config[k];
-    saveDraft(); renderSummary();
+    saveDraft(); renderSummary(); renderStatus();
     return;
   }
   const c = curCard();
@@ -366,8 +370,7 @@ document.addEventListener("click", e => {
   const tab = t.closest("[data-tab]");
   if (tab) {
     $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", b === tab));
-    $("#tab-cards").hidden = tab.dataset.tab !== "cards";
-    $("#tab-rules").hidden = tab.dataset.tab !== "rules";
+    ["cards", "packs", "eco", "rules"].forEach(k => { $("#tab-" + k).hidden = tab.dataset.tab !== k; });
     return;
   }
   const f = t.closest("[data-filter]");
@@ -382,7 +385,9 @@ document.addEventListener("click", e => {
   const st = t.closest("[data-step]");
   if (st) {
     const name = st.dataset.step, inp = document.getElementById("f-" + name);
-    setNum(name, (+inp.value || 0) + +st.dataset.d);
+    const stepBy = name.startsWith("cfg-") && CONFIG_INFO[name.slice(4)] && CONFIG_INFO[name.slice(4)].step || 1;
+    if (Admin.step(name, +st.dataset.d)) return;
+    setNum(name, (+inp.value || 0) + +st.dataset.d * stepBy);
     if (inp) inp.value = name.startsWith("cfg-") ? DATA.config[name.slice(4)] : inp.value;
     const c = curCard();
     if (c && inp) {
@@ -417,7 +422,7 @@ document.addEventListener("click", e => {
   if (ed) { curCard().effects.splice(+ed.dataset.effDel, 1); changed(); renderEditor(); return; }
 
   const a = t.closest("[data-act]");
-  if (a) act(a.dataset.act);
+  if (a) act(a.dataset.act, a);
 });
 
 document.addEventListener("input", e => {
@@ -457,7 +462,8 @@ function toggleMore(open) {
   $("#moreBtn").setAttribute("aria-expanded", String(open));
 }
 
-function act(name) {
+function act(name, el) {
+  if (Admin.act(name, el)) return;
   const c = curCard();
   switch (name) {
     case "more": toggleMore($("#more").hidden); break;
@@ -520,7 +526,7 @@ function flushSave() {
 
 /* ---------- 書き出し・読み込み ---------- */
 function exportJSON() {
-  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, decks: DATA.decks || [], cards: DATA.cards.map(c => {
+  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, packs: DATA.packs || [], decks: DATA.decks || [], cards: DATA.cards.map(c => {
     const o = { id: c.id, name: c.name, world: c.world, type: c.type, cost: c.cost };
     if (c.type === "char") { o.atk = c.atk; o.hp = c.hp; }
     Object.assign(o, { glyph: c.glyph, limit: c.limit, rarity: c.rarity, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });
