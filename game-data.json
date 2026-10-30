@@ -1,5 +1,5 @@
 {
- "version": 27,
+ "version": 28,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -636,7 +636,8 @@
      "kind": "ramp",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/crystal-f6663cadb9.webp"
   },
   {
    "id": "quantum",
@@ -653,7 +654,8 @@
      "kind": "draw",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/quantum-e5740e3740.webp"
   },
   {
    "id": "judgment",
@@ -1672,7 +1674,8 @@
      "kind": "buffBoth",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/x-repair-e91f8558a2.webp"
   },
   {
    "id": "x-reboot",
@@ -1737,7 +1740,8 @@
      "kind": "freezeAll",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/x-emp-85dd0dd2a4.webp"
   },
   {
    "id": "x-warp",
@@ -1758,7 +1762,8 @@
      "kind": "draw",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/x-warp-1ab22df710.webp"
   }
  ]
 }
