@@ -1,5 +1,5 @@
 {
- "version": 17,
+ "version": 18,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -431,7 +431,8 @@
      "kind": "ramp",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/priestess-f4446cd57c.webp"
   },
   {
    "id": "berserker",
@@ -862,7 +863,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-giant-d89a6b3cc4.webp"
   },
   {
    "id": "st-spark",
@@ -1261,7 +1263,8 @@
      "kind": "discard",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-thief-ea7874dbd9.webp"
   },
   {
    "id": "f-icewitch",
@@ -1280,7 +1283,8 @@
      "kind": "freezeTarget",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-icewitch-2a1121a64d.webp"
   },
   {
    "id": "f-treeguard",
@@ -1315,7 +1319,8 @@
    "pay": {
     "kind": "sacrifice",
     "n": 1
-   }
+   },
+   "art": "art/f-abyss-fafe46e314.webp"
   },
   {
    "id": "f-spirit",
