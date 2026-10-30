@@ -1,5 +1,5 @@
 {
- "version": 8,
+ "version": 9,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -299,7 +299,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/pegasus-3892831e7b.webp"
   },
   {
    "id": "archer",
@@ -353,7 +354,8 @@
    "keywords": [
     "haste"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/thunder-331b5edf5c.webp"
   },
   {
    "id": "sentinel",
@@ -407,7 +409,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/sage-52a5930a38.webp"
   },
   {
    "id": "priestess",
@@ -748,7 +751,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-recruit-ace8ee5c5c.webp"
   },
   {
    "id": "st-golem",
@@ -776,7 +780,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-guard-a0a6b9cc90.webp"
   },
   {
    "id": "st-infantry",
@@ -899,7 +904,8 @@
      "kind": "buffHp",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/m-prayer-ddbdcbb3b5.webp"
   },
   {
    "id": "m-shield",
