@@ -1,5 +1,5 @@
 {
- "version": 25,
+ "version": 26,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -546,7 +546,8 @@
     "haste",
     "pierce"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/omega-6cbcb7f6ce.webp"
   },
   {
    "id": "rally",
@@ -1593,7 +1594,8 @@
    "rarity": "sr",
    "keywords": [],
    "effects": [],
-   "armor": 2
+   "armor": 2,
+   "art": "art/x-tank-0296152335.webp"
   },
   {
    "id": "x-executor",
@@ -1612,7 +1614,8 @@
      "kind": "destroyTarget",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/x-executor-70b2cc3aef.webp"
   },
   {
    "id": "x-factory",
@@ -1651,7 +1654,8 @@
     "guard"
    ],
    "effects": [],
-   "armor": 2
+   "armor": 2,
+   "art": "art/x-gigas-b3ddb3f015.webp"
   },
   {
    "id": "x-repair",
@@ -1685,7 +1689,8 @@
      "kind": "refresh",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/x-reboot-cd6ac934c6.webp"
   },
   {
    "id": "x-overcharge",
@@ -1706,7 +1711,8 @@
    "pay": {
     "kind": "life",
     "n": 2
-   }
+   },
+   "art": "art/x-overcharge-b62910a3e8.webp"
   },
   {
    "id": "x-emp",
