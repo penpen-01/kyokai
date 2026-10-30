@@ -9,6 +9,9 @@ const Admin = {
   packId: null,
   confirm: null,   // { kind, id }
   importMsg: "",
+  sd: { label: "", gold: 0, cards: {}, until: "" },   // 作りかけのシリアルコード
+  serialMsg: "",
+  lastCode: null,
 
   pack() { return (DATA.packs || []).find(p => p.id === this.packId) || (DATA.packs || [])[0] || null; },
   touch(re) { saveDraft(); renderStatus(); if (re) re.call(this); },
@@ -130,6 +133,7 @@ const Admin = {
           </div>
         </div>
       </div>
+      <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
       <div class="fgroup">
         <span class="gl">シーズン</span>
         <p class="hint">シーズン名を変えて書き出し・アップロードすると、<b>全員の所持カード・G・デッキがリセット</b>され、新規スタートになります（前のシーズンのデータはFirebaseに残ります）。正式公開のときに使います。</p>
@@ -142,6 +146,66 @@ const Admin = {
         <p class="hint">今のシーズン：<b>${esc(cfg.SEASON)}</b>（半角英数字と - _ のみ）</p>
       </div>`;
   },
+
+  /* ---------- シリアルコード ---------- */
+  localCodes() { try { return JSON.parse(localStorage.getItem("kyokai-serial-codes")) || {}; } catch { return {}; } },
+  saveLocalCode(h, code) { const m = this.localCodes(); m[h] = code; try { localStorage.setItem("kyokai-serial-codes", JSON.stringify(m)); } catch {} },
+  readSerialForm() {
+    const v = id => { const el = $("#" + id); return el ? el.value : ""; };
+    this.sd.label = v("sd-label").slice(0, 30);
+    this.sd.gold = Math.max(0, Math.floor(+v("sd-gold") || 0));
+    this.sd.until = v("sd-until");
+  },
+  serialHTML() {
+    if (!DATA.serials) DATA.serials = [];
+    const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
+    const codes = this.localCodes();
+    const rew = s => [s.gold ? `${s.gold}G` : "", ...Object.entries(s.cards).map(([id, n]) => `${cards[id] ? cards[id].name : "（不明）"}×${n}`)].filter(Boolean).join("、") || "（なし）";
+    const today = localDate();
+    const sd = this.sd;
+    return `
+      <span class="gl">シリアルコード（G・カードの配布）</span>
+      <p class="hint">作ったコードを友達に教えると、ゲームの「オプション → シリアルコード」で入力して受け取れます。<b>1つのアカウントにつき1回まで</b>。公開しないとゲームでは使えません。公開されるデータにはコードそのものは入りません（暗号化した形だけ）。<b>コードはこのブラウザにだけ控えられる</b>ので、作ったらすぐコピーしてください。</p>
+      <div class="cpudeck">
+        <div class="frow">
+          <label class="small" for="sd-label" style="min-width:70px">名前</label>
+          <input class="txt" id="sd-label" maxlength="30" value="${esc(sd.label)}" placeholder="例：ベータ参加のお礼" style="flex:1;min-width:160px">
+        </div>
+        <div class="frow">
+          <label class="small" for="sd-gold" style="min-width:70px">配るG</label>
+          <input class="txt" id="sd-gold" type="number" min="0" step="10" value="${sd.gold}" style="max-width:120px">
+          <label class="small" for="sd-until">有効期限</label>
+          <input class="txt" id="sd-until" type="date" value="${esc(sd.until)}" min="${today}" style="max-width:170px">
+          <span class="hint">空欄なら期限なし</span>
+        </div>
+        <div class="frow">
+          <label class="small" for="sd-card" style="min-width:70px">配るカード</label>
+          <select class="txt" id="sd-card" style="flex:1;min-width:160px">${DATA.cards.filter(c => c.limit > 0).map(c => `<option value="${esc(c.id)}">${esc(c.name)}（${RARITY[c.rarity] || ""}）</option>`).join("")}</select>
+          <input class="txt" id="sd-n" type="number" min="1" max="9" value="1" style="max-width:70px" aria-label="枚数">
+          <button type="button" class="btn sm" data-act="sdAddCard">追加</button>
+        </div>
+        ${Object.keys(sd.cards).length ? `<div class="frow">${Object.entries(sd.cards).map(([id, n]) => `<span class="tagS">${esc(cards[id] ? cards[id].name : id)}×${n} <button type="button" class="btn sm" data-act="sdDelCard" data-id="${esc(id)}" aria-label="外す">×</button></span>`).join("")}</div>` : ""}
+        <div class="frow">
+          <button type="button" class="btn sm primary" data-act="sdCreate">コードを作る</button>
+          <span class="warn">${esc(this.serialMsg)}</span>
+        </div>
+        ${this.lastCode ? `<div class="frow"><span>作ったコード：</span><b style="font-size:20px;letter-spacing:.08em">${esc(serialFmt(this.lastCode))}</b><button type="button" class="btn sm" data-act="sdCopy" data-code="${esc(this.lastCode)}">コピー</button></div>` : ""}
+      </div>
+      ${DATA.serials.length ? `<div class="cpudecks">${DATA.serials.map(s => {
+        const expired = s.until && s.until < today;
+        return `<div class="cpudeck">
+          <div class="frow"><b style="flex:1">${esc(s.label)}</b>${expired ? `<span class="bad small">期限切れ</span>` : s.until ? `<span class="small">${esc(s.until)}まで</span>` : `<span class="small">期限なし</span>`}</div>
+          <span class="small">中身：${esc(rew(s))}</span>
+          <div class="frow">
+            ${codes[s.h] ? `<code>${esc(serialFmt(codes[s.h]))}</code><button type="button" class="btn sm" data-act="sdCopy" data-code="${esc(codes[s.h])}">コピー</button>` : `<span class="hint">コードはこのブラウザに控えがありません</span>`}
+            ${this.confirm && this.confirm.kind === "serial" && this.confirm.id === s.h
+              ? `<button type="button" class="btn sm danger" data-act="sdDelYes" data-id="${s.h}">削除する</button><button type="button" class="btn sm" data-act="cancelConfirm">やめる</button>`
+              : `<button type="button" class="btn sm danger" data-act="sdDel" data-id="${s.h}">削除</button>`}
+          </div>
+        </div>`;
+      }).join("")}</div>` : `<p class="hint">まだシリアルコードはありません。</p>`}`;
+  },
+  renderSerials() { const el = $("#serial-box"); if (el) el.innerHTML = this.serialHTML(); },
 
   /* ---------- 値の変更 ---------- */
   step(name, d) {
@@ -197,6 +261,35 @@ const Admin = {
         if (!v || v === DATA.config.SEASON) return true;
         this.confirm = { kind: "season", id: v }; this.renderEco(); return true;
       }
+      case "sdAddCard": {
+        this.readSerialForm();
+        const id = $("#sd-card").value, n = Math.max(1, Math.min(9, Math.floor(+$("#sd-n").value || 1)));
+        if (id) this.sd.cards[id] = n;
+        this.renderSerials(); return true;
+      }
+      case "sdDelCard": this.readSerialForm(); delete this.sd.cards[id]; this.renderSerials(); return true;
+      case "sdCreate": {
+        this.readSerialForm();
+        const sd = this.sd;
+        if (!sd.gold && !Object.keys(sd.cards).length) { this.serialMsg = "Gかカードを1つ以上入れてください"; this.renderSerials(); return true; }
+        const code = serialMake();
+        serialHash(code).then(h => {
+          DATA.serials.push({ h, label: sd.label || "シリアルコード", gold: sd.gold, cards: { ...sd.cards }, until: sd.until, created: localDate() });
+          this.saveLocalCode(h, code);
+          this.lastCode = code;
+          this.sd = { label: "", gold: 0, cards: {}, until: "" };
+          this.serialMsg = "作りました。公開すると使えるようになります";
+          this.touch(this.renderSerials);
+        });
+        return true;
+      }
+      case "sdCopy": {
+        const c = serialFmt(el.dataset.code);
+        navigator.clipboard?.writeText(c).then(() => { this.serialMsg = "コピーしました"; this.renderSerials(); }, () => { this.serialMsg = "コピーできませんでした。手で控えてください"; this.renderSerials(); });
+        return true;
+      }
+      case "sdDel": this.readSerialForm(); this.confirm = { kind: "serial", id }; this.renderSerials(); return true;
+      case "sdDelYes": DATA.serials = DATA.serials.filter(s => s.h !== id); this.confirm = null; this.touch(this.renderSerials); return true;
       case "seasonYes": DATA.config.SEASON = this.confirm.id; this.confirm = null; this.touch(this.renderEco); return true;
     }
     return false;

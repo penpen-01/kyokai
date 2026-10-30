@@ -20,7 +20,7 @@ const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-const snap = () => JSON.stringify({ config: DATA.config, cards: DATA.cards, packs: DATA.packs, decks: DATA.decks });
+const snap = () => JSON.stringify({ config: DATA.config, cards: DATA.cards, packs: DATA.packs, decks: DATA.decks, serials: DATA.serials });
 const curCard = () => DATA.cards.find(c => c.id === curId) || null;
 const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const fmtBytes = n => n > 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n / 1024)) + "KB";
@@ -40,6 +40,7 @@ async function boot() {
     DATA = normalizeData(draft);
     if (!DATA.decks.length && published) DATA.decks = published.decks;
     if (!DATA.packs.length && published) DATA.packs = published.packs;
+    if (!DATA.serials.length && published) DATA.serials = published.serials;
     exportedSnap = draft._exportedSnap || (published ? JSON.stringify({ config: published.config, cards: published.cards }) : "");
   } else if (published) {
     DATA = published;
@@ -529,7 +530,7 @@ function flushSave() {
 
 /* ---------- 書き出し・読み込み ---------- */
 function exportJSON() {
-  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, packs: DATA.packs || [], decks: DATA.decks || [], cards: DATA.cards.map(c => {
+  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, packs: DATA.packs || [], decks: DATA.decks || [], serials: DATA.serials || [], cards: DATA.cards.map(c => {
     const o = { id: c.id, name: c.name, world: c.world, type: c.type, cost: c.cost };
     if (c.type === "char") { o.atk = c.atk; o.hp = c.hp; }
     Object.assign(o, { glyph: c.glyph, limit: c.limit, rarity: c.rarity, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });

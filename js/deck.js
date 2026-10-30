@@ -32,6 +32,13 @@ const Decks = {
     if (Account.status === "none") return false;
     return Account.setDecks(list);
   },
+  /* 作れるデッキの数の上限。いっぱいなら知らせて true を返す（新しく作るときだけ使う） */
+  full(sample) {
+    const n = this.mine().filter(d => !!d.free === !!sample).length;
+    if (n < (CONFIG.DECK_MAX || 10)) return false;
+    toast(`${sample ? "サンプルデッキ" : "デッキ"}は${CONFIG.DECK_MAX}個までです。いらないデッキを消してから作ってください`);
+    return true;
+  },
   find(id) { return this.mine().find(d => d.id === id) || (this.free() ? PRESETS.find(d => d.id === id) : null) || null; },
   owned(id) { return Account.owned(id); },
   problems(deck) { return deckProblems(deck, DEF, CONFIG, this.unbound(deck) ? null : id => this.owned(id)); },
@@ -106,14 +113,14 @@ const Decks = {
       ${this.topbar("デッキ編成", "deckBack")}
       <p class="lead small">デッキは${CONFIG.DECK_SIZE}枚。同じカードは${CONFIG.COPY_MAX}枚まで（カードによってはそれより少ない）。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っている枚数までしか入れられません。"}</p>
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
-      <h3 class="sec">あなたのデッキ</h3>
+      <h3 class="sec">あなたのデッキ <small class="hint">${mine.length}/${CONFIG.DECK_MAX}</small></h3>
       <ul class="dlist">${mine.length ? mine.map(d => row(d, "")).join("") : `<li class="hint">デッキがありません。新しく作ってください。</li>`}</ul>
       <div class="pre-btns">
         <button type="button" class="btn" data-act="deckNew">＋ 新しいデッキ</button>
         <button type="button" class="btn" data-act="deckImport">デッキコードから作る</button>
       </div>
       ${this.sampleOK() && !this.free() ? `
-        <h3 class="sec">サンプルデッキ <small class="hint">全カード使用可・ベータ限定</small></h3>
+        <h3 class="sec">サンプルデッキ <small class="hint">${samples.length}/${CONFIG.DECK_MAX} ・ 全カード使用可・ベータ限定</small></h3>
         <p class="lead small">持っていないカードも含めて、すべてのカードで組めるデッキです。カードの強さを試すためのもので、ベータ期間が終わると使えなくなります。</p>
         <ul class="dlist">${samples.length ? samples.map(d => row(d, "サンプル")).join("") : `<li class="hint">まだありません。</li>`}</ul>
         <div class="pre-btns">
@@ -312,11 +319,11 @@ const Decks = {
       case "deckBack": this.editing = null; this.viewing = null; showStart(); return true;
       case "deckUse": this.select(id); if (this.viewing) this.showView(this.viewing); else this.showList(); return true;
       case "deckView": this.detail = null; this.showView(id); return true;
-      case "deckNew": this.startEdit({ id: "d" + Date.now().toString(36), name: "新しいデッキ", cards: {} }, true); return true;
-      case "deckNewSample": this.startEdit({ id: "s" + Date.now().toString(36), name: "サンプルデッキ", cards: {}, free: true }, true); return true;
+      case "deckNew": if (this.full(false)) return true; this.startEdit({ id: "d" + Date.now().toString(36), name: "新しいデッキ", cards: {} }, true); return true;
+      case "deckNewSample": if (this.full(true)) return true; this.startEdit({ id: "s" + Date.now().toString(36), name: "サンプルデッキ", cards: {}, free: true }, true); return true;
       case "deckPresets": this.showPresets(); return true;
       case "deckFromPreset": {
-        const p = PRESETS.find(x => x.id === id); if (!p) return true;
+        const p = PRESETS.find(x => x.id === id); if (!p || this.full(true)) return true;
         this.startEdit({ id: "s" + Date.now().toString(36), name: p.name.slice(0, 16), cards: p.cards, free: true }, true);
         return true;
       }
@@ -325,6 +332,7 @@ const Decks = {
         const d = codeToDeck($("#deck-code") ? $("#deck-code").value : "");
         if (!d) { this.showImport("デッキコードを読み取れませんでした。KYK1: から始まる文字をすべて貼り付けてください。"); return true; }
         const asSample = !!($("#deck-code-sample") && $("#deck-code-sample").checked);
+        if (this.full(asSample)) return true;
         this.startEdit({ id: (asSample ? "s" : "d") + Date.now().toString(36), name: d.name, cards: d.cards, free: asSample }, true);
         return true;
       }
@@ -334,7 +342,7 @@ const Decks = {
         return true;
       }
       case "deckCopy": {
-        const p = this.find(id); if (!p) return true;
+        const p = this.find(id); if (!p || this.full(!!p.free)) return true;
         this.startEdit({ id: (p.free ? "s" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, free: !!p.free }, true);
         return true;
       }

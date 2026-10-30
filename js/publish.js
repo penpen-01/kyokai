@@ -97,6 +97,7 @@ const Publish = {
     if (changed.length) lines.push(`変更したカード ${changed.length}種：${changed.slice(0, 8).map(c => c.name).join("、")}${changed.length > 8 ? " ほか" : ""}`);
     if (removed.length) lines.push(`削除したカード ${removed.length}種：${removed.slice(0, 8).map(c => c.name).join("、")}（持っている人のデッキからは使えなくなります）`);
     const np = normalizeData(out);
+    if (JSON.stringify(np.serials || []) !== JSON.stringify(pub.serials || [])) lines.push(`シリアルコードを変更（${(np.serials || []).length}個）`);
     if (JSON.stringify(np.packs) !== JSON.stringify(pub.packs)) lines.push(`パックの設定を変更（${np.packs.map(p => p.name + (p.open ? "" : "・停止中")).join("、")}）`);
     if (JSON.stringify(np.decks) !== JSON.stringify(pub.decks)) lines.push("CPU・スターターのデッキを変更");
     const cfgDiff = Object.keys(np.config).filter(k => !["SEASON", "SAMPLE_DECKS"].includes(k) && np.config[k] !== pub.config[k]);

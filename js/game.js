@@ -48,10 +48,12 @@ async function loadCardData() {
   DEF = Object.fromEntries(CARDS.map(c => [c.id, c]));
   PRESETS = data.decks;
   PACKS = data.packs;
+  SERIALS = data.serials;
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
+let SERIALS = []; // シリアルコード（ハッシュ）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
 /* デッキ（{id: 枚数}）を、シャッフルした山札（idの並び）にする */
@@ -1295,6 +1297,7 @@ function showOptions() {
     <div class="topbar"><button type="button" class="btn sm" data-act="optBack">← 戻る</button><b>オプション</b></div>
     <div class="optlist">
       <button type="button" class="optrow" data-act="rules"><b>ルール</b><small>遊び方・カードの能力</small></button>
+      ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="serial"><b>シリアルコード</b><small>配られたコードでGやカードを受け取る</small></button>`}
       <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
     </div>
@@ -1474,6 +1477,7 @@ function handleAct(act, el) {
       if (Splash.handleAct(act, el)) return;
       if (Account.handleAct(act, el)) return;
       if (Feedback.handleAct(act, el)) return;
+      if (Serial.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);

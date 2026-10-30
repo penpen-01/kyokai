@@ -28,16 +28,22 @@ button,input,select,textarea{font-family:inherit;color:inherit;font-size:inherit
 img{max-width:100%}
 [hidden]{display:none!important}
 
-/* ---- カード（イラストは全面、名前と数値は下に重ねる） ---- */
+/* ---- カード ----
+   キャラ：イラストが全面。下に名前の帯、左下に攻撃（赤い剣形）、右下に体力（青い盾形）、左上に丸いコスト
+   魔法　：枠の中にアーチ形の窓があり、その中にイラスト。下に巻物の帯と「魔法」の印、左上にひし形のコスト
+   外側の枠（.frame）はレア度で変わる。--rw は枠の太さ */
 .card{
   all:unset;box-sizing:border-box;container-type:inline-size;position:relative;cursor:pointer;
-  display:block;aspect-ratio:5/7;border-radius:6px;overflow:hidden;
-  border:1.5px solid var(--wc);background:var(--panel);
-  transition:transform .15s ease, box-shadow .15s ease, opacity .15s;
+  display:block;aspect-ratio:5/7;border-radius:7% / 5%;overflow:hidden;
+  --rw:2.4cqw;
+  /* コモンの縁は、金や銀と見分けがつくように、世界の色をくすませた色にする */
+  --rim:linear-gradient(160deg,color-mix(in srgb,var(--wc) 50%,#4a4a58),color-mix(in srgb,var(--wc) 35%,#14151f));
+  background:#10121f;
+  transition:transform .15s ease, box-shadow .15s ease, opacity .15s, filter .15s;
 }
 .w-myth{--wc:var(--w-myth)} .w-fan{--wc:var(--w-fan)} .w-mech{--wc:var(--w-mech)}
 .card .art{
-  position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:16cqw;
+  position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:18cqw;overflow:hidden;
   background:
     radial-gradient(circle at 50% 36%, color-mix(in srgb,var(--wc) 45%, transparent), transparent 62%),
     linear-gradient(170deg, color-mix(in srgb,var(--wc) 30%, var(--panel)) 0%, var(--panel) 75%);
@@ -45,26 +51,79 @@ img{max-width:100%}
 .card.has-art .art{padding:0;background:var(--panel)}
 .card .art img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
 .glyph{font-family:var(--f-display);font-weight:800;font-size:46cqw;line-height:1;color:color-mix(in srgb,var(--wc) 70%, #fff)}
-.card.spell{border-style:double;border-width:3px}
-.card .foot{
-  position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;
-  padding-top:14cqw;
-  background:linear-gradient(to bottom, transparent, rgba(8,9,18,.78) 38%, rgba(8,9,18,.94));
+
+/* 枠：外側の金属の縁＋内側の細い線＋上の中央の飾り石 */
+.card .frame{position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit}
+.card .frame::before{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:var(--rw);background:var(--rim);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
 }
-.nm{font-size:11.5cqw;font-weight:700;text-align:center;padding:0 3cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3f0f8;text-shadow:0 1px 3px #000}
-.stats{display:flex;justify-content:space-between;align-items:center;padding:2cqw 4cqw 4cqw;font-weight:700;font-size:14cqw;font-variant-numeric:tabular-nums}
-.atk,.hp{width:23cqw;height:23cqw;display:grid;place-items:center;border-radius:50%;line-height:1;color:#fff}
-.atk{background:#8a3a2c}
-.atk.up{background:#c0702a}
-.hp{background:#2c5f86}
-.hp.hurt{background:#b8443a}
-.hp.up{background:#2f8a64}
-.stats.spelltag{justify-content:center;font-family:var(--f-display);font-size:11cqw;color:var(--wc);letter-spacing:.2em;padding-block:3cqw 6cqw}
+.card .frame::after{
+  content:"";position:absolute;inset:var(--rw);border-radius:3.5cqw;
+  box-shadow:inset 0 0 0 .6cqw rgba(8,9,18,.85), inset 0 0 0 1.2cqw color-mix(in srgb,var(--wc) 35%,transparent);
+}
+.card .crest{
+  position:absolute;z-index:3;left:50%;top:calc(var(--rw) * .2);width:9cqw;height:9cqw;transform:translateX(-50%) rotate(45deg);
+  background:var(--rim);box-shadow:0 0 0 .7cqw #10121f;pointer-events:none;
+}
+.card .crest::after{content:"";position:absolute;inset:2.2cqw;background:color-mix(in srgb,var(--wc) 80%,#fff);box-shadow:0 0 2cqw var(--wc)}
+
+/* コスト：キャラは丸、魔法はひし形 */
 .cost{
-  position:absolute;top:2.5cqw;left:2.5cqw;width:24cqw;height:24cqw;border-radius:50%;
-  display:grid;place-items:center;background:var(--gold);color:#1a1408;font-weight:700;font-size:14cqw;line-height:1;
-  box-shadow:0 0 0 1.5px var(--bg);
+  position:absolute;z-index:3;top:calc(var(--rw) + 1cqw);left:calc(var(--rw) + 1cqw);width:22cqw;height:22cqw;border-radius:50%;
+  display:grid;place-items:center;color:#1a1408;font-weight:800;font-size:13.5cqw;line-height:1;
+  background:radial-gradient(circle at 35% 30%,#fff3c8,var(--gold) 55%,#9a7431);
+  box-shadow:0 0 0 .8cqw #10121f, 0 0 0 1.4cqw color-mix(in srgb,var(--gold) 60%,transparent);
 }
+.card.spell .cost{border-radius:2.5cqw;transform:rotate(45deg);width:19cqw;height:19cqw;top:calc(var(--rw) + 2.4cqw);left:calc(var(--rw) + 2.4cqw);
+  background:radial-gradient(circle at 35% 30%,#f2e6ff,#b48be0 55%,#5d3d8a);color:#1a0f2a}
+.card .cost i{font-style:normal;display:block}
+.card.spell .cost i{transform:rotate(-45deg)}
+
+/* 下の帯（名前と数値） */
+.card .foot{
+  position:absolute;z-index:3;left:var(--rw);right:var(--rw);bottom:var(--rw);display:flex;flex-direction:column;
+  padding-top:14cqw;border-radius:0 0 3.5cqw 3.5cqw;
+  background:linear-gradient(to bottom, transparent, rgba(8,9,18,.8) 38%, rgba(8,9,18,.95));
+}
+.nm{
+  position:relative;font-size:11cqw;font-weight:700;text-align:center;padding:1cqw 3cqw;margin:0 4cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#f3f0f8;text-shadow:0 1px 3px #000;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--wc) 32%,rgba(8,9,18,.6)) 18%,color-mix(in srgb,var(--wc) 32%,rgba(8,9,18,.6)) 82%,transparent);
+  border-top:.5cqw solid color-mix(in srgb,var(--wc) 70%,transparent);border-bottom:.5cqw solid color-mix(in srgb,var(--wc) 70%,transparent);
+}
+.stats{display:flex;justify-content:space-between;align-items:center;padding:2cqw 2.5cqw 2.5cqw;font-weight:800;font-size:13.5cqw;font-variant-numeric:tabular-nums}
+.atk,.hp{width:22cqw;height:22cqw;display:grid;place-items:center;line-height:1;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+/* 攻撃：下がとがった剣の形 / 体力：盾の形 */
+.atk{background:linear-gradient(#c0563f,#7a2a1e);clip-path:polygon(50% 0,100% 18%,100% 62%,50% 100%,0 62%,0 18%)}
+.atk.up{background:linear-gradient(#e89a45,#a85e1c)}
+.hp{background:linear-gradient(#3f7fb0,#1f4a6e);border-radius:3cqw 3cqw 50% 50% / 3cqw 3cqw 55% 55%}
+.hp.hurt{background:linear-gradient(#d0574a,#8a2a22)}
+.hp.up{background:linear-gradient(#3fa877,#1f6a48)}
+
+/* ---- 魔法カード：枠の中のアーチ窓と、巻物の帯 ---- */
+.card.spell{
+  background:
+    radial-gradient(circle at 50% 110%, color-mix(in srgb,#b48be0 35%,transparent), transparent 55%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 1.5cqw, transparent 1.5cqw 5cqw),
+    linear-gradient(170deg, color-mix(in srgb,var(--wc) 28%,#1a1430), #120e22);
+}
+.card.spell .art{
+  inset:calc(var(--rw) + 5cqw) calc(var(--rw) + 5cqw) 31cqw;border-radius:50% 50% 3cqw 3cqw / 28% 28% 3cqw 3cqw;
+  box-shadow:0 0 0 1cqw color-mix(in srgb,var(--wc) 70%,#000), 0 0 0 1.8cqw color-mix(in srgb,#b48be0 55%,transparent);
+  padding-top:12cqw;
+}
+.card.spell .foot{background:none;padding-top:0;gap:1cqw;align-items:center}
+.card.spell .nm{
+  margin:0 2cqw;align-self:stretch;border:none;border-radius:1cqw;
+  background:linear-gradient(#efe2c4,#cdb88d);color:#2a1d10;text-shadow:none;
+  box-shadow:0 0 0 .6cqw #6b5432;
+}
+.stats.spelltag{justify-content:center;padding:0 0 2.5cqw;font-family:var(--f-display);font-size:9.5cqw;letter-spacing:.3em;color:#e6d4ff}
+.stats.spelltag::before,.stats.spelltag::after{content:"";width:9cqw;height:.6cqw;background:linear-gradient(90deg,transparent,#b48be0);margin:0 2cqw}
+.stats.spelltag::after{transform:scaleX(-1)}
+
 .card:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 
 /* ---- ボタン ---- */
@@ -90,41 +149,40 @@ img{max-width:100%}
 }
 
 /* ---- 能力の印・状態 ---- */
-.card .marks{position:absolute;top:2.5cqw;right:2.5cqw;display:flex;flex-direction:column;gap:1.5cqw;align-items:flex-end}
+.card .marks{position:absolute;z-index:3;top:calc(var(--rw) + 1cqw);right:calc(var(--rw) + 1cqw);display:flex;flex-direction:column;gap:1.5cqw;align-items:flex-end}
 .card .mk{
   font-style:normal;font-weight:700;font-size:9.5cqw;line-height:1;padding:1.5cqw 2.2cqw;border-radius:2cqw;
   background:rgba(8,9,18,.82);color:#f3f0f8;border:1px solid color-mix(in srgb,var(--wc) 70%,transparent);
 }
 .card .mk-guard{background:#e9dcb4;color:#2a2108;border-color:#e9dcb4}
 .card .mk-armor{background:#8aa0b8;color:#0e1520;border-color:#8aa0b8}
-.card.guard{box-shadow:inset 0 0 0 2px color-mix(in srgb,#e9dcb4 70%,transparent)}
+.card.guard .art{box-shadow:inset 0 0 0 2.2cqw color-mix(in srgb,#e9dcb4 55%,transparent)}
 .card.frozen .art{filter:saturate(.3) brightness(1.1) hue-rotate(160deg)}
 .card .frz{
-  position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);font-weight:800;font-size:13cqw;letter-spacing:.1em;
+  position:absolute;z-index:3;left:50%;top:40%;transform:translate(-50%,-50%);font-weight:800;font-size:13cqw;letter-spacing:.1em;
   color:#dff3ff;background:rgba(40,90,140,.75);padding:1.5cqw 4cqw;border-radius:2cqw;
 }
 .cost.down{background:var(--heal)!important}
 
 /* ---- レア度ごとの枠 ----
-   コモン：世界の色の細い枠 / レア：銀の枠 / スーパーレア：金の枠と淡い光
-   ウルトラレア：虹色に流れる枠 / レジェンド：太い金の二重枠と、ときどき光が走る */
-.card.rar-rare{border-color:#c9d3e2;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--wc) 60%,transparent)}
-.card.rar-sr{border:2px solid #e3c06a;box-shadow:0 0 8px rgba(227,192,106,.45),inset 0 0 0 1px rgba(255,236,170,.5)}
-.card.rar-ur{border-color:transparent}
-.card.rar-ur::after{
-  content:"";position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;padding:2px;
-  background:conic-gradient(from 0deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff,#ff6b9b);
-  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
-  mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
-  animation:urhue 4s linear infinite;
-}
+   コモン：世界の色 / レア：銀 / スーパーレア：金 / ウルトラレア：太い金と光の筋 / レジェンド：虹色に流れる太い枠と光の筋 */
+.card.rar-rare{--rw:2.6cqw;--rim:linear-gradient(135deg,#f4f7fb,#8f9aab 35%,#e9eef4 55%,#7d889a 80%,#dfe5ec)}
+.card.rar-sr{--rw:2.8cqw;--rim:linear-gradient(135deg,#fff1c1,#c9962f 35%,#ffe08a 55%,#a8781f 80%,#f5d37a)}
+.card.rar-ur{--rw:3.6cqw;--rim:linear-gradient(135deg,#fff6d6,#d9a53a 25%,#fff0b0 45%,#b38220 65%,#ffe49a 85%,#c99530);box-shadow:0 0 6px rgba(255,214,120,.55)}
+.card.rar-legend{--rw:3.8cqw;--rim:conic-gradient(from 0deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff,#ff6b9b);box-shadow:0 0 7px rgba(255,190,240,.55)}
+.card.rar-legend .frame::before,.card.rar-legend .crest{animation:urhue 4s linear infinite}
 @keyframes urhue{to{filter:hue-rotate(360deg)}}
-.card.rar-legend{border:3px double #f2cd6b;box-shadow:0 0 12px rgba(242,205,107,.55),inset 0 0 10px rgba(242,205,107,.35)}
-.card.rar-legend::after{
-  content:"";position:absolute;inset:-40%;z-index:4;pointer-events:none;
-  background:linear-gradient(115deg,transparent 42%,rgba(255,244,200,.55) 50%,transparent 58%);
+/* UR・レジェンドは内側の二重線と、ときどき走る光 */
+.card.rar-ur .frame::after,.card.rar-legend .frame::after{
+  box-shadow:inset 0 0 0 .6cqw rgba(8,9,18,.85), inset 0 0 0 1.3cqw #f2cd6b, inset 0 0 4cqw rgba(255,226,150,.35);
+}
+.card.rar-legend .frame::after{box-shadow:inset 0 0 0 .6cqw rgba(8,9,18,.85), inset 0 0 0 1.3cqw rgba(255,255,255,.75), inset 0 0 5cqw rgba(255,200,255,.35)}
+.card.rar-ur .shine,.card.rar-legend .shine{
+  position:absolute;inset:-40%;z-index:4;pointer-events:none;
+  background:linear-gradient(115deg,transparent 42%,rgba(255,244,200,.5) 50%,transparent 58%);
   transform:translateX(-60%);animation:legendsweep 3.6s ease-in-out infinite;
 }
+.card.rar-legend .shine{background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.6) 50%,transparent 60%);animation-duration:3s}
 @keyframes legendsweep{0%,55%{transform:translateX(-60%)}85%,100%{transform:translateX(60%)}}
 /* 盤面のカードが選ばれている・攻撃できる表示は、枠の光より優先して見せる */
 .card.ready,.card.tgt,.card.sel,.card.over{z-index:1}

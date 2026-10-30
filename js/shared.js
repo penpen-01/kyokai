@@ -53,7 +53,7 @@ const EFFECTS = {
 };
 
 const DEFAULT_CONFIG = {
-  PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3,
+  PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
   SEASON: "beta", STARTER_DECK: "starter",
@@ -73,6 +73,7 @@ const CONFIG_INFO = {
   FATIGUE:    { label: "山札切れで引けないときのダメージ", min: 0, max: 20 },
   DECK_SIZE:  { label: "デッキの枚数",               min: 10, max: 60 },
   COPY_MAX:   { label: "同じカードを入れられる上限", min: 1, max: 10 },
+  DECK_MAX:   { label: "作れるデッキの数（通常・サンプルそれぞれ）", min: 1, max: 50, group: "eco" },
   STARTING_GOLD: { label: "始めたときに配るG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_EASY:   { label: "CPU初級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_NORMAL: { label: "CPU中級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
@@ -87,6 +88,21 @@ const DEFAULT_ODDS = {
 };
 
 const DRAFT_KEY = "kyokai-draft-v1";
+
+/* ---------- シリアルコード ---------- */
+/* 端末の日付（YYYY-MM-DD）。有効期限は日本時間などその人の日付で判定する */
+const localDate = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const SERIAL_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const serialNorm = s => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const serialFmt = s => serialNorm(s).replace(/(.{4})(?=.)/g, "$1-");
+function serialMake() {
+  const a = new Uint32Array(12); crypto.getRandomValues(a);
+  return Array.from(a, n => SERIAL_CHARS[n % SERIAL_CHARS.length]).join("");
+}
+async function serialHash(code) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("kyokai-serial:" + serialNorm(code)));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -150,7 +166,9 @@ function cardHTML(card, o = {}) {
   const guard = card.type === "char" && (card.keywords || []).includes("guard");
   return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art ? "has-art" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
-    ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}">${cost}</span>`}
+    <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span>
+    ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}
+    ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
     ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}
     <span class="foot"><span class="nm">${esc(card.name)}</span>${stats}</span></${tag}>`;
@@ -194,7 +212,13 @@ function normalizeData(data) {
   }));
   config.SAMPLE_DECKS = config.SAMPLE_DECKS !== false;
   config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs };
+  // シリアルコード。コードそのものは入れず、ハッシュ（h）だけを公開データに置く
+  const serials = (Array.isArray(d.serials) ? d.serials : []).filter(x => x && /^[0-9a-f]{64}$/.test(x.h)).map(x => ({
+    h: x.h, label: String(x.label || "シリアルコード").slice(0, 30),
+    gold: Math.max(0, Math.floor(+x.gold || 0)), cards: cleanDeckCards(x.cards),
+    until: /^\d{4}-\d{2}-\d{2}$/.test(x.until || "") ? x.until : "", created: x.created || ""
+  }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials };
 }
 
 function cleanDeckCards(cards) {
