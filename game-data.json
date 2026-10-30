@@ -1,5 +1,5 @@
 {
- "version": 19,
+ "version": 20,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -577,7 +577,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/stargaze-7803ce5b14.webp"
   },
   {
    "id": "bolt",
@@ -612,7 +613,8 @@
      "kind": "heal",
      "n": 5
     }
-   ]
+   ],
+   "art": "art/spring-13a9b88052.webp"
   },
   {
    "id": "crystal",
@@ -902,7 +904,8 @@
      "kind": "heal",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/st-water-c246722460.webp"
   },
   {
    "id": "m-prayer",
@@ -1351,7 +1354,8 @@
      "kind": "ramp",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-spirit-f05f01d8aa.webp"
   },
   {
    "id": "f-unicorn",
@@ -1394,7 +1398,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-whisper-41a9b2e402.webp"
   },
   {
    "id": "f-curse",
