@@ -1,5 +1,5 @@
 {
- "version": 24,
+ "version": 25,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -494,7 +494,7 @@
     "haste"
    ],
    "effects": [],
-   "art": "art/garm-6d5bf4e616.webp"
+   "art": "art/garm-e857bacf0c.webp"
   },
   {
    "id": "wargod",
@@ -1537,7 +1537,7 @@
    "keywords": [],
    "effects": [],
    "armor": 1,
-   "art": "art/x-armored-2708eded14.webp"
+   "art": "art/x-armored-92e27da621.webp"
   },
   {
    "id": "x-rush",
