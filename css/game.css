@@ -691,3 +691,4 @@ body{
 .os-info{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;animation:spfade .4s .15s both}
 .os-info .rtag,.os-info .newtag{position:static}
 .os-info b{font-family:var(--f-display);font-weight:800;font-size:20px}
+.citem.unowned .cname::after{content:"未所持";margin-left:6px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--line);color:var(--muted)}

@@ -8,7 +8,7 @@ const TYPES = { char: "キャラクター", spell: "魔法" };
 /* キャラクターの能力（キーワード） */
 const KEYWORDS = {
   haste:   { label: "速攻", short: "速", text: "場に出したターンから攻撃できる。" },
-  pierce:  { label: "直撃", short: "直", text: "相手の場にキャラがいても、相手プレイヤーを攻撃できる（守護がいるときは除く）。" },
+  pierce:  { label: "直撃", short: "直", text: "相手の守護を無視して、好きな相手キャラや相手プレイヤーを攻撃できる。" },
   trample: { label: "貫通", short: "貫", text: "キャラを攻撃して倒したとき、余ったダメージを相手プレイヤーに与える。" },
   guard:   { label: "守護", short: "守", text: "このキャラがいる間、相手は守護を持つキャラしか攻撃できない。" }
 };
@@ -53,7 +53,7 @@ const EFFECTS = {
 };
 
 const DEFAULT_CONFIG = {
-  PLAYER_HP: 20, START_HAND: 6, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 8, FATIGUE: 2, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
+  PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
   SEASON: "beta", STARTER_DECK: "starter",
@@ -70,6 +70,7 @@ const CONFIG_INFO = {
   ENERGY_MAX: { label: "エナジー上限",               min: 1, max: 15 },
   FIELD_MAX:  { label: "場に置けるキャラの数",       min: 1, max: 6 },
   HAND_MAX:   { label: "手札の上限",                 min: 1, max: 12 },
+  SECOND_BONUS: { label: "後攻が最初に多く引く枚数",   min: 0, max: 3 },
   FATIGUE:    { label: "山札切れで引けないときのダメージ", min: 0, max: 20 },
   DECK_SIZE:  { label: "デッキの枚数",               min: 10, max: 60 },
   COPY_MAX:   { label: "同じカードを入れられる上限", min: 1, max: 10 },
@@ -160,8 +161,9 @@ function cardText(card) {
 /* カードの見た目。unit を渡すと場のキャラの現在値を表示する */
 function cardHTML(card, o = {}) {
   const u = o.unit;
-  const art = card.art
-    ? `<img src="${esc(card.art)}" alt="" draggable="false">`
+  // o.hidden：まだ持っていないカード。イラストを隠して「？」を出す（名前・数値・効果は見せる）
+  const art = o.hidden ? `<span class="glyph">？</span>`
+    : card.art ? `<img src="${esc(card.art)}" alt="" draggable="false">`
     : `<span class="glyph">${esc(card.glyph || "？")}</span>`;
   let stats;
   if (card.type === "char") {
@@ -178,7 +180,7 @@ function cardHTML(card, o = {}) {
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
   const guard = card.type === "char" && (card.keywords || []).includes("guard");
-  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art ? "has-art" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
+  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
     <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span>
     ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}

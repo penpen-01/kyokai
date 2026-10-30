@@ -116,6 +116,7 @@ function chooseOrder(pi, goFirst) {
   S.first = goFirst ? pi : opp(pi);
   log(`${pname(pi)}が${goFirst ? "先攻" : "後攻"}を選んだ。${pname(S.first)}の先攻です。`);
   for (let i = 0; i < CONFIG.START_HAND; i++) { draw(0, true); draw(1, true); }
+  for (let i = 0; i < (CONFIG.SECOND_BONUS || 0); i++) draw(opp(S.first), true);
   S.phase = "mulligan";
   render();
   if (MODE === "cpu") cpuPreGame();
@@ -129,7 +130,8 @@ function mulligan(pi, redraw) {
   if (redraw) {
     p.deck.push(...p.hand); p.hand = [];
     shuffle(p.deck);
-    for (let i = 0; i < CONFIG.START_HAND; i++) draw(pi, true);
+    const k = CONFIG.START_HAND + (pi !== S.first ? (CONFIG.SECOND_BONUS || 0) : 0);
+    for (let i = 0; i < k; i++) draw(pi, true);
   }
   S.mull[pi] = !!redraw;
   log(`${pname(pi)}は${redraw ? "手札を引き直した" : "手札をそのまま使う"}。`);
@@ -396,17 +398,16 @@ function cleanup() {
 
 /* ---------- 攻撃 ---------- */
 const guards = pi => S.players[pi].field.filter(u => kw(u, "guard"));
-/* 相手の場にキャラがいる間は、相手プレイヤーを直接攻撃できない（直撃は例外。ただし守護がいると不可） */
+/* 相手プレイヤーは、相手の場に守護がいなければいつでも攻撃できる（2026-10 ルール変更）。
+   直撃を持つキャラは守護を無視できる */
 function canAttackPlayer(pi, u) {
-  const en = S.players[opp(pi)];
-  if (!en.field.length) return true;
-  if (guards(opp(pi)).length) return false;
+  if (!guards(opp(pi)).length) return true;
   return !!(u && kw(u, "pierce"));
 }
-/* 守護がいる間は、守護を持つキャラしか攻撃できない */
-function canAttackUnit(pi, target) {
+/* 守護がいる間は、守護を持つキャラしか攻撃できない（直撃を持つキャラ u は例外） */
+function canAttackUnit(pi, target, u) {
   const g = guards(opp(pi));
-  return !g.length || g.includes(target);
+  return !g.length || g.includes(target) || !!(u && kw(u, "pierce"));
 }
 function selectedUnit() {
   return ui.sel && ui.sel.kind === "unit" ? S.players[ui.sel.owner].field.find(u => u.uid === ui.sel.uid) : null;
@@ -425,7 +426,7 @@ function attack(pi, uid, target) {
     hitPlayer(opp(pi), a.atk);
   } else {
     const d = en.field.find(u => u.uid === target);
-    if (!d || !canAttackUnit(pi, d)) return false;
+    if (!d || !canAttackUnit(pi, d, a)) return false;
     a.ready = false;
     fx(unitSel(a.uid), unitSel(d.uid), "lunge");
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
@@ -526,12 +527,12 @@ function evaluate(st, pi) {
   // 相手の次の攻撃で負けそうなら大きく減点
   // 相手の次のターンに本体へ届きそうなダメージ（守護がいれば防げる）
   const myGuard = me.field.some(u => DEF[u.id] && DEF[u.id].keywords.includes("guard"));
-  const reach = myGuard ? 0 : en.field.reduce((a, u) => a + ((!me.field.length || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) && !u.frozen ? u.atk : 0), 0);
+  const reach = en.field.reduce((a, u) => a + ((!myGuard || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) && !u.frozen ? u.atk : 0), 0);
   if (reach >= me.hp) s -= 60;
   else s -= reach * 0.4;
   // 自分の次のターンに届くダメージ（とどめを狙う）
   const enGuard = en.field.some(u => DEF[u.id] && DEF[u.id].keywords.includes("guard"));
-  const myReach = enGuard ? 0 : me.field.reduce((a, u) => a + ((!en.field.length || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) ? u.atk : 0), 0);
+  const myReach = me.field.reduce((a, u) => a + ((!enGuard || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) ? u.atk : 0), 0);
   if (myReach >= en.hp) s += 25;
   return s;
 }
@@ -553,7 +554,7 @@ function legalActions(pi) {
   me.field.forEach(u => {
     if (!u.ready) return;
     if (canAttackPlayer(pi, u)) acts.push({ t: "attack", uid: u.uid, target: "player" });
-    en.field.forEach(d => { if (canAttackUnit(pi, d)) acts.push({ t: "attack", uid: u.uid, target: d.uid }); });
+    en.field.forEach(d => { if (canAttackUnit(pi, d, u)) acts.push({ t: "attack", uid: u.uid, target: d.uid }); });
   });
   return acts;
 }
@@ -669,7 +670,7 @@ function pbarHTML(pi) {
 /* 対象選択中の「今選んでいる役割」 */
 function curRole() { return ui.mode === "target" ? ui.roles[Object.keys(ui.picked).length] : null; }
 function isTargetable(pi, u) {
-  if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u);
+  if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u, selectedUnit());
   const r = curRole();
   return !!r && roleSide(ME, r) === pi;
 }
@@ -896,9 +897,9 @@ function renderSheet() {
     } else {
       const u = selectedUnit();
       msg = !S.players[OP].field.length ? "相手の体力（上の丸）をタップして直接攻撃"
-        : guards(OP).length ? "守護を持つ相手キャラをタップしてください（守護がいる間は、ほかを攻撃できません）"
-        : canAttackPlayer(ME, u) ? "直撃：相手キャラか、相手の体力（上の丸）をタップ"
-        : "攻撃する相手キャラをタップしてください";
+        : guards(OP).length && u && kw(u, "pierce") ? "直撃：守護を無視して、好きな相手キャラか相手の体力（上の丸）をタップ"
+        : guards(OP).length ? "守護を持つ相手キャラをタップしてください（守護がいる間は、ほかのキャラも本体も攻撃できません）"
+        : "攻撃する相手キャラか、相手の体力（上の丸）をタップ";
     }
     el.className = "sheet banner";
     el.innerHTML = `<p>${msg}</p><button type="button" class="btn" data-act="cancel">やめる</button>`;
@@ -1144,12 +1145,12 @@ function dropAction(x, y) {
   const uid = drag.uid;
   if (unitEl && +unitEl.dataset.owner === OP) {
     const t = +unitEl.dataset.uid, tu = S.players[OP].field.find(x => x.uid === t);
-    if (tu && !canAttackUnit(ME, tu)) return () => toast("守護を持つキャラを先に攻撃してください");
+    if (tu && !canAttackUnit(ME, tu, S.players[ME].field.find(x => x.uid === uid))) return () => toast("守護を持つキャラを先に攻撃してください");
     return () => doAttack(uid, t);
   }
   if (plEl && +plEl.dataset.player === OP) {
     const u = S.players[ME].field.find(x => x.uid === uid);
-    if (!canAttackPlayer(ME, u)) return () => toast(guards(OP).length ? "守護を持つキャラがいるので、直接攻撃できません" : "相手の場にキャラがいるので、直接攻撃できません");
+    if (!canAttackPlayer(ME, u)) return () => toast("守護を持つキャラがいるので、相手の本体は攻撃できません");
     return () => doAttack(uid, "player");
   }
   return null;
@@ -1213,7 +1214,7 @@ const RULES_HTML = () => `
     <h3>対戦の始め方</h3>
     <ul>
       <li>じゃんけんをして、勝った人が先攻か後攻かを選ぶ</li>
-      <li>お互い${CONFIG.START_HAND}枚引く。1回だけ、手札を全部山札に戻して引き直せる（マリガン）</li>
+      <li>お互い${CONFIG.START_HAND}枚引く${CONFIG.SECOND_BONUS ? `（後攻は${CONFIG.START_HAND + CONFIG.SECOND_BONUS}枚）` : ""}。1回だけ、手札を全部山札に戻して引き直せる（マリガン）</li>
     </ul>
     <h3>ターンの流れ</h3>
     <ul>
@@ -1227,7 +1228,8 @@ const RULES_HTML = () => `
       <li>場に置けるのは${CONFIG.FIELD_MAX}体まで</li>
       <li>出したターンは攻撃できない（速攻を除く）</li>
       <li>攻撃すると、お互いの攻撃力ぶんのダメージを与え合う</li>
-      <li>相手の場にキャラがいる間は、相手プレイヤーを直接攻撃できない（直撃を除く）</li>
+      <li>攻撃先は、相手のキャラか相手プレイヤー（本体）を選べる</li>
+      <li>相手の場に守護を持つキャラがいる間は、守護を持つキャラしか攻撃できない（直撃を除く）</li>
     </ul>
     <h3>能力</h3>
     <ul>
@@ -1344,12 +1346,16 @@ function showRules() {
 function showCardList() {
   const usable = CARDS.filter(c => c.limit > 0);
   const byCost = (a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja");
+  // 図鑑：まだ持っていないカードはイラストを隠す（名前・効果は見られる）
+  const collect = ["ready", "offline"].includes(Account.status);
+  const hide = c => collect && Account.owned(c.id) <= 0;
+  const ownedN = usable.filter(c => Account.owned(c.id) > 0).length;
   const group = (type, label) => {
     const list = usable.filter(c => c.type === type).sort(byCost);
     return `<h3 class="sec">${label}（${list.length}種）</h3>
       <div class="clist">${list.map(c => `
-        <div class="citem">
-          ${cardHTML(c, { static: true })}
+        <div class="citem ${hide(c) ? "unowned" : ""}">
+          ${cardHTML(c, { static: true, hidden: hide(c) })}
           <div class="cbody">
             <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount" title="1デッキに入れられる枚数">${Account.status === "free" ? "" : `所持${Account.owned(c.id)} ・ `}上限${cardLimit(c, CONFIG)}</span></div>
             <div class="cmeta">${WORLDS[c.world]} ・ ${RARITY[c.rarity]} ・ コスト${c.cost}${c.type === "char" ? ` ・ 攻撃${c.atk} ／ 体力${c.hp}` : ""}</div>
@@ -1359,7 +1365,7 @@ function showCardList() {
   };
   openOverlay(`<div class="panel wide">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>カード一覧</b></div>
-    <div class="totals"><span>全<b>${usable.length}</b>種</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
+    <div class="totals"><span>${collect ? `集めたカード <b>${ownedN}</b> / ${usable.length}種` : `全<b>${usable.length}</b>種`}</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
     ${group("char", "キャラクター")}
     ${group("spell", "魔法")}
     <button type="button" class="btn primary" data-act="back">戻る</button>
@@ -1511,7 +1517,7 @@ document.addEventListener("click", e => {
     const uid = +c.dataset.uid, owner = +c.dataset.owner;
     if (myTurn && ui.mode === "attack" && owner === OP) {
       const tu = S.players[OP].field.find(x => x.uid === uid);
-      if (tu && !canAttackUnit(ME, tu)) { toast("守護を持つキャラを先に攻撃してください"); return; }
+      if (tu && !canAttackUnit(ME, tu, selectedUnit())) { toast("守護を持つキャラを先に攻撃してください"); return; }
       const a = ui.sel.uid; ui = { sel: null, mode: null }; doAttack(a, uid); return;
     }
     if (myTurn && ui.mode === "target") {

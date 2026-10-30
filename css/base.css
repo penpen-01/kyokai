@@ -188,3 +188,7 @@ img{max-width:100%}
 @keyframes legendsweep{0%,55%{transform:translateX(-60%)}85%,100%{transform:translateX(60%)}}
 /* 盤面のカードが選ばれている・攻撃できる表示は、枠の光より優先して見せる */
 .card.ready,.card.tgt,.card.sel,.card.over{z-index:1}
+
+/* まだ持っていないカード（図鑑・デッキ編成）：イラストの代わりに「？」 */
+.card.unknown .art{background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 3cqw,transparent 3cqw 8cqw),linear-gradient(170deg,#23263c,#12131f)}
+.card.unknown .glyph{color:rgba(255,255,255,.18);font-size:50cqw}

@@ -82,9 +82,13 @@ const Decks = {
       <div class="dsplit">キャラ <b>${chars}</b> ・ 魔法 <b>${total - chars}</b></div>
     </div>`;
   },
-  tileHTML(c, badge, cls = "", act = "deckDetail") {
+  /* まだ持っていないカードはイラストを隠す（サンプルデッキ・試遊では隠さない） */
+  hideArt(c, deck) {
+    return ["ready", "offline"].includes(Account.status) && !this.unbound(deck) && Account.owned(c.id) <= 0;
+  },
+  tileHTML(c, badge, cls = "", act = "deckDetail", hidden = false) {
     return `<button type="button" class="dtile ${cls}" data-act="${act}" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">
-      ${cardHTML(c, { static: true })}${badge}</button>`;
+      ${cardHTML(c, { static: true, hidden })}${badge}</button>`;
   },
   topbar(title, backAct) {
     return `<div class="topbar"><button type="button" class="btn sm" data-act="${backAct}">← 戻る</button><b>${title}</b></div>`;
@@ -203,7 +207,7 @@ const Decks = {
       const k = ed.cards[c.id] || 0, own = this.owned(c.id), max = this.maxFor(c, ed);
       const none = !unb && own <= 0;
       return this.tileHTML(c, `<span class="dbadge ${k ? "in" : ""}">${k}/${max}</span>${unb ? "" : `<span class="obadge">所持${own}</span>`}`,
-        `${none ? "unowned" : k ? "has" : ""} ${k >= max ? "maxed" : ""}`, "deckTapAdd");
+        `${none ? "unowned" : k ? "has" : ""} ${k >= max ? "maxed" : ""}`, "deckTapAdd", this.hideArt(c, ed));
     }).join("") : `<p class="hint">条件に合うカードがありません。</p>`;
   },
 
@@ -262,7 +266,7 @@ const Decks = {
     const k = ed ? ed.cards[c.id] || 0 : 0, max = this.maxFor(c, ed);
     return `<div class="dmodal" data-act="deckDetailClose">
       <div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}" data-act="noop">
-        <div class="dmodal-card">${cardHTML(c, { static: true })}</div>
+        <div class="dmodal-card">${cardHTML(c, { static: true, hidden: this.hideArt(c, ed || this.find(this.viewing)) })}</div>
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>

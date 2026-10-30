@@ -1,12 +1,12 @@
 {
- "version": 29,
+ "version": 30,
  "updated": "2026-10-31",
  "config": {
   "PLAYER_HP": 20,
-  "START_HAND": 6,
+  "START_HAND": 5,
   "ENERGY_MAX": 10,
   "FIELD_MAX": 4,
-  "HAND_MAX": 8,
+  "HAND_MAX": 10,
   "FATIGUE": 2,
   "DECK_SIZE": 30,
   "COPY_MAX": 3,
@@ -18,7 +18,8 @@
   "REWARD_ONLINE": 150,
   "SEASON": "beta",
   "STARTER_DECK": "starter",
-  "SAMPLE_DECKS": true
+  "SAMPLE_DECKS": true,
+  "SECOND_BONUS": 0
  },
  "packs": [
   {
