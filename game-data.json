@@ -1,5 +1,5 @@
 {
- "version": 26,
+ "version": 27,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -547,7 +547,7 @@
     "pierce"
    ],
    "effects": [],
-   "art": "art/omega-6cbcb7f6ce.webp"
+   "art": "art/omega-f06a4e407f.webp"
   },
   {
    "id": "rally",
