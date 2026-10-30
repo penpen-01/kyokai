@@ -1,5 +1,5 @@
 {
- "version": 14,
+ "version": 15,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -556,7 +556,7 @@
      "n": 2
     }
    ],
-   "art": "art/rally-8632d26712.webp"
+   "art": "art/rally-774ac00c09.webp"
   },
   {
    "id": "stargaze",
