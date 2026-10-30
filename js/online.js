@@ -101,7 +101,7 @@ const Online = {
       case "onlBack": showStart(); break;
       case "onlCancel": this.leave(); MODE = "cpu"; S = null; app.innerHTML = ""; showStart(); break;
       case "onlCopy":
-        navigator.clipboard?.writeText(this.code).then(() => this.lobbyMsg("コピーしました"), () => this.lobbyMsg("コピーできませんでした。合言葉を直接伝えてください"));
+        copyText(this.code).then(ok => this.lobbyMsg(ok ? "コピーしました" : "コピーできませんでした。合言葉を直接伝えてください"));
         break;
       case "rematch": this.rematch(); break;
       case "resume": this.resume(); break;

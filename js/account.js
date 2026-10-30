@@ -155,7 +155,7 @@ const Account = {
     switch (act) {
       case "welcomeOk": this.isNew = false; showStart(); return true;
       case "acctCopy":
-        navigator.clipboard?.writeText(this.fmt(this.code)).then(() => toast("コピーしました"), () => toast("コピーできませんでした。手で控えてください"));
+        copyText(this.fmt(this.code)).then(ok => toast(ok ? "コピーしました" : "コピーできませんでした。手で控えてください"));
         return true;
       case "acctLoad": {
         const v = $("#acct-in") ? $("#acct-in").value : "";

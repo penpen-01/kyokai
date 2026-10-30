@@ -124,7 +124,21 @@ function cardTargetRoles(card) {
 
 /* 効果テキストを自動で作る */
 function effectsText(card) {
-  return (card.effects || []).filter(e => EFFECTS[e.kind]).map(e => EFFECTS[e.kind].text(e.n)).join("");
+  // 同じ効果が続くときは「〜を4回」にまとめる（天罰の光など）
+  const list = (card.effects || []).filter(e => EFFECTS[e.kind]);
+  const out = [];
+  for (let i = 0; i < list.length; i++) {
+    const e = list[i];
+    let k = 1;
+    while (i + k < list.length && list[i + k].kind === e.kind && list[i + k].n === e.n) k++;
+    let t = EFFECTS[e.kind].text(e.n);
+    // キャラの登場時効果で「自分のキャラ1体」を選ぶものは、そのキャラ自身は選べない
+    if (card.type === "char" && EFFECTS[e.kind].target === "ownUnit") t = t.replace("自分のキャラ1体", "このキャラ以外の自分のキャラ1体");
+    if (k > 1) t = e.kind === "dmgRandom" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
+    out.push(t);
+    i += k - 1;
+  }
+  return out.join("");
 }
 function cardTextLines(card) {
   const lines = [];
@@ -269,13 +283,44 @@ function registerSW() {
 }
 
 /* デッキコード（デッキを文字列にして受け渡す） */
+/* デッキコード
+   KYK2:<名前とカードをbase64url>  … 短く、URLやLINEに貼っても壊れにくい形（2026-10〜）
+   KYK1:<JSONをbase64>              … 以前の形。読み込みだけ対応 */
+const b64urlEnc = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const b64urlDec = str => decodeURIComponent(escape(atob(str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4))));
 function deckToCode(deck) {
-  const json = JSON.stringify({ n: deck.name, c: deck.cards });
-  return "KYK1:" + btoa(unescape(encodeURIComponent(json)));
+  const body = String(deck.name || "デッキ").replace(/[|]/g, "") + "|" + Object.entries(deck.cards || {}).filter(([, n]) => n > 0).map(([id, n]) => n > 1 ? `${id}*${n}` : id).join(",");
+  return "KYK2:" + b64urlEnc(body);
 }
 function codeToDeck(code) {
-  const m = String(code || "").trim().match(/^KYK1:([A-Za-z0-9+/=]+)$/);
+  // 貼り付けたときに入りがちな改行・空白・全角のコロンを取り除き、文章の中からコードの部分だけを探す
+  const t = String(code || "").replace(/[\s\u200b]+/g, "").replace(/：/g, ":");
+  let m = t.match(/KYK2:([A-Za-z0-9_-]+)/);
+  if (m) {
+    try {
+      const body = b64urlDec(m[1]);
+      const i = body.indexOf("|"); if (i < 0) return null;
+      const cards = {};
+      body.slice(i + 1).split(",").filter(Boolean).forEach(x => { const [id, n] = x.split("*"); cards[id] = (cards[id] || 0) + Math.max(1, Math.min(99, +n || 1)); });
+      return { name: body.slice(0, i).slice(0, 16) || "デッキ", cards: cleanDeckCards(cards) };
+    } catch { return null; }
+  }
+  m = t.match(/KYK1:([A-Za-z0-9+/=]+)/);
   if (!m) return null;
   try { const o = JSON.parse(decodeURIComponent(escape(atob(m[1])))); return { name: String(o.n || "デッキ").slice(0, 16), cards: cleanDeckCards(o.c) }; }
   catch { return null; }
+}
+
+/* クリップボードにコピー。使えない環境では、選択してコピーする方法に切り替える */
+function copyText(text) {
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0"; ta.style.top = "0";
+    document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+    let ok = false; try { ok = document.execCommand("copy"); } catch {}
+    ta.remove();
+    return ok;
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(() => true, () => fallback());
+  return Promise.resolve(fallback());
 }

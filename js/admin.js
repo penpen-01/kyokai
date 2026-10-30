@@ -246,7 +246,7 @@ const Admin = {
       case "cpuDelYes": DATA.decks = DATA.decks.filter(d => d.id !== id); this.confirm = null; this.touch(this.renderEco); return true;
       case "cpuCopyCode": {
         const d = DATA.decks.find(x => x.id === id); if (!d) return true;
-        navigator.clipboard?.writeText(deckToCode(d)).then(() => { this.importMsg = "コピーしました"; this.renderEco(); }, () => { this.importMsg = "コピーできませんでした"; this.renderEco(); });
+        copyText(deckToCode(d)).then(ok => { this.importMsg = ok ? "コピーしました" : "コピーできませんでした"; this.renderEco(); });
         return true;
       }
       case "cpuAdd": {
@@ -285,7 +285,7 @@ const Admin = {
       }
       case "sdCopy": {
         const c = serialFmt(el.dataset.code);
-        navigator.clipboard?.writeText(c).then(() => { this.serialMsg = "コピーしました"; this.renderSerials(); }, () => { this.serialMsg = "コピーできませんでした。手で控えてください"; this.renderSerials(); });
+        copyText(c).then(ok => { this.serialMsg = ok ? "コピーしました" : "コピーできませんでした。手で控えてください"; this.renderSerials(); });
         return true;
       }
       case "sdDel": this.readSerialForm(); this.confirm = { kind: "serial", id }; this.renderSerials(); return true;

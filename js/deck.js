@@ -143,8 +143,8 @@ const Decks = {
   showImport(msg) {
     openOverlay(`<div class="panel">
       ${this.topbar("デッキコードから作る", "decks")}
-      <p class="lead small">友達が「デッキコードをコピー」で送ってくれたコードを貼り付けてください。持っていないカードは、あとで入れ替えが必要です。</p>
-      <textarea class="otxt" id="deck-code" rows="4" placeholder="KYK1:..."></textarea>
+      <p class="lead small">友達が「デッキコードをコピー」で送ってくれたコードを貼り付けてください。メッセージごと貼り付けても、コードの部分だけを読み取ります。</p>
+      <textarea class="otxt" id="deck-code" rows="4" placeholder="KYK2:..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
       ${this.sampleOK() && !this.free() ? `<label class="ownchk"><input type="checkbox" id="deck-code-sample"> サンプルデッキとして作る（全カード使用可）</label>` : ""}
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
       <div class="pre-btns"><button type="button" class="btn" data-act="decks">やめる</button><button type="button" class="btn primary" data-act="deckImportGo">作る</button></div>
@@ -330,15 +330,26 @@ const Decks = {
       case "deckImport": this.showImport(); return true;
       case "deckImportGo": {
         const d = codeToDeck($("#deck-code") ? $("#deck-code").value : "");
-        if (!d) { this.showImport("デッキコードを読み取れませんでした。KYK1: から始まる文字をすべて貼り付けてください。"); return true; }
+        if (!d) { this.showImport("デッキコードを読み取れませんでした。KYK2:（または KYK1:）から始まる文字を、途中で切れないようにすべて貼り付けてください。"); return true; }
         const asSample = !!($("#deck-code-sample") && $("#deck-code-sample").checked);
         if (this.full(asSample)) return true;
-        this.startEdit({ id: (asSample ? "s" : "d") + Date.now().toString(36), name: d.name, cards: d.cards, free: asSample }, true);
+        // 今は使えないカード・持っていないカードは外して、何を外したかを知らせる
+        const draftDeck = { free: asSample };
+        const cards = {}, missing = [];
+        Object.entries(d.cards).forEach(([cid, n]) => {
+          const c = DEF[cid];
+          if (!c || c.limit <= 0) { missing.push(`（今は使えないカード）×${n}`); return; }
+          const k = Math.min(n, this.maxFor(c, draftDeck));
+          if (k > 0) cards[cid] = k;
+          if (k < n) missing.push(`${c.name}×${n - k}`);
+        });
+        this.startEdit({ id: (asSample ? "s" : "d") + Date.now().toString(36), name: d.name, cards, free: asSample }, true);
+        if (missing.length) toast(`持っていないカードを外しました：${missing.slice(0, 4).join("、")}${missing.length > 4 ? " ほか" : ""}`);
         return true;
       }
       case "deckCode": {
         const d = this.find(id); if (!d) return true;
-        navigator.clipboard?.writeText(deckToCode(d)).then(() => toast("デッキコードをコピーしました"), () => toast("コピーできませんでした"));
+        copyText(deckToCode(d)).then(ok => toast(ok ? "デッキコードをコピーしました" : "コピーできませんでした"));
         return true;
       }
       case "deckCopy": {

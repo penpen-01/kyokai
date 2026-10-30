@@ -72,6 +72,13 @@ const Motion = {
     if (slot) { slot.style.position = "relative"; slot.style.zIndex = "20"; }
   },
 
+  /* ---------- 召喚：キャラが場に出たところを先に見せてから、登場時効果へ ---------- */
+  land() {
+    if (typeof Online !== "undefined" && MODE === "online" && Online.role === "guest") return;
+    render();
+    this.hold(this.reduced ? 150 : 480);
+  },
+
   /* ---------- 相手が使ったカードを見せる ---------- */
   cast(id, pi) {
     if (pi === ME || !DEF[id]) return;

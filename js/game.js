@@ -229,6 +229,10 @@ function canPlay(pi, idx) {
   if (sac && !p.field.length) return { ok: false, reason: "代償にする自分のキャラがいません" };
   if (d.pay && d.pay.kind === "life" && p.hp <= d.pay.n) return { ok: false, reason: "代償の体力が足りません" };
   if (d.type === "char" && p.field.length >= CONFIG.FIELD_MAX && !sac) return { ok: false, reason: "場がいっぱいです" };
+  // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
+  const ENEMY_ONLY = ["dmgRandom", "dmgAll", "freezeAll", "debuffAll", "dmgTarget", "destroyTarget", "freezeTarget", "debuffTarget"];
+  if (d.type === "spell" && d.effects.length && d.effects.every(e => ENEMY_ONLY.includes(e.kind)) && !S.players[opp(pi)].field.length)
+    return { ok: false, reason: "相手の場にキャラがいません" };
   // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
   if (d.type === "spell") {
     for (const r of cardTargetRoles(d)) {
@@ -268,7 +272,11 @@ function playCard(pi, idx, targetsIn) {
     if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); }
   }
   let self = null;
-  if (d.type === "char") self = addUnit(pi, id);
+  if (d.type === "char") {
+    self = addUnit(pi, id);
+    // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
+    if (d.effects.length) fx(unitSel(self.uid), id, "land");
+  }
   runEffects(pi, d, targets, self);
   cleanup();
   if (!checkWin()) render();
@@ -307,13 +315,16 @@ function effect(pi, e, targets, self) {
       break;
     }
     case "dmgTarget": { const u = enemyT(); if (u) hitUnit(u, n); break; }
-    case "dmgRandom":
-      if (en.field.length) {
-        const u = en.field[Math.floor(Math.random() * en.field.length)];
+    case "dmgRandom": {
+      // すでに倒れている（体力0以下の）キャラは選ばない
+      const alive = en.field.filter(x => x.hp > 0);
+      if (alive.length) {
+        const u = alive[Math.floor(Math.random() * alive.length)];
         log(`${cname(u.id)}に${n}ダメージ。`);
         hitUnit(u, n);
       }
       break;
+    }
     case "dmgAll": if (en.field.length) { log(`相手キャラ全体に${n}ダメージ。`); en.field.forEach(u => hitUnit(u, n)); } break;
     case "dmgAllBoth": log(`すべてのキャラに${n}ダメージ。`); [...en.field, ...me.field].forEach(u => hitUnit(u, n)); break;
     case "dmgFace": log(`${pname(opp(pi))}に${n}ダメージ。`); hitPlayer(opp(pi), n); break;
@@ -1167,6 +1178,7 @@ function runFx(sel, text, cls) {
   if (sel === "sfx") { Sound.play(text); return; }
   if (cls === "lunge") { Motion.lunge(sel, text); return; }
   if (sel === "cast") { Motion.cast(text, +cls.slice(4)); return; }
+  if (cls === "land") { Motion.land(); return; }
   if (cls === "die") { const el = document.querySelector(sel); if (el) Motion.shatter(el); return; }
   if (cls === "dmg") Sound.play(text === "破壊" ? "destroy" : sel.startsWith("[data-player") ? "face" : "hit");
   else if (cls === "heal") Sound.play(/^[+＋]\d+$/.test(text) ? "heal" : "buff");
