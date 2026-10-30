@@ -1,6 +1,6 @@
 {
- "version": 28,
- "updated": "2026-10-30",
+ "version": 29,
+ "updated": "2026-10-31",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 6,
@@ -10,6 +10,7 @@
   "FATIGUE": 2,
   "DECK_SIZE": 30,
   "COPY_MAX": 3,
+  "DECK_MAX": 10,
   "STARTING_GOLD": 300,
   "REWARD_EASY": 100,
   "REWARD_NORMAL": 200,
@@ -250,6 +251,16 @@
     "turret": 2
    },
    "level": "hard"
+  }
+ ],
+ "serials": [
+  {
+   "h": "aa386987abb5ee11754fdb57caea5db3d197ec86830829b3e9295b14466e76e3",
+   "label": "ベータ用ゴールド",
+   "gold": 10000,
+   "cards": {},
+   "until": "2026-11-01",
+   "created": "2026-10-31"
   }
  ],
  "cards": [
