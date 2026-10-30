@@ -1,5 +1,5 @@
 {
- "version": 9,
+ "version": 10,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -450,7 +450,8 @@
      "kind": "buffAtk",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/berserker-31b138641f.webp"
   },
   {
    "id": "dragon",
@@ -837,7 +838,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-knight-723148360d.webp"
   },
   {
    "id": "st-giant",
@@ -921,7 +923,8 @@
    "keywords": [
     "guard"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/m-shield-ab19209854.webp"
   },
   {
    "id": "m-valkyrie",
@@ -937,7 +940,8 @@
    "keywords": [
     "trample"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/m-valkyrie-ae4aeddb38.webp"
   },
   {
    "id": "m-phoenix",
@@ -954,7 +958,8 @@
     "haste",
     "trample"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/m-phoenix-3161d989ce.webp"
   },
   {
    "id": "m-oracle",
@@ -977,7 +982,8 @@
      "kind": "buffAllAtk",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/m-oracle-c6bf5498de.webp"
   },
   {
    "id": "m-titan",
