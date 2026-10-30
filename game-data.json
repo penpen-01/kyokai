@@ -1,5 +1,5 @@
 {
- "version": 20,
+ "version": 21,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -1416,7 +1416,8 @@
      "kind": "debuffTarget",
      "n": 3
     }
-   ]
+   ],
+   "art": "art/f-curse-2c4c5a14ea.webp"
   },
   {
    "id": "f-spring",
@@ -1437,7 +1438,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-spring-feb44830b6.webp"
   },
   {
    "id": "f-blizzard",
@@ -1458,7 +1460,8 @@
      "kind": "dmgAll",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-blizzard-5fbc06f772.webp"
   },
   {
    "id": "f-horn",
@@ -1475,7 +1478,8 @@
      "kind": "summon",
      "n": 4
     }
-   ]
+   ],
+   "art": "art/f-horn-678d14d7db.webp"
   },
   {
    "id": "f-dragonwake",
@@ -1492,7 +1496,8 @@
      "kind": "summon",
      "n": 9
     }
-   ]
+   ],
+   "art": "art/f-dragonwake-e68ee257a6.webp"
   },
   {
    "id": "x-drone",
