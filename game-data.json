@@ -1,5 +1,5 @@
 {
- "version": 12,
+ "version": 13,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -1027,7 +1027,7 @@
      "n": 2
     }
    ],
-   "art": "art/m-sungod-276da7e6bf.webp"
+   "art": "art/m-sungod-d6f71e091c.webp"
   },
   {
    "id": "m-demonlord",
