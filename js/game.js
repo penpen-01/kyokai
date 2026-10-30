@@ -46,6 +46,7 @@ async function loadCardData() {
   CONFIG = data.config;
   CARDS = data.cards;
   DEF = Object.fromEntries(CARDS.map(c => [c.id, c]));
+  DEF.coin = COIN_CARD;
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
@@ -117,6 +118,8 @@ function chooseOrder(pi, goFirst) {
   log(`${pname(pi)}が${goFirst ? "先攻" : "後攻"}を選んだ。${pname(S.first)}の先攻です。`);
   for (let i = 0; i < CONFIG.START_HAND; i++) { draw(0, true); draw(1, true); }
   for (let i = 0; i < (CONFIG.SECOND_BONUS || 0); i++) draw(opp(S.first), true);
+  // 後攻の人には「境界の欠片」（エナジー+1を1回だけ）を配る
+  for (let i = 0; i < (CONFIG.SECOND_COIN || 0); i++) S.players[opp(S.first)].hand.push("coin");
   S.phase = "mulligan";
   render();
   if (MODE === "cpu") cpuPreGame();
@@ -128,7 +131,9 @@ function mulligan(pi, redraw) {
   if (!S || S.phase !== "mulligan" || S.mull[pi] != null) return false;
   const p = S.players[pi];
   if (redraw) {
-    p.deck.push(...p.hand); p.hand = [];
+    // 境界の欠片は山札に戻さず、手元に残す
+    const coins = p.hand.filter(id => id === "coin");
+    p.deck.push(...p.hand.filter(id => id !== "coin")); p.hand = coins;
     shuffle(p.deck);
     const k = CONFIG.START_HAND + (pi !== S.first ? (CONFIG.SECOND_BONUS || 0) : 0);
     for (let i = 0; i < k; i++) draw(pi, true);
@@ -303,8 +308,9 @@ function effect(pi, e, targets, self) {
   switch (e.kind) {
     case "draw": for (let i = 0; i < n; i++) draw(pi); break;
     case "refresh": {
-      const k = me.hand.length;
-      me.deck.push(...me.hand); me.hand = []; shuffle(me.deck);
+      const coins = me.hand.filter(id => id === "coin");
+      const k = me.hand.length - coins.length;
+      me.deck.push(...me.hand.filter(id => id !== "coin")); me.hand = coins; shuffle(me.deck);
       for (let i = 0; i < k + n; i++) draw(pi, true);
       log(`${pname(pi)}は手札を入れ替えた（${me.hand.length}枚）。`);
       break;
@@ -579,9 +585,12 @@ function cpuChoose(pi) {
   const hard = CPU_LEVEL === "hard";
   const tries = hard ? 2 : 1; // ランダムな効果があるので、上級は複数回試して平均をとる
   // 上級は「この手のあとに続けて打てる一番よい手」まで読む（2手先）
-  const look = st => {
+  // エナジーを増やすだけのカード（境界の欠片・双子の妖精の効果など）は、それだけでは盤面が変わらないので、
+  // 「そのあとに打てる一番よい手」まで読んで価値を決める（中級でも）
+  const isResource = a => a.t === "play" && DEF[a.id] && DEF[a.id].type === "spell" && DEF[a.id].effects.length > 0 && DEF[a.id].effects.every(e => ["energyNow", "discount"].includes(e.kind));
+  const look = (st, force) => {
     let best = evaluate(st, pi);
-    if (!hard || st.over) return best;
+    if ((!hard && !force) || st.over) return best;
     const real = S, wasSim = SIM; S = st; SIM = true;
     try {
       legalActions(pi).slice(0, 40).forEach(b => {
@@ -595,13 +604,13 @@ function cpuChoose(pi) {
     let sum = 0;
     for (let i = 0; i < tries; i++) {
       const st = simulate(() => applyAction(pi, a));
-      sum += look(st);
+      sum += look(st, isResource(a));
     }
     return { a, v: sum / tries };
   }).sort((x, y) => y.v - x.v);
   if (CPU_LEVEL === "normal") {
     // 中級：ときどき2番目以降の手を選ぶ
-    const ok = scored.filter(x => x.v > base - 0.5);
+    const ok = scored.filter(x => x.v > base - 0.5 && !(isResource(x.a) && x.v <= base + 0.05));
     if (!ok.length) return null;
     if (ok.length > 1 && Math.random() < 0.3) return ok[1 + Math.floor(Math.random() * Math.min(2, ok.length - 1))].a;
     return ok[0].v > base + 0.05 ? ok[0].a : null;
@@ -1215,6 +1224,7 @@ const RULES_HTML = () => `
     <ul>
       <li>じゃんけんをして、勝った人が先攻か後攻かを選ぶ</li>
       <li>お互い${CONFIG.START_HAND}枚引く${CONFIG.SECOND_BONUS ? `（後攻は${CONFIG.START_HAND + CONFIG.SECOND_BONUS}枚）` : ""}。1回だけ、手札を全部山札に戻して引き直せる（マリガン）</li>
+      ${CONFIG.SECOND_COIN ? `<li>後攻の人は「境界の欠片」を持って始まる。好きなときに使うと、そのターンだけエナジーが1増える（1回きり）</li>` : ""}
     </ul>
     <h3>ターンの流れ</h3>
     <ul>

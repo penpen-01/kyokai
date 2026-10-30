@@ -53,7 +53,7 @@ const EFFECTS = {
 };
 
 const DEFAULT_CONFIG = {
-  PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
+  PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
   SEASON: "beta", STARTER_DECK: "starter",
@@ -71,6 +71,7 @@ const CONFIG_INFO = {
   FIELD_MAX:  { label: "場に置けるキャラの数",       min: 1, max: 6 },
   HAND_MAX:   { label: "手札の上限",                 min: 1, max: 12 },
   SECOND_BONUS: { label: "後攻が最初に多く引く枚数",   min: 0, max: 3 },
+  SECOND_COIN: { label: "後攻に配る「境界の欠片」の枚数", min: 0, max: 2 },
   FATIGUE:    { label: "山札切れで引けないときのダメージ", min: 0, max: 20 },
   DECK_SIZE:  { label: "デッキの枚数",               min: 10, max: 60 },
   COPY_MAX:   { label: "同じカードを入れられる上限", min: 1, max: 10 },
@@ -122,6 +123,12 @@ function cardTargetRoles(card) {
   if (kinds.includes("ownUnit") && !sac) roles.push("own");
   return roles;
 }
+
+/* 後攻の人だけが最初に持つ、使い切りのカード（パックやデッキには入らない） */
+const COIN_CARD = {
+  id: "coin", name: "境界の欠片", world: "fan", type: "spell", cost: 0, glyph: "欠", limit: 0, rarity: "common",
+  keywords: [], effects: [{ kind: "energyNow", n: 1 }], note: "後攻の人だけが最初に持っている。好きなときに1回だけ使える。"
+};
 
 /* 効果テキストを自動で作る */
 function effectsText(card) {

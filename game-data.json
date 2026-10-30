@@ -1,5 +1,5 @@
 {
- "version": 30,
+ "version": 31,
  "updated": "2026-10-31",
  "config": {
   "PLAYER_HP": 20,
@@ -19,7 +19,8 @@
   "SEASON": "beta",
   "STARTER_DECK": "starter",
   "SAMPLE_DECKS": true,
-  "SECOND_BONUS": 0
+  "SECOND_BONUS": 0,
+  "SECOND_COIN": 1
  },
  "packs": [
   {
