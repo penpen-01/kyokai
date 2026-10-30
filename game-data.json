@@ -1,5 +1,5 @@
 {
- "version": 13,
+ "version": 14,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -555,7 +555,8 @@
      "kind": "buffAtk",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/rally-8632d26712.webp"
   },
   {
    "id": "stargaze",
@@ -589,7 +590,8 @@
      "kind": "dmgTarget",
      "n": 4
     }
-   ]
+   ],
+   "art": "art/bolt-af9788d659.webp"
   },
   {
    "id": "spring",
@@ -1074,7 +1076,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/m-order-5c5c25e1b7.webp"
   },
   {
    "id": "m-anthem",
@@ -1108,7 +1111,8 @@
      "kind": "destroyTarget",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/m-hammer-24265a17a1.webp"
   },
   {
    "id": "m-pact",
@@ -1129,7 +1133,8 @@
    "pay": {
     "kind": "life",
     "n": 3
-   }
+   },
+   "art": "art/m-pact-3463025fee.webp"
   },
   {
    "id": "m-altar",
@@ -1150,7 +1155,8 @@
    "pay": {
     "kind": "sacrifice",
     "n": 1
-   }
+   },
+   "art": "art/m-altar-ae5ee11a55.webp"
   },
   {
    "id": "m-ragnarok",
