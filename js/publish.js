@@ -212,7 +212,7 @@ const Publish = {
       this.progress(`公開しました（v${version}）。サイトに反映されるのを待っています…（${sec}秒）`);
     }
     this.busy = false;
-    this.progress(`公開は完了しています（v${version}）。サイトへの反映に時間がかかっています。数分後にゲームを開き直して確認してください。`, true, true);
+    this.progress(`公開は完了しています（v${version}）。GitHub側でサイトの更新が順番待ちになっているようです（混んでいると10分以上かかることがあります）。待っていれば自動で反映されるので、もう一度公開する必要はありません。しばらくしてからゲームを開き直して確認してください。`, true, true);
   },
 
   progress(text, done, good) {
