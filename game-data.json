@@ -1,5 +1,5 @@
 {
- "version": 23,
+ "version": 24,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -377,7 +377,8 @@
      "kind": "heal",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/sentinel-1d5f179df4.webp"
   },
   {
    "id": "shadow",
@@ -492,7 +493,8 @@
    "keywords": [
     "haste"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/garm-6d5bf4e616.webp"
   },
   {
    "id": "wargod",
@@ -843,7 +845,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-rockman-b4212b8187.webp"
   },
   {
    "id": "st-knight",
@@ -1533,7 +1536,8 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
-   "armor": 1
+   "armor": 1,
+   "art": "art/x-armored-2708eded14.webp"
   },
   {
    "id": "x-rush",
@@ -1573,7 +1577,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/x-jammer-6ed4a0e7a2.webp"
   },
   {
    "id": "x-tank",
@@ -1628,7 +1633,8 @@
      "kind": "summon",
      "n": 3
     }
-   ]
+   ],
+   "art": "art/x-factory-1a4312c2ed.webp"
   },
   {
    "id": "x-gigas",
