@@ -1,5 +1,5 @@
 {
- "version": 15,
+ "version": 16,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -671,7 +671,8 @@
      "kind": "dmgRandom",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/judgment-b41b280787.webp"
   },
   {
    "id": "cmvr35s2x5dv",
@@ -742,7 +743,8 @@
      "kind": "buffAtk",
      "n": 5
     }
-   ]
+   ],
+   "art": "art/cmvr3qeaobf2-492c003566.webp"
   },
   {
    "id": "st-recruit",
@@ -1094,7 +1096,8 @@
      "kind": "buffAllBoth",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/m-anthem-5dd0e52818.webp"
   },
   {
    "id": "m-hammer",
@@ -1173,7 +1176,8 @@
      "kind": "destroyAll",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/m-ragnarok-303b99d620.webp"
   },
   {
    "id": "m-inferno",
@@ -1190,7 +1194,8 @@
      "kind": "dmgAllBoth",
      "n": 4
     }
-   ]
+   ],
+   "art": "art/m-inferno-60a0e6074c.webp"
   },
   {
    "id": "f-healer",
