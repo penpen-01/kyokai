@@ -1,5 +1,5 @@
 {
- "version": 18,
+ "version": 19,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -473,7 +473,8 @@
      "kind": "dmgAll",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/dragon-9e58b54d90.webp"
   },
   {
    "id": "garm",
@@ -694,7 +695,8 @@
      "kind": "dmgAll",
      "n": 3
     }
-   ]
+   ],
+   "art": "art/cmvr35s2x5dv-20bdd2b07b.webp"
   },
   {
    "id": "cmvr3jwcugk8",
@@ -721,7 +723,8 @@
      "kind": "buffHp",
      "n": 3
     }
-   ]
+   ],
+   "art": "art/cmvr3jwcugk8-ac54e6ba2b.webp"
   },
   {
    "id": "cmvr3qeaobf2",
@@ -1301,7 +1304,8 @@
     "guard"
    ],
    "effects": [],
-   "armor": 1
+   "armor": 1,
+   "art": "art/f-treeguard-50d4145d68.webp"
   },
   {
    "id": "f-abyss",
@@ -1368,7 +1372,8 @@
      "kind": "buffBoth",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/f-unicorn-d00ae4de76.webp"
   },
   {
    "id": "f-whisper",
