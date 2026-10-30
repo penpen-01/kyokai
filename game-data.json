@@ -1,5 +1,5 @@
 {
- "version": 22,
+ "version": 23,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -1550,7 +1550,7 @@
     "trample"
    ],
    "effects": [],
-   "art": "art/x-rush-551cf76765.webp"
+   "art": "art/x-rush-fe6effa8d3.webp"
   },
   {
    "id": "x-jammer",
