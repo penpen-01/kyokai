@@ -1,5 +1,5 @@
 {
- "version": 16,
+ "version": 17,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -319,7 +319,8 @@
      "kind": "dmgRandom",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/archer-ec7ff2d10e.webp"
   },
   {
    "id": "turret",
@@ -390,7 +391,8 @@
    "keywords": [
     "pierce"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/shadow-3c851b4f14.webp"
   },
   {
    "id": "sage",
@@ -816,7 +818,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-wolf-fc3cdc5a64.webp"
   },
   {
    "id": "st-rockman",
@@ -1218,7 +1221,8 @@
      "kind": "heal",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-healer-0396e285b4.webp"
   },
   {
    "id": "f-twins",
@@ -1237,7 +1241,8 @@
      "kind": "energyNow",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/f-twins-e20d4f24cb.webp"
   },
   {
    "id": "f-thief",
