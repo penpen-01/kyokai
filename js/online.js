@@ -417,6 +417,12 @@ document.addEventListener("keydown", e => {
 
 /* ---------- 起動 ---------- */
 async function boot() {
+  // カード工房の検証ラボから開かれたとき：画面は出さず、データだけ読んで知らせる
+  if (new URLSearchParams(location.search).has("sim")) {
+    try { await loadCardData(); parent.postMessage({ from: "simlab", type: "ready", version: DATA_INFO.version, draft: DATA_INFO.draft }, location.origin); }
+    catch (e) { parent.postMessage({ from: "simlab", type: "error", message: "カードデータを読み込めませんでした" }, location.origin); }
+    return;
+  }
   try {
     await loadCardData();
   } catch (e) {

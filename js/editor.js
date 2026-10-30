@@ -372,7 +372,8 @@ document.addEventListener("click", e => {
   const tab = t.closest("[data-tab]");
   if (tab) {
     $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", b === tab));
-    ["cards", "packs", "eco", "rules"].forEach(k => { $("#tab-" + k).hidden = tab.dataset.tab !== k; });
+    ["cards", "packs", "eco", "rules", "sim"].forEach(k => { $("#tab-" + k).hidden = tab.dataset.tab !== k; });
+    if (tab.dataset.tab === "sim") Lab.render();
     return;
   }
   const f = t.closest("[data-filter]");
@@ -467,6 +468,7 @@ function toggleMore(open) {
 function act(name, el) {
   if (["pubSettings", "pubHistory", "export", "import", "revert", "restoreBackup"].includes(name)) toggleMore(false);
   if (Admin.act(name, el)) return;
+  if (Lab.act(name, el)) return;
   if (Publish.act(name, el)) return;
   const c = curCard();
   switch (name) {
