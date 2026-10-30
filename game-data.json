@@ -1,5 +1,5 @@
 {
- "version": 21,
+ "version": 22,
  "updated": "2026-10-30",
  "config": {
   "PLAYER_HP": 20,
@@ -285,7 +285,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/eye-1893728d11.webp"
   },
   {
    "id": "pegasus",
@@ -339,7 +340,8 @@
      "kind": "dmgFace",
      "n": 3
     }
-   ]
+   ],
+   "art": "art/turret-f58118e715.webp"
   },
   {
    "id": "thunder",
@@ -781,7 +783,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-golem-e18c9107a9.webp"
   },
   {
    "id": "st-guard",
@@ -810,7 +813,8 @@
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/st-infantry-f4031256c1.webp"
   },
   {
    "id": "st-wolf",
@@ -1513,7 +1517,8 @@
    "keywords": [
     "guard"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/x-drone-8f5f64fdfe.webp"
   },
   {
    "id": "x-armored",
@@ -1544,7 +1549,8 @@
    "keywords": [
     "trample"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/x-rush-551cf76765.webp"
   },
   {
    "id": "x-jammer",
