@@ -114,6 +114,8 @@ img{max-width:100%}
   box-shadow:0 0 0 1cqw color-mix(in srgb,var(--wc) 70%,#000), 0 0 0 1.8cqw color-mix(in srgb,#b48be0 55%,transparent);
   padding-top:12cqw;
 }
+/* イラストがある魔法は、窓いっぱいに絵を出す（上の余白をなくす） */
+.card.spell.has-art .art{padding:0}
 .card.spell .foot{background:none;padding-top:0;gap:1cqw;align-items:center}
 .card.spell .nm{
   margin:0 2cqw;align-self:stretch;border:none;border-radius:1cqw;
