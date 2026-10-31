@@ -29,6 +29,8 @@ const Account = {
     return (this.data && this.data.cards && this.data.cards[id]) || 0;
   },
   get gold() { return this.data ? this.data.gold || 0 : 0; },
+  get stones() { return this.data ? this.data.stones || 0 : 0; },
+  get tickets() { return this.data ? this.data.tickets || 0 : 0; },
   usable() { return this.status === "ready" || this.status === "offline" || this.status === "free"; },
 
   async init() {
@@ -61,6 +63,9 @@ const Account = {
       created: d.created || Date.now(),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
       redeemed: Object.fromEntries(Object.entries(d.redeemed || {}).filter(([k]) => /^[0-9a-f]{64}$/.test(k))),
+      // ショップ：魔石とパック券
+      stones: Math.max(0, Math.floor(+d.stones || 0)),
+      tickets: Math.max(0, Math.floor(+d.tickets || 0)),
       // CPU戦の連勝数（強さごと）と、終わっていないCPU戦の強さ（途中でやめたら連勝が途切れる）
       streak: Object.fromEntries(STREAK_LEVELS.map(k => [k, Math.max(0, Math.floor(+(d.streak || {})[k] || 0))])),
       ...(STREAK_LEVELS.includes(d.streakLive) ? { streakLive: d.streakLive } : {})

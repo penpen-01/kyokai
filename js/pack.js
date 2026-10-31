@@ -35,9 +35,10 @@ const Packs = {
     return pool.length ? pool[Math.floor(Math.random() * pool.length)].id : null;
   },
 
-  open(pack) {
+  open(pack, byTicket) {
     if (Account.status !== "ready" && Account.status !== "offline") return { ok: false, msg: "アカウントを読み込めていないため、パックを開けられません。" };
-    if (Account.gold < pack.price) return { ok: false, msg: `Gが足りません（あと${pack.price - Account.gold}G）` };
+    if (byTicket && Account.tickets < 1) return { ok: false, msg: "パック券を持っていません。" };
+    if (!byTicket && Account.gold < pack.price) return { ok: false, msg: `Gが足りません（あと${pack.price - Account.gold}G）` };
     const ids = [];
     for (let i = 0; i < pack.size; i++) {
       const id = this.rollCard(pack, i === pack.size - 1 ? pack.odds.last : pack.odds.normal);
@@ -49,10 +50,10 @@ const Packs = {
     // めくる順番：レア度の低い順（いちばんレアなカードが最後に出る）
     const rank = x => RARITY_ORDER.indexOf(DEF[x.id].rarity);
     cards.sort((a, b) => rank(a) - rank(b));
-    Account.data.gold -= pack.price;
+    if (byTicket) Account.data.tickets -= 1; else Account.data.gold -= pack.price;
     Account.addCards(ids);
     // stage: pack（未開封）→ reveal（1枚ずつ）→ done（一覧）
-    this.last = { pack, cards, stage: "pack", idx: 0, faceUp: false };
+    this.last = { pack, cards, stage: "pack", idx: 0, faceUp: false, byTicket: !!byTicket };
     this.detailId = null;
     return { ok: true };
   },
@@ -82,6 +83,7 @@ const Packs = {
                 <tr><td>${p.size}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.last[r]}%</td>`).join("")}</tr></table>
             </details>
             <button type="button" class="btn primary" data-act="packOpen" data-id="${esc(p.id)}" ${Account.gold < p.price || !["ready", "offline"].includes(Account.status) ? "disabled" : ""}>${p.price}Gで開ける</button>
+            ${Account.tickets > 0 ? `<button type="button" class="btn" data-act="packOpenTicket" data-id="${esc(p.id)}" ${["ready", "offline"].includes(Account.status) ? "" : "disabled"}>パック券で開ける（残り${Account.tickets}枚）</button>` : ""}
           </div>
         </div>`;
       }).join("") : `<p class="hint">今は買えるパックがありません。</p>`}</div>
@@ -150,7 +152,8 @@ const Packs = {
       }).join("")}</div>
       <ul class="olist">${L.cards.map(x => { const c = DEF[x.id]; return `<li><span class="rtag r-${c.rarity}">${RARITY_SHORT[c.rarity]}</span>${esc(c.name)}${x.isNew ? ` <b class="newtxt">NEW</b>` : ` <small>（所持${Account.owned(x.id)}枚）</small>`}</li>`; }).join("")}</ul>
       <div class="pre-btns">
-        <button type="button" class="btn primary" data-act="packOpen" data-id="${esc(L.pack.id)}" ${Account.gold < L.pack.price ? "disabled" : ""}>もう1パック（${L.pack.price}G）</button>
+        ${Account.tickets > 0 ? `<button type="button" class="btn primary" data-act="packOpenTicket" data-id="${esc(L.pack.id)}">もう1パック（パック券 残り${Account.tickets}枚）</button>`
+          : `<button type="button" class="btn primary" data-act="packOpen" data-id="${esc(L.pack.id)}" ${Account.gold < L.pack.price ? "disabled" : ""}>もう1パック（${L.pack.price}G）</button>`}
         <button type="button" class="btn" data-act="packs">パック一覧へ</button>
       </div>
       ${this.detailHTML()}
@@ -215,10 +218,10 @@ const Packs = {
   handleAct(act, el) {
     switch (act) {
       case "packs": this.showShop(); return true;
-      case "packOpen": {
+      case "packOpen": case "packOpenTicket": {
         const p = PACKS.find(x => x.id === (el && el.dataset.id));
         if (!p) return true;
-        const r = this.open(p);
+        const r = this.open(p, act === "packOpenTicket");
         if (!r.ok) { this.showShop(r.msg); return true; }
         this.showOpening();
         return true;

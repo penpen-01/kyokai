@@ -697,3 +697,24 @@ body{
 .os-info .rtag,.os-info .newtag{position:static}
 .os-info b{font-family:var(--f-display);font-weight:800;font-size:20px}
 .citem.unowned .cname::after{content:"未所持";margin-left:6px;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:var(--line);color:var(--muted)}
+
+/* ---- ショップ（魔石） ---- */
+.hometiles:has(> :nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
+.homebar .tags{display:flex;gap:6px;align-items:center}
+.stonetag{font-weight:800;font-size:13px;color:#b9a6ff;padding:4px 10px;border:1px solid #8a76e0;border-radius:999px;white-space:nowrap}
+.topbar .stonetag{margin-left:auto}
+.shopsec{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.topbar ~ .shopsec:first-of-type{border-top:0;padding-top:0}
+.shopsec h3{margin:0 0 4px;font-size:16px}
+.shopsec .hint{margin:0 0 8px}
+.shopmsg{margin:0;padding:8px 12px;border-radius:6px;background:color-mix(in srgb,#8a76e0 18%,transparent);border:1px solid #8a76e0;font-size:13px}
+.rates{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 10px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.rates span{display:inline-flex;align-items:center;gap:5px}
+.rates .rtag{position:static;font-style:normal}
+.surlist{margin:0 0 10px}
+.surlist li{display:flex;align-items:center;gap:4px}
+.surlist li b{margin-left:auto;color:#b9a6ff;font-variant-numeric:tabular-nums}
+.shopfilter{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px}
+.shopfilter .chip{font-size:12px;padding:4px 11px}
+.shopfilter .chip.on{background:var(--gold);color:#1a1408;border-color:var(--gold)}
+.shopneed{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px;margin-left:4px}

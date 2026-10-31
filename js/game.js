@@ -1280,6 +1280,7 @@ const HOME_ICON = {
   packs: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7.5h14l-1.2 13H6.2z"/><path d="M5 7.5 7 3h10l2 4.5M9.5 12.5h5"/></svg>',
   cards: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>',
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
+  shop: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 18.5 9 12 21.2 5.5 9z"/><path d="M5.5 9h13M12 2.8 9.2 9 12 21.2 14.8 9z"/></svg>',
   mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>'
 };
 
@@ -1289,7 +1290,7 @@ function showStart() {
   openOverlay(`<div class="homebg" aria-hidden="true"><div class="sp-bg">${Splash.bandsHTML()}</div><div class="homeshade"></div></div>
   <div class="panel home">
     <div class="homebar">
-      ${goldOK ? `<span class="goldtag">${Account.gold}G</span>` : `<span></span>`}
+      ${goldOK ? `<span class="tags"><span class="goldtag">${Account.gold}G</span><span class="stonetag">魔石 ${Account.stones}</span></span>` : `<span></span>`}
       <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
     </div>
     <div class="homemain">
@@ -1307,6 +1308,7 @@ function showStart() {
     <div class="hometiles">
       <button type="button" class="hometile" data-act="decks">${HOME_ICON.decks}<b>デッキ編成</b><small>${esc(deck ? deck.name : "未選択")}</small></button>
       <button type="button" class="hometile" data-act="packs">${HOME_ICON.packs}<b>パック</b><small>${goldOK ? `所持 ${Account.gold}G` : "開封する"}</small></button>
+      ${goldOK ? `<button type="button" class="hometile" data-act="shop">${HOME_ICON.shop}<b>ショップ</b><small>魔石 ${Account.stones}${Account.tickets ? ` ・ 券${Account.tickets}` : ""}</small></button>` : ""}
       <button type="button" class="hometile" data-act="cards">${HOME_ICON.cards}<b>カード一覧</b><small>全${CARDS.filter(c => c.limit > 0).length}種</small></button>
     </div>
     ${DATA_INFO.draft ? "" : `<button type="button" class="btn fbbtn" data-act="fbOpen"><span class="fbline">${HOME_ICON.mail}ご意見・感想を送る</span><small>改善案・不具合・良かった所・いまいちな所など</small></button>`}
@@ -1540,6 +1542,7 @@ function handleAct(act, el) {
       if (Feedback.handleAct(act, el)) return;
       if (Serial.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
+      if (Shop.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);
   }
