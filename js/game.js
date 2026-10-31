@@ -657,6 +657,15 @@ function doEnd() {
 }
 
 /* ---------- 描画 ---------- */
+/* プレイヤーの顔（アイコン）にするカード。p.icon があればそれ、なければデッキでいちばんレアな絵付きキャラ */
+function playerIcon(pi) {
+  const p = S.players[pi];
+  if (p.icon && DEF[p.icon] && DEF[p.icon].art) return p.icon;
+  const deck = (S.decks && S.decks[pi] && S.decks[pi].cards) || {};
+  const cands = Object.keys(deck).map(id => DEF[id]).filter(d => d && d.type === "char" && d.art);
+  cands.sort((x, y) => RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity) || y.cost - x.cost);
+  return cands[0] ? cands[0].id : null;
+}
 function pbarHTML(pi) {
   const p = S.players[pi];
   const tgt = ui.mode === "attack" && pi === OP && canAttackPlayer(ME, selectedUnit());
@@ -664,15 +673,19 @@ function pbarHTML(pi) {
   for (let i = 0; i < CONFIG.ENERGY_MAX; i++) {
     pips += `<span class="pip ${i < p.e ? "on" : i < p.maxE ? "used" : ""}"></span>`;
   }
+  const icon = playerIcon(pi), art = icon && DEF[icon].art;
   const status = typeof Online !== "undefined" && MODE === "online" && pi === OP ? Online.oppStatusHTML() : "";
   const side = pi === OP
-    ? `<div class="side"><button type="button" class="chip" data-act="menu">メニュー</button><span>手札 ${p.hand.length} ・ 山札 ${p.deck.length}</span></div>`
-    : `<div class="side">${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</span></div>`;
-  return `<div class="pbar ${S.turn === pi && !S.over ? "active" : ""}">
-    <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${p.hp}">
-      <span class="hpv">${Math.max(0, p.hp)}</span><span class="hpl">体力</span></button>
-    <div class="pinfo"><div class="pname">${esc(p.name)}${S.turn === pi && !S.over ? "<small>行動中</small>" : ""}${status}</div>
-      <div class="pips">${pips}<span class="etext">${p.e}/${p.maxE}</span></div></div>
+    ? `<div class="side"><button type="button" class="chip" data-act="menu">メニュー</button><span class="counts"><i title="手札">手札 ${p.hand.length}</i><i title="山札">山札 ${p.deck.length}</i></span></div>`
+    : `<div class="side">${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i></span></div>`;
+  const hp = Math.max(0, p.hp);
+  return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.turn === pi && !S.over ? "active" : ""}">
+    <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
+      <span class="face">${art ? `<img src="${esc(art)}" alt="" draggable="false">` : `<span class="glyph">召</span>`}</span>
+      <span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
+    </button>
+    <div class="pinfo"><div class="pname"><b>${esc(p.name)}</b>${S.turn === pi && !S.over ? "<small>行動中</small>" : ""}${status}</div>
+      <div class="pips" aria-label="エナジー ${p.e}/${p.maxE}">${pips}<span class="etext">${p.e}<small>/${p.maxE}</small></span></div></div>
     ${side}</div>`;
 }
 
@@ -721,14 +734,14 @@ function fieldHTML(pi) {
 }
 
 function endButtonHTML() {
-  if (S.over && resultShown) return `<button type="button" class="endbtn" data-act="showResult">結果画面へ</button>`;
-  if (S.over) return `<button type="button" class="endbtn" disabled>決着</button>`;
+  if (S.over && resultShown) return `<button type="button" class="endbtn" data-act="showResult"><span>結果<br>画面へ</span></button>`;
+  if (S.over) return `<button type="button" class="endbtn" disabled><span>決着</span></button>`;
   if (S.turn !== ME) {
-    const label = MODE === "cpu" ? "CPU行動中" : "相手のターン";
-    return `<button type="button" class="endbtn" disabled>${label}</button>`;
+    const label = MODE === "cpu" ? "CPU<br>行動中" : "相手の<br>ターン";
+    return `<button type="button" class="endbtn" disabled aria-label="${label.replace("<br>", "")}"><span>${label}</span></button>`;
   }
-  if (typeof Online !== "undefined" && Online.blocked()) return `<button type="button" class="endbtn" disabled>送信中…</button>`;
-  return `<button type="button" class="endbtn" data-act="end" ${canAct() ? "" : "disabled"}>ターン終了</button>`;
+  if (typeof Online !== "undefined" && Online.blocked()) return `<button type="button" class="endbtn" disabled><span>送信中</span></button>`;
+  return `<button type="button" class="endbtn" data-act="end" aria-label="ターン終了" ${canAct() ? "" : "disabled"}><span>ターン<br>終了</span></button>`;
 }
 
 let renderDeferred = false;
@@ -745,6 +758,7 @@ function render() {
   renderDeferred = false;
   clearDragLeftovers();
   hidePreview();
+  app.classList.toggle("battle", S.phase === "play");
   if (S.phase !== "play") { app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
   const tk = `${S.gid}-${S.turnNo}`;
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; Sound.play("turn"); }
@@ -755,7 +769,7 @@ function render() {
     ${pbarHTML(OP)}
     ${fieldHTML(OP)}
     <div class="mid">
-      <div class="pile" aria-label="自分の山札"><b>${me.deck.length}</b><span>山札</span></div>
+      <div class="pile" aria-label="自分の山札 ${me.deck.length}枚"><span class="pback"><i>境</i></span><b>${me.deck.length}</b></div>
       <button type="button" class="log" data-act="log" aria-label="プレイログを開く">${lines.map((l, i) => `<div class="${i < lines.length - 1 ? "old" : ""}">${logText(l)}</div>`).join("")}</button>
       ${endButtonHTML()}
     </div>
@@ -905,10 +919,10 @@ function renderSheet() {
         : `${esc(d.name)}の対象にする${r === "enemy" ? "相手" : "自分"}のキャラをタップしてください`;
     } else {
       const u = selectedUnit();
-      msg = !S.players[OP].field.length ? "相手の体力（上の丸）をタップして直接攻撃"
-        : guards(OP).length && u && kw(u, "pierce") ? "直撃：守護を無視して、好きな相手キャラか相手の体力（上の丸）をタップ"
+      msg = !S.players[OP].field.length ? "右上の相手の顔をタップして直接攻撃"
+        : guards(OP).length && u && kw(u, "pierce") ? "直撃：守護を無視して、好きな相手キャラか右上の相手の顔をタップ"
         : guards(OP).length ? "守護を持つ相手キャラをタップしてください（守護がいる間は、ほかのキャラも本体も攻撃できません）"
-        : "攻撃する相手キャラか、相手の体力（上の丸）をタップ";
+        : "攻撃する相手キャラか、右上の相手の顔をタップ";
     }
     el.className = "sheet banner";
     el.innerHTML = `<p>${msg}</p><button type="button" class="btn" data-act="cancel">やめる</button>`;
@@ -1464,7 +1478,7 @@ function toTitle() {
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
   clearTimeout(resultTimer);
-  app.innerHTML = "";
+  app.innerHTML = ""; app.classList.remove("battle");
   $("#sheet").hidden = true;
   hidePreview();
   showStart();
