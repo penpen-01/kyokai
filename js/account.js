@@ -63,6 +63,8 @@ const Account = {
       created: d.created || Date.now(),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
       redeemed: Object.fromEntries(Object.entries(d.redeemed || {}).filter(([k]) => /^[0-9a-f]{64}$/.test(k))),
+      // プレイヤーアイコン（キャラカードのID。なければ「おまかせ」）
+      ...(typeof d.icon === "string" && /^[\w-]{1,40}$/.test(d.icon) ? { icon: d.icon } : {}),
       // ショップ：魔石とパック券
       stones: Math.max(0, Math.floor(+d.stones || 0)),
       tickets: Math.max(0, Math.floor(+d.tickets || 0)),
@@ -190,8 +192,44 @@ const Account = {
     </div>`, null, true);
   },
 
-  handleAct(act) {
+  /* ---------- プレイヤーアイコン ---------- */
+  // アイコンにできるカード：持っているキャラカードのうち、絵があるもの（試遊は全部・接続できないときはスターター）
+  iconChoices() {
+    const ok = c => c && c.type === "char" && c.art && c.limit > 0;
+    return CARDS.filter(c => ok(c) && (this.status === "free" || this.owned(c.id) > 0))
+      .sort((a, b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity) || b.cost - a.cost);
+  },
+  // 今のアイコン（選んでいない・もう持っていないときは null ＝ デッキでいちばんレアなキャラ）
+  icon() {
+    const id = this.data && this.data.icon;
+    return id && this.iconChoices().some(c => c.id === id) ? id : null;
+  },
+  setIcon(id) {
+    if (!this.data) return;
+    if (id) this.data.icon = id; else delete this.data.icon;
+    this.save();
+  },
+  showIcons(from) {
+    if (from) this.iconFrom = from;
+    const list = this.iconChoices(), cur = this.icon();
+    const total = CARDS.filter(c => c.type === "char" && c.art && c.limit > 0).length;
+    const back = this.iconFrom === "options" ? "options" : "optBack";
+    openOverlay(`<div class="panel wide">
+      <div class="topbar"><button type="button" class="btn sm" data-act="${back}">← 戻る</button><b>アイコン</b></div>
+      <p class="lead small">対戦で顔として表示されます。持っているキャラカードの絵から選べます（${list.length} / ${total}種）。カードを集めるほど増えます。</p>
+      <div class="iconpick">
+        <button type="button" class="iconopt auto ${cur ? "" : "on"}" data-act="iconSet" data-id="" aria-label="おまかせ"><span class="iface"><span class="glyph">任</span></span><small>おまかせ</small></button>
+        ${list.map(c => `<button type="button" class="iconopt r-${c.rarity} ${cur === c.id ? "on" : ""}" data-act="iconSet" data-id="${esc(c.id)}" aria-label="${esc(c.name)}"><span class="iface">${iconImgHTML(c.id)}</span><small>${esc(c.name)}</small></button>`).join("")}
+      </div>
+      <p class="datainfo">「おまかせ」は、使うデッキでいちばんレアなキャラの絵になります。</p>
+      <button type="button" class="btn" data-act="${back}">戻る</button>
+    </div>`, this.iconFrom === "options" ? "options" : "start", true);
+  },
+
+  handleAct(act, el) {
     switch (act) {
+      case "icons": this.showIcons(el && el.dataset.from); return true;
+      case "iconSet": this.setIcon(el.dataset.id || null); Sound.play("click"); this.showIcons(); return true;
       case "welcomeOk": this.isNew = false; showStart(); return true;
       case "acctCopy":
         copyText(this.fmt(this.code)).then(ok => toast(ok ? "コピーしました" : "コピーできませんでした。手で控えてください"));

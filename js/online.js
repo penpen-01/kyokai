@@ -181,7 +181,7 @@ const Online = {
     this.role = "guest"; this.code = code; this.mySample = !!deck.sample;
     store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
-    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, by: this.uid, at: Date.now() });
+    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), by: this.uid, at: Date.now() });
     this.watchRoom();
     this.showConnecting("対戦を準備しています");
   },
@@ -278,7 +278,8 @@ const Online = {
       // 参加者のデッキ。知らないカードは除いて受け取る
       const cards = {};
       Object.entries(cleanDeckCards(a.cards)).forEach(([id, n]) => { if (DEF[id]) cards[id] = n; });
-      this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by };
+      const icon = typeof a.icon === "string" && DEF[a.icon] && DEF[a.icon].type === "char" ? a.icon : null;
+      this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by, ...(icon ? { icon } : {}) };
       if (!S && this.room && this.room.guest && this.room.status === "waiting") this.startGame();
       return;
     }

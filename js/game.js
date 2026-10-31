@@ -73,7 +73,7 @@ function newGame(names, decks) {
     phase: "rps",
     players: [mkPlayer(names[0], decks[0]), mkPlayer(names[1], decks[1])],
     rps: { picks: [null, null], round: 1, last: null }, rpsWinner: null, first: null, mull: [null, null],
-    decks: [{ name: decks[0].name, cards: decks[0].cards }, { name: decks[1].name, cards: decks[1].cards }],
+    decks: decks.map(d => ({ name: d.name, cards: d.cards, ...(d.icon ? { icon: d.icon } : {}) })),
     turn: 0, turnNo: 0, over: false, winner: null, log: [], uidN: 0, seq: 0
   };
   ui = { sel: null, mode: null };
@@ -85,7 +85,8 @@ function newGame(names, decks) {
   if (MODE === "cpu") cpuPreGame();
 }
 function mkPlayer(name, deck) {
-  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [] };
+  const icon = deck.icon && DEF[deck.icon] && DEF[deck.icon].type === "char" && DEF[deck.icon].art ? deck.icon : null;
+  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [], ...(icon ? { icon } : {}) };
 }
 
 const RPS = { g: "グー", c: "チョキ", p: "パー" };
@@ -684,7 +685,7 @@ function pbarHTML(pi) {
     <div class="pl-left">${left}</div>
     <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
       <span class="halo" aria-hidden="true"></span>
-      <span class="face">${art ? `<img src="${esc(art)}" alt="" draggable="false">` : `<span class="glyph">召</span>`}</span>
+      <span class="face">${art ? iconImgHTML(icon) : `<span class="glyph">召</span>`}</span>
       <span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
     <div class="pl-right">
@@ -1308,7 +1309,7 @@ function showStart() {
   openOverlay(`<div class="homebg" aria-hidden="true"><div class="sp-bg">${Splash.bandsHTML()}</div><div class="homeshade"></div></div>
   <div class="panel home">
     <div class="homebar">
-      ${goldOK ? `<span class="tags"><span class="goldtag">${Account.gold}G</span><span class="stonetag">魔石 ${Account.stones}</span></span>` : `<span></span>`}
+      ${goldOK ? `<span class="tags"><button type="button" class="homeicon" data-act="icons" data-from="start" aria-label="アイコンを変える">${Account.icon() ? iconImgHTML(Account.icon()) : `<span class="glyph">任</span>`}</button><span class="goldtag">${Account.gold}G</span><span class="stonetag">魔石 ${Account.stones}</span></span>` : `<span></span>`}
       <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
     </div>
     <div class="homemain">
@@ -1342,6 +1343,7 @@ function showOptions() {
     <div class="optlist">
       <button type="button" class="optrow" data-act="rules"><b>ルール</b><small>遊び方・カードの能力</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="serial"><b>シリアルコード</b><small>配られたコードでGやカードを受け取る</small></button>`}
+      ${Account.status === "none" ? "" : `<button type="button" class="optrow" data-act="icons" data-from="options"><b>アイコン</b><small>対戦で表示される顔を、持っているキャラカードの絵から選ぶ</small></button>`}
       <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
     </div>

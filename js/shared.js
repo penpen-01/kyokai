@@ -184,6 +184,15 @@ function cardText(card) {
 }
 
 /* カードの見た目。unit を渡すと場のキャラの現在値を表示する */
+/* プレイヤーアイコン：キャラカードの絵を丸く切り抜く。顔が上の方にない絵だけ、切り抜く位置を個別に決める */
+const ICON_POS = { "x-rush": "50% 40%", garm: "50% 55%" };
+function iconImgHTML(id) {
+  const c = typeof DEF !== "undefined" && DEF[id];
+  if (!c || !c.art) return `<span class="glyph">召</span>`;
+  const pos = ICON_POS[id] || "50% 18%";
+  return `<img src="${esc(c.art)}" alt="" draggable="false" style="object-position:${pos};transform-origin:${pos}">`;
+}
+
 function cardHTML(card, o = {}) {
   const u = o.unit;
   // o.hidden：まだ持っていないカード。イラストを隠して「？」を出す（名前・数値・効果は見せる）

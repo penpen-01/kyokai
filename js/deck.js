@@ -59,7 +59,8 @@ const Decks = {
     const pr = this.problems(d);
     if (pr.length) { onFail(`「${d.name}」はまだ使えません：${pr[0]}`); return null; }
     // sample：サンプルデッキ（所持に関係なく組んだデッキ）。勝ってもGはもらえない
-    return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}) };
+    const icon = Account.icon();
+    return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}) };
   },
   randomPreset(level) {
     const ok0 = PRESETS.filter(p => deckProblems(p, DEF, CONFIG).length === 0);
