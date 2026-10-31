@@ -1,5 +1,5 @@
 // ブラウザのページ内で実行する：CPU同士の対戦シミュレーター
-window.SimLab = {
+window.SimDev = {  // ゲーム側の js/simlab.js の SimLab と名前がぶつからないよう別名
   variant: "current",
   deck(cards, name) { return { name, cards }; },
   setRules(v) {

@@ -56,7 +56,7 @@ body{
 /* ---- 中央の境界 ---- */
 .mid{flex:1 0 46px;max-height:90px;display:flex;align-items:center;gap:10px;position:relative}
 .mid::before{
-  content:"";position:absolute;left:0;right:0;top:50%;height:1px;
+  content:"";position:absolute;pointer-events:none;left:0;right:0;top:50%;height:1px;
   background:linear-gradient(90deg, transparent, color-mix(in srgb,var(--gold) 60%,transparent) 20%, #b48be0 50%, color-mix(in srgb,var(--w-mech) 70%,transparent) 80%, transparent);
   opacity:.55;
 }
