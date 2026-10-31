@@ -666,6 +666,7 @@ function playerIcon(pi) {
   cands.sort((x, y) => RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity) || y.cost - x.cost);
   return cands[0] ? cands[0].id : null;
 }
+const MENU_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>';
 function pbarHTML(pi) {
   const p = S.players[pi];
   const tgt = ui.mode === "attack" && pi === OP && canAttackPlayer(ME, selectedUnit());
@@ -675,18 +676,22 @@ function pbarHTML(pi) {
   }
   const icon = playerIcon(pi), art = icon && DEF[icon].art;
   const status = typeof Online !== "undefined" && MODE === "online" && pi === OP ? Online.oppStatusHTML() : "";
-  const side = pi === OP
-    ? `<div class="side"><button type="button" class="chip" data-act="menu">メニュー</button><span class="counts"><i title="手札">手札 ${p.hand.length}</i><i title="山札">山札 ${p.deck.length}</i></span></div>`
-    : `<div class="side">${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i></span></div>`;
+  const left = pi === OP
+    ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i>手札 ${p.hand.length}</i><i>山札 ${p.deck.length}</i></span>`
+    : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i></span>`;
   const hp = Math.max(0, p.hp);
   return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.turn === pi && !S.over ? "active" : ""}">
+    <div class="pl-left">${left}</div>
     <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
+      <span class="halo" aria-hidden="true"></span>
       <span class="face">${art ? `<img src="${esc(art)}" alt="" draggable="false">` : `<span class="glyph">召</span>`}</span>
       <span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
-    <div class="pinfo"><div class="pname"><b>${esc(p.name)}</b>${S.turn === pi && !S.over ? "<small>行動中</small>" : ""}${status}</div>
-      <div class="pips" aria-label="エナジー ${p.e}/${p.maxE}">${pips}<span class="etext">${p.e}<small>/${p.maxE}</small></span></div></div>
-    ${side}</div>`;
+    <div class="pl-right">
+      <div class="pname"><b>${esc(p.name)}</b>${status}</div>
+      <div class="energy" aria-label="エナジー ${p.e}/${p.maxE}"><span class="pips">${pips}</span><span class="etext">${p.e}<small>/${p.maxE}</small></span></div>
+      ${S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}
+    </div></div>`;
 }
 
 /* 対象選択中の「今選んでいる役割」 */
@@ -774,7 +779,6 @@ function render() {
       ${endButtonHTML()}
     </div>
     ${fieldHTML(ME)}
-    ${pbarHTML(ME)}
     <div class="hand">${handOrder(me).map(i => {
       const id = me.hand[i];
       // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
@@ -782,6 +786,7 @@ function render() {
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
       return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id]) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
     }).join("")}</div>
+    ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   layoutHand();
   renderSheet();
@@ -919,10 +924,10 @@ function renderSheet() {
         : `${esc(d.name)}の対象にする${r === "enemy" ? "相手" : "自分"}のキャラをタップしてください`;
     } else {
       const u = selectedUnit();
-      msg = !S.players[OP].field.length ? "右上の相手の顔をタップして直接攻撃"
-        : guards(OP).length && u && kw(u, "pierce") ? "直撃：守護を無視して、好きな相手キャラか右上の相手の顔をタップ"
+      msg = !S.players[OP].field.length ? "上の相手の顔をタップして直接攻撃"
+        : guards(OP).length && u && kw(u, "pierce") ? "直撃：守護を無視して、好きな相手キャラか上の相手の顔をタップ"
         : guards(OP).length ? "守護を持つ相手キャラをタップしてください（守護がいる間は、ほかのキャラも本体も攻撃できません）"
-        : "攻撃する相手キャラか、右上の相手の顔をタップ";
+        : "攻撃する相手キャラか、上の相手の顔をタップ";
     }
     el.className = "sheet banner";
     el.innerHTML = `<p>${msg}</p><button type="button" class="btn" data-act="cancel">やめる</button>`;

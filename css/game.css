@@ -30,66 +30,80 @@ body{
     #0b0d19;
 }
 
-/* ---- プレイヤー欄：自分は左下、相手は右上（斜めに向かい合う） ---- */
-.pbar{position:relative;display:flex;align-items:center;gap:10px;min-height:66px;padding:4px 10px 4px 4px}
-.pbar.op{flex-direction:row-reverse;padding:4px 4px 4px 10px}
-/* 顔の側から斜めに切れていく帯 */
+/* ---- プレイヤー欄：顔は上下とも中央（攻撃の矢印を持っていきやすいように）。左に手札などの数、右に名前とエナジー ---- */
+.pbar{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;min-height:84px;flex:none}
+/* 顔の後ろを横切る装飾の板（金の縁取り） */
 .pbar::before{
-  content:"";position:absolute;inset:6px 0;z-index:-1;pointer-events:none;
-  background:linear-gradient(90deg, rgba(18,22,42,.92), rgba(18,22,42,.6) 65%, rgba(18,22,42,0));
-  clip-path:polygon(0 0, 100% 0, calc(100% - 26px) 100%, 0 100%);
-  border-radius:34px 0 0 34px;
+  content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%);z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(90deg, transparent, color-mix(in srgb,var(--gold) 75%,transparent) 14%, #f3dc9a 50%, color-mix(in srgb,var(--gold) 75%,transparent) 86%, transparent) top/100% 1px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb,var(--gold) 45%,transparent) 14%, color-mix(in srgb,var(--gold) 45%,transparent) 86%, transparent) bottom/100% 1px no-repeat,
+    linear-gradient(180deg, rgba(30,26,48,.94), rgba(14,16,32,.94));
+  -webkit-mask:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);mask:linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
-.pbar.op::before{background:linear-gradient(270deg, rgba(18,22,42,.92), rgba(18,22,42,.6) 65%, rgba(18,22,42,0));clip-path:polygon(26px 0, 100% 0, 100% 100%, 0 100%);border-radius:0 34px 34px 0}
-.pbar::after{
-  content:"";position:absolute;left:30px;right:30%;bottom:6px;height:1px;pointer-events:none;
-  background:linear-gradient(90deg, color-mix(in srgb,var(--gold) 70%,transparent), transparent);
-}
-.pbar.op::after{left:30%;right:30px;top:6px;bottom:auto;background:linear-gradient(270deg, color-mix(in srgb,#e07a7a 70%,transparent), transparent)}
+.pbar.op::before{background:
+    linear-gradient(90deg, transparent, color-mix(in srgb,#d98080 60%,transparent) 14%, #f0b0a0 50%, color-mix(in srgb,#d98080 60%,transparent) 86%, transparent) bottom/100% 1px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in srgb,var(--gold) 45%,transparent) 14%, color-mix(in srgb,var(--gold) 45%,transparent) 86%, transparent) top/100% 1px no-repeat,
+    linear-gradient(180deg, rgba(14,16,32,.94), rgba(36,20,34,.94))}
 
+.pl-left{display:flex;align-items:center;gap:8px;min-width:0;padding-left:14px}
+.pl-right{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:0 10px 0 14px;position:relative}
+
+/* 顔：金の二重の輪と、後ろのひし形の紋章 */
 .avatar{
-  all:unset;cursor:pointer;flex:none;width:62px;height:62px;border-radius:50%;position:relative;
-  border:2px solid color-mix(in srgb,var(--gold) 55%,#2a2f4a);
-  box-shadow:0 0 0 3px rgba(10,12,22,.9), 0 4px 14px rgba(0,0,0,.6);
-  background:radial-gradient(circle at 50% 35%, #2c3252, var(--panel));
+  all:unset;cursor:pointer;flex:none;position:relative;width:74px;height:74px;border-radius:50%;
+  display:grid;place-items:center;
 }
-.pbar.op .avatar{border-color:color-mix(in srgb,#e07a7a 55%,#2a2f4a)}
-.avatar .face{position:absolute;inset:0;border-radius:50%;overflow:hidden;display:grid;place-items:center}
+.avatar .halo{
+  position:absolute;left:50%;top:50%;width:62px;height:62px;transform:translate(-50%,-50%) rotate(45deg);border-radius:6px;
+  background:linear-gradient(135deg,#3a2c12,#141020);
+  box-shadow:0 0 0 1.5px #c79a44, 0 0 0 4px #1a1424, 0 0 0 5px color-mix(in srgb,var(--gold) 60%,transparent), 0 6px 16px rgba(0,0,0,.7);
+}
+.pbar.op .avatar .halo{background:linear-gradient(135deg,#3a1418,#141020);box-shadow:0 0 0 1.5px #c97a6a, 0 0 0 4px #1a1424, 0 0 0 5px color-mix(in srgb,#d98080 60%,transparent), 0 6px 16px rgba(0,0,0,.7)}
+.avatar .face{
+  position:absolute;inset:4px;border-radius:50%;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 35%, #2c3252, var(--panel));
+  box-shadow:0 0 0 2px #1a1408, 0 0 0 4.5px #e9c873, 0 0 0 6px #6e4c14, inset 0 0 10px rgba(0,0,0,.6);
+}
+.pbar.op .avatar .face{box-shadow:0 0 0 2px #1a1408, 0 0 0 4.5px #e0a090, 0 0 0 6px #6e2a20, inset 0 0 10px rgba(0,0,0,.6)}
 .avatar .face img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;transform:scale(1.35);transform-origin:50% 22%}
 .avatar .face .glyph{font-family:var(--f-display);font-weight:800;font-size:24px;color:var(--muted)}
-.active .avatar{border-color:var(--gold);box-shadow:0 0 0 3px rgba(10,12,22,.9), 0 0 18px color-mix(in srgb,var(--gold) 65%,transparent)}
-.avatar.tgt{border-color:var(--danger);animation:pulse 1s ease-in-out infinite}
-.avatar.over{box-shadow:0 0 0 3px var(--fg)!important}
-/* 体力：顔の下に重なる紋章 */
+.active .avatar .face{box-shadow:0 0 0 2px #1a1408, 0 0 0 4.5px #fff0b8, 0 0 0 6px #b8862a, 0 0 22px 4px color-mix(in srgb,var(--gold) 70%,transparent)}
+.avatar.tgt .face{animation:facetgt 1s ease-in-out infinite}
+@keyframes facetgt{50%{box-shadow:0 0 0 2px #1a1408, 0 0 0 4.5px var(--danger), 0 0 0 6px #6e2a20, 0 0 22px 6px var(--danger)}}
+.avatar.over .face{box-shadow:0 0 0 2px #1a1408, 0 0 0 5px var(--fg), 0 0 24px 6px var(--fg)!important}
+/* 体力：金の縁の盾 */
 .hpgem{
-  position:absolute;right:-8px;bottom:-6px;width:32px;height:36px;display:grid;place-items:center;
-  background:linear-gradient(160deg,#ff8a7a,#c4303a 55%,#7a1420);
-  clip-path:polygon(50% 0, 100% 18%, 100% 62%, 50% 100%, 0 62%, 0 18%);
-  filter:drop-shadow(0 2px 3px rgba(0,0,0,.7));
+  position:absolute;right:-12px;bottom:-8px;width:36px;height:41px;display:grid;place-items:center;z-index:2;
+  background:linear-gradient(160deg,#fff0b8,#c79a44 45%,#6e4c14);
+  clip-path:polygon(50% 0, 100% 16%, 100% 60%, 50% 100%, 0 60%, 0 16%);
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.8));
 }
-.hpgem::before{content:"";position:absolute;inset:2px;clip-path:inherit;background:linear-gradient(160deg,rgba(255,255,255,.35),transparent 45%);pointer-events:none}
-.pbar.op .hpgem{right:auto;left:-8px}
+.hpgem::before{content:"";position:absolute;inset:3px;clip-path:polygon(50% 0, 100% 16%, 100% 60%, 50% 100%, 0 60%, 0 16%);background:linear-gradient(160deg,#ff8f7f,#cf3240 50%,#6e1018)}
+.hpgem::after{content:"";position:absolute;inset:3px 3px 50% 3px;clip-path:polygon(50% 0, 100% 32%, 100% 100%, 0 100%, 0 32%);background:linear-gradient(rgba(255,255,255,.35),transparent);pointer-events:none}
 .hpgem.low{animation:hplow 1.1s ease-in-out infinite}
-@keyframes hplow{50%{filter:drop-shadow(0 0 8px #ff4d4d)}}
-.hpv{position:relative;font-family:var(--f-display);font-weight:800;font-size:16px;line-height:1;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);font-variant-numeric:tabular-nums;margin-top:-2px}
-.pinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-.pbar.op .pinfo{align-items:flex-end}
-.pname{font-size:13px;display:flex;gap:8px;align-items:baseline;max-width:100%}
+@keyframes hplow{50%{filter:drop-shadow(0 0 9px #ff4d4d)}}
+.hpv{position:relative;z-index:1;font-family:var(--f-display);font-weight:800;font-size:17px;line-height:1;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);font-variant-numeric:tabular-nums;margin-top:-3px}
+
+.pname{font-size:12.5px;display:flex;gap:6px;align-items:baseline;max-width:100%}
 .pname b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pbar.op .pname{flex-direction:row-reverse}
-.pname small{color:var(--gold);font-weight:700;font-size:10px;letter-spacing:.08em}
-/* エナジー：紫の結晶 */
-.pips{display:flex;gap:3px;align-items:center;flex-wrap:nowrap}
-.pbar.op .pips{flex-direction:row-reverse}
-.pip{width:10px;height:13px;clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%);background:rgba(155,108,255,.16);box-shadow:inset 0 0 0 1px rgba(155,108,255,.35)}
+.acting{position:absolute;right:10px;top:-14px;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:#1a1408;background:linear-gradient(#ffe9a6,#d4a64a);padding:1px 7px;border-radius:999px;box-shadow:0 0 8px color-mix(in srgb,var(--gold) 60%,transparent)}
+.pbar.op .acting{top:auto;bottom:-14px}
+/* エナジー：紫の結晶（数字と並べる） */
+.energy{display:flex;align-items:center;gap:5px;max-width:100%}
+.pname .etext{margin-left:auto}
+.pips{display:flex;gap:2px;align-items:center;flex-wrap:nowrap}
+.pip{width:8px;height:12px;flex:none;clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%);background:rgba(155,108,255,.16);box-shadow:inset 0 0 0 1px rgba(155,108,255,.35)}
 .pip.on{background:linear-gradient(160deg,#f0e4ff,#a07bff 45%,#5a37d0);filter:drop-shadow(0 0 3px rgba(160,123,255,.9))}
 .pip.used{background:rgba(155,108,255,.38)}
-.etext{font-family:var(--f-display);font-weight:800;font-size:14px;color:#cdb8ff;margin:0 4px;font-variant-numeric:tabular-nums}
-.etext small{font-size:10px;color:var(--muted);font-weight:500}
-.side{font-size:11px;color:var(--muted);text-align:right;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
-.pbar.op .side{align-items:flex-start;text-align:left}
-.counts{display:flex;gap:6px}
-.counts i{font-style:normal;padding:1px 7px;border-radius:999px;background:rgba(10,12,22,.7);border:1px solid var(--line);white-space:nowrap}
+.etext{font-family:var(--f-display);font-weight:800;font-size:15px;color:#d9c8ff;font-variant-numeric:tabular-nums;text-shadow:0 0 6px rgba(160,123,255,.6)}
+.etext small{font-size:10px;color:var(--muted);font-weight:500;text-shadow:none}
+.counts{display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--muted)}
+.counts i{font-style:normal;white-space:nowrap}
+.menubtn{all:unset;cursor:pointer;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 35%, #2c3152, #151829);box-shadow:0 0 0 1px color-mix(in srgb,var(--gold) 55%,transparent), 0 2px 6px rgba(0,0,0,.6)}
+.menubtn svg{width:16px;height:16px;fill:none;stroke:#e6d3a0;stroke-width:2;stroke-linecap:round}
+.menubtn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .draftbadge{font-size:10px;color:#1a1408;background:var(--heal);padding:1px 6px;border-radius:3px;font-weight:700}
 
 /* ---- 場：刻印された空き枠 ---- */
@@ -108,16 +122,17 @@ body{
   box-shadow:inset 0 0 0 1px rgba(214,178,98,.16), inset 0 0 14px rgba(0,0,0,.5);
 }
 .empty::before{content:"";position:absolute;left:50%;top:50%;width:36%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(45deg);border:1px solid rgba(214,178,98,.2)}
-.empty::after{content:"";position:absolute;left:50%;top:50%;width:12%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(45deg);background:rgba(214,178,98,.22)}
+.empty::after{content:"";position:absolute;inset:5px;pointer-events:none;
+  background:
+    linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) top left/10px 1px no-repeat, linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) top left/1px 10px no-repeat,
+    linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) top right/10px 1px no-repeat, linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) top right/1px 10px no-repeat,
+    linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) bottom left/10px 1px no-repeat, linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) bottom left/1px 10px no-repeat,
+    linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) bottom right/10px 1px no-repeat, linear-gradient(rgba(214,178,98,.4),rgba(214,178,98,.4)) bottom right/1px 10px no-repeat,
+    radial-gradient(circle, rgba(214,178,98,.3) 0 3px, transparent 3.5px) center/100% 100% no-repeat}
 
-/* ---- 中央の境界：斜めの光の帯・山札・ログ・ターン終了のメダル ---- */
+/* ---- 中央：山札・ログ・ターン終了のメダル ---- */
 .mid{flex:1 0 64px;max-height:92px;display:flex;align-items:center;gap:10px;position:relative}
-.mid::before{
-  content:"";position:absolute;pointer-events:none;left:-30px;right:-30px;top:50%;height:16px;margin-top:-8px;transform:rotate(-4deg);
-  background:linear-gradient(90deg, transparent, color-mix(in srgb,var(--gold) 35%,transparent) 18%, rgba(180,139,224,.45) 50%, color-mix(in srgb,var(--w-mech) 40%,transparent) 82%, transparent);
-  -webkit-mask:linear-gradient(transparent, #000 45%, #000 55%, transparent);mask:linear-gradient(transparent, #000 45%, #000 55%, transparent);
-  opacity:.8;
-}
+
 .pile,.log,.endbtn{position:relative}
 .pile{flex:none;width:42px;display:flex;flex-direction:column;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
 .pback{width:36px;height:50px;border-radius:4px;display:grid;place-items:center;border:1.5px solid color-mix(in srgb,var(--gold) 70%,transparent);
@@ -134,13 +149,20 @@ body{
 .log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* ターン終了：金のメダル */
 .endbtn{
-  all:unset;box-sizing:border-box;cursor:pointer;flex:none;width:68px;height:68px;border-radius:50%;
+  all:unset;box-sizing:border-box;position:relative;cursor:pointer;flex:none;width:68px;height:68px;border-radius:50%;
   display:grid;place-items:center;text-align:center;font-weight:800;font-size:12.5px;line-height:1.25;color:#2a1d06;
   background:radial-gradient(circle at 50% 35%, #fff1bf, #e7c063 45%, #a87a22 100%);
   box-shadow:0 0 0 3px #3a2a0c, 0 0 0 5px color-mix(in srgb,var(--gold) 80%,transparent), 0 0 18px color-mix(in srgb,var(--gold) 55%,transparent), 0 6px 14px rgba(0,0,0,.6);
   animation:medal 2.4s ease-in-out infinite;
 }
-.endbtn span{display:block;transform:translateY(1px)}
+.endbtn span{display:block;transform:translateY(1px);position:relative;z-index:1}
+/* メダルの外周の刻み */
+.endbtn::before{content:"";position:absolute;inset:-9px;border-radius:50%;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg, color-mix(in srgb,var(--gold) 85%,transparent) 0 3deg, transparent 3deg 15deg);
+  -webkit-mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 4px) calc(50% - 1px), transparent 50%);mask:radial-gradient(circle, transparent 0 calc(50% - 5px), #000 calc(50% - 4px) calc(50% - 1px), transparent 50%)}
+.endbtn::after{content:"";position:absolute;inset:6px;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(90,60,10,.55), inset 0 2px 6px rgba(255,255,255,.45)}
+.endbtn[disabled]::before{opacity:.35}
+.endbtn[disabled]::after{box-shadow:inset 0 0 0 1px rgba(214,178,98,.2)}
 @keyframes medal{50%{box-shadow:0 0 0 3px #3a2a0c, 0 0 0 5px var(--gold), 0 0 26px color-mix(in srgb,var(--gold) 80%,transparent), 0 6px 14px rgba(0,0,0,.6)}}
 .endbtn:active{transform:scale(.95)}
 .endbtn[disabled]{cursor:default;animation:none;color:var(--muted);font-size:11px;font-weight:700;
