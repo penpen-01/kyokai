@@ -87,8 +87,7 @@ body{
 
 .pname{font-size:12.5px;display:flex;gap:6px;align-items:baseline;max-width:100%}
 .pname b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.acting{position:absolute;right:10px;top:-14px;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:#1a1408;background:linear-gradient(#ffe9a6,#d4a64a);padding:1px 7px;border-radius:999px;box-shadow:0 0 8px color-mix(in srgb,var(--gold) 60%,transparent)}
-.pbar.op .acting{top:auto;bottom:-14px}
+.acting{flex:none;font-size:9.5px;font-weight:800;letter-spacing:.08em;color:#1a1408;background:linear-gradient(#ffe9a6,#d4a64a);padding:1px 6px;border-radius:999px;box-shadow:0 0 8px color-mix(in srgb,var(--gold) 60%,transparent);align-self:center}
 /* エナジー：紫の結晶（数字と並べる） */
 .energy{display:flex;align-items:center;gap:5px;max-width:100%}
 .pname .etext{margin-left:auto}
@@ -171,7 +170,7 @@ body{
 @media (prefers-reduced-motion: reduce){ .endbtn{animation:none} }
 
 /* ---- 手札（8枚すべて見えるよう重ねて並べる） ---- */
-.hand{flex:none;height:128px;display:flex;justify-content:center;padding-top:16px;position:relative}
+.hand{flex:none;height:128px;display:flex;justify-content:center;padding-top:16px;position:relative;margin-bottom:18px}
 /* 扇形：--rot（傾き）と --dy（下げる量）は layoutHand() で決める。選んだカードはまっすぐ持ち上げる */
 .hand .card{height:100%;flex:none;transform-origin:50% 92%;transform:translateY(var(--dy,0px)) rotate(var(--rot,0deg));transition:transform .18s ease, filter .15s}
 .hand .card.sel{transform:translateY(calc(var(--dy,0px) - 18px)) rotate(0deg) scale(1.06);z-index:50!important}

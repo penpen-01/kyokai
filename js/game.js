@@ -688,9 +688,8 @@ function pbarHTML(pi) {
       <span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
     <div class="pl-right">
-      <div class="pname"><b>${esc(p.name)}</b>${status}</div>
+      <div class="pname"><b>${esc(p.name)}</b>${S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
       <div class="energy" aria-label="エナジー ${p.e}/${p.maxE}"><span class="pips">${pips}</span><span class="etext">${p.e}<small>/${p.maxE}</small></span></div>
-      ${S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}
     </div></div>`;
 }
 
