@@ -7,6 +7,7 @@
    ========================================================= */
 
 const ACCT_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const STREAK_LEVELS = ["easy", "normal", "hard"];
 
 const Account = {
   code: null,
@@ -39,15 +40,15 @@ const Account = {
       await Promise.race([Net.init(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 12000))]);
     } catch (e) {
       console.error(e);
-      if (code && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; return; }
+      if (code && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; this.streakAbandon(); return; }
       this.status = "none";
       return;
     }
     if (code) {
       let d = null;
       try { d = await Net.get(this.path(code)); } catch (e) { console.error(e); }
-      if (d) { this.code = code; this.data = this.fix(d); this.status = "ready"; this.writeCache(); return; }
-      if (cache && cache.gold != null) { this.code = code; this.data = this.fix(cache); this.status = "ready"; this.save(); return; }
+      if (d) { this.code = code; this.data = this.fix(d); this.status = "ready"; this.writeCache(); this.streakAbandon(); return; }
+      if (cache && cache.gold != null) { this.code = code; this.data = this.fix(cache); this.status = "ready"; this.streakAbandon(false); this.save(); return; }
     }
     await this.create();
   },
@@ -59,7 +60,10 @@ const Account = {
       decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}) })),
       created: d.created || Date.now(),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
-      redeemed: Object.fromEntries(Object.entries(d.redeemed || {}).filter(([k]) => /^[0-9a-f]{64}$/.test(k)))
+      redeemed: Object.fromEntries(Object.entries(d.redeemed || {}).filter(([k]) => /^[0-9a-f]{64}$/.test(k))),
+      // CPU戦の連勝数（強さごと）と、終わっていないCPU戦の強さ（途中でやめたら連勝が途切れる）
+      streak: Object.fromEntries(STREAK_LEVELS.map(k => [k, Math.max(0, Math.floor(+(d.streak || {})[k] || 0))])),
+      ...(STREAK_LEVELS.includes(d.streakLive) ? { streakLive: d.streakLive } : {})
     };
   },
 
@@ -89,6 +93,36 @@ const Account = {
     this.writeCache();
     try { await Net.set(this.path(this.code), this.data); return true; }
     catch (e) { console.error(e); return false; }
+  },
+
+  /* ---------- CPU戦の連勝 ---------- */
+  streakOn() { return !!this.data && this.status !== "free" && this.status !== "none"; },
+  streak(level) { return (this.streakOn() && this.data.streak && this.data.streak[level]) || 0; },
+  // 次に勝ったときのボーナス（%）。1勝目は0%、2連勝目から STREAK_STEP% ずつ、最大 STREAK_MAX%
+  streakBonus(wins) { return Math.max(0, Math.min(CONFIG.STREAK_MAX || 0, (CONFIG.STREAK_STEP || 0) * (wins - 1))); },
+  // CPU戦を始めた。前の試合が終わらないまま（途中でやめた・閉じた）なら、その強さの連勝を0にする
+  streakStart(level) {
+    if (!this.streakOn()) return;
+    this.streakAbandon(false);
+    this.data.streakLive = level;
+    this.save();
+  },
+  // 終わっていないCPU戦があれば、負けと同じ扱いで連勝を0にする
+  streakAbandon(save = true) {
+    if (!this.streakOn() || !this.data.streakLive) return;
+    const lv = this.data.streakLive;
+    delete this.data.streakLive;
+    if (this.data.streak) this.data.streak[lv] = 0;
+    if (save) this.save();
+  },
+  // 決着。勝てば連勝+1、負け・引き分けは0。戻り値は { wins: 今の連勝数, prev: 決着前の連勝数 }
+  streakEnd(level, win) {
+    if (!this.streakOn()) return { wins: 0, prev: 0 };
+    delete this.data.streakLive;
+    const st = this.data.streak || (this.data.streak = {});
+    const prev = st[level] || 0;
+    st[level] = win ? prev + 1 : 0;
+    return { wins: st[level], prev };
   },
 
   // Gとカードは大事なので、すぐに保存する

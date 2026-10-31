@@ -1395,29 +1395,50 @@ function showLog() {
   const ll = $("#loglist"); ll.scrollTop = ll.scrollHeight;
 }
 
-/* 勝ったときのG（1試合につき1回だけ） */
+/* 勝ったときのG（1試合につき1回だけ）。CPU戦は強さごとの連勝ボーナスを足す */
 const rewarded = {};
 function giveReward(res) {
-  if (!S || rewarded[S.gid] != null) return rewarded[S && S.gid] || 0;
-  let g = 0;
-  if (res === "win" && Account.status !== "free" && Account.status !== "none") {
-    g = MODE === "online" ? CONFIG.REWARD_ONLINE
-      : { easy: CONFIG.REWARD_EASY, normal: CONFIG.REWARD_NORMAL, hard: CONFIG.REWARD_HARD }[CPU_LEVEL] || 0;
-    if (g) Account.addGold(g);
+  if (!S) return { g: 0 };
+  if (rewarded[S.gid]) return rewarded[S.gid];
+  const r = { g: 0, bonus: 0, wins: 0, prev: 0, cpu: false };
+  const counts = Account.status !== "free" && Account.status !== "none";
+  if (MODE === "cpu" && counts) {
+    Object.assign(r, Account.streakEnd(CPU_LEVEL, res === "win"), { cpu: true });
   }
-  rewarded[S.gid] = g;
+  if (res === "win" && counts) {
+    const base = MODE === "online" ? CONFIG.REWARD_ONLINE
+      : { easy: CONFIG.REWARD_EASY, normal: CONFIG.REWARD_NORMAL, hard: CONFIG.REWARD_HARD }[CPU_LEVEL] || 0;
+    r.bonus = r.cpu ? Account.streakBonus(r.wins) : 0;
+    r.g = Math.round(base * (100 + r.bonus) / 100);
+  }
+  if (r.g) Account.addGold(r.g);       // 連勝数も一緒に保存される
+  else if (r.cpu) Account.saveNow();   // 負け：連勝が0になったことを保存
+  rewarded[S.gid] = r;
   Sound.play(res === "win" ? "win" : res === "lose" ? "lose" : "click");
-  return g;
+  return r;
+}
+
+/* 結果画面の連勝の表示 */
+function streakHTML(r, res) {
+  if (!r.cpu) return "";
+  if (res === "win") {
+    const next = Account.streakBonus(r.wins + 1);
+    const now = r.wins >= 2 ? `${r.wins}連勝！${r.bonus ? `ボーナス +${r.bonus}%` : ""}` : "連勝スタート";
+    const tail = next > r.bonus ? `次も勝てば +${next}%` : next ? `ボーナスは最大の +${next}%` : "";
+    return `<p class="streak">${now}${tail ? `<small>${tail}</small>` : ""}</p>`;
+  }
+  return r.prev >= 2 ? `<p class="streak lost">${r.prev}連勝で途切れました</p>` : "";
 }
 
 function showResult(res) {
   if (!res) return;
   const label = { win: "勝利", lose: "敗北", draw: "引分" }[res];
   const online = MODE === "online";
-  const g = giveReward(res);
+  const r = giveReward(res), g = r.g;
   openOverlay(`<div class="panel">
     <p class="result ${res}">${label}</p>
     ${g ? `<p class="reward">+${g}G <small>（所持 ${Account.gold}G）</small></p>` : ""}
+    ${streakHTML(r, res)}
     <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
     ${online
       ? (Online.role === "host" ? `<button type="button" class="btn primary" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
@@ -1431,6 +1452,9 @@ function showResult(res) {
 
 function toTitle() {
   if (MODE === "online") Online.leave();
+  // CPU戦：決着していれば報酬と連勝を確定。途中でやめたら連勝は途切れる
+  if (MODE === "cpu" && S && S.over) giveReward(myResult());
+  else if (MODE === "cpu" && S) Account.streakAbandon();
   MODE = "cpu"; setPerspective(0);
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
@@ -1441,6 +1465,14 @@ function toTitle() {
   showStart();
 }
 
+/* 強さ選択に出す「◯連勝中」 */
+function streakTag(level) {
+  const w = Account.streak(level);
+  if (!w) return "";
+  const next = Account.streakBonus(w + 1);
+  return `<span class="lvl-streak">${w}連勝中${next ? `・次は+${next}%` : ""}</span>`;
+}
+
 function showCpuSelect() {
   if (!Decks.readyDeck(msg => Decks.showList(msg))) return;
   openOverlay(`<div class="panel">
@@ -1448,9 +1480,9 @@ function showCpuSelect() {
     <p class="lead">使うデッキ：${esc(Decks.selected().name)}</p>
     <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
       <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}">
-        <b>${v.label}</b><span>${v.desc}</span><em class="lvl-g">勝利で ${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}G</em>
+        <b>${v.label}</b><span>${v.desc}</span><em class="lvl-g">勝利で ${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}G${streakTag(k)}</em>
       </button>`).join("")}</div>
-    <p class="datainfo">負けたときは0Gです。${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</p>
+    <p class="datainfo">負けたときは0Gです。${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると、2連勝目から報酬が${CONFIG.STREAK_STEP}%ずつ増えます（最大${CONFIG.STREAK_MAX}%）。負けるか、途中でやめると0に戻ります。` : ""}${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</p>
     <button type="button" class="btn" data-act="back">戻る</button>
   </div>`, "start", true);
 }
@@ -1464,6 +1496,7 @@ function startCpuGame(level) {
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
   newGame(["あなた", `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [mine, { name: cpu.name, cards: cpu.cards }]);
+  Account.streakStart(CPU_LEVEL);
 }
 
 /* ---------- 入力（タップ操作） ---------- */

@@ -321,6 +321,10 @@ body{
 .lead.small{font-size:12.5px}
 .reward{margin:0;text-align:center;font-family:var(--f-display);font-weight:800;font-size:28px;color:var(--gold)}
 .reward small{font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:500}
+/* CPU戦の連勝 */
+.streak{margin:2px 0 0;text-align:center;font-weight:700;font-size:15px;color:#ffcf6b}
+.streak small{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-top:2px}
+.streak.lost{color:var(--muted);font-weight:500;font-size:13px}
 
 /* ---- アカウント ---- */
 .codebox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border:1px solid var(--gold);border-radius:10px;background:color-mix(in srgb,var(--gold) 6%,var(--panel))}
@@ -440,6 +444,7 @@ body{
 
 /* ---- CPUの報酬・デッキの細部 ---- */
 .lvl-g{font-style:normal;font-size:12px;font-weight:700;color:var(--gold)}
+.lvl .lvl-streak{display:inline;margin-left:8px;padding:1px 7px;border-radius:999px;background:color-mix(in srgb,#ffcf6b 18%,transparent);color:#ffcf6b;font-size:11px}
 .obadge{left:auto!important;right:-4px;top:-8px!important}
 .dtile.maxed .dbadge.in{background:var(--heal);border-color:var(--heal)}
 .dtile.pulse .card{animation:pulse2 .5s ease-out}
