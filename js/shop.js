@@ -3,6 +3,7 @@
    ・上限（COPY_MAX）を超えて持っているカードを分解して「魔石」にする
    ・魔石で、好きなカード1枚かパック券と交換する
    ・Gではカードを直接買えない（パックを開ける意味を残すため）
+   ・未所持のカードは、一覧では手札の「使えないカード」と同じ色あせで見せる（絵は隠さない。買う前に見られるように）
    ・レートはすべて CONFIG（カード工房の「報酬・CPU・シーズン」）で変えられる
    ========================================================= */
 
@@ -113,7 +114,7 @@ const Shop = {
         <div class="dgrid">${list.length ? list.map(c => {
           const own = Account.owned(c.id), cost = this.costRate(c.rarity);
           return `<button type="button" class="dtile ${own >= cap ? "unowned" : ""}" data-act="shopDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">
-            ${cardHTML(c, { static: true, hidden: own <= 0 })}<span class="dbadge ${Account.stones >= cost && own < cap ? "in" : ""}">${cost}</span></button>`;
+            ${cardHTML(c, { static: true, cls: own <= 0 ? "dim" : "" })}<span class="dbadge ${Account.stones >= cost && own < cap ? "in" : ""}">${cost}</span></button>`;
         }).join("") : `<p class="hint">条件に合うカードはありません。</p>`}</div>
         <p class="hint">パック券1枚で、どのパックでもGを使わずに1パック開けられます（パックの画面で使います）。</p>
       </section>
@@ -168,7 +169,7 @@ const Shop = {
     const label = own >= cap ? `${cap}枚持っています` : Account.stones < cost ? `魔石が足りません（あと${cost - Account.stones}）` : `魔石${cost}で交換する`;
     return `<div class="dmodal" data-act="shopDetailClose">
       <div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}" data-act="noop">
-        <div class="dmodal-card">${cardHTML(c, { static: true, hidden: own <= 0 })}</div>
+        <div class="dmodal-card">${cardHTML(c, { static: true })}</div>
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
