@@ -1,6 +1,15 @@
 # 引き継ぎメモ（2026-10-31 時点）
 
-新しいチャットで作業を続けるときは、まずこのファイルと README.md を読ませてください。
+新しいチャットで作業を続けるときは、まずこのファイルと README.md、docs/ の中身を読ませてください。
+
+## 資料の場所
+
+| 資料 | 場所 |
+| --- | --- |
+| これまでの決めごとと理由 | `docs/decisions.md` |
+| バランス調整ノート（シミュレーション結果・数値調整案） | `docs/balance-notes.md`（オーナーが編集できる元の版：https://claude.ai/artifact/HEY2sb7avficbBd9uc6WuX） |
+| イラストの依頼リスト（Gemini に貼る文章） | `docs/art-list.html`（ブラウザで開けばコピーボタンが使える。元の版：https://claude.ai/artifact/3TadVrenpPMMheDqFGbf8y） |
+| 対戦シミュレーターのスクリプト（開発用） | `tools/sim/`（普段はカード工房の「検証」タブで十分） |
 
 ## このプロジェクト
 

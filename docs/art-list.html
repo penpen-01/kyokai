@@ -1,0 +1,306 @@
+<title>境界の召喚士 イラスト依頼リスト</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* 縦一列の作業リスト：世界ごとの依頼セット（コピー用）→ 中のカード1枚ずつ */
+:root{
+  --bg:#f5f2ea; --surface:#fffdf7; --fg:#1d1b26; --muted:#6c6878; --line:#ddd6c6;
+  --gold:#9a7431; --myth:#a7782a; --fan:#3f8a62; --mech:#3b77ad; --done:#3f8a62;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d0f1c; --surface:#161a2e; --fg:#ece8f4; --muted:#9c98ad; --line:#2a2f4a;
+  --gold:#d8b468; --myth:#d6a64c; --fan:#5db588; --mech:#5b9ed6; --done:#5db588; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0f1c; --surface:#161a2e; --fg:#ece8f4; --muted:#9c98ad; --line:#2a2f4a;
+  --gold:#d8b468; --myth:#d6a64c; --fan:#5db588; --mech:#5b9ed6; --done:#5db588; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);line-height:1.7;font-size:14px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.25;margin:0;text-wrap:balance;letter-spacing:.04em}
+h1 small{display:block;font-family:var(--f-body);font-size:12px;letter-spacing:.3em;color:var(--gold);font-weight:700;margin-bottom:6px}
+p{margin:0}
+.lead{color:var(--muted)}
+.how{display:flex;flex-direction:column;gap:6px;margin:0;padding-left:1.4em}
+.prog{display:flex;align-items:center;gap:12px;font-variant-numeric:tabular-nums}
+.bar{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--done);width:0;transition:width .3s}
+.rules{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.rules pre{margin:0;white-space:pre-wrap;font-family:var(--f-body);font-size:12.5px;line-height:1.75;color:var(--fg)}
+.world{display:flex;flex-direction:column;gap:12px}
+.world h2{font-family:var(--f-display);font-weight:800;font-size:22px;margin:10px 0 0;color:var(--wc);display:flex;align-items:baseline;gap:10px}
+.world h2 span{font-family:var(--f-body);font-size:12px;color:var(--muted);font-weight:500}
+.w-myth{--wc:var(--myth)} .w-fan{--wc:var(--fan)} .w-mech{--wc:var(--mech)}
+.batch{border:1px solid var(--line);border-left:4px solid var(--wc);border-radius:10px;background:var(--surface);overflow:hidden}
+.bhead{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bhead b{font-size:14px}
+.bhead small{color:var(--muted);font-size:12px;flex:1;min-width:120px}
+button{font:inherit;cursor:pointer}
+.copy{border:1px solid var(--wc);color:var(--wc);background:transparent;border-radius:6px;padding:6px 12px;font-weight:700;font-size:12.5px;white-space:nowrap}
+.copy.main{background:var(--wc);color:var(--surface)}
+.copy:focus-visible,.chk:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.copy.ok{border-color:var(--done);color:var(--done);background:transparent}
+ul.cards{list-style:none;margin:0;padding:0}
+.card{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:12px 12px 12px 14px;align-items:start}
+.card + .card{border-top:1px dashed var(--line)}
+.chk{width:22px;height:22px;margin:2px 0 0;accent-color:var(--done)}
+.ctext{min-width:0;display:flex;flex-direction:column;gap:3px}
+.cname{font-weight:700;font-size:15px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 8px}
+.tag{font-size:11px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:0 8px;line-height:1.7}
+.tag.r-sr,.tag.r-ur,.tag.r-legend{color:var(--gold);border-color:var(--gold)}
+.desc{font-size:13px}
+.grade{font-size:11.5px;color:var(--muted)}
+.card.done .cname,.card.done .desc{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.bar i,.toast{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>GEMINI用</small>境界の召喚士 イラスト依頼リスト</h1>
+  </header>
+  <p class="lead">残り77枚のカードを、世界ごとに6枚前後のセットに分けました。「セットをコピー」で、共通ルールとカードの一覧をまとめてコピーできます。そのまま Gemini に貼ってください。</p>
+  <ol class="how">
+    <li>Gemini に見習い剣士の画像を添付し、「セットをコピー」した文章を貼る</li>
+    <li>1枚できるごとに確認し、よければ「次」と送る。直したいところがあれば、その場で頼む</li>
+    <li>できたカードにチェックを入れる（チェックはこの端末のブラウザにだけ保存されます）</li>
+    <li>会話が長くなって画風がぶれてきたら、新しいチャットで次のセットから始める</li>
+  </ol>
+  <div class="prog"><span id="progText">0 / 0</span><div class="bar"><i id="progBar"></i></div></div>
+  <details class="rules">
+    <summary><b>共通ルール（各セットのコピーに自動で入ります）</b></summary>
+    <pre id="rulesText"></pre>
+  </details>
+  <div id="list"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const WORLD = {
+  myth: { name: "神話", note: "古代ギリシャ・北欧風の神々と英雄。色は金色・琥珀・白い大理石。荘厳な光" },
+  fan: { name: "幻想", note: "剣と魔法の森の世界。色は深い緑・若葉色、差し色に金色の木漏れ日" },
+  mech: { name: "機械", note: "SFの機械と兵器の世界。機体の色・形・発光の色はカードごとの指定に従う（全部を青とシアンにしない）。人型ロボットばかりにせず、シルエットをはっきり変える" }
+};
+const RAR = { common: "コモン", rare: "レア", sr: "SR", ur: "UR", legend: "レジェンド" };
+/* レア度ごとの描き込みと迫力の目安（依頼文の各カードに付く） */
+const GRADE = {
+  common: "落ち着いた構図。背景はシンプルでよい。光や効果は控えめ",
+  rare: "動きのあるポーズ。背景もしっかり描き込む。光の効果を少し",
+  sr: "大胆な構図とあおりの角度。光・炎・魔力などのエフェクトをはっきり。背景も壮大に",
+  ur: "画面全体を使うドラマチックな構図。強いエフェクトと逆光、細部まで描き込んだ豪華な装飾",
+  legend: "最高の迫力。画面からはみ出すほどのスケール感、神々しい光、圧倒的な存在感。一枚絵の大作として描き込む"
+};
+
+const RULES = `【共通ルール】
+・縦長、縦横比 5:7（3:4 ではなく 5:7）
+・画面の下から約3割は、名前と数字を重ねるので、足元・地面・背景だけにする（顔・大事な物を置かない）
+・左上と右上の角には、数字やマークを重ねるので、大事なものを置かない
+・人物はひざ上〜胸から上のアップ。大きな怪物・機械は全身でもよいが、顔（頭部）は画面の上半分に
+・魔法カードは人物の立ち絵ではなく、その魔法が発動している瞬間の場面を描く
+・デジタルイラスト、輪郭線あり、セル塗りと厚塗りの中間。やや暗めの画面にドラマチックな光
+・レア度が高いカードほど、迫力・描き込み・エフェクトを強くする（各カードの「演出」の指定に従う）
+　コモン＜レア＜SR＜UR＜レジェンド の順に豪華に
+・添付した画像は「画風（線の太さ・塗り方・色調）」の見本としてだけ使う。添付画像の人物・顔・髪型・服装・ポーズ・構図・背景は絶対にまねしない。毎回まったく別のキャラクターとして描く
+・前に描いたカードとも、顔立ち・髪型・体の向き・ポーズ・カメラの角度を必ず変える
+・背景は毎回まったく別の場所にする（例：草原、湖、洞窟、山、夜の村、花畑、雪原、遺跡など）。前の絵と同じ背景や、上から枝がかぶさる同じ額縁の構図は使わない（カードの説明で場所が指定されているときはそれに従う）
+・文字、ロゴ、サイン、数字、枠、カードのデザインは一切入れない（イラストだけ）
+・実在の作品やキャラクターに似せない`;
+
+const CARDS = [
+  // ---- 神話 ----
+  ["myth","st-recruit","見習い兵","char","common","赤毛をひとつに束ねた、そばかすの少女の新兵。古代ギリシャ風の、とさか付きの青銅の兜（少し大きすぎてずれている）と丸い青銅の盾、白い布の短衣。槍を両手で立てて直立し、緊張で唇を結んでいる。正面向き。背景は白い石の神殿の前の広場"],
+  ["myth","st-guard","村の衛兵","char","common","口ひげを生やした、がっしりした40代の男の衛兵。鉄の兜と鎖かたびら、槍に寄りかかって門の前に立つ。夕暮れの石造りの村の門、腰にランタン。少し横向きで、こちらをじろりと見る"],
+  ["myth","pegasus","天馬の騎士","char","common","白い翼の天馬にまたがり、雲の上を駆ける金髪の女性騎士。青と金の軽い鎧、手に長い槍。斜め下から見上げる角度"],
+  ["myth","m-prayer","祈りの巫女","char","common","長い黒髪の巫女が、神殿で目を閉じて手を合わせて祈る。白と金の衣、額に金の飾り。天井から柔らかい光が降りてくる。横顔"],
+  ["myth","thunder","雷霆の戦士","char","common","短い銀髪で日焼けした筋肉質の青年戦士。稲妻をまとった剣を振りかぶって突進する。兜はかぶらず、赤いマント、体の周りに走る雷。斜めからの躍動的な構図"],
+  ["myth","sage","知識の神官","char","common","白く長いひげの老神官が、古い巻物を広げて読む。白い法衣、眼鏡をかけた穏やかな顔。神殿の書庫。巻物には文字ではなく光る模様"],
+  ["myth","m-shield","聖盾の守り手","char","common","大柄な女性の重装騎士。光り輝く大盾を前に構え、盾の陰から鋭い目でこちらを見る。盾には太陽の紋章（文字なし）"],
+  ["myth","m-valkyrie","戦乙女","char","common","翼の飾りの兜をかぶった、三つ編みの金髪の北欧風戦乙女。槍を突き出して空から急降下する。上から見下ろす角度"],
+  ["myth","st-knight","若き騎士","char","common","黒髪で短髪の青年騎士。銀のフルプレートの鎧、剣を胸の前で掲げて誓いを立てるポーズ。青いマントが風になびき、自信に満ちた表情"],
+  ["myth","m-phoenix","不死鳥の騎士","char","rare","背中に炎の不死鳥の翼を広げた騎士。燃える剣、周りに舞う火の粉"],
+  ["myth","m-oracle","神託の語り部","char","rare","顔にベールをかけた、褐色の肌の年老いた女性の語り部（ひげの老人にはしない）。立ったまま両腕を広げ、白く光る目で神託を語る。足元の香炉の煙の中に、未来の戦いの幻がぼんやり浮かぶ。紫と金の衣"],
+  ["myth","berserker","獣王の狂戦士","char","rare","獣の頭骨を兜にした筋骨たくましい狂戦士。毛皮をまとい両手斧を構えて咆哮、赤い闘気"],
+  ["myth","wargod","戦神の化身","char","sr","黄金の鎧をまとった巨体の戦神。燃える剣と円い盾、背後に後光。見下ろす圧倒的な威圧感"],
+  ["myth","m-demonlord","混沌の魔王","char","ur","黒い角と紫の炎をまとった魔王が玉座から立ち上がる。背後に渦巻く混沌、血のような赤い光"],
+  ["myth","m-titan","巨神兵タロス","char","sr","青銅でできた巨人の兵士。古代ギリシャの彫像のような姿で、胸に光る核。港の前に立ちはだかる"],
+  ["myth","endragon","終焉の龍神","char","legend","天を覆う黄金と黒の巨大な龍神。口から破滅の光を放ち、空が割れ、神殿が崩れていく"],
+  ["myth","m-sungod","太陽神の化身","char","legend","雲よりも大きい、山のように巨大な太陽神。下から見上げる角度で、足元には小さく見える神殿と人々。背中に燃え盛る太陽そのものを背負い、髪は炎のように揺らめく。金と白の鎧、持ち上げた手のひらに小さな太陽。画面全体が燃えるようにまぶしく、「戦神の化身」よりはるかに壮大に（太陽の輪と剣と盾の組み合わせは使わない）"],
+  ["myth","st-spark","小さな火花","spell","common","指先からぱちぱちと飛び散る小さな火花の魔法。手元のアップ"],
+  ["myth","rally","戦意高揚","spell","common","剣を両手で額に当て、目を閉じて集中する一人の女性剣士のアップ。剣と体から金色の闘気が立ちのぼる。群衆・旗・兵士の列は描かない（「軍神の号令」と似ないように）。背景は夜明け前の静かな野営地"],
+  ["myth","m-altar","生贄の祭壇","spell","rare","古代の石の祭壇。赤い魔法陣が光り、炎が立ちのぼる不吉な光景"],
+  ["myth","m-pact","冥府の契約","spell","rare","冥府の門の前で、骸骨の手と人間の手が握手を交わす。青白い炎"],
+  ["myth","bolt","雷撃","spell","rare","天から落ちる巨大な金色の稲妻が、怪物に直撃する瞬間。まぶしい閃光"],
+  ["myth","m-order","軍神の号令","spell","rare","戦場の丘で剣を高く掲げ、号令をかける将軍。後ろに並ぶ兵士の列"],
+  ["myth","m-hammer","雷神の槌","spell","sr","雷をまとった巨大な槌が、天から振り下ろされる瞬間。北欧の雷神の腕"],
+  ["myth","m-anthem","英雄の凱歌","spell","sr","竪琴を奏でて勝利の歌を歌う吟遊詩人と、剣を掲げる英雄たち。金色の光と旗"],
+  ["myth","judgment","天罰の光","spell","sr","雲の切れ間から、幾筋もの光の槍が地上に降り注ぐ。神々しく恐ろしい光景"],
+  ["myth","m-inferno","終末の業火","spell","sr","地平線まで広がる業火。赤黒い空の下で城が溶けていく"],
+  ["myth","m-ragnarok","ラグナロク","spell","ur","神々の黄昏。燃え上がる世界樹、空から落ちる星、遠くに巨大な狼の影。世界の終わり"],
+  ["myth","cmvr3qeaobf2","超新星","spell","ur","宇宙で星が爆発する瞬間。金と白の光の奔流と、星座の形をした神々の影"],
+  // ---- 幻想 ----
+  ["fan","f-twins","双子の妖精","char","rare","手をつないで飛ぶ双子の小さな妖精。透き通った羽、花の上で笑い合う"],
+  ["fan","archer","森の射手","char","common","長い銀髪で耳のとがったエルフの女性射手。緑のフードとマント、高い木の枝の上で弓を引きしぼる。横向き"],
+  ["fan","f-healer","森の癒し手","char","common","ふわふわの栗色の髪に花かんむりをつけた、小柄なドルイドの少女。薬草のかごを抱え、手のひらから緑の癒しの光"],
+  ["fan","st-wolf","森の狼","char","common","夜の森を駆ける灰色の狼。牙をむき、目が光る"],
+  ["fan","shadow","夜影の刺客","char","rare","顔の下半分を黒い布で覆った黒装束の刺客。二本の短剣を逆手に持ち、月夜の屋根の上でしゃがむ。鋭い金色の目"],
+  ["fan","f-thief","月光の盗賊","char","rare","にやりと笑う、ぼさぼさの金髪の青年盗賊。満月を背に、盗んだ宝石を指でつまんで見せる。なびく紺色のマント"],
+  ["fan","priestess","世界樹の巫女","char","rare","緑の長い髪の若い巫女。葉の冠をかぶり、巨大な世界樹の前で、手のひらに光る種をささげ持つ"],
+  ["fan","f-icewitch","氷結の魔女","char","rare","青白い長髪の大人の魔女。氷の杖を掲げ、周りの空気が凍りついていく。冷たい笑み"],
+  ["fan","st-giant","丘の巨人","char","common","苔むした岩のような肌の巨人。大きな棍棒を担いで丘の上に立つ"],
+  ["fan","f-abyss","深淵の取引者","char","sr","フードの奥で目だけが光る謎の取引者。深淵の闇から何本もの手が伸び、金貨が舞う"],
+  ["fan","f-treeguard","大樹の守護者","char","rare","樹木でできた巨人の守護者。両腕を広げて仲間を守る。体に苔と根"],
+  ["fan","dragon","炎竜","char","rare","赤い鱗の竜が、森の上空で炎を吐く"],
+  ["fan","f-unicorn","聖獣ユニコーン","char","sr","白く輝く一角獣。虹色に光るたてがみ、森の湖のほとりで前脚を上げる"],
+  ["fan","cmvr35s2x5dv","童姫アリス","char","sr","魔法の絵本を開く幼い姫。ページから光の蝶と紙の兵隊が飛び出す。黒と赤のゴシック風ドレス（青いエプロンドレスなど有名作品の姿にはしない）"],
+  ["fan","cmvr3jwcugk8","大賢者スール","char","ur","長い白髪と白いひげの大賢者。星の杖を掲げ、背後に巨大な魔法陣、周りに浮かぶ本"],
+  ["fan","f-spirit","森羅の大精霊","char","legend","森そのものが人の姿になった巨大な精霊。花の咲いた角、全身から無数の光の粒。神秘的で圧倒的"],
+  ["fan","st-water","癒しの水","spell","common","両手ですくった、光る水。こぼれる水滴がきらめく"],
+  ["fan","stargaze","星読みの占術","spell","common","星空の下、水晶玉に星図が映る。のぞき込む占い師の手"],
+  ["fan","f-whisper","妖精の囁き","spell","common","人の耳元で何かを囁く小さな妖精。周りに舞う光の粒"],
+  ["fan","spring","癒しの泉","spell","common","森の奥の、ほのかに光る泉。妖精の光が水面を舞う"],
+  ["fan","f-curse","魔女の呪い","spell","common","紫の呪いの煙にからみつかれ、ひび割れていく剣と鎧"],
+  ["fan","f-spring","生命の泉","spell","common","大樹の根元から湧き出す金色の泉。周りに花が咲き乱れる"],
+  ["fan","f-horn","召喚の角笛","spell","rare","角笛を吹く手。光の中から魔獣の影が現れる"],
+  ["fan","f-blizzard","吹雪","spell","sr","青白い吹雪の嵐。凍りついていく兵士たちの影"],
+  ["fan","f-dragonwake","竜王の目覚め","spell","ur","山の岩肌が崩れ、中から巨大な竜王の目が開く。流れ出す溶岩"],
+  // ---- 機械 ----
+  ["mech","eye","偵察機アイ","char","common","一つ目のレンズを持つ小型の浮遊ドローン。青く光るレンズで辺りを偵察している"],
+  ["mech","turret","砲台ユニット","char","common","二連装の砲台が、砲口から火を噴いて発射する瞬間"],
+  ["mech","st-golem","訓練用ゴーレム","char","common","石と金属でできた、ずんぐりした訓練用のゴーレム。体に的の模様（文字なし）"],
+  ["mech","x-drone","防衛ドローン","char","common","青いバリアを張って仲間を守る、盾の形のドローン"],
+  ["mech","x-rush","突撃ドローン","char","common","赤と黒に塗られた、細長い矢じりの形の突撃ドローン。先端がドリルで、後ろからオレンジの噴射炎。真横から見た構図で、砂漠の荒野を地面すれすれに猛スピードで飛び、砂けむりが上がる（丸い体や盾の形のドローンにはしない）"],
+  ["mech","st-infantry","鉄の歩兵","char","common","ライフルを持つ量産型の鉄の歩兵ロボット。後ろに同じ型が隊列を組む"],
+  ["mech","sentinel","鋼鉄の番兵","char","common","大きな盾を持った重厚な人型ロボットの番兵。基地の門の前に立つ"],
+  ["mech","x-armored","装甲兵","char","common","オリーブ色と砂色の迷彩の、分厚いパワードスーツを着た人間の兵士。ヘルメットのバイザーを上げていて、傷のある中年の男の顔が見える。肩に大きな装甲板、黄色い警告灯。昼の砂漠の前線基地で、土のう越しに身構える（ロボットにはしない、青い色は使わない）"],
+  ["mech","x-jammer","妨害機エコー","char","rare","アンテナを何本も持つ妨害機。周りに電波のノイズの波紋が広がる"],
+  ["mech","st-rockman","岩の巨兵","char","common","岩と機械が合体した大型ロボット。採掘場に立つ"],
+  ["mech","garm","強襲機ガルム","char","rare","真っ黒な装甲に赤いラインが光る、四本足の狼型の高速機動兵器（人型にはしない）。夜の高速道路を低い姿勢で疾走し、後ろにテールランプのような赤い光の筋が流れる。岩の装甲は付けない"],
+  ["mech","x-factory","量産工場","char","rare","煙突と作業アームのある自動工場。中からロボットが次々に出てくる"],
+  ["mech","x-tank","重装戦車","char","sr","砂漠迷彩（砂色とこげ茶）の巨大な重戦車。砲塔が三つあり、キャタピラが砂を巻き上げて荒野を進む。夕焼けのオレンジの空"],
+  ["mech","x-executor","処刑機兵","char","sr","黒と赤の細身の処刑ロボット。赤い単眼、両腕が巨大な鎌のような刃。雨の降る夜の廃墟の高層ビルの屋上に立つ"],
+  ["mech","omega","機神オメガ","char","legend","白と金の、天を突く神のような巨大機械。頭には顔がなく、丸いレンズが一つ光るだけ。肩から下は橋脚のような細い脚がなく、大きな鐘のような形の胴体が浮かぶ。背中に何重もの光の輪、周りに浮かぶ無数の砲台。宇宙空間、足元に青い地球。金色の光。日本のロボットアニメの人型メカのような顔・角（V字のアンテナ）・手足には絶対にしない"],
+  ["mech","x-gigas","機甲要塞ギガス","char","legend","黒鉄色の装甲にオレンジの溶鉱炉のような光が漏れる、歩く要塞のような超巨大メカ。城壁のような装甲と無数の砲台。雪の降る山脈をまたいで進み、足元に小さな町"],
+  ["mech","x-overcharge","過充電","spell","rare","限界を超えて赤く白熱するエネルギーコア。火花と稲妻、焼け焦げて溶けるケーブル。色は赤とオレンジ"],
+  ["mech","x-reboot","再起動プロトコル","spell","common","暗い格納庫で、停止していた人型ロボットの目が緑色に再び光る。周りに回転する緑の光の輪（文字なし）"],
+  ["mech","crystal","魔力結晶","spell","common","機械に組み込まれた、紫色に光る結晶。エネルギーが満ちていく"],
+  ["mech","x-repair","ナノ修復","spell","common","傷ついた銀色の機械の腕を、金色に光るナノマシンの粒が修復していく"],
+  ["mech","quantum","量子演算","spell","rare","白い研究室の中に、虹色の光の回路が無数に広がるホログラム。量子コンピューターの内部"],
+  ["mech","x-emp","EMPパルス","spell","sr","白い閃光の電磁パルスの衝撃波が都市に広がり、ロボットたちの目の光が消えて停止する"],
+  ["mech","x-warp","時空の歪み","spell","ur","空間が紫とピンクの渦を巻いて歪み、時計の歯車が飛び散る"]
+];
+
+const KEY = "kyokai-art-done";
+let done = {};
+try { done = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { done = {}; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const line = (c, i) => `${i}. ${c[2]}（${WORLD[c[0]].name}・${c[3] === "spell" ? "魔法" : "キャラクター"}・${RAR[c[4]]}）：${c[5]}\n　演出（${RAR[c[4]]}）：${GRADE[c[4]]}`;
+
+/* 世界ごとに6枚前後のセットに分ける */
+const batches = [];
+for (const w of Object.keys(WORLD)) {
+  const list = CARDS.filter(c => c[0] === w);
+  const n = Math.ceil(list.length / 6), size = Math.ceil(list.length / n);
+  for (let i = 0; i < list.length; i += size) batches.push({ w, cards: list.slice(i, i + size) });
+}
+
+function batchText(b) {
+  return `以下のカードゲーム用イラストを、1枚ずつ順番に描いてください。1枚描いたらそこで止まり、私が「次」と言ったら次の1枚を描いてください。
+
+${RULES}
+
+【この世界の色と雰囲気】${WORLD[b.w].name}：${WORLD[b.w].note}
+
+【描いてほしいカード】
+${b.cards.map((c, i) => line(c, i + 1)).join("\n")}`;
+}
+function oneText(c) {
+  return `カードゲーム用のイラストを1枚描いてください。
+
+${RULES}
+
+【この世界の色と雰囲気】${WORLD[c[0]].name}：${WORLD[c[0]].note}
+
+【描いてほしいカード】
+${line(c, 1).slice(3)}`;
+}
+
+function render() {
+  document.getElementById("rulesText").textContent = RULES;
+  let html = "", bn = 0, lastW = null;
+  batches.forEach((b, bi) => {
+    if (b.w !== lastW) {
+      if (lastW) html += `</section>`;
+      const cnt = CARDS.filter(c => c[0] === b.w).length;
+      html += `<section class="world w-${b.w}"><h2>${WORLD[b.w].name}<span>${cnt}枚</span></h2>`;
+      lastW = b.w; bn = 0;
+    }
+    bn++;
+    html += `<div class="batch">
+      <div class="bhead"><b>セット${bn}</b><small>${b.cards.length}枚 ・ <span data-bc="${bi}"></span></small>
+        <button type="button" class="copy main" data-batch="${bi}">セットをコピー</button></div>
+      <ul class="cards">${b.cards.map(c => `
+        <li class="card ${done[c[1]] ? "done" : ""}" data-id="${c[1]}">
+          <input type="checkbox" class="chk" id="chk-${c[1]}" ${done[c[1]] ? "checked" : ""} aria-label="${esc(c[2])}を完了にする">
+          <label class="ctext" for="chk-${c[1]}">
+            <span class="cname">${esc(c[2])}<span class="tag">${c[3] === "spell" ? "魔法" : "キャラ"}</span><span class="tag r-${c[4]}">${RAR[c[4]]}</span></span>
+            <span class="desc">${esc(c[5])}</span>
+            <span class="grade">演出：${esc(GRADE[c[4]])}</span>
+          </label>
+          <button type="button" class="copy" data-one="${c[1]}" aria-label="${esc(c[2])}の依頼文をコピー">1枚分</button>
+        </li>`).join("")}</ul>
+    </div>`;
+  });
+  html += `</section>`;
+  document.getElementById("list").innerHTML = html;
+  updateProgress();
+}
+
+function updateProgress() {
+  const n = CARDS.filter(c => done[c[1]]).length;
+  document.getElementById("progText").textContent = `完成 ${n} / ${CARDS.length}枚`;
+  document.getElementById("progBar").style.width = (n / CARDS.length * 100) + "%";
+  batches.forEach((b, bi) => {
+    const el = document.querySelector(`[data-bc="${bi}"]`);
+    if (el) el.textContent = `完成 ${b.cards.filter(c => done[c[1]]).length}枚`;
+  });
+}
+
+let toastT;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1600);
+}
+function copy(text, btn) {
+  const ok = () => { toast("コピーしました"); btn.classList.add("ok"); setTimeout(() => btn.classList.remove("ok"), 1200); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let good = false; try { good = document.execCommand("copy"); } catch (e) {}
+    ta.remove();
+    good ? ok() : toast("コピーできませんでした。長押しで選択してください");
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, fallback);
+  else fallback();
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-batch]");
+  if (b) { copy(batchText(batches[+b.dataset.batch]), b); return; }
+  const o = e.target.closest("[data-one]");
+  if (o) { copy(oneText(CARDS.find(c => c[1] === o.dataset.one)), o); return; }
+});
+document.addEventListener("change", e => {
+  if (!e.target.classList.contains("chk")) return;
+  const li = e.target.closest(".card"), id = li.dataset.id;
+  if (e.target.checked) done[id] = 1; else delete done[id];
+  li.classList.toggle("done", e.target.checked);
+  save(); updateProgress();
+});
+render();
+</script>
