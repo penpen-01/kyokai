@@ -13,6 +13,8 @@ const Shop = {
   onlyNeed: true,  // 上限まで持っていないカードだけ出す
   detailId: null,
   msg: null,
+  view: "main",    // main（交換） | dis（分解）
+  sel: {},         // 分解の画面で選んだ枚数 { カードID: 枚数 }
 
   usable() { return ["ready", "offline"].includes(Account.status); },
   getRate(r) { return Math.max(0, CONFIG["STONE_GET_" + STONE_KEY[r]] || 0); },
@@ -36,16 +38,19 @@ const Shop = {
   },
 
   /* ---------- 操作 ---------- */
-  dismantle() {
+  /* 分解する。picks = { カードID: 枚数 }（省略するとダブり全部） */
+  dismantle(picks) {
     if (!this.usable()) return;
-    const list = this.surplus();
-    if (!list.length) return this.show("分解できるカードはありません。");
+    const sur = this.surplus();
+    const list = sur.map(x => ({ ...x, k: picks ? Math.min(x.n, Math.max(0, picks[x.c.id] || 0)) : x.n })).filter(x => x.k > 0);
+    if (!list.length) return this.showDismantle(picks ? "分解するカードを選んでください。" : "分解できるカードはありません。");
     let n = 0, s = 0;
-    list.forEach(x => { Account.data.cards[x.c.id] -= x.n; n += x.n; s += x.stones; });
+    list.forEach(x => { Account.data.cards[x.c.id] -= x.k; n += x.k; s += x.k * this.getRate(x.c.rarity); });
     Account.data.stones = Account.stones + s;
     Account.saveNow();
     Sound.play("flip");
-    this.show(`${n}枚を分解して、魔石を${s}個手に入れました。`);
+    this.sel = {};
+    this.showDismantle(`${n}枚を分解して、魔石を${s}個手に入れました（所持 ${Account.stones}）。`);
   },
 
   buyTicket() {
@@ -74,36 +79,30 @@ const Shop = {
   },
 
   /* ---------- 画面 ---------- */
-  show(msg) {
-    this.msg = msg === undefined ? this.msg : msg;
-    const note = this.usable() ? (Account.status === "offline" ? `<p class="datainfo">オフラインです。交換した内容は、通信できるようになったら保存されます。</p>` : "")
+  noteHTML() {
+    return this.usable() ? (Account.status === "offline" ? `<p class="datainfo">オフラインです。交換した内容は、通信できるようになったら保存されます。</p>` : "")
       : Account.status === "free" ? `<p class="onl-msg">試遊モードではショップを使えません（すべてのカードを使えます）。</p>`
       : `<p class="onl-msg">アカウントを読み込めていません。通信状態を確認して、開き直してください。</p>`;
+  },
+
+  /* ショップの入口：カードとの交換が主役。分解とパック券は上の2つのボタンから */
+  show(msg) {
+    this.view = "main";
+    this.msg = msg === undefined ? this.msg : msg;
     const sur = this.surplus();
     const surN = sur.reduce((a, x) => a + x.n, 0), surS = sur.reduce((a, x) => a + x.stones, 0);
-    const cap = this.cap();
+    const cap = this.cap(), tc = this.ticketCost();
     const list = this.pool().filter(c => (this.rar === "all" || c.rarity === this.rar) && (!this.onlyNeed || Account.owned(c.id) < cap));
-    const tc = this.ticketCost();
     openOverlay(`<div class="panel wide shop">
       <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b><span class="stonetag">魔石 ${Account.stones}</span></div>
-      ${note}
+      ${this.noteHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
-
-      <section class="shopsec">
-        <h3>分解する</h3>
-        <p class="hint">同じカードを${cap}枚より多く持っている分を、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>
-        <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.getRate(r)}</span>`).join("")}</p>
-        ${sur.length ? `<ul class="olist surlist">${sur.map(x => `<li><span class="rtag r-${x.c.rarity}">${RARITY_SHORT[x.c.rarity]}</span>${esc(x.c.name)} <small>×${x.n}</small><b>+${x.stones}</b></li>`).join("")}</ul>
-          <button type="button" class="btn primary" data-act="shopDismantle" ${this.usable() ? "" : "disabled"}>${surN}枚を分解して魔石 +${surS}</button>`
-          : `<p class="hint">今は分解できるカードがありません。</p>`}
-      </section>
-
-      <section class="shopsec">
-        <h3>パック券</h3>
-        <p class="hint">パック券1枚で、どのパックでもGを使わずに1パック開けられます。所持 <b>${Account.tickets}枚</b></p>
-        <button type="button" class="btn" data-act="shopTicket" ${this.usable() && Account.stones >= tc ? "" : "disabled"}>魔石${tc}でパック券と交換</button>
-      </section>
-
+      <div class="shopacts">
+        <button type="button" class="shopact" data-act="shopDis" ${this.usable() ? "" : "disabled"}>
+          <b>分解する</b><small>${surN ? `ダブり${surN}枚 ・ 最大 +${surS}` : "ダブりはありません"}</small><span class="go" aria-hidden="true">›</span></button>
+        <button type="button" class="shopact" data-act="shopTicket" ${this.usable() && Account.stones >= tc ? "" : "disabled"}>
+          <b>パック券と交換</b><small>魔石${tc} ・ 所持${Account.tickets}枚</small></button>
+      </div>
       <section class="shopsec">
         <h3>カードと交換</h3>
         <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.costRate(r)}</span>`).join("")}</p>
@@ -116,10 +115,48 @@ const Shop = {
           return `<button type="button" class="dtile ${own >= cap ? "unowned" : ""}" data-act="shopDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">
             ${cardHTML(c, { static: true, hidden: own <= 0 })}<span class="dbadge ${Account.stones >= cost && own < cap ? "in" : ""}">${cost}</span></button>`;
         }).join("") : `<p class="hint">条件に合うカードはありません。</p>`}</div>
+        <p class="hint">パック券1枚で、どのパックでもGを使わずに1パック開けられます（パックの画面で使います）。</p>
       </section>
-
       <button type="button" class="btn" data-act="back">戻る</button>
       ${this.detailHTML()}
+    </div>`, "start", true);
+  },
+
+  /* 分解の画面：カードごとに枚数を選んで分解、またはまとめて分解 */
+  showDismantle(msg) {
+    this.view = "dis";
+    if (msg !== undefined) this.msg = msg;
+    const sur = this.surplus(), cap = this.cap();
+    this.sel = Object.fromEntries(Object.entries(this.sel || {}).filter(([id, k]) => k > 0 && sur.some(x => x.c.id === id)));
+    const allN = sur.reduce((a, x) => a + x.n, 0), allS = sur.reduce((a, x) => a + x.stones, 0);
+    const pick = x => Math.min(x.n, this.sel[x.c.id] || 0);
+    const selN = sur.reduce((a, x) => a + pick(x), 0), selS = sur.reduce((a, x) => a + pick(x) * this.getRate(x.c.rarity), 0);
+    openOverlay(`<div class="panel wide shop">
+      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b><span class="stonetag">魔石 ${Account.stones}</span></div>
+      ${this.noteHTML()}
+      ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
+      <p class="hint">同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>
+      <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.getRate(r)}</span>`).join("")}</p>
+      ${sur.length ? `
+        <ul class="dislist">${sur.map(x => {
+          const k = pick(x), rate = this.getRate(x.c.rarity);
+          return `<li class="${k ? "on" : ""}">
+            <button type="button" class="disthumb" data-act="shopPickAll" data-id="${esc(x.c.id)}" aria-label="${esc(x.c.name)}をすべて選ぶ">${cardHTML(x.c, { static: true })}</button>
+            <div class="disinfo"><span><i class="rtag r-${x.c.rarity}">${RARITY_SHORT[x.c.rarity]}</i>${esc(x.c.name)}</span><small>所持${Account.owned(x.c.id)}枚 ・ ダブり${x.n}枚 ・ 1枚 +${rate}</small></div>
+            <div class="stepper">
+              <button type="button" class="btn sm" data-act="shopPick" data-id="${esc(x.c.id)}" data-v="-1" ${k ? "" : "disabled"} aria-label="1枚減らす">−</button>
+              <b>${k}</b>
+              <button type="button" class="btn sm" data-act="shopPick" data-id="${esc(x.c.id)}" data-v="1" ${k < x.n ? "" : "disabled"} aria-label="1枚増やす">＋</button>
+            </div>
+          </li>`;
+        }).join("")}</ul>
+        <div class="disbtns">
+          <button type="button" class="btn primary" data-act="shopDisSel" ${this.usable() && selN ? "" : "disabled"}>${selN ? `選んだ${selN}枚を分解（+${selS}）` : "分解するカードを選んでください"}</button>
+          <button type="button" class="btn" data-act="shopDisAll" ${this.usable() ? "" : "disabled"}>ダブりをまとめて分解（${allN}枚・+${allS}）</button>
+          <button type="button" class="btn sm" data-act="shopSelClear" ${selN ? "" : "disabled"}>選択を解除</button>
+        </div>`
+        : `<p class="hint">今は分解できるカードがありません。</p>`}
+      <button type="button" class="btn" data-act="shopMain">ショップに戻る</button>
     </div>`, "start", true);
   },
 
@@ -147,7 +184,21 @@ const Shop = {
   handleAct(act, el) {
     switch (act) {
       case "shop": this.msg = null; this.detailId = null; this.show(); return true;
-      case "shopDismantle": this.dismantle(); return true;
+      case "shopMain": this.msg = null; this.show(); return true;
+      case "shopDis": this.msg = null; this.sel = {}; this.showDismantle(); return true;
+      case "shopPick": {
+        const id = el.dataset.id, x = this.surplus().find(y => y.c.id === id);
+        if (x) this.sel[id] = Math.max(0, Math.min(x.n, (this.sel[id] || 0) + (+el.dataset.v)));
+        this.msg = null; this.showDismantle(); return true;
+      }
+      case "shopPickAll": {
+        const id = el.dataset.id, x = this.surplus().find(y => y.c.id === id);
+        if (x) this.sel[id] = (this.sel[id] || 0) >= x.n ? 0 : x.n;
+        this.msg = null; this.showDismantle(); return true;
+      }
+      case "shopSelClear": this.sel = {}; this.msg = null; this.showDismantle(); return true;
+      case "shopDisSel": this.dismantle(this.sel); return true;
+      case "shopDisAll": this.dismantle(null); return true;
       case "shopTicket": this.buyTicket(); return true;
       case "shopRar": this.rar = el.dataset.v; this.show(); return true;
       case "shopNeed": this.onlyNeed = !!el.checked; this.show(); return true;

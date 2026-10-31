@@ -1402,8 +1402,10 @@ const rewarded = {};
 function giveReward(res) {
   if (!S) return { g: 0 };
   if (rewarded[S.gid]) return rewarded[S.gid];
-  const r = { g: 0, bonus: 0, wins: 0, prev: 0, cpu: false };
-  const counts = Account.status !== "free" && Account.status !== "none";
+  const r = { g: 0, bonus: 0, wins: 0, prev: 0, cpu: false, sample: false };
+  // サンプルデッキで戦った試合は、Gも連勝もなし（全カードを試すための機能なので）
+  r.sample = MODE === "online" ? !!(typeof Online !== "undefined" && Online.mySample) : !!S.mySample;
+  const counts = Account.status !== "free" && Account.status !== "none" && !r.sample;
   if (MODE === "cpu" && counts) {
     Object.assign(r, Account.streakEnd(CPU_LEVEL, res === "win"), { cpu: true });
   }
@@ -1440,6 +1442,7 @@ function showResult(res) {
   openOverlay(`<div class="panel">
     <p class="result ${res}">${label}</p>
     ${g ? `<p class="reward">+${g}G <small>（所持 ${Account.gold}G）</small></p>` : ""}
+    ${r.sample && res === "win" ? `<p class="streak lost">サンプルデッキの対戦なので、Gはもらえません</p>` : ""}
     ${streakHTML(r, res)}
     <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
     ${online
@@ -1456,7 +1459,7 @@ function toTitle() {
   if (MODE === "online") Online.leave();
   // CPU戦：決着していれば報酬と連勝を確定。途中でやめたら連勝は途切れる
   if (MODE === "cpu" && S && S.over) giveReward(myResult());
-  else if (MODE === "cpu" && S) Account.streakAbandon();
+  else if (MODE === "cpu" && S && !S.mySample) Account.streakAbandon();
   MODE = "cpu"; setPerspective(0);
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
@@ -1480,6 +1483,7 @@ function showCpuSelect() {
   openOverlay(`<div class="panel">
     <h2 class="title sm">CPUの強さ</h2>
     <p class="lead">使うデッキ：${esc(Decks.selected().name)}</p>
+    ${Decks.selected().free && Decks.sampleOK() ? `<p class="onl-msg">サンプルデッキで勝っても、Gはもらえません（連勝にも数えません）。Gを集めるときは、自分のカードで組んだデッキを使ってください。</p>` : ""}
     <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
       <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}">
         <b>${v.label}</b><span>${v.desc}</span><em class="lvl-g">勝利で ${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}G${streakTag(k)}</em>
@@ -1498,7 +1502,9 @@ function startCpuGame(level) {
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
   newGame(["あなた", `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [mine, { name: cpu.name, cards: cpu.cards }]);
-  Account.streakStart(CPU_LEVEL);
+  S.mySample = !!mine.sample;
+  // サンプルデッキの試合は連勝に数えない（伸びも途切れもしない）
+  if (!S.mySample) Account.streakStart(CPU_LEVEL);
 }
 
 /* ---------- 入力（タップ操作） ---------- */

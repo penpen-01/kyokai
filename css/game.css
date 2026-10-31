@@ -704,7 +704,6 @@ body{
 .stonetag{font-weight:800;font-size:13px;color:#b9a6ff;padding:4px 10px;border:1px solid #8a76e0;border-radius:999px;white-space:nowrap}
 .topbar .stonetag{margin-left:auto}
 .shopsec{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
-.topbar ~ .shopsec:first-of-type{border-top:0;padding-top:0}
 .shopsec h3{margin:0 0 4px;font-size:16px}
 .shopsec .hint{margin:0 0 8px}
 .shopmsg{margin:0;padding:8px 12px;border-radius:6px;background:color-mix(in srgb,#8a76e0 18%,transparent);border:1px solid #8a76e0;font-size:13px}
@@ -718,3 +717,25 @@ body{
 .shopfilter .chip{font-size:12px;padding:4px 11px}
 .shopfilter .chip.on{background:var(--gold);color:#1a1408;border-color:var(--gold)}
 .shopneed{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px;margin-left:4px}
+.shopacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.shopact{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:3px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.shopact b{font-size:15px}
+.shopact small{font-size:11.5px;color:var(--muted)}
+.shopact .go{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--muted)}
+.shopact:first-child{border-color:#8a76e0}
+.shopact[disabled]{opacity:.45;cursor:default}
+.shopact:not([disabled]):active{transform:scale(.98)}
+.shopact:focus-visible{outline:2px solid var(--fg)}
+.dislist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.dislist li{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+.dislist li.on{border-color:#8a76e0;background:color-mix(in srgb,#8a76e0 10%,transparent)}
+.disthumb{all:unset;cursor:pointer;display:block}
+.disthumb .card{width:46px}
+.disinfo{min-width:0;display:flex;flex-direction:column;gap:2px}
+.disinfo span{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.disinfo .rtag{position:static;font-style:normal}
+.disinfo small{font-size:11px;color:var(--muted)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper b{min-width:1.4em;text-align:center;font-variant-numeric:tabular-nums}
+.stepper .btn.sm{min-width:34px;padding:6px 0}
+.disbtns{display:flex;flex-direction:column;gap:8px;margin-top:4px}

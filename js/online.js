@@ -151,8 +151,8 @@ const Online = {
       console.error(e);
       return this.lobbyMsg("部屋を作れませんでした（サーバーの設定を確認してください）。");
     }
-    this.role = "host"; this.code = code; this.myDeck = deck; this.guestDeck = null;
-    store.set(ROOM_KEY, { code, role: "host" });
+    this.role = "host"; this.code = code; this.myDeck = deck; this.guestDeck = null; this.mySample = !!deck.sample;
+    store.set(ROOM_KEY, { code, role: "host", sample: this.mySample });
     this.watchRoom();
     this.showWaiting();
   },
@@ -178,8 +178,8 @@ const Online = {
       console.error(e);
       return this.lobbyMsg("参加できませんでした。");
     }
-    this.role = "guest"; this.code = code;
-    store.set(ROOM_KEY, { code, role: "guest" });
+    this.role = "guest"; this.code = code; this.mySample = !!deck.sample;
+    store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
     Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, by: this.uid, at: Date.now() });
     this.watchRoom();
@@ -373,7 +373,7 @@ const Online = {
       store.del(ROOM_KEY);
       return this.showLobby("前回の部屋はもう閉じられています。");
     }
-    this.role = saved.role; this.code = saved.code; this.room = room;
+    this.role = saved.role; this.code = saved.code; this.room = room; this.mySample = !!saved.sample;
     if (this.role === "host") {
       if (room.state) {
         try { S = JSON.parse(room.state).S; } catch { S = null; }

@@ -58,7 +58,8 @@ const Decks = {
     if (!d) { onFail("デッキがありません。デッキ編成で作ってください。"); return null; }
     const pr = this.problems(d);
     if (pr.length) { onFail(`「${d.name}」はまだ使えません：${pr[0]}`); return null; }
-    return { name: d.name, cards: { ...d.cards } };
+    // sample：サンプルデッキ（所持に関係なく組んだデッキ）。勝ってもGはもらえない
+    return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}) };
   },
   randomPreset(level) {
     const ok0 = PRESETS.filter(p => deckProblems(p, DEF, CONFIG).length === 0);
@@ -125,7 +126,7 @@ const Decks = {
       </div>
       ${this.sampleOK() && !this.free() ? `
         <h3 class="sec">サンプルデッキ <small class="hint">${samples.length}/${CONFIG.DECK_MAX} ・ 全カード使用可・ベータ限定</small></h3>
-        <p class="lead small">持っていないカードも含めて、すべてのカードで組めるデッキです。カードの強さを試すためのもので、ベータ期間が終わると使えなくなります。</p>
+        <p class="lead small">持っていないカードも含めて、すべてのカードで組めるデッキです。カードの強さを試すためのもので、勝ってもGはもらえません。ベータ期間が終わると使えなくなります。</p>
         <ul class="dlist">${samples.length ? samples.map(d => row(d, "サンプル")).join("") : `<li class="hint">まだありません。</li>`}</ul>
         <div class="pre-btns">
           <button type="button" class="btn" data-act="deckNewSample">＋ 新しいサンプルデッキ</button>
