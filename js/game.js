@@ -7,7 +7,7 @@
    参加した人（ゲスト）は 1 で、操作をホストに送り、結果の盤面を受け取る。
    ========================================================= */
 
-const CPU_DELAY = 700; // CPUの行動間隔（ミリ秒）
+const CPU_DELAY = 1000; // CPUの行動間隔（ミリ秒）。何をしたか目で追えるように、少しゆっくり
 
 let CONFIG = { ...DEFAULT_CONFIG };
 let CARDS = [];
@@ -658,7 +658,9 @@ function cpuChoose(pi) {
 async function cpuTurn() {
   const g = S;
   busy = true; render();
-  await sleep(CPU_DELAY);
+  await sleep(300);
+  if (typeof Cinema !== "undefined") await Cinema.idle();   // 「相手のターン」の表示が終わってから動く
+  await sleep(CPU_DELAY * 0.6);
   if (S !== g) return;
   for (let guard = 0; guard < 30 && !S.over; guard++) {
     const a = cpuChoose(1);
@@ -804,12 +806,12 @@ function render() {
   renderDeferred = false;
   clearDragLeftovers();
   hidePreview();
+  if (typeof Cinema !== "undefined") Cinema.watch();   // 試合開始・じゃんけん・先攻後攻・ターンの始めの大きな演出
   app.classList.add("battle");                       // 対戦前（じゃんけんなど）も同じ舞台を敷く
   app.classList.toggle("pre", S.phase !== "play");    // 対戦前は暗めに
   if (S.phase !== "play") { app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
   const tk = `${S.gid}-${S.turnNo}`;
-  if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; Sound.play("turn"); }
-  if (!S.over && tk !== lastBannerKey) { lastBannerKey = tk; Motion.banner(S.turn === ME); }
+  if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; }
   const me = S.players[ME];
   const lines = S.log.filter(l => !l.sep).slice(-2);
   app.innerHTML = `
@@ -1540,6 +1542,7 @@ function toTitle() {
   MODE = "cpu"; setPerspective(0);
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
+  if (typeof Cinema !== "undefined") Cinema.reset();
   clearTimeout(resultTimer);
   app.innerHTML = ""; app.classList.remove("battle", "pre");
   $("#sheet").hidden = true;

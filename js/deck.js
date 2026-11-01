@@ -57,9 +57,9 @@ const Decks = {
     const w = Object.entries((deck && deck.want) || {}).filter(([id, n]) => n > 0 && DEF[id]);
     if (!w.length) return "";
     return `<h3 class="sec">まだ持っていないカード <small class="hint">${editable ? "手に入れたら、タップでデッキに入れられます" : "手に入れると、このデッキに入れられます"}</small></h3>
-      <div class="dgrid want">${w.map(([id, n]) => {
+      <div class="dstrips want">${w.map(([id, n]) => {
         const c = DEF[id], can = editable && this.maxFor(c, deck) > (deck.cards[id] || 0);
-        return `<button type="button" class="dtile ${can ? "has" : "unowned"}" data-act="${editable ? "deckWantAdd" : "deckDetail"}" data-id="${esc(id)}" aria-label="${esc(c.name)}">${cardHTML(c, { static: true, cls: can ? "" : "dim" })}<span class="dbadge">×${n}</span></button>`;
+        return this.stripHTML(c, n, editable ? "deckWantAdd" : "deckDetail", false, can ? "can" : "notown");
       }).join("")}</div>`;
   },
   find(id) { return this.mine().find(d => d.id === id) || (this.free() ? PRESETS.find(d => d.id === id) : null) || null; },
@@ -111,9 +111,35 @@ const Decks = {
   hideArt(c, deck) {
     return ["ready", "offline"].includes(Account.status) && !this.unbound(deck) && Account.owned(c.id) <= 0;
   },
+  /* カードのタイル。枚数などの札はカードに重ねず、下の1行に並べる */
   tileHTML(c, badge, cls = "", act = "deckDetail", hidden = false) {
     return `<button type="button" class="dtile ${cls}" data-act="${act}" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">
-      ${cardHTML(c, { static: true, hidden })}${badge}</button>`;
+      ${cardHTML(c, { static: true, hidden })}<span class="dmeta">${badge}</span></button>`;
+  },
+  /* デッキの中身の1行（コスト・名前・絵の帯・枚数）。重ならず、名前がはっきり読める */
+  stripHTML(c, n, act, hidden = false, cls = "") {
+    const art = c.art && !hidden ? `style="background-image:url('${esc(c.art)}')"` : "";
+    return `<button type="button" class="dstrip w-${esc(c.world)} r-${esc(c.rarity || "common")} ${cls}" data-act="${act}" data-id="${esc(c.id)}" aria-label="${esc(c.name)} ${n}枚">
+      <span class="ds-cost">${c.cost}</span><span class="ds-art" ${art}></span>
+      <span class="ds-name">${esc(c.name)}${c.type === "spell" ? `<small>魔法</small>` : `<small>${c.atk}/${c.hp}</small>`}</span>
+      <span class="ds-n">×${n}</span></button>`;
+  },
+  stripsHTML(cards, act, deck) {
+    const list = this.sorted(cards);
+    return list.length ? `<div class="dstrips">${list.map(({ c, n, id }) => c
+      ? this.stripHTML(c, n, act, this.hideArt(c, deck))
+      : `<button type="button" class="dstrip missing" data-act="${act === "deckTapDec" ? "deckDec" : "noop"}" data-id="${esc(id)}"><span class="ds-cost">？</span><span class="ds-name">今は使えないカード</span><span class="ds-n">×${n}</span></button>`).join("")}</div>` : "";
+  },
+  /* デッキの代表カード（レア度・コストの高い、絵のあるカード） */
+  keyCard(deck) {
+    const R = RARITY_ORDER;
+    return this.sorted(deck.cards).map(x => x.c).filter(c => c && c.art && !this.hideArt(c, deck))
+      .sort((a, b) => R.indexOf(b.rarity) - R.indexOf(a.rarity) || b.cost - a.cost)[0] || null;
+  },
+  worldBar(deck) {
+    const n = { myth: 0, fan: 0, mech: 0 }; let t = 0;
+    this.sorted(deck.cards).forEach(({ c, n: k }) => { if (c) { n[c.world] += k; t += k; } });
+    return t ? `<span class="dworlds" aria-label="${Object.keys(n).map(w => `${WORLDS[w]}${n[w]}枚`).join("・")}">${Object.keys(n).filter(w => n[w]).map(w => `<i class="w-${w}" style="flex:${n[w]}"></i>`).join("")}</span>` : "";
   },
   topbar(title, backAct) {
     return `<div class="topbar"><button type="button" class="btn sm" data-act="${backAct}">← 戻る</button><b>${title}</b></div>`;
@@ -128,11 +154,11 @@ const Decks = {
     const row = (d, tag) => {
       const pr = this.problems(d), n = deckCount(d);
       const using = sel && sel.id === d.id;
-      const top = this.sorted(d.cards).filter(x => x.c).sort((a, b) => b.c.cost - a.c.cost).slice(0, 5);
-      return `<li class="drow ${using ? "using" : ""}">
+      const key = this.keyCard(d);
+      return `<li class="drow dbox ${using ? "using" : ""}">
         <button type="button" class="drow-open" data-act="deckView" data-id="${esc(d.id)}">
-          <span class="drow-thumbs">${top.map(x => cardHTML(x.c, { static: true, showCost: false })).join("")}</span>
-          <span class="drow-main"><b>${esc(d.name)}${tag ? `<small class="ptag">${tag}</small>` : ""}</b>
+          <span class="dbox-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
+          <span class="drow-main"><b>${esc(d.name)}${tag ? `<small class="ptag">${tag}</small>` : ""}</b>${this.worldBar(d)}
             <span class="${pr.length ? "bad" : "ok"}">${n}/${CONFIG.DECK_SIZE}枚${n < CONFIG.DECK_SIZE ? ` ・ 未完成（あと${CONFIG.DECK_SIZE - n}枚${this.wantCount(d) ? `・まだ持っていないカード${this.wantCount(d)}枚` : ""}）` : pr.length ? " ・ " + esc(pr[0]) : ""}</span></span>
         </button>
         <div class="drow-acts">${using ? `<span class="usingtag">使用中</span>` : `<button type="button" class="btn sm" data-act="deckUse" data-id="${esc(d.id)}" ${pr.length ? "disabled" : ""}>使う</button>`}</div>
@@ -199,10 +225,8 @@ const Decks = {
              <button type="button" class="btn" data-act="deckCopy" data-id="${esc(id)}">複製</button>`}
         <button type="button" class="btn" data-act="deckCode" data-id="${esc(id)}">デッキコードを送る</button>
       </div>
-      <p class="hint">カードを長押しすると、効果を見られます。</p>
-      <div class="dgrid">${this.sorted(d.cards).map(({ c, n }) => c
-        ? this.tileHTML(c, `<span class="dbadge">×${n}</span>`)
-        : `<div class="dtile missing"><span>使えないカード</span><span class="dbadge">×${n}</span></div>`).join("")}</div>
+      <p class="hint">カードをタップすると、効果を見られます。</p>
+      ${this.stripsHTML(d.cards, "deckDetail", d)}
       ${this.wantHTML(d, false)}
       ${this.codeHTML(d)}
       ${this.detailHTML(false)}
@@ -230,6 +254,7 @@ const Decks = {
   /* ---------- 編集 ---------- */
   startEdit(deck, isNew) {
     this.editing = { id: deck.id, name: deck.name, cards: { ...deck.cards }, want: { ...(deck.want || {}) }, isNew, free: !!deck.free, confirmDel: false };
+    this.editTab = isNew && !deckCount(deck) ? "pool" : (deckCount(deck) ? "deck" : "pool");
     this.detail = null;
     this.renderEdit();
   },
@@ -251,7 +276,7 @@ const Decks = {
     return list.length ? list.map(c => {
       const k = ed.cards[c.id] || 0, own = this.owned(c.id), max = this.maxFor(c, ed);
       const none = !unb && own <= 0;
-      return this.tileHTML(c, `<span class="dbadge ${k ? "in" : ""}">${k}/${max}</span>${unb ? "" : `<span class="obadge">所持${own}</span>`}`,
+      return this.tileHTML(c, `<span class="dbadge ${k ? "in" : ""}">${k ? `デッキ${k}` : "＋"}<small>/${max}</small></span>${unb ? "" : `<span class="obadge">所持${own}</span>`}`,
         `${none ? "unowned" : k ? "has" : ""} ${k >= max ? "maxed" : ""}`, "deckTapAdd", this.hideArt(c, ed));
     }).join("") : `<p class="hint">条件に合うカードがありません。</p>`;
   },
@@ -271,13 +296,17 @@ const Decks = {
       ${ed.free ? `<p class="hint">サンプルデッキ：持っていないカードも入れられます（ベータ限定）。</p>` : ""}
       <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(ed) : "このデッキで対戦できます"}</p>
       ${this.curveHTML(ed.cards)}
-      <h3 class="sec">デッキの中身 <small class="hint">タップで1枚減らす・長押しで詳細</small></h3>
-      <div class="dgrid" id="deck-in">${n ? this.sorted(ed.cards).map(({ c, n, id }) => c
-        ? this.tileHTML(c, `<span class="dbadge">×${n}</span>`, "", "deckTapDec")
-        : `<button type="button" class="dtile missing" data-act="deckDec" data-id="${esc(id)}"><span>使えないカード</span><span class="dbadge">×${n}</span></button>`).join("")
-        : `<p class="hint">下のカードをタップして入れてください。</p>`}</div>
-      ${this.wantHTML(ed, true)}
-
+      <div class="seg dtabs" role="tablist">
+        <button type="button" role="tab" data-act="deckTab" data-v="pool" aria-pressed="${this.editTab !== "deck"}">カードを選ぶ</button>
+        <button type="button" role="tab" data-act="deckTab" data-v="deck" aria-pressed="${this.editTab === "deck"}">デッキの中身 <b>${n}</b>${this.wantCount(ed) ? `<small>＋未所持${this.wantCount(ed)}</small>` : ""}</button>
+      </div>
+      <div class="dedit-cols tab-${this.editTab === "deck" ? "deck" : "pool"}">
+      <section class="dpane deckpane">
+        <h3 class="sec">デッキの中身 <small class="hint">タップで1枚減らす・長押しで詳細</small></h3>
+        <div id="deck-in">${n ? this.stripsHTML(ed.cards, "deckTapDec", ed) : `<p class="hint">「カードを選ぶ」でカードをタップすると、ここに入ります。</p>`}</div>
+        ${this.wantHTML(ed, true)}
+      </section>
+      <section class="dpane poolpane">
       <h3 class="sec">カードを選ぶ <small class="hint">タップで1枚入れる・長押しで詳細</small></h3>
       <div class="dfilters">
         <input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索（例：守護、ドロー）" value="${esc(f.q)}" autocomplete="off">
@@ -288,6 +317,8 @@ const Decks = {
         ${unb ? "" : `<label class="ownchk"><input type="checkbox" id="deck-owned" ${f.owned ? "checked" : ""}> 持っているカードだけ</label>`}
       </div>
       <div class="dgrid pool" id="deck-pool">${this.poolHTML()}</div>
+      </section>
+      </div>
 
       ${this.detailHTML(true)}
 
@@ -358,8 +389,10 @@ const Decks = {
   },
   /* 入れたカードがデッキのどこに入ったか分かるように光らせる */
   pulse(id) {
-    const el = document.querySelector(`#deck-in [data-id="${CSS.escape(id)}"]`);
-    if (el) { el.classList.add("pulse"); setTimeout(() => el.classList.remove("pulse"), 500); }
+    [`#deck-in [data-id="${CSS.escape(id)}"]`, `#deck-pool [data-id="${CSS.escape(id)}"]`, `.dtabs [data-v="deck"]`].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) { el.classList.add("pulse"); setTimeout(() => el.classList.remove("pulse"), 500); }
+    });
   },
 
   handleAct(act, el) {
@@ -441,6 +474,7 @@ const Decks = {
       case "deckDetail": this.detail = id; this.rerender(); return true;
       case "deckDetailClose": this.detail = null; this.rerender(); return true;
       case "deckFilter": this.filter[el.dataset.k] = el.dataset.v; this.renderEdit(); return true;
+      case "deckTab": this.editTab = el.dataset.v; this.renderEdit(); return true;
       case "deckTapAdd": this.inc(id, true); return true;
       case "deckTapDec": this.dec(id); return true;
       case "deckInc": this.inc(id, false); return true;
@@ -494,7 +528,7 @@ document.addEventListener("change", e => {
   // 長押しで詳細を開いたあと、指を離したときの「タップ」で閉じたり1枚追加されたりしないようにする
   document.addEventListener("pointerup", () => { if (fired) { fired = false; blockClick(); } }, true);
   document.addEventListener("pointerdown", e => {
-    const tile = e.target.closest("#overlay .dtile[data-id], #overlay .oslot.up[data-id]");
+    const tile = e.target.closest("#overlay .dtile[data-id], #overlay .dstrip[data-id], #overlay .oslot.up[data-id]");
     if (!tile) return;
     sx = e.clientX; sy = e.clientY;
     clear();
