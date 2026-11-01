@@ -855,26 +855,17 @@ function pregameHTML() {
     </div>`;
   let body = "";
   const last = S.rps.last;
-  // じゃんけんの結果：お互いの手を並べて、勝ち・負け・あいこを大きく出す
-  const lastLine = last ? (() => {
-    const v = last.winner == null ? "tie" : last.winner === ME ? "win" : "lose";
-    const side = (pi, who) => `<div class="rp ${last.winner === pi ? "won" : last.winner == null ? "" : "lost"}">
-        <span class="rp-who">${who}</span>${rpsImg(last.hands[pi])}<b>${RPS[last.hands[pi]]}</b></div>`;
-    return `<div class="rpsres ${v}">
-        ${side(ME, "あなた")}<span class="rp-vs">VS</span>${side(OP, esc(op.name))}
-      </div>
-      <p class="rpsverdict ${v}">${v === "tie" ? "あいこ！ もう一度" : v === "win" ? "あなたの勝ち！" : "相手の勝ち"}</p>`;
-  })() : "";
+  // じゃんけんの結果は大きな演出（js/cinema.js）で見せるので、ここでは一行だけ
+  const lastLine = last ? `<p class="datainfo">相手：${RPS[last.hands[OP]]} ／ あなた：${RPS[last.hands[ME]]}</p>` : "";
   if (S.phase === "rps") {
     const mine = S.rps.picks[ME];
-    body = `<h2 class="pre-title">じゃんけん</h2>
-      ${last ? "" : `<p class="lead">勝った人が、先攻か後攻かを選べます。</p>`}
-      ${lastLine}
+    body = `<h2 class="pre-title">${last ? "あいこ！ もう一度" : "じゃんけん"}</h2>
+      ${last ? lastLine : `<p class="lead">勝った人が、先攻か後攻かを選べます。</p>`}
       ${mine ? `<p class="pre-wait">${RPS[mine] ? `あなたは${RPS[mine]}。` : "選びました。"}相手を待っています…</p>` : `
       <div class="rps">${Object.entries(RPS).map(([k, v]) => `<button type="button" class="rpsbtn" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}
       ${S.rps.picks[OP] ? `<p class="datainfo">相手は選び終わっています</p>` : ""}`;
   } else if (S.phase === "choose") {
-    body = `<h2 class="pre-title">じゃんけんの結果</h2>
+    body = `<h2 class="pre-title">${S.rpsWinner === ME ? "あなたの勝ち！" : "相手の勝ち"}</h2>
       ${lastLine}
       ${S.rpsWinner === ME ? `
         <p class="lead">先攻か後攻かを選んでください。先攻は最初のターンにカードを引きません。</p>

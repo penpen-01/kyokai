@@ -931,8 +931,8 @@ body{
    既定の見た目＝最後の状態。動きはアニメーションで足す（視差効果を減らす設定では動きなしで最後の状態だけ）
    ========================================================= */
 .cine{position:fixed;inset:0;z-index:70;overflow:hidden;background:#06070e;cursor:pointer;user-select:none;-webkit-user-select:none;
-  animation:cineout .35s ease-in var(--out,2.25s) forwards}
-.cine.intro{--out:2.25s} .cine.rpsc{--out:2.65s} .cine.orderc{--out:2.35s}
+}
+.cine.out{animation:cineout .35s ease-in forwards}
 @keyframes cineout{to{opacity:0}}
 /* 斜めの帯：上が相手（赤）、下が自分（青と金）。中にアイコンのカードの絵を大きく敷く */
 .cv-band{position:absolute;inset:0;background-size:cover;background-position:50% 25%;background-color:#141833}
@@ -980,21 +980,21 @@ body{
 .cv-hand.op{top:24%;transform:translateX(-50%) rotate(180deg)}
 .cv-hand.me{bottom:27%}
 .cv-hand img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.8))}
-.cv-hand .shake{opacity:0;animation:cvshk 1.26s ease-in-out both}
-.cv-hand .real{animation:cvreal 1.6s ease-out both}
-@keyframes cvshk{0%{opacity:1;transform:translateY(0)}12%{transform:translateY(-22%)}25%{transform:translateY(0)}45%{transform:translateY(-22%)}58%{transform:translateY(0)}78%{transform:translateY(-22%)}99%{opacity:1;transform:translateY(0)}100%{opacity:0}}
-@keyframes cvreal{0%,78%{opacity:0;transform:scale(.7)}88%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
-.cv-hand.won img.real{filter:drop-shadow(0 0 18px rgba(255,213,106,.95)) drop-shadow(0 8px 14px rgba(0,0,0,.8));animation:cvreal 1.6s ease-out both, cvwin 1s 1.6s ease-in-out infinite alternate}
-.cv-hand.lost img.real{filter:grayscale(.8) brightness(.55)}
-@keyframes cvwin{to{transform:scale(1.08)}}
-.cv-chant{position:absolute;left:0;right:0;top:50%;z-index:4;transform:translateY(-50%);display:grid;place-items:center;pointer-events:none}
-.cv-chant i{grid-area:1/1;font-style:normal;font-family:var(--f-display);font-weight:800;font-size:44px;color:#fff;letter-spacing:.1em;text-shadow:0 0 16px rgba(255,213,106,.8),0 3px 8px #000;opacity:0}
-.cv-chant i:nth-child(1){animation:cvchant .42s 0s both}
-.cv-chant i:nth-child(2){animation:cvchant .42s .42s both}
-.cv-chant i:nth-child(3){animation:cvchant .5s .84s both;font-size:56px;color:#ffe7a3}
-@keyframes cvchant{0%{opacity:0;transform:scale(1.6)}30%{opacity:1;transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.cv-hand.op .real{animation:cvhandop .32s cubic-bezier(.2,1.3,.4,1) both}
+.cv-hand.me .real{animation:cvhandme .32s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes cvhandop{from{opacity:0;transform:translateY(160%) scale(1.3)}to{opacity:1;transform:none}}
+@keyframes cvhandme{from{opacity:0;transform:translateY(160%) scale(1.3)}to{opacity:1;transform:none}}
+.cv-hand.won img.real{filter:drop-shadow(0 0 18px rgba(255,213,106,.95)) drop-shadow(0 8px 14px rgba(0,0,0,.8))}
+.cv-hand.won{animation:cvwin .6s .55s ease-in-out infinite alternate}
+.cv-hand.op.won{animation-name:cvwinop}
+.cv-hand.lost img.real{transition:filter .3s .5s;filter:grayscale(.6) brightness(.7) drop-shadow(0 8px 14px rgba(0,0,0,.8))}
+/* 手の後ろに暗い円：絵の背景に手が溶け込まないように */
+.cv-hand::before{content:"";position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(closest-side,rgba(6,7,14,.92),rgba(6,7,14,.7) 60%,transparent);animation:cvfade .25s both}
+.cv-hand.won::before{background:radial-gradient(closest-side,rgba(60,45,10,.9),rgba(6,7,14,.75) 60%,transparent)}
+@keyframes cvwin{to{transform:translateX(-50%) scale(1.08)}}
+@keyframes cvwinop{to{transform:translateX(-50%) rotate(180deg) scale(1.08)}}
 .cv-verdict{position:absolute;left:0;right:0;top:50%;z-index:4;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;
-  padding:14px 16px;background:linear-gradient(90deg,transparent,rgba(6,7,14,.85) 20%,rgba(6,7,14,.85) 80%,transparent);animation:cvverd .45s 1.4s cubic-bezier(.2,1.3,.4,1) both}
+  padding:14px 16px;background:linear-gradient(90deg,transparent,rgba(6,7,14,.85) 20%,rgba(6,7,14,.85) 80%,transparent);animation:cvverd .4s .5s cubic-bezier(.2,1.3,.4,1) both}
 .cv-verdict b{font-family:var(--f-display);font-weight:800;font-size:38px;letter-spacing:.06em;text-shadow:0 3px 10px #000}
 .cv-verdict small{font-size:13px;color:#d9d3c2}
 .cv-verdict.win b{color:#ffe7a3;text-shadow:0 0 18px rgba(255,213,106,.8),0 3px 10px #000}
@@ -1038,7 +1038,6 @@ body{
 @keyframes cvturntxt{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 
 .cine.reduced,.cine.reduced *,.cine.reduced *::after{animation:none!important}
-.cine.reduced .cv-hand .shake{opacity:0}
 .cine.reduced .cv-oback{opacity:0}
 
 /* =========================================================

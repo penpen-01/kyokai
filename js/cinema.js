@@ -16,7 +16,7 @@ const Cinema = {
     return new Promise(res => { const chk = () => (this.busy() ? setTimeout(chk, 80) : res()); chk(); });
   },
   reset() {
-    clearTimeout(this.timer);
+    clearTimeout(this.timer); clearTimeout(this.fadeT);
     this.q = []; this.playing = null; this.seen = new Set();
     const el = document.getElementById("cine"); if (el) el.remove();
   },
@@ -35,13 +35,17 @@ const Cinema = {
   },
 
   next() {
-    clearTimeout(this.timer);
+    clearTimeout(this.timer); clearTimeout(this.fadeT);
     const old = document.getElementById("cine"); if (old) old.remove();
     const fn = this.q.shift();
     if (!fn) { this.playing = null; return; }
     this.playing = fn;
     const ms = fn();
     if (!ms) { this.playing = null; return this.next(); }
+    // 次の演出が控えていれば消えずにそのまま切り替える（下の画面が一瞬見えないように）。
+    // 何もなければ最後の 0.35 秒で薄くして、下の画面へ戻す
+    const fade = Math.max(0, ms - 350);
+    this.fadeT = setTimeout(() => { const el = document.getElementById("cine"); if (el && !this.q.length) el.classList.add("out"); }, fade);
     this.timer = setTimeout(() => this.next(), ms);
   },
   skip() { if (this.playing && this.playing.skippable !== false) this.next(); },
@@ -80,23 +84,22 @@ const Cinema = {
     return Motion.reduced ? 1200 : 2600;
   },
 
-  /* ---------- じゃんけん ---------- */
+  /* ---------- じゃんけん：お互いの手が上と下から飛び出して、すぐ結果 ---------- */
   rps(last) {
     const v = last.winner == null ? "tie" : last.winner === ME ? "win" : "lose";
     const verdict = v === "tie" ? "あいこ！" : v === "win" ? "あなたの勝ち！" : "相手の勝ち";
     const hands = `相手：${RPS[last.hands[OP]]} ／ あなた：${RPS[last.hands[ME]]}`;
     const sub = hands + "　" + (v === "tie" ? "もう一度" : v === "win" ? "先攻か後攻かを選べます" : "相手が先攻か後攻かを選びます");
     const hand = (pi, cls) => `<div class="cv-hand ${cls} ${last.winner === pi ? "won" : last.winner == null ? "" : "lost"}">
-        <img class="shake" src="ui/rps-g.webp" alt="" draggable="false"><img class="real" src="ui/rps-${last.hands[pi]}.webp" alt="" draggable="false"></div>`;
+        <img class="real" src="ui/rps-${last.hands[pi]}.webp" alt="" draggable="false"></div>`;
     this.layer("rpsc " + v, this.bands(`
       ${hand(OP, "op")}${hand(ME, "me")}
-      <div class="cv-chant" aria-hidden="true"><i>じゃん</i><i>けん</i><i>ぽん！</i></div>
       <div class="cv-verdict ${v}"><b>${verdict}</b><small>${sub}</small></div>`));
     if (!Motion.reduced) {
-      [0, 420, 840].forEach(t => setTimeout(() => Sound.play("click"), t));
-      setTimeout(() => Sound.play(v === "win" ? "rare" : v === "lose" ? "hit" : "flip"), 1260);
+      setTimeout(() => Sound.play("hit"), 260);
+      setTimeout(() => Sound.play(v === "win" ? "rare" : v === "lose" ? "flip" : "click"), 560);
     }
-    return Motion.reduced ? 1600 : 3000;
+    return Motion.reduced ? 1300 : 2000;
   },
 
   /* ---------- 先攻／後攻 ---------- */

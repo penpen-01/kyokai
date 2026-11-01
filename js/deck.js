@@ -130,9 +130,11 @@ const Decks = {
       ? this.stripHTML(c, n, act, this.hideArt(c, deck))
       : `<button type="button" class="dstrip missing" data-act="${act === "deckTapDec" ? "deckDec" : "noop"}" data-id="${esc(id)}"><span class="ds-cost">？</span><span class="ds-name">今は使えないカード</span><span class="ds-n">×${n}</span></button>`).join("")}</div>` : "";
   },
-  /* デッキの代表カード（レア度・コストの高い、絵のあるカード） */
+  /* デッキの代表カード：自分で選んだカード（deck.key）。選んでいなければレア度・コストの高い、絵のあるカード */
   keyCard(deck) {
     const R = RARITY_ORDER;
+    const k = deck.key && DEF[deck.key];
+    if (k && k.art && ((deck.cards[k.id] || 0) + ((deck.want || {})[k.id] || 0)) > 0 && !this.hideArt(k, deck)) return k;
     return this.sorted(deck.cards).map(x => x.c).filter(c => c && c.art && !this.hideArt(c, deck))
       .sort((a, b) => R.indexOf(b.rarity) - R.indexOf(a.rarity) || b.cost - a.cost)[0] || null;
   },
@@ -225,7 +227,7 @@ const Decks = {
              <button type="button" class="btn" data-act="deckCopy" data-id="${esc(id)}">複製</button>`}
         <button type="button" class="btn" data-act="deckCode" data-id="${esc(id)}">デッキコードを送る</button>
       </div>
-      <p class="hint">カードをタップすると、効果を見られます。</p>
+      <p class="hint">カードをタップすると、効果を見られます。${isPreset ? "" : "そこから「代表カード」（一覧に出る絵）も選べます。"}</p>
       ${this.stripsHTML(d.cards, "deckDetail", d)}
       ${this.wantHTML(d, false)}
       ${this.codeHTML(d)}
@@ -253,7 +255,7 @@ const Decks = {
 
   /* ---------- 編集 ---------- */
   startEdit(deck, isNew) {
-    this.editing = { id: deck.id, name: deck.name, cards: { ...deck.cards }, want: { ...(deck.want || {}) }, isNew, free: !!deck.free, confirmDel: false };
+    this.editing = { id: deck.id, name: deck.name, cards: { ...deck.cards }, want: { ...(deck.want || {}) }, key: deck.key || null, isNew, free: !!deck.free, confirmDel: false };
     this.editTab = isNew && !deckCount(deck) ? "pool" : (deckCount(deck) ? "deck" : "pool");
     this.detail = null;
     this.renderEdit();
@@ -335,6 +337,13 @@ const Decks = {
     o.scrollTop = keepScroll;
   },
 
+  /* 代表カード（デッキ一覧の絵）にするボタン：自分のデッキに入っている、絵のあるカードだけ */
+  keyBtn(c) {
+    const d = this.editing || (this.viewing && this.mine().find(x => x.id === this.viewing));
+    if (!d || !c.art || !((d.cards[c.id] || 0) + ((d.want || {})[c.id] || 0)) || this.hideArt(c, d)) return "";
+    return d.key === c.id ? `<span class="hint keyon">★ このデッキの代表カードです（一覧に絵が出ます）</span>`
+      : `<button type="button" class="btn" data-act="deckKey" data-id="${esc(c.id)}">★ 代表カードにする</button>`;
+  },
   /* カードの詳細（編集中は枚数を変えられる） */
   detailHTML(editable) {
     const c = this.detail && DEF[this.detail];
@@ -355,6 +364,7 @@ const Decks = {
             <button type="button" class="btn primary" data-act="deckInc" data-id="${esc(c.id)}" ${k >= max ? "disabled" : ""}>＋</button>
           </div>
           ${k >= max && max < cardLimit(c, CONFIG, ed) ? `<span class="hint">持っている枚数までしか入れられません。</span>` : ""}` : ""}
+          ${this.keyBtn(c)}
           <button type="button" class="btn" data-act="deckDetailClose">閉じる</button>
         </div>
       </div>
@@ -472,6 +482,14 @@ const Decks = {
       }
       case "deckEdit": { const d = this.find(id); if (d) { this.viewing = null; this.startEdit(d, false); } return true; }
       case "deckDetail": this.detail = id; this.rerender(); return true;
+      case "deckKey": {
+        if (this.editing) { this.editing.key = id; this.rerender(); toast("代表カードにしました（保存すると一覧に反映されます）"); return true; }
+        const list = this.mine(), d = list.find(x => x.id === this.viewing);
+        if (!d) return true;
+        d.key = id;
+        if (!this.saveMine(list)) { toast("保存できませんでした（サーバーに接続できていません）"); return true; }
+        this.rerender(); toast("代表カードにしました"); return true;
+      }
       case "deckDetailClose": this.detail = null; this.rerender(); return true;
       case "deckFilter": this.filter[el.dataset.k] = el.dataset.v; this.renderEdit(); return true;
       case "deckTab": this.editTab = el.dataset.v; this.renderEdit(); return true;
@@ -486,7 +504,7 @@ const Decks = {
         if (pr.length) { toast(pr[0]); return true; }
         const list = this.mine().filter(d => d.id !== ed.id);
         const want = cleanDeckCards(ed.want);
-        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}), ...(Object.keys(want).length ? { want } : {}) });
+        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}), ...(ed.key ? { key: ed.key } : {}), ...(Object.keys(want).length ? { want } : {}) });
         if (!this.saveMine(list)) { this.editing = null; this.showList("保存できませんでした（サーバーに接続できていません）"); return true; }
         // 対戦に使えるデッキになったときだけ「使用中」にする（未完成のデッキは選ばない）
         if ((ed.isNew || !this.isValid(this.selected())) && !this.problems(this.mine().find(d => d.id === ed.id) || ed).length) this.select(ed.id);
