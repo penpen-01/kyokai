@@ -173,7 +173,7 @@ ${DATA.cards.filter(c => c.limit > 0).map(cardLine).join("\n")}
         ${opt("type", TYPES, "種類")}
         ${opt("rarity", RARITY, "レア度")}
         ${opt("cost", Object.fromEntries([...Array(11).keys()].map(i => [String(i), String(i)])), "コスト")}
-        <label class="small">枚数<select class="txt" data-ai="n" style="width:auto">${[1, 2, 3, 5].map(n => `<option ${o.n === String(n) ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+        <label class="small">作る案の数<select class="txt" data-ai="n" style="width:auto">${[1, 2, 3, 5].map(n => `<option value="${n}" ${o.n === String(n) ? "selected" : ""}>${n}種類</option>`).join("")}</select></label>
       </div>
       <div class="frow"><button type="button" class="btn primary" data-act="aiCopyIdea">② 依頼文をコピー</button><span class="hint small">ルール・使える効果・今のカード${DATA.cards.filter(c => c.limit > 0).length}枚の一覧が入ります</span></div>
       <label for="ai-answer" class="small">③ AIの答えを貼る</label>
