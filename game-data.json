@@ -1,5 +1,5 @@
 {
- "version": 32,
+ "version": 33,
  "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
@@ -68,6 +68,16 @@
     "cmvr35s2x5dv",
     "cmvr3jwcugk8",
     "cmvr3qeaobf2",
+    "st-recruit",
+    "st-golem",
+    "st-guard",
+    "st-infantry",
+    "st-wolf",
+    "st-rockman",
+    "st-knight",
+    "st-giant",
+    "st-spark",
+    "st-water",
     "m-prayer",
     "m-shield",
     "m-valkyrie",
@@ -1790,6 +1800,24 @@
     }
    ],
    "art": "art/x-warp-1ab22df710.webp"
+  },
+  {
+   "id": "cmvy5b8qb40p",
+   "name": "位相転移ゲート",
+   "world": "mech",
+   "type": "spell",
+   "cost": 7,
+   "glyph": "位",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "banishOwn",
+     "n": 1
+    }
+   ],
+   "art": "art/cmvy5b8qb40p-ed90803b25.webp"
   }
  ]
 }
