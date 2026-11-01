@@ -610,7 +610,7 @@ body{
 .deckplate svg{flex:none;width:15px;height:15px;fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linejoin:round}
 .deckplate:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 /* 真ん中は背景の絵を見せる空き */
-.homemain{flex:1;min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px}
+.homemain{flex:1;min-height:200px;display:flex;flex-direction:column;justify-content:flex-end;gap:8px}
 /* 対戦：2枚の大きな札を横に並べる */
 .battles{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:12px}
 .battlebtn{
@@ -674,30 +674,32 @@ body{
 /* ---- 起動画面 ---- */
 .overlay.splash{padding:0;background:#07080f}
 .sp-root{position:relative;flex:1;min-height:100%;overflow:hidden;cursor:pointer;display:grid;place-items:center}
-.sp-bg{position:absolute;inset:-2%;background:linear-gradient(160deg,#ffe7a3,#d8b468 50%,#9f7a36)}
-.sp-band{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 90% at 50% 50%, color-mix(in srgb,var(--wc) 55%,#0b0d18), #07080f 85%)}
-.sp-b0{clip-path:polygon(0 0,100% 0,100% 21%,0 39%)}
-.sp-b1{clip-path:polygon(0 40.5%,100% 22.5%,100% 61%,0 79%)}
-.sp-b2{clip-path:polygon(0 80.5%,100% 62.5%,100% 100%,0 100%)}
-.sp-art{position:absolute;inset:0;display:grid}
-.sp-b0 .sp-art{bottom:58%}
-.sp-b1 .sp-art{top:22%;bottom:20%}
-.sp-b2 .sp-art{top:62%}
-.sp-art img{width:100%;height:100%;object-fit:cover;opacity:.62;animation:spdrift 14s ease-in-out infinite alternate}
-.sp-glyph{place-self:center;font-family:var(--f-display);font-weight:800;font-size:min(44vh,70vw);line-height:1;color:color-mix(in srgb,var(--wc) 50%,transparent);text-shadow:0 0 60px color-mix(in srgb,var(--wc) 60%,transparent);animation:spdrift 12s ease-in-out infinite alternate}
-.sp-b1 .sp-glyph{animation-delay:-4s}
-.sp-b2 .sp-glyph{animation-delay:-8s}
-@keyframes spdrift{from{transform:scale(1.04) translateX(-2%)}to{transform:scale(1.14) translateX(2%)}}
-.sp-wname{position:absolute;font-family:var(--f-display);font-weight:800;font-size:13px;letter-spacing:.5em;color:color-mix(in srgb,var(--wc) 85%,#fff);opacity:.85}
-.sp-b0 .sp-wname{left:16px;top:calc(14px + env(safe-area-inset-top,0px))}
-.sp-b1 .sp-wname{right:16px;top:30%}
-.sp-b2 .sp-wname{left:16px;bottom:calc(46px + env(safe-area-inset-bottom,0px))}
-.sp-b0{animation:spinL .8s cubic-bezier(.2,.8,.2,1) both}
-.sp-b1{animation:spinR .8s .12s cubic-bezier(.2,.8,.2,1) both}
-.sp-b2{animation:spinL .8s .24s cubic-bezier(.2,.8,.2,1) both}
-@keyframes spinL{from{transform:translateX(-105%)}to{transform:none}}
-@keyframes spinR{from{transform:translateX(105%)}to{transform:none}}
-.sp-shade{position:absolute;inset:0;background:radial-gradient(70% 45% at 50% 50%, rgba(7,8,15,.72), transparent 75%),linear-gradient(transparent 70%, rgba(7,8,15,.75));pointer-events:none}
+/* 3つの世界の光：左上から金（神話）、左下から緑（幻想）、右から青（機械）。ゆっくり明滅する */
+.sp-sky{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 45%, #141833, #07080f 75%)}
+.sp-sky i{position:absolute;width:120vmax;height:120vmax;border-radius:50%;filter:blur(30px);opacity:.55;animation:spglow 7s ease-in-out infinite alternate}
+.sp-sky .w-myth{left:-60vmax;top:-70vmax;background:radial-gradient(circle, rgba(255,205,110,.75), rgba(214,166,76,.25) 40%, transparent 65%)}
+.sp-sky .w-fan{left:-70vmax;bottom:-75vmax;background:radial-gradient(circle, rgba(110,220,150,.6), rgba(60,150,100,.2) 40%, transparent 65%);animation-delay:-2.3s}
+.sp-sky .w-mech{right:-75vmax;top:-20vmax;background:radial-gradient(circle, rgba(110,170,255,.65), rgba(90,110,230,.22) 40%, transparent 65%);animation-delay:-4.6s}
+@keyframes spglow{from{opacity:.38;transform:scale(.95)}to{opacity:.7;transform:scale(1.05)}}
+/* 降るカード：縦に落ちながら、カード自体は縦の軸でくるくる回る（裏面も見える） */
+.sp-rain{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.sp-fall{position:absolute;top:0;left:var(--x);width:calc(118px * var(--s));perspective:700px;opacity:var(--o);filter:blur(var(--b));
+  animation:spfall var(--d) linear var(--dl) infinite;will-change:transform}
+.sp-fall.l0{filter:blur(var(--b)) brightness(.55) saturate(.8)}
+.sp-fall.l1{filter:brightness(.8)}
+.sp-fall.l2{filter:drop-shadow(0 10px 18px rgba(0,0,0,.7))}
+@keyframes spfall{
+  from{transform:translate(-50%,-130%) rotate(var(--r))}
+  to{transform:translate(-50%,calc(100vh + 30px)) rotate(calc(var(--r) * -1))}
+}
+.sp-spin{position:relative;transform-style:preserve-3d;animation:spspin var(--spin) linear infinite}
+@keyframes spspin{from{transform:rotateY(0) rotateX(8deg)}to{transform:rotateY(360deg) rotateX(8deg)}}
+.sp-face,.sp-backface{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.sp-face .card{width:100%}
+.sp-backface{position:absolute;inset:0;transform:rotateY(180deg);border-radius:7px;display:grid;place-items:center;
+  border:2px solid #c79a44;background:repeating-linear-gradient(135deg, #1d2240 0 6px, #262c55 6px 12px);box-shadow:inset 0 0 0 4px #10132a, inset 0 0 0 5px rgba(214,178,98,.5)}
+.sp-backface i{font-style:normal;font-family:var(--f-display);font-weight:800;font-size:calc(26px * var(--s));color:#e9c873;width:42%;aspect-ratio:1;display:grid;place-items:center;border:1.5px solid rgba(233,200,115,.7);transform:rotate(45deg)}
+.sp-shade{position:absolute;inset:0;background:radial-gradient(62% 26% at 50% 50%, rgba(7,8,15,.82), rgba(7,8,15,.45) 60%, transparent 100%),linear-gradient(transparent 75%, rgba(7,8,15,.8));pointer-events:none}
 .sp-motes{position:absolute;inset:0;pointer-events:none}
 .sp-motes i{position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:#ffe7a3;box-shadow:0 0 10px #ffd56a;opacity:0;animation:spmote linear infinite}
 @keyframes spmote{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-100vh) translateX(30px);opacity:0}}
@@ -720,17 +722,35 @@ body{
 @keyframes spleave{to{opacity:0;transform:scale(1.06)}}
 @keyframes spflash{0%{opacity:0}25%{opacity:.85}100%{opacity:0}}
 @media (prefers-reduced-motion: reduce){
-  .sp-band,.sp-logo,.sp-sub,.sp-tap,.sp-art img,.sp-glyph,.sp-motes i{animation:none!important}
+  .sp-logo,.sp-sub,.sp-tap,.sp-motes i,.sp-sky i,.sp-spin{animation:none!important}
+  .sp-fall{animation-play-state:paused!important}
 }
 
 
-/* ---- ホームの背景（起動画面の帯を薄く）とロゴ ---- */
-.homebg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
-.homebg .sp-bg{opacity:.75}
-.homebg .sp-band{animation:none}
-.homebg .sp-art img,.homebg .sp-glyph{opacity:.6}
-.homebg .sp-wname{display:none}
-.homeshade{position:absolute;inset:0;background:linear-gradient(rgba(13,15,28,.7),rgba(13,15,28,.25) 22%,rgba(13,15,28,.3) 48%,rgba(13,15,28,.85) 72%,rgba(13,15,28,.95))}
+/* ---- ホームの背景（仮。Gemini の絵ができたら差し替える）と飾り棚 ---- */
+.homebg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  background:
+    radial-gradient(60% 30% at 50% 52%, rgba(214,178,98,.16), transparent 70%),
+    radial-gradient(90% 50% at 15% 0%, rgba(214,166,76,.18), transparent 70%),
+    radial-gradient(80% 50% at 0% 85%, rgba(80,180,120,.12), transparent 70%),
+    radial-gradient(80% 60% at 100% 40%, rgba(90,140,230,.16), transparent 70%),
+    radial-gradient(120% 90% at 50% 40%, #151935, #07080f 80%)}
+.homemain{position:relative}
+.showcase{position:relative;isolation:isolate;flex:1;min-height:200px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+.showcase:active{cursor:grabbing}
+/* カードが回る台座（斜め上から見た光の輪） */
+.sc-stage{position:absolute;left:50%;top:66%;width:min(100%,440px);aspect-ratio:3.4;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(closest-side, rgba(214,178,98,.22), rgba(214,178,98,.06) 70%, transparent);
+  box-shadow:0 0 0 1px rgba(214,178,98,.35), 0 0 0 7px rgba(214,178,98,.06), 0 0 40px rgba(214,178,98,.18)}
+.sc-stage::after{content:"";position:absolute;inset:16%;border-radius:50%;box-shadow:0 0 0 1px rgba(214,178,98,.25)}
+.sc-item{all:unset;cursor:pointer;position:absolute;left:50%;top:50%;display:block;transform-origin:50% 50%;will-change:transform}
+.sc-item .card{width:100%;box-shadow:0 12px 24px rgba(0,0,0,.6)}
+.sc-item.front .card{box-shadow:0 0 0 2px rgba(255,236,170,.8), 0 0 22px rgba(255,213,106,.55), 0 14px 26px rgba(0,0,0,.6)}
+.sc-item:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+.sc-count{all:unset;cursor:pointer;align-self:center;font-size:12px;color:var(--muted);padding:3px 12px;border-radius:999px;background:rgba(10,12,22,.7);box-shadow:0 0 0 1px var(--line)}
+.sc-count b{color:var(--gold);font-size:13px}
+.sc-count:focus-visible{outline:2px solid var(--fg)}
+.sc-modal{position:fixed;z-index:60}
 .homelogo{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:8px;text-align:center}
 .homelogo small{font-family:var(--f-display);font-weight:700;font-size:12px;letter-spacing:.4em;margin-right:-.4em;color:#e9d7a6}
 .homelogo b{

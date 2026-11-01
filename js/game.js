@@ -1311,7 +1311,7 @@ function showStart() {
   const tickets = goldOK ? Account.tickets : 0;
   const dupes = goldOK && typeof Shop !== "undefined" ? Shop.surplus().reduce((a, x) => a + x.n, 0) : 0;
   const badge = (n, label) => n ? `<span class="navbadge" aria-label="${label}">${n > 99 ? "99+" : n}</span>` : "";
-  openOverlay(`<div class="homebg" aria-hidden="true"><div class="sp-bg">${Splash.bandsHTML()}</div><div class="homeshade"></div></div>
+  openOverlay(`<div class="homebg" aria-hidden="true"></div>
   <div class="panel home">
     <div class="homebar">
       <div class="hb-left">${goldOK ? `<span class="goldtag">${Account.gold}G</span><span class="stonetag">魔石 ${Account.stones}</span>` : ""}</div>
@@ -1326,6 +1326,7 @@ function showStart() {
       </div>
     </div>
     <div class="homemain">
+      ${Showcase.html()}
       ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
       ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
     </div>
@@ -1344,6 +1345,7 @@ function showStart() {
       <button type="button" class="navbtn" data-act="cards">${HOME_ICON.cards}<b>カード</b></button>
     </nav>
   </div>`, "start", true);
+  Showcase.start();
 }
 
 /* 歯車ボタン：ルール・アカウント・音などの事務的なもの */
@@ -1580,6 +1582,7 @@ function handleAct(act, el) {
       if (Serial.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
       if (Shop.handleAct(act, el)) return;
+      if (Showcase.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);
   }
