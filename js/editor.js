@@ -105,7 +105,7 @@ function poolStats() {
     kinds: usable.length, all: DATA.cards.length,
     chars: kinds(c => c.type === "char"), spells: kinds(c => c.type === "spell"),
     myth: kinds(c => c.world === "myth"), fan: kinds(c => c.world === "fan"), mech: kinds(c => c.world === "mech"),
-    common: kinds(c => c.rarity === "common"), rare: kinds(c => c.rarity === "rare"), legend: kinds(c => c.rarity === "legend"),
+    rar: Object.fromEntries(Object.keys(RARITY).map(r => [r, kinds(c => (c.rarity || "common") === r)])),
     curve
   };
 }
@@ -122,7 +122,7 @@ function renderSummary() {
       <span style="color:var(--w-myth)">神話 <b>${s.myth}</b></span>
       <span style="color:var(--w-fan)">幻想 <b>${s.fan}</b></span>
       <span style="color:var(--w-mech)">機械 <b>${s.mech}</b></span>
-      <span>コモン <b>${s.common}</b> ・ レア <b>${s.rare}</b> ・ レジェンド <b>${s.legend}</b></span>
+      <span>${Object.keys(RARITY).map(r => `${RARITY_SHORT[r]} <b>${s.rar[r]}</b>`).join(" ・ ")}</span>
     </div>
     <div>
       <div class="curve" aria-label="コスト別の種類数">
@@ -222,7 +222,7 @@ function renderEditor() {
           </div>
           <p class="hint">投入上限は、1つのデッキに何枚まで入れられるか。ルール設定の「同じカードを入れられる上限」（今は${DATA.config.COPY_MAX}枚）より大きくしても、そちらが優先されます。0にすると、データには残りますがデッキに入れられなくなります。</p>
           <div class="field grow">
-            <span class="lab">レア度（パック開封で使う予定）</span>
+            <span class="lab">レア度</span>
             <div class="seg wide" role="group" aria-label="レア度">
               ${Object.entries(RARITY).map(([k, v]) => `<button type="button" data-rarity="${k}" aria-pressed="${c.rarity === k}">${v}</button>`).join("")}
             </div>
