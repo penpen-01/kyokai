@@ -95,11 +95,11 @@ const Admin = {
         <select class="txt" data-admin="starter" aria-label="スターターデッキ">
           ${decks.map(d => `<option value="${esc(d.id)}" ${cfg.STARTER_DECK === d.id ? "selected" : ""}>${esc(d.name)}（${deckCount(d)}枚）</option>`).join("")}
         </select>
-        <p class="hint">下の「CPU・サンプルデッキ」の中から選びます。中身を変えるときは、ゲーム側の試遊モードでデッキを組んで「デッキコードをコピー」し、下で登録してください。</p>
+        <p class="hint">下の「CPU・サンプルデッキ」の中から選びます。中身は「デッキ」タブで組めます。</p>
       </div>
       <div class="fgroup">
         <span class="gl">CPU・サンプルデッキ</span>
-        <p class="hint">CPUは、選ばれた強さのデッキの中からランダムに1つ使います。</p>
+        <p class="hint">CPUは、選ばれた強さのデッキの中からランダムに1つ使います。<b>中身の編集・新しいデッキは「デッキ」タブ</b>でできます。 <button type="button" class="btn sm" data-tab="decks">デッキタブを開く</button></p>
         <div class="cpudecks">${decks.map(d => {
           const pr = deckProblems(d, cards, cfg);
           const isStarter = cfg.STARTER_DECK === d.id;

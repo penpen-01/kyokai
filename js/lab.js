@@ -19,7 +19,7 @@ const Lab = {
     ];
     return [
       ...test.map(d => ({ ...d, kind: "test" })),
-      ...(DATA.decks || []).map(d => ({ id: d.id, name: d.name, cards: d.cards, kind: "cpu" })),
+      ...(DATA.decks || []).map(d => ({ id: d.id, name: d.name, cards: d.cards, kind: d.level === "test" ? "test" : "cpu" })),
       ...this.extra.map(d => ({ ...d, kind: "code" }))
     ];
   },
@@ -172,7 +172,7 @@ const Lab = {
         const ids = [...this.sel];
         const all = this.allDecks();
         const decks = ids.map(id => all.find(d => d.id === id)).filter(Boolean)
-          .map(d => d.kind === "test" ? { testId: d.id, name: d.name } : { name: d.name, cards: d.cards });
+          .map(d => d.kind === "test" && !d.cards ? { testId: d.id, name: d.name } : { name: d.name, cards: d.cards });   // 組み込みの試験デッキだけ testId で送る
         this.start({ kind: "battle", decks, n: +$("#lab-n").value, level: $("#lab-level").value });
         return true;
       }

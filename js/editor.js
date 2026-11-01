@@ -282,6 +282,11 @@ function renderEditor() {
                 ${c.art ? `<button type="button" class="btn sm" data-act="clearArt">外す</button>` : ""}
               </div>
             </div>
+            <div class="field" style="flex-basis:100%">
+              <label for="f-artnote">絵の指定（Gemini への依頼文に入る）</label>
+              <textarea class="txt" id="f-artnote" data-text="artNote" rows="3" placeholder="例：銀髪の青年の騎士。青い鎧に白いマント、雪の城壁の上で剣を構える">${esc(AiTools.artNote(c))}</textarea>
+              <div class="acts"><button type="button" class="btn sm" data-act="aiArtOne">イラストの依頼文をコピー</button></div>
+            </div>
             <div class="field">
               <label for="f-glyph">イラストがないときの文字</label>
               <input class="txt glyph-in" id="f-glyph" data-text="glyph" value="${esc(c.glyph)}" maxlength="2" autocomplete="off">
@@ -370,12 +375,7 @@ document.addEventListener("click", e => {
   if (!t.closest("#more") && !t.closest("#moreBtn")) toggleMore(false);
 
   const tab = t.closest("[data-tab]");
-  if (tab) {
-    $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", b === tab));
-    ["cards", "packs", "eco", "rules", "sim"].forEach(k => { $("#tab-" + k).hidden = tab.dataset.tab !== k; });
-    if (tab.dataset.tab === "sim") Lab.render();
-    return;
-  }
+  if (tab) { showTab(tab.dataset.tab); return; }
   const f = t.closest("[data-filter]");
   if (f) { filter = f.dataset.filter; $$("[data-filter]").forEach(b => b.setAttribute("aria-pressed", b === f)); renderList(); return; }
 
@@ -430,6 +430,8 @@ document.addEventListener("click", e => {
 
 document.addEventListener("input", e => {
   const t = e.target;
+  if (t.dataset.wd && WDecks.input(t)) return;
+  if (t.dataset.ai && AiTools.input(t)) return;
   if (t.dataset.text) {
     const c = curCard(); if (!c) return;
     c[t.dataset.text] = t.value;
@@ -439,6 +441,7 @@ document.addEventListener("input", e => {
 
 document.addEventListener("change", e => {
   const t = e.target;
+  if (t.dataset.ai && AiTools.input(t)) return;
   if (t.dataset.num) { setNum(t.dataset.num, t.value); return; }
   if (t.dataset.limitIn) { setCopies(t.dataset.limitIn, t.value); return; }
   if (t.dataset.kw) {
@@ -460,6 +463,15 @@ document.addEventListener("keydown", e => {
   if (e.key === "Enter" && e.target.matches("input[data-num],input[data-limit-in]")) e.target.blur();
 });
 
+/* タブを切り替える（ほかのタブから呼ぶこともある） */
+function showTab(name) {
+  $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === name));
+  ["cards", "decks", "packs", "eco", "rules", "sim"].forEach(k => { $("#tab-" + k).hidden = name !== k; });
+  if (name === "sim") Lab.render();
+  if (name === "decks") WDecks.render();
+  window.scrollTo(0, 0);
+}
+
 function toggleMore(open) {
   $("#more").hidden = !open;
   $("#moreBtn").setAttribute("aria-expanded", String(open));
@@ -468,6 +480,8 @@ function toggleMore(open) {
 function act(name, el) {
   if (["pubSettings", "pubHistory", "export", "import", "revert", "restoreBackup"].includes(name)) toggleMore(false);
   if (Admin.act(name, el)) return;
+  if (WDecks.handleAct(name, el)) return;
+  if (typeof AiTools !== "undefined" && AiTools.act(name, el)) return;
   if (Lab.act(name, el)) return;
   if (Publish.act(name, el)) return;
   const c = curCard();

@@ -246,11 +246,12 @@ function normalizeData(data) {
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => ({ kind: e.kind, n: Math.max(EFFECTS[e.kind].min ?? 1, +e.n || 0) })) : [],
     note: c.note ? String(c.note) : "",
+    artNote: c.artNote ? String(c.artNote) : "",   // イラストの指定（Gemini への依頼文に使う）
     art: c.art ? String(c.art) : ""
   })).filter(c => c.id);
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
-    level: ["easy", "normal", "hard"].includes(x.level) ? x.level : "normal"
+    level: ["easy", "normal", "hard", "test"].includes(x.level) ? x.level : "normal"   // test = 検証用（CPUもプレイヤーも使わない）
   }));
   const packs = (Array.isArray(d.packs) ? d.packs : []).filter(x => x && x.id).map(x => ({
     id: String(x.id), name: String(x.name || "パック"), price: Math.max(0, +x.price || 0), size: Math.max(1, Math.min(10, +x.size || 5)),
