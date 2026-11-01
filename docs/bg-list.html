@@ -1,0 +1,334 @@
+<title>境界の召喚士 背景依頼リスト</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* 縦一列の作業リスト：使い方 → 共通ルール → 依頼3つ（配置図・依頼文・選ぶときの目安・直し方）→ できたら */
+:root{
+  --bg:#f5f2ea; --surface:#fffdf7; --fg:#1d1b26; --muted:#6c6878; --line:#ddd6c6;
+  --gold:#9a7431; --myth:#a7782a; --fan:#3f8a62; --mech:#3b77ad; --done:#3f8a62;
+  --zone-dark:#2a2a3a; --zone-ui:#c9b27a; --zone-deco:#7aa0c8; --zone-bg:#efe9da;
+  --f-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d0f1c; --surface:#161a2e; --fg:#ece8f4; --muted:#9c98ad; --line:#2a2f4a;
+  --gold:#d8b468; --myth:#d6a64c; --fan:#5db588; --mech:#5b9ed6; --done:#5db588;
+  --zone-dark:#05060d; --zone-ui:#d8b468; --zone-deco:#5b9ed6; --zone-bg:#1f2440; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0f1c; --surface:#161a2e; --fg:#ece8f4; --muted:#9c98ad; --line:#2a2f4a;
+  --gold:#d8b468; --myth:#d6a64c; --fan:#5db588; --mech:#5b9ed6; --done:#5db588;
+  --zone-dark:#05060d; --zone-ui:#d8b468; --zone-deco:#5b9ed6; --zone-bg:#1f2440; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);line-height:1.7;font-size:14px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.25;margin:0;text-wrap:balance;letter-spacing:.04em}
+h1 small{display:block;font-family:var(--f-body);font-size:12px;letter-spacing:.3em;color:var(--gold);font-weight:700;margin-bottom:6px}
+h2{font-family:var(--f-display);font-weight:800;font-size:22px;margin:0;text-wrap:balance}
+h3{font-size:13px;margin:0;color:var(--muted);letter-spacing:.08em}
+p{margin:0}
+.lead{color:var(--muted)}
+ol.how,ul.tick{display:flex;flex-direction:column;gap:6px;margin:0;padding-left:1.4em}
+.prog{display:flex;align-items:center;gap:12px;font-variant-numeric:tabular-nums}
+.bar{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--done);width:0;transition:width .3s}
+.box{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+pre.prompt{margin:0;white-space:pre-wrap;font-family:var(--f-body);font-size:12.5px;line-height:1.75;color:var(--fg);max-height:340px;overflow:auto;padding:10px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
+.req{border:1px solid var(--line);border-left:4px solid var(--wc,var(--gold));border-radius:10px;background:var(--surface);overflow:hidden}
+.req.done{border-left-color:var(--done)}
+.rhead{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rhead .ttl{display:flex;flex-direction:column;min-width:0;flex:1}
+.rhead .ttl small{color:var(--muted);font-size:12px}
+.rbody{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding:14px}
+@media (max-width:560px){ .rbody{grid-template-columns:1fr} .zones{max-width:170px;margin:0 auto} .rhead .ttl{flex:1 1 100%} }
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.zones{width:100%}
+.zones svg{display:block;width:100%;height:auto}
+.zones figcaption{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.check{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--done)}
+.copy{appearance:none;border:1px solid var(--gold);background:transparent;color:var(--gold);font:700 13px var(--f-body);padding:7px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.copy.main{background:var(--gold);color:var(--bg)}
+.copy.sm{font-size:12px;padding:4px 10px;font-weight:500}
+.copy.ok{border-color:var(--done);background:var(--done);color:var(--bg)}
+.copy:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.fixes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.fixes li{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:12.5px;padding:6px 8px;border-radius:6px;background:var(--bg)}
+.fixes li span{min-width:0}
+.tag{font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.w-battle{--wc:var(--myth)} .w-home{--wc:var(--fan)} .w-pack{--wc:var(--mech)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:99px;font-size:13px;font-weight:700;transition:.2s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion: reduce){ .bar i,.toast{transition:none} }
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1><small>GEMINI用</small>境界の召喚士 背景依頼リスト</h1>
+    <p class="lead">対戦の舞台・ホーム・パックの絵、3枚分の依頼文です。「依頼文をコピー」で共通ルールごとコピーされるので、そのまま Gemini に貼ってください。カード枠やボタンはゲーム側で描くので、ここで頼むのは絵だけです。</p>
+  </header>
+
+  <section class="box">
+    <h3>使い方</h3>
+    <ol class="how">
+      <li>Gemini で<b>新しいチャット</b>を開き、依頼文を貼る（画像は何も添付しない）</li>
+      <li>何枚か作ってもらい、「選ぶときに見るところ」で選ぶ。直したいところは下のひと言をコピーして送る</li>
+      <li>気に入った画像を、Claude とのチャットに添付する（PNGのままでよい。候補が複数あれば全部）。WebPにしてゲームに組み込みます</li>
+      <li>できたものにチェックを入れる（チェックはこの端末のブラウザにだけ残ります）</li>
+    </ol>
+    <p class="lead" style="font-size:12.5px">ポケポケやシャドバなどの画面は Gemini に添付しないでください。配置や模様まで写されます。画風がカードとかけ離れたときだけ、カードの絵を1枚添付して「この画像は画風（線・塗り・色調）の見本としてだけ使い、人物や構図はまねしない」と書き足してください。</p>
+    <div class="prog"><span id="progText">完成 0 / 3</span><div class="bar"><i id="progBar"></i></div></div>
+  </section>
+
+  <section class="box">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <h3>共通ルール（各依頼文のコピーに自動で入ります）</h3>
+      <button type="button" class="copy sm" data-copy="rules">共通ルールだけコピー</button>
+    </div>
+    <pre class="prompt" id="rulesText"></pre>
+  </section>
+
+  <div id="list" style="display:flex;flex-direction:column;gap:22px"></div>
+
+  <section class="box">
+    <h3>できたら</h3>
+    <p>画像をチャットに添付して「背景ができた」と送ってください。組み込むときに、カードやログが読みにくくならないか実際の画面で確かめて、必要なら暗さを調整します。</p>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const RULES = `【共通ルール】
+・スマホのカードゲーム「境界の召喚士」で使う背景の絵です。神話（金色・白い大理石・荘厳な光）、幻想（深い緑の森・若葉・木漏れ日）、機械（青や紫に光る金属のSF兵器）の3つの世界が接する「境界」が舞台です
+・人物・動物・怪物・ロボットなど、キャラクターは一切描かない（背景や物だけ）
+・文字、ロゴ、数字、記号、サイン、枠、ボタン、カード、画面の部品（UI）は一切描かない
+・画風：デジタルイラスト、輪郭線あり、セル塗りと厚塗りの中間。やや暗めの画面にドラマチックな光
+・実在のゲームや作品の画面・模様・建物に似せない
+・指定した縦横比で、縦長に描く
+・「暗く静かにする所」と書いた場所は、明るい光の点や細かい模様を置かず、暗く落ち着いた面にする（上に文字やボタンが重なるため）`;
+
+const REQS = [
+  {
+    id: "battle", cls: "w-battle", name: "対戦の舞台", ratio: "9:16",
+    use: "対戦画面の背景。上に相手、下に自分のカードと顔が重なる",
+    text: `カードゲームの対戦画面に敷く「対戦の舞台」の背景画像を1枚描いてください。
+
+${RULES}
+
+【比率】縦長 9:16
+
+【場所と構図】
+3つの世界の境目にある、古い召喚の闘技場の床を、真上から見下ろした平らな構図（遠近感はほとんどつけない）。
+床には細い金色の線で、大きな円形の魔法陣が刻まれている。魔法陣の中心は画面の上から40%あたり。円は画面の幅より大きく、上下と左右にはみ出してよい。線は細く、ぼんやり光る程度。
+
+【上からの配置】
+・0〜10%：暗く静かにする所（中央に相手の顔のアイコンが重なる）
+・12〜32%：暗い石畳。模様は控えめに（相手のカードが4枚横に並ぶ）
+・35〜46%：魔法陣の中心のあたり。光は弱く、暗く静かにする所（文字が重なる）
+・48〜66%：暗い石畳。模様は控えめに（自分のカードが4枚横に並ぶ）
+・68〜88%：暗くてよい（手札が重なる）
+・88〜100%：暗く静かにする所（中央に自分の顔のアイコンが重なる）
+
+【3つの世界の入り方】
+・左上：白い大理石の床と、金の装飾が入った柱の足元（神話）
+・左下：苔むした古木の根と若葉、小さな緑の光の粒（幻想）
+・右側：青や紫に光る金属の床板と、光る配線（機械）
+・3つは画面の左右の端から中央に向かって少しずつ入り込み、真ん中では混ざり合った暗い古い石になる
+・装飾と光がいちばん豊かなのは、画面の左右の端から2割くらいまで。いちばん外側は画面によって切れるので、大事な物は置かない
+・画面の中央の縦の帯（幅の6割）は、全体を通して落ち着いた暗い床にする
+
+【色と明るさ】
+全体は濃い紺と、黒に近い暗さ。金色の細い線と、3つの世界の色（金・緑・青）が左右の端でほのかに光る。カードの絵より暗く、彩度は控えめに。`,
+    pick: [
+      "画面の真ん中（カードが並ぶ所）に、明るい光や細かい模様がない",
+      "上から35〜46%（ログの位置）が暗い。文字が読めそう",
+      "飾りや光が左右の端に寄っている。中央の縦の帯は落ち着いている",
+      "真上から見た平らな床になっている（斜めの風景になっていない）",
+      "キャラクター・文字・カードの形が入っていない"
+    ],
+    fixes: [
+      "全体をもう少し暗くして、模様を控えめにしてください",
+      "中央の縦の帯から光と模様を減らして、飾りを左右の端に寄せてください",
+      "斜めから見た風景ではなく、真上から見下ろした平らな床にしてください",
+      "上から35〜46%のあたりを、もっと暗く静かにしてください"
+    ],
+    zones: [ // [上%, 下%, 種類, ラベル]
+      [0, 10, "dark", "相手の顔"], [12, 32, "ui", "相手の場"], [35, 46, "dark", "ログ"],
+      [48, 66, "ui", "自分の場"], [68, 88, "ui", "手札"], [88, 100, "dark", "自分の顔"]
+    ], deco: "sides"
+  },
+  {
+    id: "home", cls: "w-home", name: "ホーム", ratio: "9:16",
+    use: "ホーム画面の背景。上にタイトル、下にボタンが並ぶ",
+    text: `スマホのカードゲームの「ホーム画面」の背景画像を1枚描いてください。
+
+${RULES}
+
+【比率】縦長 9:16
+
+【場面】
+3つの世界がぶつかり合う「境界」の地平を、高い崖の上から見渡す、夕暮れから夜に変わる風景。
+・左奥：金色に輝く白い大理石の神殿群と、光の差す雲（神話）
+・中央奥：天まで届く巨大な樹と、深い森（幻想）
+・右奥：青く光る塔が並ぶ機械の要塞都市と、空を横切る光の筋（機械）
+・3つの世界の境目の空に、縦に走る細い光の裂け目（これが「境界」）
+
+【上からの配置】
+・0〜12%：暗めの夜空（左上に所持金、右上に設定のボタンが重なる）
+・12〜32%：いちばんの見せ場。3つの世界の遠景と、光の裂け目
+・ただし、中央の上から18〜28%あたりにはゲームのタイトル文字が重なるので、そこは空や雲などなめらかな面にする
+・32〜100%：手前の暗い崖と、たなびく霧。ボタンが並んで大部分が隠れるので、暗く静かにする所。下に行くほど黒に近く
+
+【色と明るさ】
+空は濃い紺と紫。3つの世界の光（金・緑・青）が遠景を照らす。手前は暗く沈める。`,
+    pick: [
+      "上の3割で、3つの世界と光の裂け目が分かる",
+      "タイトルが重なる所（中央の上から18〜28%）がなめらかで、文字が読めそう",
+      "下の7割が暗く、模様が少ない（ボタンの後ろがうるさくない）",
+      "キャラクター・文字が入っていない"
+    ],
+    fixes: [
+      "下の7割をもっと暗くして、霧と崖だけにしてください",
+      "タイトルが重なる中央の上から18〜28%を、なめらかな空にしてください",
+      "3つの世界（神殿・巨大な樹・機械の塔）を、それぞれもっとはっきり描き分けてください"
+    ],
+    zones: [
+      [0, 12, "dark", "所持金・設定"], [12, 32, "deco", "見せ場"], [18, 28, "ui", "タイトル"],
+      [32, 100, "dark", "ボタンが並ぶ"]
+    ], deco: "top"
+  },
+  {
+    id: "pack", cls: "w-pack", name: "パック「境界の目覚め」", ratio: "2:3",
+    use: "第1弾パックの表面の絵。開封画面とパック一覧で使う",
+    text: `カードゲームのパック（カードが入った袋）の表面に印刷する絵を1枚描いてください。袋そのものは描かず、表面に入れる絵だけを描きます。
+
+${RULES}
+
+【比率】縦長 2:3
+
+【パック】第1弾「境界の目覚め」（名前の文字は後から重ねるので、絵には入れない）
+
+【場面】
+暗闇の中で、縦に大きく裂けた光の「境界」が目覚める瞬間。裂け目から3色の光があふれ出す。
+・左へ流れる金色の光の中に、白い神殿の柱のシルエット（神話）
+・中央の奥の緑の光の中に、巨大な樹のシルエット（幻想）
+・右へ流れる青い光の中に、機械の塔のシルエット（機械）
+・周りに舞う光の粒と、ひび割れて浮かぶ空間のかけら
+
+【上からの配置】
+・0〜18%：暗めで静かにする所（パックの名前が重なる）
+・18〜75%：絵の主役（光の裂け目）。迫力があり華やかに
+・75〜100%：暗めで静かにする所（「5枚入り」などの文字が重なる）
+
+【迫力】
+レジェンドのカードと同じくらい豪華に。神々しい光、強い逆光、細部まで描き込む。この絵だけは、背景よりも明るく鮮やかでよい。`,
+    pick: [
+      "小さくしても（幅2cmくらい）光の裂け目と3色が分かる",
+      "上と下が暗めで、名前の文字を重ねられる",
+      "キャラクター・文字・袋の形が入っていない"
+    ],
+    fixes: [
+      "袋の形は描かず、表面の絵だけにしてください",
+      "上の2割と下の2割を暗くしてください",
+      "金・緑・青の3色の光を、もっとはっきり分けてください"
+    ],
+    zones: [ [0, 18, "dark", "パック名"], [18, 75, "deco", "主役"], [75, 100, "dark", "5枚入り"] ],
+    deco: "none"
+  }
+];
+
+const KEY = "kyokai-bg-done";
+let done = {};
+try { done = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { done = {}; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/* 画面のどこに何が重なるかの図（縦の%どおり） */
+function zonesSVG(r) {
+  const [w, h] = r.ratio === "2:3" ? [120, 180] : [112, 199];
+  const fill = { dark: "var(--zone-dark)", ui: "var(--zone-ui)", deco: "var(--zone-deco)" };
+  const op = { dark: .85, ui: .35, deco: .45 };
+  let s = `<svg viewBox="0 0 ${w + 70} ${h}" role="img" aria-label="${esc(r.name)}の配置図" font-family="Zen Kaku Gothic New, Hiragino Sans, Noto Sans JP, sans-serif">`;
+  s += `<rect x="0.5" y="0.5" width="${w - 1}" height="${h - 1}" rx="6" fill="var(--zone-bg)" stroke="var(--line)"/>`;
+  if (r.deco === "sides") {
+    s += `<rect x="1" y="1" width="${w * .2}" height="${h - 2}" fill="var(--zone-deco)" opacity=".45"/>`;
+    s += `<rect x="${w * .8 - 1}" y="1" width="${w * .2}" height="${h - 2}" fill="var(--zone-deco)" opacity=".45"/>`;
+  }
+  r.zones.forEach(([a, b, k, label]) => {
+    const y = a / 100 * h, hh = (b - a) / 100 * h;
+    const inset = k === "ui" && r.id === "home" ? w * .2 : (r.deco === "sides" ? w * .2 : 1);
+    s += `<rect x="${inset}" y="${y + .5}" width="${w - inset * 2}" height="${Math.max(1, hh - 1)}" fill="${fill[k]}" opacity="${op[k]}"/>`;
+    s += `<line x1="${w + 2}" y1="${y + hh / 2}" x2="${w + 8}" y2="${y + hh / 2}" stroke="var(--muted)" stroke-width=".8"/>`;
+    s += `<text x="${w + 10}" y="${y + hh / 2 + 3.5}" font-size="9.5" fill="var(--fg)">${esc(label)}</text>`;
+  });
+  return s + `</svg>`;
+}
+
+function render() {
+  document.getElementById("rulesText").textContent = RULES;
+  document.getElementById("list").innerHTML = REQS.map(r => `
+    <article class="req ${r.cls} ${done[r.id] ? "done" : ""}" id="req-${r.id}">
+      <div class="rhead">
+        <div class="ttl"><h2>${esc(r.name)}</h2><small>${esc(r.use)}</small></div>
+        <span class="tag">縦長 ${r.ratio}</span>
+        <button type="button" class="copy main" data-copy="${r.id}">依頼文をコピー</button>
+      </div>
+      <div class="rbody">
+        <div class="side">
+          <figure class="zones" style="margin:0">${zonesSVG(r)}
+            <figcaption>図の高さは画像の上から下まで。ここに何が重なるか</figcaption></figure>
+          <div class="legend"><span><i style="background:var(--zone-dark)"></i>暗く静かに</span><span><i style="background:var(--zone-ui);opacity:.6"></i>部品が重なる</span><span><i style="background:var(--zone-deco);opacity:.6"></i>見せ場・飾り</span></div>
+          <label class="check"><input type="checkbox" id="chk-${r.id}" data-done="${r.id}" ${done[r.id] ? "checked" : ""}> できた</label>
+        </div>
+        <div class="side">
+          <pre class="prompt">${esc(r.text)}</pre>
+          <div><h3>選ぶときに見るところ</h3><ul class="tick">${r.pick.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>
+          <div><h3>直してほしいときのひと言</h3>
+            <ul class="fixes">${r.fixes.map((f, i) => `<li><span>${esc(f)}</span><button type="button" class="copy sm" data-fix="${r.id}:${i}">コピー</button></li>`).join("")}</ul></div>
+        </div>
+      </div>
+    </article>`).join("");
+  updateProgress();
+}
+function updateProgress() {
+  const n = REQS.filter(r => done[r.id]).length;
+  document.getElementById("progText").textContent = `完成 ${n} / ${REQS.length}`;
+  document.getElementById("progBar").style.width = (n / REQS.length * 100) + "%";
+}
+
+let toastT;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1600);
+}
+function copy(text, btn) {
+  const ok = () => { toast("コピーしました"); btn.classList.add("ok"); setTimeout(() => btn.classList.remove("ok"), 1200); };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let r = false; try { r = document.execCommand("copy"); } catch (e) {}
+    ta.remove();
+    r ? ok() : toast("コピーできませんでした。文章を長押しして選んでください");
+  };
+  try { navigator.clipboard.writeText(text).then(ok, fallback); } catch (e) { fallback(); }
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.copy) copy(b.dataset.copy === "rules" ? RULES : REQS.find(r => r.id === b.dataset.copy).text, b);
+  if (b.dataset.fix) { const [id, i] = b.dataset.fix.split(":"); copy(REQS.find(r => r.id === id).fixes[+i], b); }
+});
+document.addEventListener("change", e => {
+  const id = e.target.dataset && e.target.dataset.done;
+  if (!id) return;
+  if (e.target.checked) done[id] = true; else delete done[id];
+  save();
+  document.getElementById("req-" + id).classList.toggle("done", e.target.checked);
+  updateProgress();
+});
+render();
+</script>
