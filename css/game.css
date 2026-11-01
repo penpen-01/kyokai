@@ -693,9 +693,14 @@ body{
   from{transform:translate(-50%,-130%) rotate(var(--r))}
   to{transform:translate(-50%,calc(100vh + 30px)) rotate(calc(var(--r) * -1))}
 }
-.sp-spin{position:relative;transform-style:preserve-3d;animation:spspin var(--spin) linear infinite}
+.sp-spin{position:relative;transform-style:preserve-3d;animation:spspin var(--spin) linear infinite var(--dir,normal)}
 @keyframes spspin{from{transform:rotateY(0) rotateX(8deg)}to{transform:rotateY(360deg) rotateX(8deg)}}
-.sp-face,.sp-backface{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.sp-face,.sp-backface{backface-visibility:hidden;-webkit-backface-visibility:hidden;animation:var(--spin) linear infinite var(--dir,normal)}
+/* 回転の角度に合わせて表と裏を切り替える（iPhone の Safari では「裏から見えたら隠す」が効かず、表の文字が裏返って見えたため） */
+.sp-face{animation-name:spfront}
+.sp-backface{animation-name:spback}
+@keyframes spfront{0%,24.9%{opacity:1}25%,74.9%{opacity:0}75%,100%{opacity:1}}
+@keyframes spback{0%,24.9%{opacity:0}25%,74.9%{opacity:1}75%,100%{opacity:0}}
 .sp-face .card{width:100%}
 .sp-backface{position:absolute;inset:0;transform:rotateY(180deg);border-radius:7px;background:#14183a url("../ui/card-back.webp") center/cover no-repeat}
 .sp-shade{position:absolute;inset:0;background:radial-gradient(62% 26% at 50% 50%, rgba(7,8,15,.82), rgba(7,8,15,.45) 60%, transparent 100%),linear-gradient(transparent 75%, rgba(7,8,15,.8));pointer-events:none}
@@ -734,7 +739,8 @@ body{
 @keyframes spleave{to{opacity:0;transform:scale(1.06)}}
 @keyframes spflash{0%{opacity:0}25%{opacity:.85}100%{opacity:0}}
 @media (prefers-reduced-motion: reduce){
-  .sp-logo,.sp-sub,.sp-tap,.sp-motes i,.sp-sky i,.sp-spin{animation:none!important}
+  .sp-logo,.sp-sub,.sp-tap,.sp-motes i,.sp-sky i,.sp-spin,.sp-face,.sp-backface{animation:none!important}
+  .sp-backface{opacity:0}
   .sp-fall{animation-play-state:paused!important}
 }
 
@@ -902,3 +908,8 @@ body{
 .iconopt.on .iface{box-shadow:0 0 0 3px var(--fg), 0 0 0 5px var(--gold), 0 0 16px color-mix(in srgb,var(--gold) 70%,transparent)}
 .iconopt.on small{color:var(--fg);font-weight:700}
 .iconopt:focus-visible .iface{outline:2px solid var(--fg);outline-offset:4px}
+
+/* アイコンの絵：丸の中に背景として敷く（幅の135%に拡大して、顔のあたりを見せる） */
+.iimg{position:absolute;inset:0;background-size:135% auto;background-repeat:no-repeat;border-radius:inherit}
+.avatar .face,.homeicon .hface,.iconopt .iface{position:absolute}
+.iconopt .iface{position:relative}

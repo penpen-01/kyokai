@@ -45,8 +45,9 @@ const Splash = {
     const L = [{ s: .5, d: 15, o: .5, b: 1.6 }, { s: .78, d: 11, o: .78, b: .4 }, { s: 1.08, d: 8, o: .95, b: 0 }][layer];
     const dur = L.d + (i % 3) * 1.3, x = 8 + ((i * 37 + layer * 19) % 84);
     const delay = -((i * 2.9 + layer * 1.7) % dur);       // 最初から画面に散らばっているように、途中から始める
-    const rot = ((i * 47) % 50) - 25, spin = (i % 2 ? 1 : -1) * (5 + (i % 4) * 1.5);
-    return `<div class="sp-fall l${layer}" style="--x:${x}%;--s:${L.s};--d:${dur}s;--dl:${delay.toFixed(2)}s;--r:${rot}deg;--o:${L.o};--b:${L.b}px;--spin:${spin}s">
+    // 回る速さ（秒）と向き。速さをマイナスにすると CSS では無効になって回らなくなるので、向きは別に指定する
+    const rot = ((i * 47) % 50) - 25, spin = 5 + (i % 4) * 1.5, dir = i % 2 ? "normal" : "reverse";
+    return `<div class="sp-fall l${layer}" style="--x:${x}%;--s:${L.s};--d:${dur}s;--dl:${delay.toFixed(2)}s;--r:${rot}deg;--o:${L.o};--b:${L.b}px;--spin:${spin}s;--dir:${dir}">
       <div class="sp-spin"><div class="sp-face" data-id="${esc(card.id)}">${cardHTML(card, { static: true })}</div><div class="sp-backface"></div></div></div>`;
   },
 

@@ -189,8 +189,9 @@ const ICON_POS = { "x-rush": "50% 40%", garm: "50% 55%" };
 function iconImgHTML(id) {
   const c = typeof DEF !== "undefined" && DEF[id];
   if (!c || !c.art) return `<span class="glyph">召</span>`;
+  // img＋拡大（transform）だと iPhone の Safari で絵の上がずれて帯が出たので、背景画像として敷く
   const pos = ICON_POS[id] || "50% 18%";
-  return `<img src="${esc(c.art)}" alt="" draggable="false" style="object-position:${pos};transform-origin:${pos}">`;
+  return `<span class="iimg" style="background-image:url('${esc(c.art)}');background-position:${pos}"></span>`;
 }
 
 function cardHTML(card, o = {}) {
