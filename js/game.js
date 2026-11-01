@@ -1303,35 +1303,46 @@ const HOME_ICON = {
   mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>'
 };
 
+/* ホーム：上の段（所持・アイコン・設定）→ 背景の絵を見せる空き → 対戦の2つのボタン → 下のメニュー（片手で届くように下へ寄せる） */
 function showStart() {
   const deck = Decks.selected();
   const goldOK = Account.status !== "none" && Account.status !== "free";
+  const icon = goldOK ? Account.icon() : null;
+  const tickets = goldOK ? Account.tickets : 0;
+  const dupes = goldOK && typeof Shop !== "undefined" ? Shop.surplus().reduce((a, x) => a + x.n, 0) : 0;
+  const badge = (n, label) => n ? `<span class="navbadge" aria-label="${label}">${n > 99 ? "99+" : n}</span>` : "";
   openOverlay(`<div class="homebg" aria-hidden="true"><div class="sp-bg">${Splash.bandsHTML()}</div><div class="homeshade"></div></div>
   <div class="panel home">
     <div class="homebar">
-      ${goldOK ? `<span class="tags"><button type="button" class="homeicon" data-act="icons" data-from="start" aria-label="アイコンを変える">${Account.icon() ? iconImgHTML(Account.icon()) : `<span class="glyph">任</span>`}</button><span class="goldtag">${Account.gold}G</span><span class="stonetag">魔石 ${Account.stones}</span></span>` : `<span></span>`}
-      <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
+      <div class="hb-left">${goldOK ? `<span class="goldtag">${Account.gold}G</span><span class="stonetag">魔石 ${Account.stones}</span>` : ""}</div>
+      <div class="hb-me">
+        ${goldOK ? `<button type="button" class="homeicon" data-act="icons" data-from="start" aria-label="アイコンを変える">
+          <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : `<span class="glyph">任</span>`}</span></button>` : ""}
+        <button type="button" class="deckplate" data-act="decks" aria-label="使うデッキ：${esc(deck ? deck.name : "未選択")}（デッキ編成へ）">${HOME_ICON.decks}<span>${esc(deck ? deck.name : "デッキ未選択")}</span></button>
+      </div>
+      <div class="hb-right">
+        ${DATA_INFO.draft ? "" : `<button type="button" class="iconbtn" data-act="fbOpen" aria-label="ご意見・感想を送る">${HOME_ICON.mail}</button>`}
+        <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
+      </div>
     </div>
     <div class="homemain">
-    <div class="homelogo"><small>神話 ・ 幻想 ・ 機械</small><b>境界の召喚士</b></div>
-    ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
-    ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
+      ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
+      ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
+    </div>
     <div class="battles">
       <button type="button" class="battlebtn cpu" data-act="start">
-        <span class="bicon">${HOME_ICON.cpu}</span><span class="btxt"><b>CPUと対戦</b><small>3つの強さ・勝つとGがもらえる</small></span>
+        <span class="bicon">${HOME_ICON.cpu}</span><b>CPUと対戦</b><small>勝つとGがもらえる</small>
       </button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="battlebtn online" data-act="online">
-        <span class="bicon">${HOME_ICON.online}</span><span class="btxt"><b>友達と対戦</b><small>合言葉で部屋に入る</small></span>
+        <span class="bicon">${HOME_ICON.online}</span><b>友達と対戦</b><small>合言葉で部屋に入る</small>
       </button>`}
     </div>
-    <div class="hometiles">
-      <button type="button" class="hometile" data-act="decks">${HOME_ICON.decks}<b>デッキ編成</b><small>${esc(deck ? deck.name : "未選択")}</small></button>
-      <button type="button" class="hometile" data-act="packs">${HOME_ICON.packs}<b>パック</b><small>${goldOK ? `所持 ${Account.gold}G` : "開封する"}</small></button>
-      ${goldOK ? `<button type="button" class="hometile" data-act="shop">${HOME_ICON.shop}<b>ショップ</b><small>魔石 ${Account.stones}${Account.tickets ? ` ・ 券${Account.tickets}` : ""}</small></button>` : ""}
-      <button type="button" class="hometile" data-act="cards">${HOME_ICON.cards}<b>カード一覧</b><small>全${CARDS.filter(c => c.limit > 0).length}種</small></button>
-    </div>
-    ${DATA_INFO.draft ? "" : `<button type="button" class="btn fbbtn" data-act="fbOpen"><span class="fbline">${HOME_ICON.mail}ご意見・感想を送る</span><small>改善案・不具合・良かった所・いまいちな所など</small></button>`}
-    </div>
+    <nav class="homenav" aria-label="メニュー">
+      <button type="button" class="navbtn" data-act="decks">${HOME_ICON.decks}<b>デッキ</b></button>
+      <button type="button" class="navbtn" data-act="packs">${HOME_ICON.packs}<b>パック</b>${badge(tickets, `パック券${tickets}枚`)}</button>
+      ${goldOK ? `<button type="button" class="navbtn" data-act="shop">${HOME_ICON.shop}<b>ショップ</b>${badge(dupes, `分解できるカード${dupes}枚`)}</button>` : ""}
+      <button type="button" class="navbtn" data-act="cards">${HOME_ICON.cards}<b>カード</b></button>
+    </nav>
   </div>`, "start", true);
 }
 

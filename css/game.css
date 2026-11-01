@@ -582,49 +582,84 @@ body{
 @keyframes bannertxt{0%{transform:translateX(40px);opacity:0}20%{transform:none;opacity:1}80%{transform:none}100%{transform:translateX(-30px)}}
 
 /* ---- ホーム画面 ---- */
-.panel.home{gap:16px;margin:0 auto;min-height:100%}
-.homemain{margin:auto 0;display:flex;flex-direction:column;gap:16px;padding-bottom:6vh}
-.homebar{display:flex;justify-content:space-between;align-items:center;min-height:44px}
-.homebar .goldtag{font-size:16px;padding:4px 12px}
-.iconbtn{all:unset;box-sizing:border-box;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
-.iconbtn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .4s}
-.iconbtn:active svg{transform:rotate(60deg)}
-.iconbtn:focus-visible{outline:2px solid var(--gold)}
-.battles{display:flex;flex-direction:column;gap:12px}
+.overlay:has(.panel.home){padding-bottom:0}
+.panel.home{gap:14px;margin:0 auto;min-height:100%;max-width:460px}
+.homebar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;gap:8px}
+.hb-left{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding-top:6px}
+.hb-left .goldtag,.hb-left .stonetag{font-size:13px;padding:3px 10px}
+.hb-right{display:flex;gap:8px;justify-content:flex-end;padding-top:4px}
+.hb-me{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.iconbtn{all:unset;box-sizing:border-box;cursor:pointer;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;
+  background:radial-gradient(circle at 50% 35%, #2c3152, #151829);box-shadow:0 0 0 1px color-mix(in srgb,var(--gold) 55%,transparent), 0 3px 8px rgba(0,0,0,.6);color:#e6d3a0}
+.iconbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;transition:transform .4s}
+.iconbtn[data-act="options"]:active svg{transform:rotate(60deg)}
+.iconbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* 自分のアイコン：対戦画面の顔と同じ金の輪とひし形の紋章 */
+.homeicon{all:unset;cursor:pointer;position:relative;width:78px;height:78px;display:grid;place-items:center}
+.homeicon .halo{position:absolute;left:50%;top:50%;width:64px;height:64px;transform:translate(-50%,-50%) rotate(45deg);border-radius:6px;
+  background:linear-gradient(135deg,#3a2c12,#141020);box-shadow:0 0 0 1.5px #c79a44, 0 0 0 4px #1a1424, 0 0 0 5px color-mix(in srgb,var(--gold) 60%,transparent), 0 6px 16px rgba(0,0,0,.7)}
+.homeicon .hface{position:absolute;inset:6px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%, #2c3252, var(--panel));
+  box-shadow:0 0 0 2px #1a1408, 0 0 0 4.5px #e9c873, 0 0 0 6px #6e4c14, 0 0 18px 2px color-mix(in srgb,var(--gold) 45%,transparent)}
+.homeicon .hface img{width:100%;height:100%;object-fit:cover;transform:scale(1.35)}
+.homeicon .glyph{font-family:var(--f-display);font-weight:800;font-size:20px;color:var(--muted)}
+.homeicon:active{transform:scale(.96)}
+.homeicon:focus-visible{outline:2px solid var(--fg);outline-offset:3px;border-radius:50%}
+.deckplate{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;max-width:170px;padding:3px 12px 3px 9px;border-radius:999px;font-size:11.5px;color:var(--fg);
+  background:rgba(10,12,22,.78);box-shadow:0 0 0 1px color-mix(in srgb,var(--gold) 40%,transparent)}
+.deckplate span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deckplate svg{flex:none;width:15px;height:15px;fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linejoin:round}
+.deckplate:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+/* 真ん中は背景の絵を見せる空き */
+.homemain{flex:1;min-height:120px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px}
+/* 対戦：2枚の大きな札を横に並べる */
+.battles{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:12px}
 .battlebtn{
   all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;
-  display:flex;align-items:center;gap:16px;min-height:96px;padding:16px 20px;border-radius:14px;
-  border:1px solid color-mix(in srgb,var(--bc) 70%,transparent);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:156px;padding:18px 10px 16px;border-radius:14px;text-align:center;
+  border:1px solid color-mix(in srgb,var(--bc) 75%,transparent);
   background:
-    linear-gradient(115deg, color-mix(in srgb,var(--bc) 34%,transparent), color-mix(in srgb,var(--bc) 8%,transparent) 60%, transparent),
-    var(--panel);
-  box-shadow:inset 0 1px 0 color-mix(in srgb,#fff 10%,transparent), 0 8px 24px rgba(0,0,0,.35);
+    radial-gradient(90% 60% at 50% 0%, color-mix(in srgb,var(--bc) 30%,transparent), transparent 70%),
+    linear-gradient(180deg, rgba(26,30,54,.94), rgba(12,14,28,.96));
+  box-shadow:inset 0 0 0 4px rgba(10,12,22,.9), inset 0 0 0 5px color-mix(in srgb,var(--bc) 35%,transparent), 0 10px 26px rgba(0,0,0,.5);
   transition:transform .12s;
 }
-.battlebtn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,color-mix(in srgb,#fff 14%,transparent) 50%,transparent 65%);transform:translateX(-100%);animation:homesheen 5s ease-in-out infinite}
+/* 四隅の金具 */
+.battlebtn::before{content:"";position:absolute;inset:9px;pointer-events:none;
+  background:
+    linear-gradient(var(--bc),var(--bc)) top left/14px 1.5px no-repeat, linear-gradient(var(--bc),var(--bc)) top left/1.5px 14px no-repeat,
+    linear-gradient(var(--bc),var(--bc)) top right/14px 1.5px no-repeat, linear-gradient(var(--bc),var(--bc)) top right/1.5px 14px no-repeat,
+    linear-gradient(var(--bc),var(--bc)) bottom left/14px 1.5px no-repeat, linear-gradient(var(--bc),var(--bc)) bottom left/1.5px 14px no-repeat,
+    linear-gradient(var(--bc),var(--bc)) bottom right/14px 1.5px no-repeat, linear-gradient(var(--bc),var(--bc)) bottom right/1.5px 14px no-repeat;
+  opacity:.8}
+.battlebtn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,color-mix(in srgb,#fff 12%,transparent) 50%,transparent 65%);transform:translateX(-100%);animation:homesheen 5s ease-in-out infinite}
 .battlebtn.online::after{animation-delay:2.5s}
 @keyframes homesheen{0%,70%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 .battlebtn:active{transform:scale(.98)}
 .battlebtn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .battlebtn.cpu{--bc:var(--gold)}
-.battlebtn.online{--bc:var(--w-mech)}
-.bicon{flex:none;width:52px;height:52px;display:grid;place-items:center;border-radius:12px;background:color-mix(in srgb,var(--bc) 18%,var(--bg));color:var(--bc)}
+.battlebtn.online{--bc:#6aa6e0}
+.bicon{flex:none;width:58px;height:58px;display:grid;place-items:center;border-radius:50%;color:var(--bc);margin-bottom:2px;
+  background:radial-gradient(circle at 50% 35%, color-mix(in srgb,var(--bc) 26%,#1a1e36), #0e1020 75%);
+  box-shadow:0 0 0 1.5px var(--bc), 0 0 0 4px rgba(10,12,22,.9), 0 0 0 5px color-mix(in srgb,var(--bc) 40%,transparent), 0 0 16px color-mix(in srgb,var(--bc) 40%,transparent)}
 .bicon svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.btxt{display:flex;flex-direction:column;gap:4px;min-width:0}
-.btxt b{font-family:var(--f-display);font-weight:800;font-size:24px;letter-spacing:.06em;color:var(--fg)}
-.btxt small{font-size:12px;color:var(--muted)}
-.hometiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.hometile{
-  all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:14px 6px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel);text-align:center;min-width:0;
+.battlebtn b{font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:.04em;color:var(--fg);white-space:nowrap}
+.battlebtn small{font-size:11px;color:var(--muted)}
+/* 下のメニュー（画面の一番下に固定した板） */
+.homenav{
+  position:sticky;bottom:0;margin:4px calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 0;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));
+  padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left, 0px));
+  background:linear-gradient(180deg, rgba(20,22,40,.96), rgba(9,10,20,.98));
+  box-shadow:0 -1px 0 color-mix(in srgb,var(--gold) 55%,transparent), 0 -10px 24px rgba(0,0,0,.45);
 }
-.hometile svg{width:30px;height:30px;fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:2px}
-.hometile b{font-size:14px}
-.hometile small{font-size:10.5px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hometile:active{transform:scale(.97)}
-.hometile:focus-visible{outline:2px solid var(--fg)}
-.fbline{display:inline-flex;align-items:center;gap:8px}
-.fbline svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.homenav::before{content:"";position:absolute;left:50%;top:-5px;width:9px;height:9px;transform:translateX(-50%) rotate(45deg);background:var(--gold);box-shadow:0 0 8px color-mix(in srgb,var(--gold) 70%,transparent)}
+.navbtn{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border-radius:10px;min-width:0}
+.navbtn svg{width:27px;height:27px;fill:none;stroke:#e6d3a0;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.navbtn b{font-size:11.5px;font-weight:700;color:var(--fg)}
+.navbtn:active{transform:scale(.95)}
+.navbtn:focus-visible{outline:2px solid var(--fg)}
+.navbadge{position:absolute;top:0;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:999px;display:grid;place-items:center;
+  font-size:10.5px;font-weight:800;color:#fff;background:linear-gradient(#ff7a6a,#c4303a);box-shadow:0 0 0 2px #0e1020;font-variant-numeric:tabular-nums}
 
 /* ---- オプション ---- */
 .optlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
@@ -693,9 +728,9 @@ body{
 .homebg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
 .homebg .sp-bg{opacity:.75}
 .homebg .sp-band{animation:none}
-.homebg .sp-art img,.homebg .sp-glyph{opacity:.35}
+.homebg .sp-art img,.homebg .sp-glyph{opacity:.6}
 .homebg .sp-wname{display:none}
-.homeshade{position:absolute;inset:0;background:linear-gradient(rgba(13,15,28,.45),rgba(13,15,28,.74) 45%,rgba(13,15,28,.86))}
+.homeshade{position:absolute;inset:0;background:linear-gradient(rgba(13,15,28,.7),rgba(13,15,28,.25) 22%,rgba(13,15,28,.3) 48%,rgba(13,15,28,.85) 72%,rgba(13,15,28,.95))}
 .homelogo{display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:8px;text-align:center}
 .homelogo small{font-family:var(--f-display);font-weight:700;font-size:12px;letter-spacing:.4em;margin-right:-.4em;color:#e9d7a6}
 .homelogo b{
@@ -829,11 +864,7 @@ body{
 
 /* ---- プレイヤーアイコン ---- */
 .avatar .face img{width:100%;height:100%;object-fit:cover;transform:scale(1.35)}
-.homeicon{all:unset;cursor:pointer;flex:none;width:34px;height:34px;border-radius:50%;overflow:hidden;display:grid;place-items:center;
-  background:radial-gradient(circle at 50% 35%, #2c3252, var(--panel));box-shadow:0 0 0 2px #e9c873, 0 0 0 3.5px #6e4c14, 0 2px 8px rgba(0,0,0,.6)}
-.homeicon img{width:100%;height:100%;object-fit:cover;transform:scale(1.35)}
-.homeicon .glyph,.iconopt .glyph{font-family:var(--f-display);font-weight:800;font-size:15px;color:var(--muted)}
-.homeicon:focus-visible{outline:2px solid var(--fg);outline-offset:3px}
+.iconopt .glyph{font-family:var(--f-display);font-weight:800;font-size:15px;color:var(--muted)}
 .iconpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:14px 8px}
 .iconopt{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
 .iconopt .iface{width:62px;height:62px;border-radius:50%;overflow:hidden;display:grid;place-items:center;
