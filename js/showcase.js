@@ -1,6 +1,7 @@
 /* =========================================================
    ホームの飾り棚：持っているカードが輪になって、奥と手前を回る
-   ・レア度の高い順に最大8枚。カードは常にこちらを向いたまま、輪の上を回る（奥ほど小さく暗い）
+   ・持っているカード（絵のあるもの）から毎回ばらばらに8枚。カードは常にこちらを向いたまま、輪の上を回る（奥ほど小さく暗い）
+   ・輪のいちばん奥を通るたびに、まだ出ていない持ちカードへ入れ替える（持っているカードが多いほど、いろいろ回ってくる）
    ・ゆっくり自動で回る。指で左右になぞると回せて、離すと少し惰性で回ってから元の速さに戻る
    ・カードをタップすると詳しく見られる
    ========================================================= */
@@ -15,11 +16,21 @@ const Showcase = {
   blockClickUntil: 0,
   AUTO: (Math.PI * 2) / 48,   // 1周48秒
 
+  owned() { return CARDS.filter(c => c.art && c.limit > 0 && Account.owned(c.id) > 0); },
+  shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; },
   pick() {
-    const R = RARITY_ORDER;
-    return CARDS.filter(c => c.art && c.limit > 0 && Account.owned(c.id) > 0)
-      .sort((a, b) => R.indexOf(b.rarity) - R.indexOf(a.rarity) || b.cost - a.cost || a.id.localeCompare(b.id))
-      .slice(0, 8);
+    this.queue = this.shuffle(this.owned());
+    return this.queue.splice(0, 8);
+  },
+  /* 奥を通ったカードを、まだ出ていないカードと入れ替える */
+  swap(it) {
+    if (!this.queue || !this.queue.length) return;
+    const old = DEF[it.dataset.id], c = this.queue.shift();
+    if (old) this.queue.push(old);   // 出ていたカードは列の最後へ
+    it.dataset.id = c.id;
+    it.setAttribute("aria-label", c.name);
+    it.className = it.className.replace(/\br-\w+/, "r-" + c.rarity);
+    it.innerHTML = cardHTML(c, { static: true });
   },
 
   html() {
@@ -67,8 +78,13 @@ const Showcase = {
     const cardW = Math.max(70, Math.min(w * 0.38, h * 0.66 * 5 / 7, 175));
     const R = n === 1 ? 0 : Math.min(w * 0.42, cardW * 1.6);
     let front = null, best = -2;
+    const TAU = Math.PI * 2;
     items.forEach((it, i) => {
-      const th = this.angle + (i / n) * Math.PI * 2;
+      const th = this.angle + (i / n) * TAU;
+      // 奥（角度がちょうど半周の所）をまたいだら入れ替える。どちら向きに回っても同じ
+      const back = Math.floor((th - Math.PI) / TAU);
+      if (it._back !== undefined && it._back !== back) this.swap(it);
+      it._back = back;
       const x = Math.sin(th) * R, z = Math.cos(th);
       const depth = (z + 1) / 2;                       // 手前1 〜 奥0
       const sc = 0.4 + 0.6 * depth;

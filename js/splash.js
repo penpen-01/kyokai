@@ -1,7 +1,7 @@
 /* =========================================================
    起動画面（タップしてスタート）
    3つの世界（神話・幻想・機械）の光の中を、カードが回転しながら降ってくる。
-   降らせるのはレア度の高い代表カード。アカウントを読み込めたら、持っているカードも混ぜる。
+   降らせるのは絵のあるすべてのカード。毎回ばらばらに選び、降りきるたびに画面に出ていないカードへ入れ替える。
    カードは奥・中・手前の3段（小さく暗い→大きく明るい）で、1枚降りきるたびに別のカードに入れ替わる。
    裏ではアカウントの読み込みを進めておき、タップされたらホーム画面へ進む。
    ========================================================= */
@@ -31,19 +31,14 @@ const Splash = {
     }).join("");
   },
 
-  /* 降らせるカード：絵のあるカードをレア度の高い順に。アカウントがあれば持っているカードも混ぜる */
-  pool() {
-    const R = RARITY_ORDER, withArt = CARDS.filter(c => c.art && c.limit > 0);
-    const top = [...withArt].sort((a, b) => R.indexOf(b.rarity) - R.indexOf(a.rarity) || b.cost - a.cost).slice(0, 16);
-    const mine = Account.data && Account.status !== "free" ? withArt.filter(c => Account.owned(c.id) > 0) : [];
-    const seen = new Set(), out = [];
-    [...top, ...mine].forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); out.push(c); } });
-    return out;
-  },
+  /* 降らせるカード：絵のあるすべてのカード */
+  pool() { return CARDS.filter(c => c.art && c.limit > 0); },
+  /* avoid（今出ているカードのID）以外から1枚 */
   randomCard(avoid) {
     const p = this.cardPool && this.cardPool.length ? this.cardPool : this.pool();
-    for (let i = 0; i < 6; i++) { const c = p[Math.floor(Math.random() * p.length)]; if (!avoid || !avoid.has(c.id)) return c; }
-    return p[Math.floor(Math.random() * p.length)];
+    const free = avoid ? p.filter(c => !avoid.has(c.id)) : p;
+    const list = free.length ? free : p;
+    return list[Math.floor(Math.random() * list.length)];
   },
   /* 1枚分の降るカード。奥（0）ほど小さく暗く遅い */
   fallHTML(i, layer, card) {
@@ -52,7 +47,7 @@ const Splash = {
     const delay = -((i * 2.9 + layer * 1.7) % dur);       // 最初から画面に散らばっているように、途中から始める
     const rot = ((i * 47) % 50) - 25, spin = (i % 2 ? 1 : -1) * (5 + (i % 4) * 1.5);
     return `<div class="sp-fall l${layer}" style="--x:${x}%;--s:${L.s};--d:${dur}s;--dl:${delay.toFixed(2)}s;--r:${rot}deg;--o:${L.o};--b:${L.b}px;--spin:${spin}s">
-      <div class="sp-spin"><div class="sp-face">${cardHTML(card, { static: true })}</div><div class="sp-backface"><i>境</i></div></div></div>`;
+      <div class="sp-spin"><div class="sp-face" data-id="${esc(card.id)}">${cardHTML(card, { static: true })}</div><div class="sp-backface"><i>境</i></div></div></div>`;
   },
 
   show() {
@@ -87,17 +82,16 @@ const Splash = {
     rain.addEventListener("animationiteration", e => {
       const f = e.target;
       if (!f.classList || !f.classList.contains("sp-fall")) return;
-      const now = new Set([...rain.querySelectorAll(".sp-face .card")].map(el => el.getAttribute("aria-label")));
-      const c = this.randomCard();
-      if (now.has(c.name) && this.cardPool.length > 14) return;
-      f.querySelector(".sp-face").innerHTML = cardHTML(c, { static: true });
+      const now = new Set([...rain.querySelectorAll(".sp-face")].map(el => el.dataset.id));
+      const c = this.randomCard(now), face = f.querySelector(".sp-face");
+      face.dataset.id = c.id;
+      face.innerHTML = cardHTML(c, { static: true });
     });
   },
 
   /* 読み込みが終わった。先にタップされていたらそのまま進む */
   setReady(next) {
     this.ready = true;
-    this.cardPool = this.pool();   // 持っているカードも降るようにする
     this.next = next;
     const t = $("#sp-tap");
     if (t) t.textContent = "タップしてスタート";
