@@ -201,6 +201,7 @@ function startTurn(pi, skipDraw) {
   const p = S.players[pi];
   p.maxE = Math.min(CONFIG.ENERGY_MAX, p.maxE + 1);
   p.e = p.maxE;
+  returnFromVoid(pi);   // 亜空間のキャラは、元から場にいた扱いで戻る
   // 行動不能のキャラは、このターンだけ攻撃できない
   p.field.forEach(u => { if (u.frozen) { u.ready = false; u.frozen = false; } else u.ready = true; });
   S.log.push({ sep: true, msg: `ターン${S.turnNo}：${pname(pi)}（エナジー${p.e}）` });
@@ -214,6 +215,37 @@ function endTurn(pi) {
   if (S.over || S.phase !== "play" || S.turn !== pi) return;
   if (pi === ME) ui = { sel: null, mode: null };
   startTurn(opp(pi), false);
+}
+
+/* ---------- 亜空間（自分のキャラを一時的に場から外す） ----------
+   p.voidU = [{ u: キャラ, slot: 元の場所 }]。外れている間、その場所にはキャラを出せない。
+   次のその人のターン開始時に、元の場所に戻る（状態はそのまま・登場時効果なし・そのターンから攻撃できる） */
+const voidOf = p => p.voidU || [];
+/* 場の4つの場所に、何が入っているか（亜空間で空けている場所も含む）。{ u, void } か null */
+function slotLayout(p) {
+  const slots = Array(CONFIG.FIELD_MAX).fill(null);
+  voidOf(p).forEach(v => { if (v.slot < slots.length && !slots[v.slot]) slots[v.slot] = { u: v.u, void: true }; else { const i = slots.indexOf(null); if (i >= 0) slots[i] = { u: v.u, void: true }; } });
+  let i = 0;
+  p.field.forEach(u => { while (i < slots.length && slots[i]) i++; if (i < slots.length) slots[i++] = { u, void: false }; });
+  return slots;
+}
+const fieldFull = p => p.field.length + voidOf(p).length >= CONFIG.FIELD_MAX;
+function banishOwn(pi) {
+  const p = S.players[pi];
+  if (!p.field.length) return;
+  const slots = slotLayout(p);
+  p.voidU = slots.map((x, slot) => x ? { u: x.u, slot } : null).filter(Boolean);
+  p.field.forEach(u => fx(unitSel(u.uid), "亜空間へ", "heal"));
+  p.field = [];
+  log(`${pname(pi)}のキャラは亜空間に送られた（次の${pname(pi)}のターンに戻る）。`);
+}
+function returnFromVoid(pi) {
+  const p = S.players[pi];
+  if (!voidOf(p).length) return;
+  const slots = slotLayout(p);
+  p.field = slots.filter(Boolean).map(x => x.u);
+  p.voidU = [];
+  log(`${pname(pi)}のキャラが亜空間から戻った。`);
 }
 
 /* ---------- カードを使う ---------- */
@@ -236,7 +268,8 @@ function canPlay(pi, idx) {
   const sac = d.pay && d.pay.kind === "sacrifice";
   if (sac && !p.field.length) return { ok: false, reason: "代償にする自分のキャラがいません" };
   if (d.pay && d.pay.kind === "life" && p.hp <= d.pay.n) return { ok: false, reason: "代償の体力が足りません" };
-  if (d.type === "char" && p.field.length >= CONFIG.FIELD_MAX && !sac) return { ok: false, reason: "場がいっぱいです" };
+  if (d.type === "char" && fieldFull(p) && !sac) return { ok: false, reason: voidOf(p).length ? "空いている場所がありません（亜空間のキャラが戻る場所です）" : "場がいっぱいです" };
+  if (d.type === "spell" && d.effects.some(e => e.kind === "banishOwn") && d.effects.every(e => e.kind === "banishOwn") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
   // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
   const ENEMY_ONLY = ["dmgRandom", "dmgAll", "freezeAll", "debuffAll", "dmgTarget", "destroyTarget", "freezeTarget", "debuffTarget"];
   if (d.type === "spell" && d.effects.length && d.effects.every(e => ENEMY_ONLY.includes(e.kind)) && !S.players[opp(pi)].field.length)
@@ -357,9 +390,10 @@ function effect(pi, e, targets, self) {
       break;
     }
     case "energyNow": me.e += n; log(`${pname(pi)}はエナジーを${n}得た。`); fx(playerSel(pi), `エナジー+${n}`, "heal"); break;
+    case "banishOwn": banishOwn(pi); break;
     case "discount": me.discount = (me.discount || 0) + n; log(`${pname(pi)}の次のカードのコストが${n}下がる。`); break;
     case "summon": {
-      if (me.field.length >= CONFIG.FIELD_MAX) { log("場がいっぱいで、キャラを出せなかった。"); break; }
+      if (fieldFull(me)) { log("場に空いている場所がなく、キャラを出せなかった。"); break; }
       const cands = me.deck.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && DEF[x.id].cost <= n);
       if (!cands.length) { log("条件に合うキャラが山札にいなかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
@@ -529,6 +563,8 @@ function evaluate(st, pi) {
   let s = 0;
   s += me.hp * 1.0 - en.hp * 1.6;
   s += me.field.reduce((a, u) => a + unitValue(u), 0) - en.field.reduce((a, u) => a + unitValue(u), 0) * 1.1;
+  // 亜空間のキャラは、相手に倒されずに戻ってくる（少しだけ割り引いて数える）
+  s += voidOf(me).reduce((a, v) => a + unitValue(v.u) * 0.9, 0) - voidOf(en).reduce((a, v) => a + unitValue(v.u), 0) * 1.0;
   s += Math.min(me.hand.length, 7) * 0.7 - en.hand.length * 0.35;
   s += me.maxE * 0.9;
   // 相手の次の攻撃で負けそうなら大きく減点
@@ -723,9 +759,14 @@ function fieldHTML(pi) {
   const p = S.players[pi];
   const myTurn = S.turn === ME && !S.over;
   let s = "";
+  const layout = slotLayout(p);
   for (let i = 0; i < CONFIG.FIELD_MAX; i++) {
-    const u = p.field[i];
+    const x = layout[i], u = x && x.u;
     if (!u) { s += `<div class="slot"><span class="empty"></span></div>`; continue; }
+    if (x.void) {
+      s += `<div class="slot voidslot" title="亜空間：次の${esc(p.name)}のターンに戻る">${cardHTML(DEF[u.id], { unit: u, cls: "voided", showCost: false })}<span class="voidtag">亜空間</span></div>`;
+      continue;
+    }
     const cls = [
       pi === ME && myTurn && canAct() && u.ready ? "ready" : "",
       pi === ME && myTurn && !u.ready ? "rest" : "",
