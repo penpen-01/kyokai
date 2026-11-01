@@ -1,6 +1,6 @@
 {
- "version": 31,
- "updated": "2026-10-31",
+ "version": 32,
+ "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -8,6 +8,8 @@
   "FIELD_MAX": 4,
   "HAND_MAX": 10,
   "FATIGUE": 2,
+  "SECOND_BONUS": 0,
+  "SECOND_COIN": 1,
   "DECK_SIZE": 30,
   "COPY_MAX": 3,
   "DECK_MAX": 10,
@@ -16,11 +18,22 @@
   "REWARD_NORMAL": 200,
   "REWARD_HARD": 300,
   "REWARD_ONLINE": 150,
+  "STREAK_STEP": 10,
+  "STREAK_MAX": 50,
+  "STONE_GET_COMMON": 5,
+  "STONE_GET_RARE": 20,
+  "STONE_GET_SR": 50,
+  "STONE_GET_UR": 150,
+  "STONE_GET_LEGEND": 400,
+  "STONE_COST_COMMON": 40,
+  "STONE_COST_RARE": 100,
+  "STONE_COST_SR": 400,
+  "STONE_COST_UR": 1000,
+  "STONE_COST_LEGEND": 3000,
+  "STONE_TICKET": 150,
   "SEASON": "beta",
   "STARTER_DECK": "starter",
-  "SAMPLE_DECKS": true,
-  "SECOND_BONUS": 0,
-  "SECOND_COIN": 1
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {
@@ -481,7 +494,7 @@
    "atk": 4,
    "hp": 5,
    "glyph": "竜",
-   "limit": 2,
+   "limit": 3,
    "rarity": "rare",
    "keywords": [],
    "effects": [
@@ -501,7 +514,7 @@
    "atk": 5,
    "hp": 4,
    "glyph": "機",
-   "limit": 2,
+   "limit": 3,
    "rarity": "rare",
    "keywords": [
     "haste"
@@ -518,7 +531,7 @@
    "atk": 6,
    "hp": 6,
    "glyph": "神",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [],
@@ -533,7 +546,7 @@
    "atk": 8,
    "hp": 8,
    "glyph": "龍",
-   "limit": 2,
+   "limit": 3,
    "rarity": "legend",
    "keywords": [],
    "effects": [
@@ -553,7 +566,7 @@
    "atk": 6,
    "hp": 7,
    "glyph": "極",
-   "limit": 2,
+   "limit": 3,
    "rarity": "legend",
    "keywords": [
     "haste",
@@ -569,7 +582,7 @@
    "type": "spell",
    "cost": 1,
    "glyph": "昂",
-   "limit": 2,
+   "limit": 3,
    "rarity": "common",
    "keywords": [],
    "effects": [
@@ -587,7 +600,7 @@
    "type": "spell",
    "cost": 1,
    "glyph": "星",
-   "limit": 2,
+   "limit": 3,
    "rarity": "common",
    "keywords": [],
    "effects": [
@@ -623,7 +636,7 @@
    "type": "spell",
    "cost": 2,
    "glyph": "泉",
-   "limit": 2,
+   "limit": 3,
    "rarity": "common",
    "keywords": [],
    "effects": [
@@ -677,7 +690,7 @@
    "type": "spell",
    "cost": 6,
    "glyph": "罰",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -709,7 +722,7 @@
    "atk": 4,
    "hp": 3,
    "glyph": "童",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -729,7 +742,7 @@
    "atk": 3,
    "hp": 9,
    "glyph": "賢",
-   "limit": 2,
+   "limit": 3,
    "rarity": "ur",
    "keywords": [],
    "effects": [
@@ -755,7 +768,7 @@
    "type": "spell",
    "cost": 8,
    "glyph": "星",
-   "limit": 1,
+   "limit": 3,
    "rarity": "ur",
    "keywords": [],
    "effects": [
@@ -1035,7 +1048,7 @@
    "atk": 7,
    "hp": 7,
    "glyph": "巨",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [
     "guard"
@@ -1053,7 +1066,7 @@
    "atk": 8,
    "hp": 8,
    "glyph": "陽",
-   "limit": 1,
+   "limit": 3,
    "rarity": "legend",
    "keywords": [
     "guard",
@@ -1076,7 +1089,7 @@
    "atk": 7,
    "hp": 7,
    "glyph": "魔",
-   "limit": 2,
+   "limit": 3,
    "rarity": "ur",
    "keywords": [
     "trample"
@@ -1122,7 +1135,7 @@
    "type": "spell",
    "cost": 5,
    "glyph": "歌",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -1140,7 +1153,7 @@
    "type": "spell",
    "cost": 4,
    "glyph": "槌",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -1202,7 +1215,7 @@
    "type": "spell",
    "cost": 7,
    "glyph": "終",
-   "limit": 2,
+   "limit": 3,
    "rarity": "ur",
    "keywords": [],
    "effects": [
@@ -1220,7 +1233,7 @@
    "type": "spell",
    "cost": 6,
    "glyph": "業",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -1342,7 +1355,7 @@
    "atk": 6,
    "hp": 5,
    "glyph": "淵",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [],
@@ -1361,7 +1374,7 @@
    "atk": 6,
    "hp": 8,
    "glyph": "霊",
-   "limit": 1,
+   "limit": 3,
    "rarity": "legend",
    "keywords": [],
    "effects": [
@@ -1389,7 +1402,7 @@
    "atk": 4,
    "hp": 4,
    "glyph": "角",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [
     "haste"
@@ -1471,7 +1484,7 @@
    "type": "spell",
    "cost": 4,
    "glyph": "雪",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -1511,7 +1524,7 @@
    "type": "spell",
    "cost": 6,
    "glyph": "醒",
-   "limit": 2,
+   "limit": 3,
    "rarity": "ur",
    "keywords": [],
    "effects": [
@@ -1605,7 +1618,7 @@
    "atk": 5,
    "hp": 6,
    "glyph": "車",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [],
@@ -1621,7 +1634,7 @@
    "atk": 4,
    "hp": 4,
    "glyph": "刑",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -1663,7 +1676,7 @@
    "atk": 7,
    "hp": 10,
    "glyph": "塞",
-   "limit": 1,
+   "limit": 3,
    "rarity": "legend",
    "keywords": [
     "guard"
@@ -1737,7 +1750,7 @@
    "type": "spell",
    "cost": 4,
    "glyph": "電",
-   "limit": 2,
+   "limit": 3,
    "rarity": "sr",
    "keywords": [],
    "effects": [
@@ -1763,7 +1776,7 @@
    "type": "spell",
    "cost": 5,
    "glyph": "歪",
-   "limit": 2,
+   "limit": 3,
    "rarity": "ur",
    "keywords": [],
    "effects": [
