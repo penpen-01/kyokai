@@ -122,6 +122,6 @@ const Cinema = {
       `<div class="cv-turn"><b>${mine ? "あなたのターン" : "相手のターン"}</b><small>ターン${own}${mine ? ` ・ エナジー ${S.players[ME].e}` : ""}</small></div>`, false);
     el.style.pointerEvents = "none";
     if (mine) Sound.play("turn");
-    return Motion.reduced ? 700 : 1500;
+    return Motion.reduced ? 600 : 900;
   }
 };
