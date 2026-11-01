@@ -69,7 +69,7 @@ const Splash = {
       <div class="sp-shade"></div>
       <div class="sp-motes" aria-hidden="true">${motes}</div>
       <div class="sp-center">
-        <h1 class="sp-logo two" aria-label="境界の召喚士"><img class="sp-frame" src="ui/logo-frame.webp" alt="" draggable="false"><span class="l1a">境</span><span class="l1b">界</span><span class="l2"><small>の</small>召喚士</span><span class="l0">境界の召喚士</span></h1>
+        <h1 class="sp-logo two" aria-label="境界の召喚士"><img class="sp-frame" src="ui/logo-frame.webp" alt="" draggable="false"><span class="l1a">境</span><span class="l1b">界<small>の</small></span><span class="l2">召喚士</span><span class="l0">境界の召喚士</span></h1>
         <p class="sp-sub">神話 ・ 幻想 ・ 機械</p>
         <p class="sp-tap" id="sp-tap">${this.ready ? "タップしてスタート" : "読み込み中…"}</p>
       </div>
