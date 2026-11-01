@@ -134,9 +134,8 @@ body{
 
 .pile,.log,.endbtn{position:relative}
 .pile{flex:none;width:42px;display:flex;flex-direction:column;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
-.pback{width:36px;height:50px;border-radius:4px;display:grid;place-items:center;border:1.5px solid color-mix(in srgb,var(--gold) 70%,transparent);
-  background:repeating-linear-gradient(135deg, #1d2240 0 5px, #252b52 5px 10px);box-shadow:2px 2px 0 #12152a, 4px 4px 0 #0c0f1f, 0 4px 10px rgba(0,0,0,.5)}
-.pback i{font-style:normal;font-family:var(--f-display);font-weight:800;font-size:13px;color:color-mix(in srgb,var(--gold) 85%,#fff);width:20px;height:20px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--gold) 60%,transparent);transform:rotate(45deg)}
+.pback{width:36px;height:50px;border-radius:3px;display:block;background:#14183a url("../ui/card-back.webp") center/cover no-repeat;
+  box-shadow:2px 2px 0 #12152a, 3px 3px 0 #b08a3e, 5px 5px 0 #0c0f1f, 0 4px 10px rgba(0,0,0,.5)}
 .pile b{font-size:12px;line-height:1;color:var(--fg)}
 .log{
   all:unset;cursor:pointer;flex:1;min-width:0;font-size:12px;line-height:1.45;color:var(--fg);
@@ -696,9 +695,7 @@ body{
 @keyframes spspin{from{transform:rotateY(0) rotateX(8deg)}to{transform:rotateY(360deg) rotateX(8deg)}}
 .sp-face,.sp-backface{backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .sp-face .card{width:100%}
-.sp-backface{position:absolute;inset:0;transform:rotateY(180deg);border-radius:7px;display:grid;place-items:center;
-  border:2px solid #c79a44;background:repeating-linear-gradient(135deg, #1d2240 0 6px, #262c55 6px 12px);box-shadow:inset 0 0 0 4px #10132a, inset 0 0 0 5px rgba(214,178,98,.5)}
-.sp-backface i{font-style:normal;font-family:var(--f-display);font-weight:800;font-size:calc(26px * var(--s));color:#e9c873;width:42%;aspect-ratio:1;display:grid;place-items:center;border:1.5px solid rgba(233,200,115,.7);transform:rotate(45deg)}
+.sp-backface{position:absolute;inset:0;transform:rotateY(180deg);border-radius:7px;background:#14183a url("../ui/card-back.webp") center/cover no-repeat}
 .sp-shade{position:absolute;inset:0;background:radial-gradient(62% 26% at 50% 50%, rgba(7,8,15,.82), rgba(7,8,15,.45) 60%, transparent 100%),linear-gradient(transparent 75%, rgba(7,8,15,.8));pointer-events:none}
 .sp-motes{position:absolute;inset:0;pointer-events:none}
 .sp-motes i{position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:#ffe7a3;box-shadow:0 0 10px #ffd56a;opacity:0;animation:spmote linear infinite}
@@ -823,18 +820,13 @@ body{
 .os-back:focus-visible,.os-card:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
 .os-card .card{width:100%;cursor:pointer}
 .os-back{position:relative;border-radius:7% / 5%;overflow:hidden;animation:slidein .35s cubic-bezier(.2,.8,.3,1);
-  background:
-    radial-gradient(circle at 50% 50%,rgba(216,180,104,.25),transparent 55%),
-    repeating-linear-gradient(45deg,rgba(216,180,104,.08) 0 6px,transparent 6px 14px),
-    linear-gradient(160deg,#252a50,#10122a);
-  box-shadow:inset 0 0 0 5px #b08a3e, inset 0 0 0 7px #10122a, inset 0 0 0 8px rgba(216,180,104,.6), 0 14px 36px rgba(0,0,0,.6)}
-.cb-ring{position:absolute;left:50%;top:50%;width:46%;aspect-ratio:1;transform:translate(-50%,-50%) rotate(45deg);border:2px solid rgba(216,180,104,.7);box-shadow:0 0 0 6px rgba(216,180,104,.15)}
-.cb-mark{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:44px;color:#e9d7a6;text-shadow:0 0 14px rgba(255,213,106,.6)}
+  background:#14183a url("../ui/card-back.webp") center/cover no-repeat;   /* カードの裏面（Gemini） */
+  box-shadow:0 14px 36px rgba(0,0,0,.6)}
 @keyframes slidein{from{transform:translateX(60%) rotate(8deg);opacity:0}to{transform:none;opacity:1}}
 /* SR以上は裏のまま光る（色はレア度） */
 .os-slot.r-sr{--rc:255,214,120} .os-slot.r-ur{--rc:255,190,80} .os-slot.r-legend{--rc:255,160,240}
 .os-back.glow{animation:slidein .35s cubic-bezier(.2,.8,.3,1), backglow 1.2s ease-in-out infinite}
-@keyframes backglow{50%{box-shadow:inset 0 0 0 5px #b08a3e, inset 0 0 0 7px #10122a, inset 0 0 0 8px rgba(216,180,104,.6), 0 0 30px 6px rgba(var(--rc),.8)}}
+@keyframes backglow{50%{box-shadow:0 0 30px 6px rgba(var(--rc),.8)}}
 .os-back.charge{animation:charge .65s ease-in forwards}
 @keyframes charge{0%{transform:none}30%{transform:scale(1.04) rotate(-2deg)}60%{transform:scale(1.06) rotate(2deg);filter:brightness(1.4)}100%{transform:scale(1.12);filter:brightness(3);box-shadow:0 0 60px 20px rgba(var(--rc),1)}}
 .os-slot.shown .os-card{animation:flipface .45s cubic-bezier(.2,.8,.3,1)}

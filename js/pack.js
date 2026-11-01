@@ -132,7 +132,6 @@ const Packs = {
                <b>${esc(c.name)}</b>
              </div>`
           : `<button type="button" class="os-back ${r >= 2 ? "glow" : ""} ${isLast && L.cards.length > 1 ? "last" : ""}" data-act="packFlip" aria-label="めくる">
-               <span class="cb-ring"></span><span class="cb-mark">境</span>
              </button>`}
       </div>
       <p class="os-hint">${L.faceUp ? (isLast ? "タップで結果を見る" : "タップで次のカード") : isLast && L.cards.length > 1 ? "最後の1枚（レア以上）" : "タップしてめくる"}</p>

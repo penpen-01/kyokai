@@ -47,7 +47,7 @@ const Splash = {
     const delay = -((i * 2.9 + layer * 1.7) % dur);       // 最初から画面に散らばっているように、途中から始める
     const rot = ((i * 47) % 50) - 25, spin = (i % 2 ? 1 : -1) * (5 + (i % 4) * 1.5);
     return `<div class="sp-fall l${layer}" style="--x:${x}%;--s:${L.s};--d:${dur}s;--dl:${delay.toFixed(2)}s;--r:${rot}deg;--o:${L.o};--b:${L.b}px;--spin:${spin}s">
-      <div class="sp-spin"><div class="sp-face" data-id="${esc(card.id)}">${cardHTML(card, { static: true })}</div><div class="sp-backface"><i>境</i></div></div></div>`;
+      <div class="sp-spin"><div class="sp-face" data-id="${esc(card.id)}">${cardHTML(card, { static: true })}</div><div class="sp-backface"></div></div></div>`;
   },
 
   show() {

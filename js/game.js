@@ -774,7 +774,7 @@ function render() {
     ${pbarHTML(OP)}
     ${fieldHTML(OP)}
     <div class="mid">
-      <div class="pile" aria-label="自分の山札 ${me.deck.length}枚"><span class="pback"><i>境</i></span><b>${me.deck.length}</b></div>
+      <div class="pile" aria-label="自分の山札 ${me.deck.length}枚"><span class="pback"></span><b>${me.deck.length}</b></div>
       <button type="button" class="log" data-act="log" aria-label="プレイログを開く">${lines.map((l, i) => `<div class="${i < lines.length - 1 ? "old" : ""}">${logText(l)}</div>`).join("")}</button>
       ${endButtonHTML()}
     </div>
