@@ -19,15 +19,14 @@ body{
 
 /* ---- 対戦の背景（仮。Gemini の背景画像ができたら差し替える） ----
    3つの世界の色を斜めに薄く重ね、中央の境界に光と魔法陣の輪を置く */
+#app.battle.pre::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:rgba(7,8,15,.62)}
 #app.battle::before{
   content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  /* Gemini の絵（ui/bg-battle.webp）。高さに合わせて敷く（縦の位置が依頼文の%どおりになる）。横長の画面では外側を暗い色で埋める */
   background:
-    radial-gradient(ellipse 80% 22% at 50% 50%, rgba(180,139,224,.20), transparent 70%),
-    repeating-radial-gradient(circle at 50% 50%, transparent 0 46px, rgba(214,178,98,.07) 46px 47px, transparent 47px 92px),
-    linear-gradient(155deg, rgba(214,178,98,.16) 0%, transparent 32%, transparent 68%, rgba(84,146,230,.16) 100%),
-    linear-gradient(155deg, transparent 44%, rgba(96,190,130,.07) 50%, transparent 56%),
-    radial-gradient(130% 70% at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%),
-    #0b0d19;
+    radial-gradient(130% 70% at 50% 50%, transparent 60%, rgba(0,0,0,.45) 100%),
+    url("../ui/bg-battle.webp") center/auto 100% no-repeat,
+    #0a0c18;
 }
 
 /* ---- プレイヤー欄：顔は上下とも中央（攻撃の矢印を持っていきやすいように）。左に手札などの数、右に名前とエナジー ---- */
@@ -322,6 +321,8 @@ body{
   font-family:var(--f-display);font-weight:800;font-size:18px;
 }
 .rpsbtn svg{width:54px;height:54px;fill:none;stroke:var(--gold);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.rpsimg{display:block;width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.rp .rpsimg{width:80px;height:80px}
 .rpsbtn:active{transform:scale(.96)}
 .rpsbtn[disabled]{opacity:.5;cursor:default}
 .rpsbtn:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
@@ -426,6 +427,7 @@ body{
   background:linear-gradient(160deg,#3a2350,#1c2140 55%,#14324a);border:1px solid var(--gold);
   font-family:var(--f-display);font-weight:800;font-size:12px;color:var(--gold);line-height:1.4;
 }
+.packart.has-art{place-items:start center;background-size:cover;background-position:center;color:#fff6dc;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.8);font-size:10.5px;padding:6px}
 .packbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
 .packbody b{font-size:15px}
 .odds summary{cursor:pointer;font-size:12px;color:var(--muted)}
@@ -674,12 +676,12 @@ body{
 .overlay.splash{padding:0;background:#07080f}
 .sp-root{position:relative;flex:1;min-height:100%;overflow:hidden;cursor:pointer;display:grid;place-items:center}
 /* 3つの世界の光：左上から金（神話）、左下から緑（幻想）、右から青（機械）。ゆっくり明滅する */
-.sp-sky{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 45%, #141833, #07080f 75%)}
-.sp-sky i{position:absolute;width:120vmax;height:120vmax;border-radius:50%;filter:blur(30px);opacity:.55;animation:spglow 7s ease-in-out infinite alternate}
+.sp-sky{position:absolute;inset:0;background:#07080f url("../ui/bg-splash.webp") center/cover no-repeat}   /* Gemini の絵の上に、3色の光を薄く重ねて揺らす */
+.sp-sky i{position:absolute;width:120vmax;height:120vmax;border-radius:50%;filter:blur(30px);opacity:.3;mix-blend-mode:screen;animation:spglow 7s ease-in-out infinite alternate}
 .sp-sky .w-myth{left:-60vmax;top:-70vmax;background:radial-gradient(circle, rgba(255,205,110,.75), rgba(214,166,76,.25) 40%, transparent 65%)}
 .sp-sky .w-fan{left:-70vmax;bottom:-75vmax;background:radial-gradient(circle, rgba(110,220,150,.6), rgba(60,150,100,.2) 40%, transparent 65%);animation-delay:-2.3s}
 .sp-sky .w-mech{right:-75vmax;top:-20vmax;background:radial-gradient(circle, rgba(110,170,255,.65), rgba(90,110,230,.22) 40%, transparent 65%);animation-delay:-4.6s}
-@keyframes spglow{from{opacity:.38;transform:scale(.95)}to{opacity:.7;transform:scale(1.05)}}
+@keyframes spglow{from{opacity:.12;transform:scale(.95)}to{opacity:.38;transform:scale(1.05)}}
 /* 降るカード：縦に落ちながら、カード自体は縦の軸でくるくる回る（裏面も見える） */
 .sp-rain{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 .sp-fall{position:absolute;top:0;left:var(--x);width:calc(118px * var(--s));perspective:700px;opacity:var(--o);filter:blur(var(--b));
@@ -739,12 +741,8 @@ body{
 
 /* ---- ホームの背景（仮。Gemini の絵ができたら差し替える）と飾り棚 ---- */
 .homebg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
-  background:
-    radial-gradient(60% 30% at 50% 52%, rgba(214,178,98,.16), transparent 70%),
-    radial-gradient(90% 50% at 15% 0%, rgba(214,166,76,.18), transparent 70%),
-    radial-gradient(80% 50% at 0% 85%, rgba(80,180,120,.12), transparent 70%),
-    radial-gradient(80% 60% at 100% 40%, rgba(90,140,230,.16), transparent 70%),
-    radial-gradient(120% 90% at 50% 40%, #151935, #07080f 80%)}
+  /* Gemini の絵（ui/bg-home.webp）。絵は高さの22〜71%の帯にあり、ちょうど飾り棚の後ろに来る */
+  background:url("../ui/bg-home.webp") center/cover no-repeat, #04071a}
 .homemain{position:relative}
 .showcase{position:relative;isolation:isolate;flex:1;min-height:200px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
 .showcase:active{cursor:grabbing}
@@ -799,10 +797,11 @@ body{
 .bp-tear{top:0;height:13%;z-index:2;border-radius:10px 10px 0 0;
   background:repeating-linear-gradient(90deg,#d8b468 0 6px,#b08a3e 6px 12px);
   clip-path:polygon(0 0,100% 0,100% 80%,95% 100%,90% 80%,85% 100%,80% 80%,75% 100%,70% 80%,65% 100%,60% 80%,55% 100%,50% 80%,45% 100%,40% 80%,35% 100%,30% 80%,25% 100%,20% 80%,15% 100%,10% 80%,5% 100%,0 80%)}
-.bp-body{top:10%;bottom:0;border-radius:0 0 10px 10px;display:flex;align-items:center;justify-content:center}
+.bp-body{top:10%;bottom:0;border-radius:0 0 10px 10px;display:flex;align-items:flex-start;justify-content:center;background-size:cover;background-position:center}
 .bp-bands{position:absolute;inset:0;transform:skewY(-14deg) scale(1.3)}
 .bp-bands i{display:block;height:33.4%;background:linear-gradient(90deg,color-mix(in srgb,var(--wc) 55%,#141733),color-mix(in srgb,var(--wc) 25%,#141733));border-bottom:2px solid #d8b468}
-.bp-logo{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;background:rgba(7,8,15,.72);border-top:1px solid #d8b468;border-bottom:1px solid #d8b468;width:100%;text-align:center}
+.bp-logo{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 10px 18px;background:linear-gradient(rgba(7,8,15,.85),rgba(7,8,15,.55) 70%,transparent);width:100%;text-align:center}
+.bp-body.has-art .bp-bands{display:none}
 .bp-logo small{font-family:var(--f-display);font-weight:700;font-size:12px;letter-spacing:.3em;color:#e9d7a6}
 .bp-logo b{font-family:var(--f-display);font-weight:800;font-size:20px;text-wrap:balance;word-break:keep-all;letter-spacing:.06em;color:#fff6dc;text-shadow:0 0 12px rgba(255,213,106,.5)}
 .bp-logo em{font-style:normal;font-size:11px;color:var(--muted)}

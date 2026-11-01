@@ -763,7 +763,8 @@ function render() {
   renderDeferred = false;
   clearDragLeftovers();
   hidePreview();
-  app.classList.toggle("battle", S.phase === "play");
+  app.classList.add("battle");                       // 対戦前（じゃんけんなど）も同じ舞台を敷く
+  app.classList.toggle("pre", S.phase !== "play");    // 対戦前は暗めに
   if (S.phase !== "play") { app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
   const tk = `${S.gid}-${S.turnNo}`;
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; Sound.play("turn"); }
@@ -799,6 +800,8 @@ const RPS_ICON = {
   c: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 27 14 7.5c-.6-2.4 1-4.5 3.2-4.5 1.6 0 2.9 1.1 3.3 2.7L25 22"/><path d="M27 22 31 5.5c.4-1.6 1.8-2.7 3.4-2.5 2.1.3 3.4 2.4 2.8 4.4L32 26"/><path d="M12 30c0-3 2-4.5 4.5-4.5h15c3 0 5 2 5 5v3c0 6-5 11-11 11h-3c-6 0-10.5-4.5-10.5-10.5z"/><path d="M17 33h13"/></svg>',
   p: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 27V12c0-1.7 1.3-3 3-3s3 1.3 3 3v11M20 22V7c0-1.7 1.3-3 3-3s3 1.3 3 3v15M26 22V8c0-1.7 1.3-3 3-3s3 1.3 3 3v15M32 24v-9c0-1.7 1.3-3 3-3s3 1.3 3 3v15c0 8-6 14-14 14h-1c-5 0-8-2.5-11-6l-5-7c-1-1.5-.6-3.4.9-4.4 1.4-.9 3.2-.6 4.2.7L14 29"/></svg>'
 };
+/* じゃんけんの手（Gemini の絵を切り分けたもの：ui/rps-g/c/p.webp） */
+const rpsImg = k => `<img class="rpsimg" src="ui/rps-${k}.webp" alt="" draggable="false">`;
 function pregameHTML() {
   const me = S.players[ME], op = S.players[OP];
   const wait = typeof Online !== "undefined" && MODE === "online" && Online.blocked();
@@ -813,7 +816,7 @@ function pregameHTML() {
   const lastLine = last ? (() => {
     const v = last.winner == null ? "tie" : last.winner === ME ? "win" : "lose";
     const side = (pi, who) => `<div class="rp ${last.winner === pi ? "won" : last.winner == null ? "" : "lost"}">
-        <span class="rp-who">${who}</span>${RPS_ICON[last.hands[pi]]}<b>${RPS[last.hands[pi]]}</b></div>`;
+        <span class="rp-who">${who}</span>${rpsImg(last.hands[pi])}<b>${RPS[last.hands[pi]]}</b></div>`;
     return `<div class="rpsres ${v}">
         ${side(ME, "あなた")}<span class="rp-vs">VS</span>${side(OP, esc(op.name))}
       </div>
@@ -825,7 +828,7 @@ function pregameHTML() {
       ${last ? "" : `<p class="lead">勝った人が、先攻か後攻かを選べます。</p>`}
       ${lastLine}
       ${mine ? `<p class="pre-wait">${RPS[mine] ? `あなたは${RPS[mine]}。` : "選びました。"}相手を待っています…</p>` : `
-      <div class="rps">${Object.entries(RPS).map(([k, v]) => `<button type="button" class="rpsbtn" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${RPS_ICON[k]}<span>${v}</span></button>`).join("")}</div>`}
+      <div class="rps">${Object.entries(RPS).map(([k, v]) => `<button type="button" class="rpsbtn" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}
       ${S.rps.picks[OP] ? `<p class="datainfo">相手は選び終わっています</p>` : ""}`;
   } else if (S.phase === "choose") {
     body = `<h2 class="pre-title">じゃんけんの結果</h2>
@@ -1497,7 +1500,7 @@ function toTitle() {
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
   clearTimeout(resultTimer);
-  app.innerHTML = ""; app.classList.remove("battle");
+  app.innerHTML = ""; app.classList.remove("battle", "pre");
   $("#sheet").hidden = true;
   hidePreview();
   showStart();

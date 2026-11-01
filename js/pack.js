@@ -11,6 +11,9 @@ const RARITY_ORDER = ["common", "rare", "sr", "ur", "legend"];
 const Packs = {
   last: null, // 直前に開けた結果 { pack, cards: [{id, isNew}] , flipped: [] }
 
+  /* パックの表の絵。パックごとに art があればそれ、なければ第1弾の絵（Gemini：ui/pack-art.webp） */
+  art(pack) { return pack.art || (pack.id === "pack1" ? "ui/pack-art.webp" : ""); },
+
   pool(pack) {
     const ids = pack.cards.length ? pack.cards : CARDS.map(c => c.id);
     return ids.map(id => DEF[id]).filter(c => c && c.limit > 0);
@@ -72,7 +75,7 @@ const Packs = {
         const pool = this.pool(p);
         const cnt = r => pool.filter(c => c.rarity === r).length;
         return `<div class="packcard">
-          <div class="packart"><span>${esc(p.name)}</span></div>
+          <div class="packart ${this.art(p) ? "has-art" : ""}" ${this.art(p) ? `style="background-image:url('${esc(this.art(p))}')"` : ""}><span>${esc(p.name)}</span></div>
           <div class="packbody">
             <b>${esc(p.name)}</b>
             <span class="pmeta">${pool.length}種 ・ 1パック${p.size}枚 ・ 最後の1枚はレア以上</span>
@@ -105,7 +108,7 @@ const Packs = {
       <div class="os-top"><span class="goldtag">${Account.gold}G</span></div>
       <button type="button" class="bigpack" data-act="packTear" aria-label="パックを開ける">
         <span class="bp-tear"></span>
-        <span class="bp-body">
+        <span class="bp-body ${this.art(L.pack) ? "has-art" : ""}" ${this.art(L.pack) ? `style="background-image:url('${esc(this.art(L.pack))}')"` : ""}>
           <span class="bp-bands"><i class="w-myth"></i><i class="w-fan"></i><i class="w-mech"></i></span>
           <span class="bp-logo"><small>境界の召喚士</small><b>${esc(L.pack.name)}</b><em>${L.pack.size}枚入り</em></span>
         </span>
