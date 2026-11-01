@@ -704,14 +704,22 @@ body{
 .sp-motes i{position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:#ffe7a3;box-shadow:0 0 10px #ffd56a;opacity:0;animation:spmote linear infinite}
 @keyframes spmote{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-100vh) translateX(30px);opacity:0}}
 .sp-center{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:0 16px}
-.sp-sub{margin:0;font-family:var(--f-display);font-weight:700;font-size:14px;letter-spacing:.4em;color:#f3e2b5;text-shadow:0 2px 8px #000;animation:spfade .8s .7s both}
-.sp-logo{margin:0;display:flex;flex-direction:column;align-items:center;line-height:1.05;font-family:var(--f-display);font-weight:800;letter-spacing:.08em;animation:splogo 1s .55s cubic-bezier(.2,.8,.2,1) both}
-.sp-logo span{
+.sp-sub{margin:-6px 0 0;font-family:var(--f-display);font-weight:700;font-size:13px;letter-spacing:.4em;margin-right:-.4em;color:#f3e2b5;text-shadow:0 2px 8px #000;animation:spfade .8s .9s both}
+/* タイトル：Gemini の飾り（ui/logo-frame.webp）の板の上に、文字をフォントで重ねる。
+   板は飾りの高さの42〜86%・幅の22〜78%。上の方には紋章の光の裂け目が入り込み、文字の後ろを通る */
+.sp-logo{position:relative;margin:0;width:min(96vw,460px);aspect-ratio:986/583;font-family:var(--f-display);font-weight:800;line-height:1;
+  animation:splogo 1s .55s cubic-bezier(.2,.8,.2,1) both;filter:drop-shadow(0 10px 22px rgba(0,0,0,.7))}
+.sp-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sp-logo span{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;
   background:linear-gradient(180deg,#fffaf0 0%,#ffe7a3 38%,#d8b468 62%,#8f6a2a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 3px 0 #2a1d08) drop-shadow(0 0 18px rgba(255,213,106,.45)) drop-shadow(0 8px 16px #000);
-}
-.sp-logo span:first-child{font-size:min(9vw,40px);letter-spacing:.3em;margin-right:-.3em}
-.sp-logo span:last-child{font-size:min(19vw,84px)}
+  filter:drop-shadow(0 2px 0 #2a1d08) drop-shadow(0 0 1px #2a1d08) drop-shadow(0 0 10px rgba(255,213,106,.4))}
+.sp-logo .l0{display:none}
+/* 2行：上に小さく「境界の」、下に大きく「召喚士」 */
+.sp-logo.two .l1{top:47.5%;font-size:calc(min(96vw,460px) * .062);letter-spacing:.42em;margin-left:.21em}
+.sp-logo.two .l2{top:56.5%;font-size:calc(min(96vw,460px) * .145);letter-spacing:.12em;margin-left:.06em}
+/* 1行：「境界の召喚士」を板の下寄りに */
+.sp-logo.one .l1,.sp-logo.one .l2{display:none}
+.sp-logo.one .l0{display:block;top:56%;font-size:calc(min(96vw,460px) * .088);letter-spacing:.08em;margin-left:.04em}
 @keyframes splogo{from{opacity:0;transform:scale(1.25);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 @keyframes spfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .sp-tap{margin:28px 0 0;font-family:var(--f-display);font-weight:800;font-size:20px;letter-spacing:.25em;color:#fff;text-shadow:0 0 12px rgba(255,213,106,.8),0 2px 6px #000;animation:spfade .6s 1.2s both, spblink 1.6s 1.8s ease-in-out infinite}
