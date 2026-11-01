@@ -706,7 +706,7 @@ body{
 .sp-sub{margin:-6px 0 0;font-family:var(--f-display);font-weight:700;font-size:13px;letter-spacing:.4em;margin-right:-.4em;color:#f3e2b5;text-shadow:0 2px 8px #000;animation:spfade .8s .9s both}
 /* タイトル：Gemini の飾り（ui/logo-frame.webp）の板の上に、文字をフォントで重ねる。
    板は飾りの高さの42〜86%・幅の22〜78%。上の方には紋章の光の裂け目が入り込み、文字の後ろを通る */
-.sp-logo{position:relative;margin:0;width:min(96vw,460px);aspect-ratio:986/583;font-family:var(--f-display);font-weight:800;line-height:1;
+.sp-logo{position:relative;margin:0;width:min(96vw,460px);aspect-ratio:1400/821;font-family:var(--f-display);font-weight:800;line-height:1;
   animation:splogo 1s .55s cubic-bezier(.2,.8,.2,1) both;filter:drop-shadow(0 10px 22px rgba(0,0,0,.7))}
 .sp-frame{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .sp-logo span{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;
