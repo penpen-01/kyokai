@@ -714,11 +714,16 @@ body{
   background:linear-gradient(180deg,#fffaf0 0%,#ffe7a3 38%,#d8b468 62%,#8f6a2a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 2px 0 #2a1d08) drop-shadow(0 0 1px #2a1d08) drop-shadow(0 0 10px rgba(255,213,106,.4))}
 .sp-logo .l0{display:none}
-/* 2行：上に小さく「境界の」、下に大きく「召喚士」 */
-.sp-logo.two .l1{top:47.5%;font-size:calc(min(96vw,460px) * .062);letter-spacing:.42em;margin-left:.21em}
-.sp-logo.two .l2{top:56.5%;font-size:calc(min(96vw,460px) * .145);letter-spacing:.12em;margin-left:.06em}
+/* 2行：紋章の光の裂け目を「境」と「界」の間に通す（裂け目が2つの字を分ける境界線になる）。「の」は2行目の頭に小さく */
+.sp-logo.two .l1a,.sp-logo.two .l1b{top:46%;font-size:calc(min(96vw,460px) * .085);transform:none}
+.sp-logo.two .l1a{left:auto;right:calc(50% + min(96vw,460px) * .03)}
+.sp-logo.two .l1b{left:calc(50% + min(96vw,460px) * .03)}
+.sp-logo.two .l2{top:58%;font-size:calc(min(96vw,460px) * .135);letter-spacing:.1em;margin-left:.05em}
+/* 「の」は「召喚士」の左に小さく添える（「召喚士」を真ん中に保つため、字の外に出す） */
+.sp-logo.two .l2 small{position:absolute;right:100%;bottom:.06em;font-size:.45em;letter-spacing:0;margin-right:.05em;
+  background:inherit;-webkit-background-clip:text;background-clip:text;color:transparent}
 /* 1行：「境界の召喚士」を板の下寄りに */
-.sp-logo.one .l1,.sp-logo.one .l2{display:none}
+.sp-logo.one .l1a,.sp-logo.one .l1b,.sp-logo.one .l2{display:none}
 .sp-logo.one .l0{display:block;top:56%;font-size:calc(min(96vw,460px) * .088);letter-spacing:.08em;margin-left:.04em}
 @keyframes splogo{from{opacity:0;transform:scale(1.25);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 @keyframes spfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
