@@ -59,7 +59,7 @@ const Account = {
     return {
       gold: Math.max(0, Math.floor(+d.gold || 0)),
       cards: cleanDeckCards(d.cards),
-      decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}) })),
+      decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
       created: d.created || Date.now(),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
       redeemed: Object.fromEntries(Object.entries(d.redeemed || {}).filter(([k]) => /^[0-9a-f]{64}$/.test(k))),

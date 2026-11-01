@@ -39,6 +39,29 @@ const Decks = {
     toast(`${sample ? "サンプルデッキ" : "デッキ"}は${CONFIG.DECK_MAX}個までです。いらないデッキを消してから作ってください`);
     return true;
   },
+  /* 保存できない理由。30枚に足りないのは「未完成」として保存できる（対戦には使えない） */
+  saveProblems(deck) {
+    const n = deckCount(deck), size = CONFIG.DECK_SIZE;
+    return this.problems(deck).filter(p => !(n < size && p.startsWith(`${size}枚ちょうど`)));
+  },
+  /* デッキの状態の一文。30枚に足りないときは「未完成」と伝える */
+  probText(deck, all) {
+    const pr = this.problems(deck), n = deckCount(deck), size = CONFIG.DECK_SIZE;
+    if (!pr.length) return "";
+    if (n < size && pr.length === 1) return `未完成：あと${size - n}枚。${size}枚そろうと対戦に使えます`;
+    return all ? pr.map(esc).join("<br>") : esc(pr[0]);
+  },
+  wantCount(deck) { return Object.values((deck && deck.want) || {}).reduce((a, b) => a + b, 0); },
+  /* まだ持っていないカードの一覧（タイル） */
+  wantHTML(deck, editable) {
+    const w = Object.entries((deck && deck.want) || {}).filter(([id, n]) => n > 0 && DEF[id]);
+    if (!w.length) return "";
+    return `<h3 class="sec">まだ持っていないカード <small class="hint">${editable ? "手に入れたら、タップでデッキに入れられます" : "手に入れると、このデッキに入れられます"}</small></h3>
+      <div class="dgrid want">${w.map(([id, n]) => {
+        const c = DEF[id], can = editable && this.maxFor(c, deck) > (deck.cards[id] || 0);
+        return `<button type="button" class="dtile ${can ? "has" : "unowned"}" data-act="${editable ? "deckWantAdd" : "deckDetail"}" data-id="${esc(id)}" aria-label="${esc(c.name)}">${cardHTML(c, { static: true, cls: can ? "" : "dim" })}<span class="dbadge">×${n}</span></button>`;
+      }).join("")}</div>`;
+  },
   find(id) { return this.mine().find(d => d.id === id) || (this.free() ? PRESETS.find(d => d.id === id) : null) || null; },
   owned(id) { return Account.owned(id); },
   problems(deck) { return deckProblems(deck, DEF, CONFIG, this.unbound(deck) ? null : id => this.owned(id)); },
@@ -98,7 +121,7 @@ const Decks = {
 
   /* ---------- 一覧 ---------- */
   showList(msg) {
-    this.editing = null; this.viewing = null; this.detail = null;
+    this.editing = null; this.viewing = null; this.detail = null; this.codeFor = null;
     const sel = this.selected();
     const all = this.mine();
     const mine = all.filter(d => !d.free), samples = all.filter(d => d.free);
@@ -110,7 +133,7 @@ const Decks = {
         <button type="button" class="drow-open" data-act="deckView" data-id="${esc(d.id)}">
           <span class="drow-thumbs">${top.map(x => cardHTML(x.c, { static: true, showCost: false })).join("")}</span>
           <span class="drow-main"><b>${esc(d.name)}${tag ? `<small class="ptag">${tag}</small>` : ""}</b>
-            <span class="${pr.length ? "bad" : "ok"}">${n}/${CONFIG.DECK_SIZE}枚${pr.length ? " ・ " + esc(pr[0]) : ""}</span></span>
+            <span class="${pr.length ? "bad" : "ok"}">${n}/${CONFIG.DECK_SIZE}枚${n < CONFIG.DECK_SIZE ? ` ・ 未完成（あと${CONFIG.DECK_SIZE - n}枚${this.wantCount(d) ? `・まだ持っていないカード${this.wantCount(d)}枚` : ""}）` : pr.length ? " ・ " + esc(pr[0]) : ""}</span></span>
         </button>
         <div class="drow-acts">${using ? `<span class="usingtag">使用中</span>` : `<button type="button" class="btn sm" data-act="deckUse" data-id="${esc(d.id)}" ${pr.length ? "disabled" : ""}>使う</button>`}</div>
       </li>`;
@@ -167,26 +190,46 @@ const Decks = {
     openOverlay(`<div class="panel wide">
       ${this.topbar("デッキ", "decks")}
       <div class="dview-head"><h2 class="title sm">${esc(d.name)}${d.free ? `<small class="ptag">サンプル</small>` : ""}</h2><span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span></div>
-      <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? pr.map(esc).join("<br>") : "このデッキで対戦できます"}</p>
+      <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(d, true) : "このデッキで対戦できます"}</p>
       ${this.curveHTML(d.cards)}
       <div class="dview-acts">
         ${sel && sel.id === id ? `<span class="usingtag big">使用中</span>` : `<button type="button" class="btn primary" data-act="deckUse" data-id="${esc(id)}" ${pr.length ? "disabled" : ""}>このデッキを使う</button>`}
         ${isPreset ? `<button type="button" class="btn" data-act="deckCopy" data-id="${esc(id)}">コピーして編集</button>`
           : `<button type="button" class="btn" data-act="deckEdit" data-id="${esc(id)}">編集</button>
              <button type="button" class="btn" data-act="deckCopy" data-id="${esc(id)}">複製</button>`}
-        <button type="button" class="btn" data-act="deckCode" data-id="${esc(id)}">デッキコードをコピー</button>
+        <button type="button" class="btn" data-act="deckCode" data-id="${esc(id)}">デッキコードを送る</button>
       </div>
       <p class="hint">カードを長押しすると、効果を見られます。</p>
       <div class="dgrid">${this.sorted(d.cards).map(({ c, n }) => c
         ? this.tileHTML(c, `<span class="dbadge">×${n}</span>`)
         : `<div class="dtile missing"><span>使えないカード</span><span class="dbadge">×${n}</span></div>`).join("")}</div>
+      ${this.wantHTML(d, false)}
+      ${this.codeHTML(d)}
       ${this.detailHTML(false)}
     </div>`, "start", true);
   },
 
+  /* デッキコードの窓：コードを見せて、コピーか共有（LINE など）で送る */
+  codeHTML(d) {
+    if (this.codeFor !== d.id) return "";
+    const code = deckToCode(d), canShare = !!navigator.share;
+    return `<div class="dmodal" data-act="deckCodeClose">
+      <div class="dmodal-in codebox" role="dialog" aria-label="デッキコード" data-act="noop">
+        <b class="dm-name">デッキコード</b>
+        <p class="hint">このコードを友達に送ると、「デッキコードから作る」で同じデッキを作れます。${this.wantCount(d) ? "まだ持っていないカードも含めた、完成形のデッキのコードです。" : ""}</p>
+        <textarea class="otxt codetxt" id="deck-code-out" rows="4" readonly>${esc(code)}</textarea>
+        <div class="pre-btns">
+          ${canShare ? `<button type="button" class="btn primary" data-act="deckCodeShare">LINE などで送る</button>` : ""}
+          <button type="button" class="btn ${canShare ? "" : "primary"}" data-act="deckCodeCopy">コピー</button>
+          <button type="button" class="btn" data-act="deckCodeClose">閉じる</button>
+        </div>
+      </div>
+    </div>`;
+  },
+
   /* ---------- 編集 ---------- */
   startEdit(deck, isNew) {
-    this.editing = { id: deck.id, name: deck.name, cards: { ...deck.cards }, isNew, free: !!deck.free, confirmDel: false };
+    this.editing = { id: deck.id, name: deck.name, cards: { ...deck.cards }, want: { ...(deck.want || {}) }, isNew, free: !!deck.free, confirmDel: false };
     this.detail = null;
     this.renderEdit();
   },
@@ -226,13 +269,14 @@ const Decks = {
         <span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span>
       </div>
       ${ed.free ? `<p class="hint">サンプルデッキ：持っていないカードも入れられます（ベータ限定）。</p>` : ""}
-      <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? esc(pr[0]) : "このデッキで対戦できます"}</p>
+      <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(ed) : "このデッキで対戦できます"}</p>
       ${this.curveHTML(ed.cards)}
       <h3 class="sec">デッキの中身 <small class="hint">タップで1枚減らす・長押しで詳細</small></h3>
       <div class="dgrid" id="deck-in">${n ? this.sorted(ed.cards).map(({ c, n, id }) => c
         ? this.tileHTML(c, `<span class="dbadge">×${n}</span>`, "", "deckTapDec")
         : `<button type="button" class="dtile missing" data-act="deckDec" data-id="${esc(id)}"><span>使えないカード</span><span class="dbadge">×${n}</span></button>`).join("")
         : `<p class="hint">下のカードをタップして入れてください。</p>`}</div>
+      ${this.wantHTML(ed, true)}
 
       <h3 class="sec">カードを選ぶ <small class="hint">タップで1枚入れる・長押しで詳細</small></h3>
       <div class="dfilters">
@@ -254,7 +298,7 @@ const Decks = {
              <button type="button" class="btn" data-act="deckDelNo">やめる</button>`
           : `${ed.isNew ? "" : `<button type="button" class="btn danger" data-act="deckDel">削除</button>`}
              <button type="button" class="btn" data-act="deckCancel">保存せずに戻る</button>
-             <button type="button" class="btn primary" data-act="deckSave" ${pr.length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? "保存" : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
+             <button type="button" class="btn primary" data-act="deckSave" ${this.saveProblems(ed).length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? "保存" : n < CONFIG.DECK_SIZE ? `未完成のまま保存（あと${CONFIG.DECK_SIZE - n}枚）` : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
       </div>
     </div>`, "start", true);
     o.scrollTop = keepScroll;
@@ -301,6 +345,7 @@ const Decks = {
       return;
     }
     ed.cards[id] = k + 1;
+    if (ed.want && ed.want[id] > 0 && --ed.want[id] <= 0) delete ed.want[id];   // 欲しかったカードを入れたら、その分を減らす
     Sound.play("click");
     this.renderEdit();
     if (quick) this.pulse(id);
@@ -324,7 +369,7 @@ const Decks = {
       case "decks": this.showList(); return true;
       case "deckBack": this.editing = null; this.viewing = null; showStart(); return true;
       case "deckUse": this.select(id); if (this.viewing) this.showView(this.viewing); else this.showList(); return true;
-      case "deckView": this.detail = null; this.showView(id); return true;
+      case "deckView": this.detail = null; this.codeFor = null; this.showView(id); return true;
       case "deckNew": if (this.full(false)) return true; this.startEdit({ id: "d" + Date.now().toString(36), name: "新しいデッキ", cards: {} }, true); return true;
       case "deckNewSample": if (this.full(true)) return true; this.startEdit({ id: "s" + Date.now().toString(36), name: "サンプルデッキ", cards: {}, free: true }, true); return true;
       case "deckPresets": this.showPresets(); return true;
@@ -335,32 +380,61 @@ const Decks = {
       }
       case "deckImport": this.showImport(); return true;
       case "deckImportGo": {
-        const d = codeToDeck($("#deck-code") ? $("#deck-code").value : "");
-        if (!d) { this.showImport("デッキコードを読み取れませんでした。KYK2:（または KYK1:）から始まる文字を、途中で切れないようにすべて貼り付けてください。"); return true; }
+        const raw = $("#deck-code") ? $("#deck-code").value : "";
+        const d = codeToDeck(raw);
+        if (!d) {
+          // 何が貼り付けられたかを見せる（原因を伝えやすくするため）
+          const t = normCodeText(raw), at = t.search(/KYK[12]:/i);
+          const seen = !raw.trim() ? "何も貼り付けられていません。"
+            : at < 0 ? `「KYK2:」が見つかりません。貼り付けた文字の始め：「${t.slice(0, 24)}」（全${t.length}文字）`
+            : `「${t.slice(at, at + 24)}…」（コードの部分 ${t.length - at}文字）を読みましたが、途中で切れているか、文字が変わっています。`;
+          this.showImport("デッキコードを読み取れませんでした。" + seen + " 送ってもらったコードを、もう一度すべてコピーして貼り付けてください。");
+          return true;
+        }
         const asSample = !!($("#deck-code-sample") && $("#deck-code-sample").checked);
         if (this.full(asSample)) return true;
         // 今は使えないカード・持っていないカードは外して、何を外したかを知らせる
         const draftDeck = { free: asSample };
-        const cards = {}, missing = [];
+        // 持っていない分は「まだ持っていないカード（want）」としてデッキに残す。手に入れたら入れられる
+        const cards = {}, want = {};
+        let gone = 0, wantN = 0;
         Object.entries(d.cards).forEach(([cid, n]) => {
           const c = DEF[cid];
-          if (!c || c.limit <= 0) { missing.push(`（今は使えないカード）×${n}`); return; }
-          const k = Math.min(n, this.maxFor(c, draftDeck));
+          if (!c || c.limit <= 0) { gone += n; return; }
+          const cap = Math.min(n, cardLimit(c, CONFIG, draftDeck));
+          const k = Math.min(cap, this.maxFor(c, draftDeck));
           if (k > 0) cards[cid] = k;
-          if (k < n) missing.push(`${c.name}×${n - k}`);
+          if (cap > k) { want[cid] = cap - k; wantN += cap - k; }
         });
-        this.startEdit({ id: (asSample ? "s" : "d") + Date.now().toString(36), name: d.name, cards, free: asSample }, true);
-        if (missing.length) toast(`持っていないカードを外しました：${missing.slice(0, 4).join("、")}${missing.length > 4 ? " ほか" : ""}`);
+        this.startEdit({ id: (asSample ? "s" : "d") + Date.now().toString(36), name: d.name, cards, want, free: asSample }, true);
+        if (wantN) toast(`持っていないカード${wantN}枚は「まだ持っていないカード」に入れました。未完成のまま保存できます`);
+        if (gone) setTimeout(() => toast(`今は使えないカード${gone}枚は外しました`), 1900);
         return true;
       }
-      case "deckCode": {
-        const d = this.find(id); if (!d) return true;
-        copyText(deckToCode(d)).then(ok => toast(ok ? "デッキコードをコピーしました" : "コピーできませんでした"));
+      case "deckCode": { this.codeFor = id; this.showView(id); return true; }
+      case "deckCodeClose": { const v = this.codeFor; this.codeFor = null; if (v) this.showView(v); return true; }
+      case "deckCodeCopy": {
+        const d = this.find(this.codeFor); if (!d) return true;
+        copyText(deckToCode(d)).then(ok => toast(ok ? "デッキコードをコピーしました" : "コピーできませんでした。上の文字を長押しして選んでください"));
+        return true;
+      }
+      case "deckCodeShare": {
+        const d = this.find(this.codeFor); if (!d || !navigator.share) return true;
+        navigator.share({ text: `境界の召喚士のデッキ「${d.name}」\n${deckToCode(d)}` }).catch(() => {});
+        return true;
+      }
+      case "deckWantAdd": {
+        const c = DEF[id]; if (!ed || !c) return true;
+        if (this.maxFor(c, ed) <= (ed.cards[id] || 0)) { this.detail = id; this.renderEdit(); return true; }   // まだ持っていない：詳細を見せる
+        if (deckCount(ed) >= CONFIG.DECK_SIZE) { toast(`${CONFIG.DECK_SIZE}枚になっています。先に何かを減らしてください`); return true; }
+        ed.cards[id] = (ed.cards[id] || 0) + 1;
+        if (--ed.want[id] <= 0) delete ed.want[id];
+        this.renderEdit();
         return true;
       }
       case "deckCopy": {
         const p = this.find(id); if (!p || this.full(!!p.free)) return true;
-        this.startEdit({ id: (p.free ? "s" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, free: !!p.free }, true);
+        this.startEdit({ id: (p.free ? "s" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, want: p.want, free: !!p.free }, true);
         return true;
       }
       case "deckEdit": { const d = this.find(id); if (d) { this.viewing = null; this.startEdit(d, false); } return true; }
@@ -374,16 +448,18 @@ const Decks = {
       case "deckSave": {
         const nameEl = $("#deck-name");
         ed.name = (nameEl ? nameEl.value : ed.name).trim().slice(0, 16) || "デッキ";
-        const pr = this.problems(ed);
+        const pr = this.saveProblems(ed);
         if (pr.length) { toast(pr[0]); return true; }
         const list = this.mine().filter(d => d.id !== ed.id);
-        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}) });
+        const want = cleanDeckCards(ed.want);
+        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}), ...(Object.keys(want).length ? { want } : {}) });
         if (!this.saveMine(list)) { this.editing = null; this.showList("保存できませんでした（サーバーに接続できていません）"); return true; }
-        if (ed.isNew || !this.isValid(this.selected())) this.select(ed.id);
+        // 対戦に使えるデッキになったときだけ「使用中」にする（未完成のデッキは選ばない）
+        if ((ed.isNew || !this.isValid(this.selected())) && !this.problems(this.mine().find(d => d.id === ed.id) || ed).length) this.select(ed.id);
         const saved = ed;
         this.editing = null; this.detail = null;
         this.showView(saved.id);
-        toast("保存しました");
+        toast(deckCount(saved) === CONFIG.DECK_SIZE ? "保存しました" : `未完成のまま保存しました（あと${CONFIG.DECK_SIZE - deckCount(saved)}枚）`);
         return true;
       }
       case "deckCancel": { const back = ed && !ed.isNew ? ed.id : null; this.editing = null; this.detail = null; back ? this.showView(back) : this.showList(); return true; }

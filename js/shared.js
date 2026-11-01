@@ -326,13 +326,25 @@ function registerSW() {
 const b64urlEnc = str => btoa(unescape(encodeURIComponent(str))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const b64urlDec = str => decodeURIComponent(escape(atob(str.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((str.length + 3) % 4))));
 function deckToCode(deck) {
-  const body = String(deck.name || "デッキ").replace(/[|]/g, "") + "|" + Object.entries(deck.cards || {}).filter(([, n]) => n > 0).map(([id, n]) => n > 1 ? `${id}*${n}` : id).join(",");
+  // まだ持っていないカード（want）も含めた「目指すデッキ」をコードにする
+  const all = { ...(deck.cards || {}) };
+  Object.entries(deck.want || {}).forEach(([id, n]) => { all[id] = (all[id] || 0) + n; });
+  const body = String(deck.name || "デッキ").replace(/[|]/g, "") + "|" + Object.entries(all).filter(([, n]) => n > 0).map(([id, n]) => n > 1 ? `${id}*${n}` : id).join(",");
   return "KYK2:" + b64urlEnc(body);
+}
+/* 貼り付けた文字を、コードとして読める形に戻す。
+   iPhone でメモや LINE を通すと、英数字が全角になったり「-」が別の横線に変わったりすることがあるため */
+function normCodeText(code) {
+  let t = String(code || "");
+  try { t = t.normalize("NFKC"); } catch {}
+  return t.replace(/[\s\u200b-\u200d\u2060\ufeff]+/g, "")
+    .replace(/[\u2010-\u2015\u2212\ufe58\ufe63\uff0d\u30fc\u2500]/g, "-")
+    .replace(/[：]/g, ":");
 }
 function codeToDeck(code) {
   // 貼り付けたときに入りがちな改行・空白・全角のコロンを取り除き、文章の中からコードの部分だけを探す
-  const t = String(code || "").replace(/[\s\u200b]+/g, "").replace(/：/g, ":");
-  let m = t.match(/KYK2:([A-Za-z0-9_-]+)/);
+  const t = normCodeText(code);
+  let m = t.match(/KYK2:([A-Za-z0-9_-]+)/i);
   if (m) {
     try {
       const body = b64urlDec(m[1]);
@@ -342,7 +354,7 @@ function codeToDeck(code) {
       return { name: body.slice(0, i).slice(0, 16) || "デッキ", cards: cleanDeckCards(cards) };
     } catch { return null; }
   }
-  m = t.match(/KYK1:([A-Za-z0-9+/=]+)/);
+  m = t.match(/KYK1:([A-Za-z0-9+/=]+)/i);
   if (!m) return null;
   try { const o = JSON.parse(decodeURIComponent(escape(atob(m[1])))); return { name: String(o.n || "デッキ").slice(0, 16), cards: cleanDeckCards(o.c) }; }
   catch { return null; }

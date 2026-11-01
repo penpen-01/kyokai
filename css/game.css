@@ -913,3 +913,7 @@ body{
 .iimg{position:absolute;inset:0;background-size:135% auto;background-repeat:no-repeat;border-radius:inherit}
 .avatar .face,.homeicon .hface,.iconopt .iface{position:absolute}
 .iconopt .iface{position:relative}
+/* デッキコードの窓・まだ持っていないカード */
+.codebox{flex-direction:column;align-items:stretch;gap:10px}
+.codetxt{font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all;resize:none;user-select:text;-webkit-user-select:text}
+.dgrid.want .dtile.unowned{opacity:.8}
