@@ -204,7 +204,7 @@ function startTurn(pi, skipDraw) {
   p.e = p.maxE;
   returnFromVoid(pi);   // 亜空間のキャラは、元から場にいた扱いで戻る
   // 行動不能のキャラは、このターンだけ攻撃できない
-  p.field.forEach(u => { if (u.frozen) { u.ready = false; u.frozen = false; } else u.ready = true; });
+  p.field.forEach(u => { u.swings = 0; if (u.frozen) { u.ready = false; u.frozen = false; } else u.ready = !kw(u, "noattack"); });
   S.log.push({ sep: true, msg: `ターン${S.turnNo}：${pname(pi)}（エナジー${p.e}）` });
   if (!skipDraw) draw(pi);
   trigUnits(pi, "turnStart");
@@ -217,6 +217,10 @@ function startTurn(pi, skipDraw) {
 function endTurn(pi) {
   if (S.over || S.phase !== "play" || S.turn !== pi) return;
   if (pi === ME) ui = { sel: null, mode: null };
+  S.players[pi].field.forEach(u => {
+    if (kw(u, "regen") && u.hp > 0 && u.hp < u.maxHp) { fx(unitSel(u.uid), "+" + (u.maxHp - u.hp), "heal"); u.hp = u.maxHp; log(`${cname(u.id)}は再生した。`); }
+    if (kw(u, "doom")) { if (u.doomArmed) { log(`${cname(u.id)}は寿命で破壊された。`); destroyUnit(u); } else u.doomArmed = true; }
+  });
   trigUnits(pi, "turnEnd");
   cleanup();
   if (checkWin()) return;
@@ -260,13 +264,23 @@ function returnFromVoid(pi) {
 /* キャラの能力：カードの能力＋効果で与えられた能力（u.kws）。沈黙したキャラは何も持たない */
 const kw = (u, k) => !!(u && !u.silenced && DEF[u.id] && (DEF[u.id].keywords.includes(k) || (u.kws || []).includes(k)));
 const armorOf = u => (u.silenced ? 0 : ((DEF[u.id] && DEF[u.id].armor) || 0) + (u.armorPlus || 0));
+/* 隠密（攻撃するまで）・聖盾（1回使うまで） */
+const hidden = u => kw(u, "stealth") && !u.revealed;
+const shielded = u => kw(u, "shield") && !u.shieldUsed;
+/* 相手が対象に選べるか（隠密・呪文耐性は選べない） */
+const canTarget = u => !hidden(u) && !kw(u, "elusive");
+/* 対象を選ぶ役割で、選べるキャラ */
+function targetables(pi, role) {
+  const f = S.players[roleSide(pi, role)].field;
+  return role === "enemy" ? f.filter(canTarget) : f;
+}
 function effCost(pi, d) { return Math.max(0, d.cost - (S.players[pi].discount || 0)); }
 
 /* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか */
 function roleSide(pi, role) { return role === "enemy" ? opp(pi) : pi; }
 /* 実際に選ぶ必要がある対象（キャラで、その側にキャラがいない効果は選ばずに空振り） */
 function neededRoles(pi, d) {
-  return cardTargetRoles(d).filter(r => S.players[roleSide(pi, r)].field.length > 0);
+  return cardTargetRoles(d).filter(r => targetables(pi, r).length > 0);
 }
 
 function canPlay(pi, idx) {
@@ -286,7 +300,7 @@ function canPlay(pi, idx) {
   // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
   if (d.type === "spell") {
     for (const r of cardTargetRoles(d)) {
-      if (!S.players[roleSide(pi, r)].field.length) return { ok: false, reason: r === "enemy" ? "対象の相手キャラがいません" : "対象の自分のキャラがいません" };
+      if (!targetables(pi, r).length) return { ok: false, reason: r === "enemy" ? (S.players[opp(pi)].field.length ? "対象に選べる相手キャラがいません（隠密・呪文耐性）" : "対象の相手キャラがいません") : "対象の自分のキャラがいません" };
     }
   }
   return { ok: true };
@@ -305,7 +319,7 @@ function playCard(pi, idx, targetsIn) {
   const targets = normTargets(pi, d, targetsIn);
   const roles = neededRoles(pi, d);
   for (const r of roles) {
-    if (!S.players[roleSide(pi, r)].field.some(u => u.uid === targets[r])) return false;
+    if (!targetables(pi, r).some(u => u.uid === targets[r])) return false;
   }
   const cost = effCost(pi, d);
   p.hand.splice(idx, 1);
@@ -336,7 +350,7 @@ function playCard(pi, idx, targetsIn) {
 
 function addUnit(pi, id) {
   const d = DEF[id];
-  const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") };
+  const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") && !d.keywords.includes("noattack") };
   S.players[pi].field.push(u);
   trigUnits(pi, "allyEnter", u);
   return u;
@@ -370,7 +384,7 @@ function effect(pi, e, targets, self) {
     case "dmgTarget": { const u = enemyT(); if (u) hitUnit(u, n); break; }
     case "dmgRandom": {
       // すでに倒れている（体力0以下の）キャラは選ばない
-      const alive = en.field.filter(x => x.hp > 0);
+      const alive = en.field.filter(x => x.hp > 0 && canTarget(x));
       if (alive.length) {
         const u = alive[Math.floor(Math.random() * alive.length)];
         log(`${cname(u.id)}に${n}ダメージ。`);
@@ -479,7 +493,8 @@ function effect(pi, e, targets, self) {
       log(`山札から${cname(pick.id)}が現れた！`);
       // 出てきたキャラの登場時効果は、対象をランダムに選んで発動する
       const auto = {};
-      if (en.field.length) auto.enemy = en.field[Math.floor(Math.random() * en.field.length)].uid;
+      const et = en.field.filter(canTarget);
+      if (et.length) auto.enemy = et[Math.floor(Math.random() * et.length)].uid;
       const others = me.field.filter(x => x !== u);
       if (others.length) auto.own = others[Math.floor(Math.random() * others.length)].uid;
       playEffects(DEF[pick.id]).filter(x => x.kind !== "summon").forEach(x => effect(pi, x, auto, u));
@@ -494,7 +509,10 @@ function grant(u, e) {
   if (!KEYWORDS[e.kw]) return;
   log(`${cname(u.id)}は${KEYWORDS[e.kw].label}を得た。`);
   u.kws = [...new Set([...(u.kws || []), e.kw])];
-  if (e.kw === "haste" && !u.frozen) u.ready = true;
+  if (e.kw === "haste" && !u.frozen && !kw(u, "noattack") && !u.swings) u.ready = true;
+  if (e.kw === "shield") u.shieldUsed = false;
+  if (e.kw === "stealth") u.revealed = false;
+  if (e.kw === "noattack") u.ready = false;
   fx(unitSel(u.uid), KEYWORDS[e.kw].label, "heal");
 }
 /* 場のキャラを手札（to="hand"）か山札（"deck"）へ。トークンは消える。手札があふれたら捨て札 */
@@ -513,6 +531,7 @@ function swapStats(u) {
 }
 
 function hitUnit(u, n) {
+  if (n > 0 && shielded(u)) { u.shieldUsed = true; fx(unitSel(u.uid), "聖盾", "heal"); log(`${cname(u.id)}の聖盾がダメージを防いだ。`); return 0; }
   const dmg = Math.max(0, n - armorOf(u));
   u.hp -= dmg;
   fx(unitSel(u.uid), dmg < n ? `-${dmg}（装甲）` : "-" + dmg, "dmg");
@@ -544,7 +563,7 @@ function trigUnits(pi, when, except) {
 /* 登場時以外の効果の対象：ランダムに選ぶ（倒れかけのキャラは選ばない） */
 function autoTargets(pi, self) {
   const pick = a => a.length ? a[Math.floor(Math.random() * a.length)].uid : undefined;
-  return { enemy: pick(S.players[opp(pi)].field.filter(x => x.hp > 0)), own: pick(S.players[pi].field.filter(x => x.hp > 0 && x !== self)) };
+  return { enemy: pick(S.players[opp(pi)].field.filter(x => x.hp > 0 && canTarget(x))), own: pick(S.players[pi].field.filter(x => x.hp > 0 && x !== self)) };
 }
 function fireTrig(t) {
   const p = S.players[t.pi];
@@ -591,7 +610,7 @@ function cleanup() {
 }
 
 /* ---------- 攻撃 ---------- */
-const guards = pi => S.players[pi].field.filter(u => kw(u, "guard"));
+const guards = pi => S.players[pi].field.filter(u => kw(u, "guard") && !hidden(u));
 /* 相手プレイヤーは、相手の場に守護がいなければいつでも攻撃できる（2026-10 ルール変更）。
    直撃を持つキャラは守護を無視できる */
 function canAttackPlayer(pi, u) {
@@ -600,6 +619,7 @@ function canAttackPlayer(pi, u) {
 }
 /* 守護がいる間は、守護を持つキャラしか攻撃できない（直撃を持つキャラ u は例外） */
 function canAttackUnit(pi, target, u) {
+  if (hidden(target)) return false;
   const g = guards(opp(pi));
   return !g.length || g.includes(target) || !!(u && kw(u, "pierce"));
 }
@@ -611,19 +631,27 @@ function attack(pi, uid, target) {
   if (S.over || S.phase !== "play" || S.turn !== pi) return false;
   const me = S.players[pi], en = S.players[opp(pi)];
   const a = me.field.find(u => u.uid === uid);
-  if (!a || !a.ready) return false;
+  if (!a || !a.ready || kw(a, "noattack")) return false;
   if (target === "player") {
     if (!canAttackPlayer(pi, a)) return false;
-    a.ready = false;
+  } else {
+    const d0 = en.field.find(u => u.uid === target);
+    if (!d0 || !canAttackUnit(pi, d0, a)) return false;
+  }
+  // 2回攻撃は1ターンに2回まで。攻撃すると隠密は解ける
+  a.swings = (a.swings || 0) + 1;
+  a.ready = kw(a, "twice") && a.swings < 2;
+  if (hidden(a)) { a.revealed = true; log(`${cname(a.id)}の隠密が解けた。`); }
+  const steal = (u, pIdx, n) => { if (n > 0 && kw(u, "lifesteal")) { S.players[pIdx].hp += n; log(`吸収！${pname(pIdx)}の体力が${n}回復。`); fx(playerSel(pIdx), "+" + n, "heal"); trigUnits(pIdx, "healed"); } };
+  if (target === "player") {
     fx(unitSel(a.uid), playerSel(opp(pi)), "lunge");
     log(`${cname(a.id)}が${pname(opp(pi))}に${a.atk}ダメージ！`);
     hitPlayer(opp(pi), a.atk);
+    steal(a, pi, a.atk);
     queueTrig(pi, "attack", a);
     if (a.atk > 0) queueTrig(pi, "face", a);
   } else {
     const d = en.field.find(u => u.uid === target);
-    if (!d || !canAttackUnit(pi, d, a)) return false;
-    a.ready = false;
     fx(unitSel(a.uid), unitSel(d.uid), "lunge");
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
     const before = d.hp;
@@ -633,7 +661,11 @@ function attack(pi, uid, target) {
       log(`貫通！${pname(opp(pi))}に${over}ダメージ。`);
       hitPlayer(opp(pi), over);
     }
-    hitUnit(a, d.atk);
+    if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); destroyUnit(d); }
+    steal(a, pi, dealt);
+    const back = hitUnit(a, d.atk);
+    if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); destroyUnit(a); }
+    steal(d, opp(pi), back);
     queueTrig(pi, "attack", a);
     if (before > 0 && d.hp <= 0) queueTrig(pi, "kill", a);
     if (kw(a, "trample") && dealt > before && before > 0) queueTrig(pi, "face", a);
@@ -710,6 +742,15 @@ function unitValue(u) {
   if (kw(u, "guard")) v += 1.5 + u.hp * 0.2;
   if (kw(u, "pierce")) v += u.atk * 0.4;
   if (kw(u, "trample")) v += 0.5;
+  if (hidden(u)) v += 1 + u.atk * 0.3;
+  if (kw(u, "twice")) v += u.atk * 0.8;
+  if (shielded(u)) v += 1 + u.atk * 0.5;
+  if (kw(u, "poison")) v += 2;
+  if (kw(u, "lifesteal")) v += u.atk * 0.4;
+  if (kw(u, "elusive")) v += 1;
+  if (kw(u, "noattack")) v -= u.atk * 1.0;
+  if (kw(u, "regen")) v += 1 + u.maxHp * 0.15;
+  if (kw(u, "doom")) v -= (u.atk + u.hp) * (u.doomArmed ? 0.6 : 0.3);
   v += armorOf(u) * 1.5;
   if (!u.silenced) v += d.effects.filter(e => whenOf(e) !== "play").length * 0.8;   // 場に残ると働く効果
   if (u.frozen) v -= u.atk * 0.6;
@@ -728,13 +769,13 @@ function evaluate(st, pi) {
   s += me.maxE * 0.9;
   // 相手の次の攻撃で負けそうなら大きく減点
   // 相手の次のターンに本体へ届きそうなダメージ（守護がいれば防げる）
-  const myGuard = me.field.some(u => kw(u, "guard"));
-  const reach = en.field.reduce((a, u) => a + ((!myGuard || kw(u, "pierce")) && !u.frozen ? u.atk : 0), 0);
+  const myGuard = me.field.some(u => kw(u, "guard") && !hidden(u));
+  const reach = en.field.reduce((a, u) => a + ((!myGuard || kw(u, "pierce")) && !u.frozen && !kw(u, "noattack") ? u.atk * (kw(u, "twice") ? 2 : 1) : 0), 0);
   if (reach >= me.hp) s -= 60;
   else s -= reach * 0.4;
   // 自分の次のターンに届くダメージ（とどめを狙う）
-  const enGuard = en.field.some(u => kw(u, "guard"));
-  const myReach = me.field.reduce((a, u) => a + ((!enGuard || kw(u, "pierce")) ? u.atk : 0), 0);
+  const enGuard = en.field.some(u => kw(u, "guard") && !hidden(u));
+  const myReach = me.field.reduce((a, u) => a + ((!enGuard || kw(u, "pierce")) && !kw(u, "noattack") ? u.atk * (kw(u, "twice") ? 2 : 1) : 0), 0);
   if (myReach >= en.hp) s += 25;
   return s;
 }
@@ -748,7 +789,7 @@ function legalActions(pi) {
     const roles = neededRoles(pi, DEF[id]);
     let combos = [{}];
     roles.forEach(r => {
-      const opts = S.players[roleSide(pi, r)].field.map(u => u.uid);
+      const opts = targetables(pi, r).map(u => u.uid);
       combos = combos.flatMap(c => opts.map(o => ({ ...c, [r]: o })));
     });
     combos.slice(0, 24).forEach(t => acts.push({ t: "play", idx, id, targets: t }));
@@ -896,7 +937,7 @@ function curRole() { return ui.mode === "target" ? ui.roles[Object.keys(ui.picke
 function isTargetable(pi, u) {
   if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u, selectedUnit());
   const r = curRole();
-  return !!r && roleSide(ME, r) === pi;
+  return !!r && roleSide(ME, r) === pi && (r !== "enemy" || canTarget(u));
 }
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
 function beginPlay(idx) {
@@ -1359,7 +1400,8 @@ function dropAction(x, y) {
     if (z.units != null) {
       if (!unitEl || +unitEl.dataset.owner !== z.units) return null;
       if (!chk.ok) return () => toast(chk.reason);
-      const uid = +unitEl.dataset.uid;
+      const uid = +unitEl.dataset.uid, tu = S.players[z.units].field.find(x => x.uid === uid);
+      if (z.role === "enemy" && tu && !canTarget(tu)) return () => toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません");
       return () => doPlay(idx, { [z.role]: uid });
     }
     if (!fieldEl || +fieldEl.dataset.zone !== ME) return null;
@@ -1370,7 +1412,7 @@ function dropAction(x, y) {
   const uid = drag.uid;
   if (unitEl && +unitEl.dataset.owner === OP) {
     const t = +unitEl.dataset.uid, tu = S.players[OP].field.find(x => x.uid === t);
-    if (tu && !canAttackUnit(ME, tu, S.players[ME].field.find(x => x.uid === uid))) return () => toast("守護を持つキャラを先に攻撃してください");
+    if (tu && !canAttackUnit(ME, tu, S.players[ME].field.find(x => x.uid === uid))) return () => toast(hidden(tu) ? "隠密のキャラは攻撃できません" : "守護を持つキャラを先に攻撃してください");
     return () => doAttack(uid, t);
   }
   if (plEl && +plEl.dataset.player === OP) {
@@ -1808,12 +1850,16 @@ document.addEventListener("click", e => {
     const uid = +c.dataset.uid, owner = +c.dataset.owner;
     if (myTurn && ui.mode === "attack" && owner === OP) {
       const tu = S.players[OP].field.find(x => x.uid === uid);
-      if (tu && !canAttackUnit(ME, tu, selectedUnit())) { toast("守護を持つキャラを先に攻撃してください"); return; }
+      if (tu && !canAttackUnit(ME, tu, selectedUnit())) { toast(hidden(tu) ? "隠密のキャラは攻撃できません" : "守護を持つキャラを先に攻撃してください"); return; }
       const a = ui.sel.uid; ui = { sel: null, mode: null }; doAttack(a, uid); return;
     }
     if (myTurn && ui.mode === "target") {
       const r = curRole();
-      if (r && owner === roleSide(ME, r)) { pickTarget(uid); return; }
+      if (r && owner === roleSide(ME, r)) {
+        const tu = S.players[owner].field.find(x => x.uid === uid);
+        if (r === "enemy" && tu && !canTarget(tu)) { toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません"); return; }
+        pickTarget(uid); return;
+      }
       return;
     }
     const u = S.players[owner].field.find(x => x.uid === uid);

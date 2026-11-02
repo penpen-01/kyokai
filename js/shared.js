@@ -10,7 +10,16 @@ const KEYWORDS = {
   haste:   { label: "速攻", short: "速", text: "場に出したターンから攻撃できる。" },
   pierce:  { label: "直撃", short: "直", text: "相手の守護を無視して、好きな相手キャラや相手プレイヤーを攻撃できる。" },
   trample: { label: "貫通", short: "貫", text: "キャラを攻撃して倒したとき、余ったダメージを相手プレイヤーに与える。" },
-  guard:   { label: "守護", short: "守", text: "このキャラがいる間、相手は守護を持つキャラしか攻撃できない。" }
+  guard:   { label: "守護", short: "守", text: "このキャラがいる間、相手は守護を持つキャラしか攻撃できない。" },
+  stealth: { label: "隠密", short: "隠", text: "このキャラが攻撃するまで、相手はこのキャラを攻撃することも、効果の対象に選ぶこともできない（隠密の守護は相手の攻撃をさえぎらない）。" },
+  twice:   { label: "2回攻撃", short: "二", text: "1ターンに2回攻撃できる。" },
+  shield:  { label: "聖盾", short: "盾", text: "最初に受けるダメージを1回だけ0にする（破壊の効果は防げない）。" },
+  poison:  { label: "毒", short: "毒", text: "攻撃や反撃でダメージを与えたキャラを破壊する。" },
+  lifesteal:{ label: "吸収", short: "吸", text: "攻撃や反撃で与えたダメージの分、自分の体力を回復する。" },
+  elusive: { label: "呪文耐性", short: "耐", text: "相手の魔法や効果の対象に選ばれない（ランダムな1体にも選ばれない。全体への効果は受ける）。" },
+  noattack:{ label: "不動", short: "不", text: "攻撃できない。" },
+  regen:   { label: "再生", short: "再", text: "自分のターンの終わりに、体力が最大まで回復する。" },
+  doom:    { label: "寿命", short: "寿", text: "場に出した次の自分のターンの終わりに破壊される。" }
 };
 /* 装甲は数値つきの能力（card.armor） */
 const ARMOR_TEXT = n => `装甲${n}：受けるダメージを${n}減らす。`;
@@ -269,7 +278,8 @@ function cardHTML(card, o = {}) {
   }
   const tag = o.static ? "div" : "button";
   // 場のキャラは、与えられた能力も見せる。沈黙したキャラは能力なし
-  const kwl = u && u.silenced ? [] : [...new Set([...(card.keywords || []), ...((u && u.kws) || [])])];
+  const kwl = (u && u.silenced ? [] : [...new Set([...(card.keywords || []), ...((u && u.kws) || [])])])
+    .filter(k => !(u && ((k === "stealth" && u.revealed) || (k === "shield" && u.shieldUsed))));   // 解けた隠密・使った聖盾は消す
   const arm = u ? (u.silenced ? 0 : (card.armor || 0) + (u.armorPlus || 0)) : card.armor;
   const marks = card.type === "char"
     ? kwl.filter(k => KEYWORDS[k]).map(k => `<i class="mk mk-${k}">${KEYWORDS[k].short}</i>`).join("")
@@ -278,7 +288,7 @@ function cardHTML(card, o = {}) {
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
   const guard = card.type === "char" && kwl.includes("guard");
-  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
+  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
     <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span>
     ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}

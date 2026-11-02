@@ -79,6 +79,8 @@
 
 - 段階2「トークンと効果」：実装済み（2026-11-02 昼、`kakunin` で確認待ち）。カードに `token`（limit は 0 に固定）。効果に追加の設定 `card`（トークン）・`kw`（与える能力。armor は n が値）・`world`・`ctype`（`normEffect` で整える）。キャラに `u.kws`（与えられた能力）・`u.armorPlus`・`u.silenced`。能力の判定は必ず `kw(u, k)` / `armorOf(u)` を通す。全体強化（攻撃力・＋N/＋N）にも世界の絞り込みを追加
 
+- 段階3「能力」：実装済み（2026-11-02 昼、`kakunin` で確認待ち）。KEYWORDS に stealth・twice・shield・poison・lifesteal・elusive・noattack・regen・doom。状態は `u.revealed`（隠密が解けた）・`u.shieldUsed`・`u.swings`（そのターンの攻撃回数）・`u.doomArmed`。相手が選べる対象は `targetables()` / `canTarget()` を通す。毒・吸収は攻撃と反撃のダメージだけ（効果のダメージには付かない）。装甲で0になったら毒は効かない
+
 ## 進め方
 1. 発動するタイミング → 2. トークンと効果 → 3. 能力 → 4. 条件付き → 5. CPU の判断の調整
 - まとまりごとに作って、確認用ブランチ `kakunin` で動画を見せ、オーナーの「OK」で main へ
