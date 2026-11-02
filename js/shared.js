@@ -305,12 +305,12 @@ function cardHTML(card, o = {}) {
   const guard = card.type === "char" && kwl.includes("guard");
   return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
-    <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span>
+    <span class="frame" aria-hidden="true"></span><span class="orn" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span><span class="gem" aria-hidden="true"></span>
     ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
     ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}
-    <span class="foot"><span class="nm">${esc(card.name)}</span>${stats}</span></${tag}>`;
+    <span class="foot"><span class="nm ${card.name.length >= 9 ? "xlong" : card.name.length >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
 /* 効果1つの欠けを補う（追加の設定：card＝トークン、kw＝与える能力、world＝世界の絞り込み、ctype＝カードの種類） */
