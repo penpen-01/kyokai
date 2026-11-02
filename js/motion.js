@@ -101,7 +101,7 @@ const Motion = {
     const w = document.createElement("div");
     w.id = "cutin";
     w.className = `cutin ${mine ? "mine" : "theirs"} r-${d.rarity} w-${d.world}${this.reduced ? " reduced" : ""}`;
-    w.innerHTML = `<div class="ci-band"><div class="ci-art" ${d.art ? `style="background-image:url('${esc(d.art)}')"` : ""}></div></div>
+    w.innerHTML = `<div class="ci-rays"></div><div class="ci-pic">${d.art ? `<img src="${esc(d.art)}" alt="" draggable="false">` : `<span class="glyph">${esc(d.glyph || "？")}</span>`}</div>
       <div class="ci-flash"></div>
       <div class="ci-text"><small>${d.rarity === "legend" ? "LEGEND" : "ULTRA RARE"}</small><b>${esc(d.name)}</b><span>${esc(S && S.players[pi] ? S.players[pi].name : "")}が${d.type === "char" ? "召喚" : "使用"}</span></div>`;
     // タップで飛ばしたときだけ、待っている演出をすぐ進める
