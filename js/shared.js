@@ -19,7 +19,7 @@ const KEYWORDS = {
   elusive: { label: "呪文耐性", short: "耐", text: "相手の魔法や効果の対象に選ばれない（ランダムな1体にも選ばれない。全体への効果は受ける）。" },
   noattack:{ label: "不動", short: "不", text: "攻撃できない。" },
   regen:   { label: "再生", short: "再", text: "自分のターンの終わりに、体力が最大まで回復する。" },
-  doom:    { label: "寿命", short: "寿", text: "場に出した次の自分のターンの終わりに破壊される。" }
+  doom:    { label: "死の宣告", short: "死", text: "場に出した次の自分のターンの終わりに破壊される。" }
 };
 /* 装甲は数値つきの能力（card.armor） */
 const ARMOR_TEXT = n => `装甲${n}：受けるダメージを${n}減らす。`;
@@ -81,6 +81,8 @@ const EFFECTS = {
   transform:   { group: "除去",   label: "相手キャラを変身させる",       text: (n, e) => e && e.card ? `相手キャラ1体を「${tokName(e)}」に変身させる。` : "相手キャラ1体を、効果も能力もない1/1に変身させる。", target: "enemyUnit", noN: true, opts: ["token"], tokenType: "char", tokenOptional: true },
   steal:       { group: "除去",   label: "相手キャラを奪う",             text: () => "相手キャラ1体を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。", target: "enemyUnit", noN: true },
   silence:     { group: "妨害",   label: "相手キャラを沈黙させる",       text: () => "相手キャラ1体を沈黙させる（効果と能力をすべて失う）。", target: "enemyUnit", noN: true },
+  silenceAll:  { group: "妨害",   label: "相手キャラ全体を沈黙させる",   text: () => "相手キャラ全体を沈黙させる（効果と能力をすべて失う）。", noN: true },
+  silenceOwn:  { group: "強化",   label: "自分のキャラを沈黙させる",     text: () => "自分のキャラ1体を沈黙させる（効果と能力をすべて失う。不動や死の宣告も消える）。", target: "ownUnit", noN: true },
   swapEnemy:   { group: "妨害",   label: "相手キャラの攻撃力と体力を入れ替える", text: () => "相手キャラ1体の攻撃力と体力を入れ替える。", target: "enemyUnit", noN: true },
   swapOwn:     { group: "強化",   label: "自分のキャラの攻撃力と体力を入れ替える", text: () => "自分のキャラ1体の攻撃力と体力を入れ替える。", target: "ownUnit", noN: true },
   bounceOwn:   { group: "強化",   label: "自分のキャラを手札に戻す",     text: () => "自分のキャラ1体を手札に戻す（トークンは消える）。", target: "ownUnit", noN: true },

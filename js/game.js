@@ -220,7 +220,7 @@ function endTurn(pi) {
   if (pi === ME) ui = { sel: null, mode: null };
   S.players[pi].field.forEach(u => {
     if (kw(u, "regen") && u.hp > 0 && u.hp < u.maxHp) { fx(unitSel(u.uid), "+" + (u.maxHp - u.hp), "heal"); u.hp = u.maxHp; log(`${cname(u.id)}は再生した。`); }
-    if (kw(u, "doom")) { if (u.doomArmed) { log(`${cname(u.id)}は寿命で破壊された。`); destroyUnit(u); } else u.doomArmed = true; }
+    if (kw(u, "doom")) { if (u.doomArmed) { log(`${cname(u.id)}は死の宣告で破壊された。`); destroyUnit(u); } else u.doomArmed = true; }
   });
   trigUnits(pi, "turnEnd");
   cleanup();
@@ -475,7 +475,9 @@ function effect(pi, e, targets, self) {
       log(`${pname(pi)}は${cname(u.id)}を奪った！`); fx(unitSel(u.uid), "奪った", "heal");
       break;
     }
-    case "silence": { const u = enemyT(); if (u) { u.silenced = true; u.kws = []; u.armorPlus = 0; log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "dmg"); } break; }
+    case "silence": { const u = enemyT(); if (u) silenceUnit(u); break; }
+    case "silenceAll": if (en.field.length) { log("相手キャラ全体が沈黙した。"); en.field.forEach(silenceUnit); } break;
+    case "silenceOwn": { const u = ownT(); if (u) silenceUnit(u); break; }
     case "transform": {
       const u = enemyT(); if (!u) break;
       const t = DEF[e.card], before = cname(u.id);
@@ -540,6 +542,11 @@ function bounce(pi, u, to) {
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
   if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); return; }
   p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
+}
+/* 沈黙：効果と能力をすべて失う（上がった攻撃力・体力はそのまま） */
+function silenceUnit(u) {
+  u.silenced = true; u.kws = []; u.armorPlus = 0;
+  log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "dmg");
 }
 function swapStats(u) {
   const a = u.atk; u.atk = Math.max(0, u.hp); u.hp = a; u.maxHp = Math.max(u.maxHp, a);

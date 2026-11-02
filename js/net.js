@@ -44,6 +44,8 @@ const FirebaseNet = {
   async get(path) { const s = await this.ref(path).get(); return s.exists() ? s.val() : null; },
   set(path, v) { return this.ref(path).set(v); },
   update(path, v) { return this.ref(path).update(v); },
+  /* サーバーの今の値を見てから書く（fn が undefined を返したら書かない）。{ committed, val } */
+  async tx(path, fn) { const r = await this.ref(path).transaction(fn, undefined, false); return { committed: r.committed, val: r.snapshot.exists() ? r.snapshot.val() : null }; },
   remove(path) { return this.ref(path).remove(); },
   push(path, v) { return this.ref(path).push(v).key; },
   // 書き込みがサーバーに届くまで待つ（ご意見フォーム用）

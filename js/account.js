@@ -15,6 +15,8 @@ const Account = {
   status: "none",   // none | loading | ready | offline | free（試遊：全カード使用可）
   isNew: false,
   saveTimer: null,
+  /* 別の端末で遊んだデータを読み込み直したら、ホームを開いているときだけ描き直す */
+  onReload() { if ((!S || S.over) && document.querySelector(".homebar") && typeof showStart === "function") showStart(); },
 
   key() { return `kyokai-acct-${CONFIG.SEASON}`; },
   cacheKey() { return `kyokai-acct-cache-${CONFIG.SEASON}`; },
@@ -42,15 +44,17 @@ const Account = {
       await Promise.race([Net.init(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 12000))]);
     } catch (e) {
       console.error(e);
-      if (code && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; this.streakAbandon(); return; }
+      if (code && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; return; }
       this.status = "none";
       return;
     }
     if (code) {
-      let d = null;
-      try { d = await Net.get(this.path(code)); } catch (e) { console.error(e); }
-      if (d) { this.code = code; this.data = this.fix(d); this.status = "ready"; this.writeCache(); this.streakAbandon(); return; }
-      if (cache && cache.gold != null) { this.code = code; this.data = this.fix(cache); this.status = "ready"; this.streakAbandon(false); this.save(); return; }
+      let d = null, failed = false;
+      try { d = await Net.get(this.path(code)); } catch (e) { console.error(e); failed = true; }
+      if (d) { this.code = code; this.data = this.fix(d); this.status = "ready"; this.writeCache(); this.watch(); this.streakAbandon(); return; }
+      // 読み込みに失敗しただけのときは、端末に残っている古いデータでサーバーを上書きしない（オフライン扱い）
+      if (failed && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; return; }
+      if (cache && cache.gold != null) { this.code = code; this.data = this.fix(cache); this.status = "ready"; this.watch(); this.streakAbandon(false); this.save(); return; }
     }
     await this.create();
   },
@@ -58,6 +62,7 @@ const Account = {
   fix(d) {
     return {
       gold: Math.max(0, Math.floor(+d.gold || 0)),
+      rev: Math.max(0, Math.floor(+d.rev || 0)),   // 保存するたびに1増える（古いデータでの上書きを防ぐ）
       cards: cleanDeckCards(d.cards),
       decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.key ? { key: String(x.key) } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
       created: d.created || Date.now(),
@@ -86,6 +91,7 @@ const Account = {
     try { localStorage.setItem(this.key(), code); } catch {}
     try { localStorage.setItem(DECK_SEL_KEY, "d-starter"); } catch {}
     await this.saveNow();
+    this.watch();
   },
 
   writeCache() { try { localStorage.setItem(this.cacheKey(), JSON.stringify(this.data)); } catch {} },
@@ -93,13 +99,39 @@ const Account = {
     if (this.status === "free" || !this.data) return;
     this.writeCache();
     clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => this.saveNow(), 300);
+    this.saveTimer = setTimeout(() => { this.saveTimer = null; this.saveNow(); }, 300);
   },
-  async saveNow() {
-    if (this.status === "free" || !this.data || !this.code) return false;
+  /* 保存は順番に1つずつ。サーバーのデータが、こちらが読み込んだときより新しければ（別の端末・別の画面で
+     遊んだあと）上書きせずに、サーバーのデータを読み込み直す。オフラインの間はサーバーに書かない */
+  saveNow() {
+    if (this.status === "free" || !this.data || !this.code) return Promise.resolve(false);
     this.writeCache();
-    try { await Net.set(this.path(this.code), this.data); return true; }
-    catch (e) { console.error(e); return false; }
+    if (this.status === "offline") return Promise.resolve(false);
+    this.saving = (this.saving || Promise.resolve()).then(() => this.saveOnce()).catch(e => { console.error(e); return false; });
+    return this.saving;
+  },
+  async saveOnce() {
+    if (!this.data) return false;
+    const base = this.data.rev || 0;
+    const next = JSON.parse(JSON.stringify({ ...this.data, rev: base + 1 }));
+    const r = await Net.tx(this.path(this.code), cur => (cur && (+cur.rev || 0) !== base ? undefined : next));
+    if (r.committed) { this.data.rev = base + 1; this.writeCache(); return true; }
+    if (r.val) {
+      this.data = this.fix(r.val); this.writeCache();
+      if (typeof toast === "function") toast("別の端末（または別の画面）で遊んだ新しいデータを読み込みました。直前の変更は保存されていません");
+      if (typeof this.onReload === "function") this.onReload();
+    }
+    return false;
+  },
+  /* サーバーのデータが新しくなったら（別の端末で遊んだ）、こちらも読み込み直す */
+  watch() {
+    if (this.unwatch || !this.code) return;
+    try {
+      this.unwatch = Net.on(this.path(this.code), v => {
+        if (!v || !this.data || this.saveTimer) return;
+        if ((+v.rev || 0) > (this.data.rev || 0)) { this.data = this.fix(v); this.writeCache(); if (typeof this.onReload === "function") this.onReload(); }
+      });
+    } catch (e) { console.error(e); }
   },
 
   /* ---------- CPU戦の連勝 ---------- */
@@ -150,9 +182,11 @@ const Account = {
     let d = null;
     try { d = await Net.get(this.path(code)); } catch { return { ok: false, msg: "読み込みに失敗しました。" }; }
     if (!d) return { ok: false, msg: "そのコードのデータは見つかりませんでした。シーズンが変わったか、コードが違います。" };
+    if (this.unwatch) { this.unwatch(); this.unwatch = null; }
     this.code = code; this.data = this.fix(d); this.status = "ready"; this.isNew = false;
     try { localStorage.setItem(this.key(), code); localStorage.removeItem(DECK_SEL_KEY); } catch {}
     this.writeCache();
+    this.watch();
     return { ok: true };
   },
 
@@ -174,7 +208,7 @@ const Account = {
   },
 
   showScreen(msg) {
-    const st = { ready: "", offline: "（オフライン：通信できるようになったら保存されます）", none: "", free: "" }[this.status] || "";
+    const st = { ready: "", offline: "（オフライン：この間に手に入れたものは保存されません。通信できるところで開き直してください）", none: "", free: "" }[this.status] || "";
     openOverlay(`<div class="panel">
       <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>アカウント</b></div>
       ${this.status === "free" ? `<p class="lead">試遊モードでは、すべてのカードを使えます。アカウントは使いません。</p>`
