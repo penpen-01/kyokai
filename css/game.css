@@ -1322,3 +1322,14 @@ body{
 /* 10連の一覧は軽く：小さいカードの光る演出を止める（iPhone の負担を減らす） */
 .mslot .card .shine,.mslot .card .art::after{display:none}
 .mslot .card .frame::before{animation:none!important}
+.hidden-until{display:none!important}
+.ms-sum.pop,.pre-btns.pop{animation:msin .35s ease-out both}
+/* SR と UR を見分ける：UR は黒地に金の文字の札、光も強く脈打つ */
+.rtag.r-ur,.r-ur .rtag{background:#0c0a10!important;color:#ffd977!important;box-shadow:0 0 0 1px #ffd977,0 0 6px rgba(255,214,120,.7)!important}
+.mslot.r-sr{box-shadow:0 0 0 1.5px #c9962f}
+.mslot.r-ur{box-shadow:0 0 0 2px #0c0a10,0 0 0 3.5px #ffd977,0 0 14px 3px rgba(255,214,120,.8);animation:urpulse 1.6s ease-in-out infinite}
+.mslot.r-ur.pop{animation:msin .3s cubic-bezier(.2,1.3,.4,1) both,urpulse 1.6s .3s ease-in-out infinite}
+.mslot.r-legend{box-shadow:0 0 0 2px #fff,0 0 16px 4px rgba(255,150,220,.85),0 0 26px 6px rgba(120,200,255,.5)}
+@keyframes urpulse{50%{box-shadow:0 0 0 2px #0c0a10,0 0 0 3.5px #fff3c8,0 0 22px 6px rgba(255,214,120,.95)}}
+.ms-b.r-ur{background:#0c0a10;color:#ffd977}
+.lg-c.r-ur{background:#0c0a10}

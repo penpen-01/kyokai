@@ -173,6 +173,9 @@ const Packs = {
   /* 未開封のパック。タップで破る */
   showPack() {
     const L = this.last;
+    // iPhone：前の画面の慣性スクロールが残って、パックが画面外に出たままになるのを防ぐ
+    const ov = $("#overlay"); ov.style.overflow = "hidden"; ov.scrollTop = 0;
+    requestAnimationFrame(() => { ov.scrollTop = 0; requestAnimationFrame(() => { ov.scrollTop = 0; ov.style.overflow = ""; }); });
     openOverlay(`<div class="openstage">
       <div class="os-top"><span class="goldtag">${Account.gold}G</span></div>
       <div class="bp-wrap">${L.multi ? Array.from({ length: L.multi - 1 }, (_, i) => `<span class="bp-ghost" style="--i:${L.multi - 1 - i}${this.art(L.pack) ? `;background-image:url('${esc(this.art(L.pack))}')` : ""}"></span>`).join("") : ""}
@@ -250,12 +253,12 @@ const Packs = {
       : `<button type="button" class="btn primary" data-act="packOpen10" data-id="${esc(L.pack.id)}" ${Account.gold >= L.pack.price * 10 ? "" : "disabled"}>もう10パック（${L.pack.price * 10}G）</button>`;
     openOverlay(`<div class="panel wide">
       <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>10パックの結果</b><span class="goldtag">${Account.gold}G</span></div>
-      <div class="ms-sum">
+      <div class="ms-grid">${L.rows.map((row, i) => `<div class="ms-row"><span class="ms-no">${i + 1}</span>${row.map(cell).join("")}</div>`).join("")}</div>
+      <div class="ms-sum ${play ? "hidden-until" : ""}">
         <div class="ms-counts">${RARITY_ORDER.map(r => `<span class="r-${r}"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}</span>`).join("")}<span class="ms-new">NEW ${newN}</span></div>
         ${best.length ? `<div class="ms-best"><small>SR以上</small><div>${best.map(x => `<button type="button" class="ms-b r-${DEF[x.id].rarity}" data-act="packDetail" data-id="${esc(x.id)}">${esc(DEF[x.id].name)}</button>`).join("")}</div></div>` : ""}
       </div>
-      <div class="ms-grid">${L.rows.map((row, i) => `<div class="ms-row"><span class="ms-no">${i + 1}</span>${row.map(cell).join("")}</div>`).join("")}</div>
-      <div class="pre-btns">${again}<button type="button" class="btn" data-act="packs">パック一覧へ</button></div>
+      <div class="pre-btns ${play ? "hidden-until" : ""}">${again}<button type="button" class="btn" data-act="packs">パック一覧へ</button></div>
       ${this.detailHTML()}
     </div>`, "start", true);
     if (play) this.revealMulti(all);
@@ -267,15 +270,22 @@ const Packs = {
     this.stopReveal();
     const L = this.last, slots = [...document.querySelectorAll(".mslot.wait")];
     let i = 0, stop = false, t = null;
-    const finish = () => { stop = true; clearTimeout(t); document.querySelectorAll(".mslot.wait").forEach(el => el.classList.remove("wait")); };
+    // 全部めくり終わったら、当たりのまとめと「もう10パック」を出す（先に見せるとネタばれになる）
+    const done = () => document.querySelectorAll(".hidden-until").forEach(el => { el.classList.remove("hidden-until"); el.classList.add("pop"); });
+    const finish = () => { stop = true; clearTimeout(t); document.querySelectorAll(".mslot.wait").forEach(el => el.classList.remove("wait")); done(); };
     this.revealStop = () => { stop = true; clearTimeout(t); };
     document.querySelector(".ms-grid").addEventListener("click", e => { if (document.querySelector(".mslot.wait")) { e.stopPropagation(); finish(); } }, { capture: true, once: true });
+    const ov = $("#overlay");
+    const follow = el => { const r = el.getBoundingClientRect(), h = window.innerHeight; if (r.bottom > h * .82 || r.top < 60) ov.scrollBy({ top: r.top - h * .45, behavior: "smooth" }); };
     const step = () => {
-      if (stop || this.last !== L || i >= slots.length) return;
+      if (stop || this.last !== L) return;
+      if (i >= slots.length) { done(); return; }
       const x = all[i], el = slots[i], c = DEF[x.id], r = RARITY_ORDER.indexOf(c.rarity);
+      // 行の始めで、めくっている行が画面に入るよう追いかける
+      if (i % 5 === 0) follow(el);
       i++;
       const show = () => { el.classList.remove("wait"); el.classList.add("pop"); if (r >= 2) Sound.play("rare", r); t = setTimeout(step, r >= 2 ? 160 : 45); };
-      if (r >= 3) { el.scrollIntoView({ block: "center", behavior: "smooth" }); Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！"); t = setTimeout(show, 760); }
+      if (r >= 3) { Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！"); t = setTimeout(show, 760); }
       else show();
     };
     step();
