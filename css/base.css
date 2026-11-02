@@ -178,7 +178,7 @@ img{max-width:100%}
 .card.rar-sr{--rw:2.8cqw;--rim:linear-gradient(135deg,#fff1c1,#c9962f 35%,#ffe08a 55%,#a8781f 80%,#f5d37a)}
 .card.rar-ur{--rw:3.6cqw;--rim:linear-gradient(135deg,#fff6d6,#d9a53a 25%,#fff0b0 45%,#b38220 65%,#ffe49a 85%,#c99530);box-shadow:0 0 6px rgba(255,214,120,.55)}
 .card.rar-legend{--rw:3.8cqw;--rim:conic-gradient(from 0deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff,#ff6b9b);box-shadow:0 0 7px rgba(255,190,240,.55)}
-.card.rar-legend .frame::before,.card.rar-legend .crest{animation:urhue 4s linear infinite}
+.card.rar-legend .frame::before{animation:urhue 4s linear infinite}
 @keyframes urhue{to{filter:hue-rotate(360deg)}}
 /* UR・レジェンドは内側の二重線と、ときどき走る光 */
 .card.rar-ur .frame::after,.card.rar-legend .frame::after{
@@ -209,40 +209,39 @@ img{max-width:100%}
 
 
 /* =========================================================
-   カード枠の作り直し（2026-11-02）
-   レア度：コモン＝銅 / レア＝銀＋小さな飾り / SR＝金＋つる草 / UR＝黒と金＋窓の上がアーチ / レジェンド＝虹＋アーチ
-   世界の色：名前の帯の色・窓の内側の細い線・上の飾り石・下の宝石（.gem）で見せる
+   カード枠（2026-11-03）
+   レア度：コモン＝銅 / レア＝銀 / SR＝金 / UR＝金の縁に黒い帯、金が光って流れる / レジェンド＝虹
+   世界の色：名前の帯・窓の内側の細い線・上と下の宝石（金属の台座に世界の色の宝石）
    ========================================================= */
-.card{--rim:linear-gradient(135deg,#e7b98e,#8c5a33 35%,#d79d6c 55%,#6c4122 80%,#c99062)}
-.card.rar-rare{--rw:2.8cqw}
-.card.rar-sr{--rw:3.2cqw}
-.card.rar-ur{--rw:5.2cqw;--rim:linear-gradient(135deg,#3a3340,#0b090f 30%,#2b2531 52%,#09070c 75%,#352e3b);box-shadow:0 0 0 1px #e9c873,0 0 7px rgba(255,214,120,.55)}
-.card.rar-legend{--rw:5.2cqw}
-/* 窓の内側の線は世界の色（UR は金の二重線の内側に世界の色） */
+.card{--rim:linear-gradient(135deg,#e7b98e,#8c5a33 35%,#d79d6c 55%,#6c4122 80%,#c99062);--metal:linear-gradient(135deg,#f0c9a0,#9a6438 50%,#d9a273)}
+.card.rar-rare{--rw:2.8cqw;--metal:linear-gradient(135deg,#ffffff,#9aa5b5 50%,#e6ebf1)}
+.card.rar-sr{--rw:3.2cqw;--metal:linear-gradient(135deg,#fff3c4,#c9962f 50%,#ffe08a)}
+.card.rar-ur{--rw:4.6cqw;--metal:linear-gradient(135deg,#fff6d6,#d9a53a 50%,#ffe49a);
+  --rim:linear-gradient(110deg,#8a6418,#e9c060 10%,#fff6d6 14%,#d4a235 20%,#7a5512 34%,#c99530 48%,#fff0b8 53%,#c99530 60%,#7a5512 74%,#e2b54e 88%,#fff3c8 92%,#a87a20);
+  box-shadow:0 0 6px rgba(255,214,120,.6)}
+.card.rar-ur .frame::before{background-size:300% 300%;animation:urgold 5s linear infinite}
+@keyframes urgold{from{background-position:0% 50%}to{background-position:300% 50%}}
+.card.rar-legend{--rw:4.6cqw;--metal:linear-gradient(135deg,#ffffff,#d8d2ff 50%,#fff4fb)}
+/* 窓の内側：世界の色の細い線。UR は内側に黒い帯と金の線（黒と金） */
 .card .frame::after{box-shadow:inset 0 0 0 .6cqw rgba(8,9,18,.85),inset 0 0 0 1.3cqw color-mix(in srgb,var(--wc) 85%,transparent)}
-.card.rar-ur .frame::after{box-shadow:inset 0 0 0 .5cqw #f2cd6b,inset 0 0 0 1cqw rgba(8,9,18,.9),inset 0 0 0 1.6cqw color-mix(in srgb,var(--wc) 85%,transparent),inset 0 0 5cqw rgba(255,226,150,.25)}
+.card.rar-ur .frame::after{box-shadow:inset 0 0 0 1.6cqw #0d0b10,inset 0 0 0 2.1cqw #f2cd6b,inset 0 0 0 2.7cqw color-mix(in srgb,var(--wc) 85%,transparent),inset 0 0 6cqw rgba(255,226,150,.3)}
 .card.rar-legend .frame::after{box-shadow:inset 0 0 0 .5cqw rgba(255,255,255,.85),inset 0 0 0 1cqw rgba(8,9,18,.9),inset 0 0 0 1.6cqw color-mix(in srgb,var(--wc) 85%,transparent),inset 0 0 5cqw rgba(255,200,255,.3)}
-/* 上の飾り：レア度が上がるほど大きく豪華に */
-.card .orn{position:absolute;inset:0;z-index:2;pointer-events:none;background-repeat:no-repeat}
-.card.rar-rare .orn{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2020%22%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%22%20stroke%3D%22%233a3f4a%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%22%20stroke%3D%22%23eef2f7%22%20stroke-width%3D%222%22/%3E%3Cg%20transform%3D%22translate%28100%200%29%20scale%28-1%201%29%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%22%20stroke%3D%22%233a3f4a%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%22%20stroke%3D%22%23eef2f7%22%20stroke-width%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");background-size:70cqw 14cqw;background-position:50% calc(var(--rw) * .1)}
-.card.rar-sr .orn{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2020%22%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%22%20stroke%3D%22%235a3d0c%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%22%20stroke%3D%22%23ffe08a%22%20stroke-width%3D%222%22/%3E%3Cg%20transform%3D%22translate%28100%200%29%20scale%28-1%201%29%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%22%20stroke%3D%22%235a3d0c%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%22%20stroke%3D%22%23ffe08a%22%20stroke-width%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");background-size:84cqw 16.8cqw;background-position:50% calc(var(--rw) * .05)}
-.card.rar-ur .orn{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2020%22%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%23120e16%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%23ffd977%22%20stroke-width%3D%222%22/%3E%3Cg%20transform%3D%22translate%28100%200%29%20scale%28-1%201%29%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%23120e16%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%23ffd977%22%20stroke-width%3D%222%22/%3E%3C/g%3E%3C/g%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2215.5%22%20r%3D%221.6%22%20fill%3D%22%23ffd977%22/%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2215.5%22%20r%3D%221.6%22%20fill%3D%22%23ffd977%22/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2022%22%3E%3Cpath%20d%3D%22M0%200%20H100%20V22%20C100%208%2080%203%2050%203%20C20%203%200%208%200%2022%20Z%22%20fill%3D%22%230d0b11%22/%3E%3Cpath%20d%3D%22M0%2022%20C0%208%2020%203%2050%203%20C80%203%20100%208%20100%2022%22%20fill%3D%22none%22%20stroke%3D%22%23e9c873%22%20stroke-width%3D%222.4%22/%3E%3C/svg%3E");background-size:96cqw 19cqw,calc(100% - var(--rw) * 2) 26cqw;background-position:50% 0,50% var(--rw)}
-.card.rar-legend .orn{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2020%22%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%233a2a4a%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%23fffaf0%22%20stroke-width%3D%222%22/%3E%3Cg%20transform%3D%22translate%28100%200%29%20scale%28-1%201%29%22%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%233a2a4a%22%20stroke-width%3D%224.2%22/%3E%3Cpath%20d%3D%22M50%209%20C42%209%2038%2013%2031%2013%20C26%2013%2025%209%2028%208.5%20C30%208%2031%2010%2029.5%2011%20M31%2013%20C24%2013%2020%206%2013%207%20C8%208%208%2012%2011%2012.5%20C13%2013%2014%2011%2012.5%2010%20M13%207%20C9%204%205%205%203%208%22%20stroke%3D%22%23fffaf0%22%20stroke-width%3D%222%22/%3E%3C/g%3E%3C/g%3E%3Ccircle%20cx%3D%2220%22%20cy%3D%2215.5%22%20r%3D%221.6%22%20fill%3D%22%23fffaf0%22/%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2215.5%22%20r%3D%221.6%22%20fill%3D%22%23fffaf0%22/%3E%3C/svg%3E"),url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20100%2022%22%3E%3Cpath%20d%3D%22M0%200%20H100%20V22%20C100%208%2080%203%2050%203%20C20%203%200%208%200%2022%20Z%22%20fill%3D%22%23140f1c%22/%3E%3Cpath%20d%3D%22M0%2022%20C0%208%2020%203%2050%203%20C80%203%20100%208%20100%2022%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222.4%22/%3E%3C/svg%3E");background-size:96cqw 19cqw,calc(100% - var(--rw) * 2) 26cqw;background-position:50% 0,50% var(--rw)}
-.card.spell .orn{background-position-y:calc(var(--rw) * .1),var(--rw)}
-/* 飾り石は大きく、UR は黒地に金 */
-.card .crest{width:10.5cqw;height:10.5cqw;z-index:3}
-.card.rar-ur .crest{background:linear-gradient(135deg,#ffe9a8,#b58a2a);box-shadow:0 0 0 .7cqw #0b090f,0 0 3cqw rgba(255,214,120,.6)}
-/* 下の宝石：世界の色 */
-.card .gem{position:absolute;z-index:4;left:50%;bottom:calc(var(--rw) * .5 - 4cqw);width:8cqw;height:8cqw;transform:translateX(-50%) rotate(45deg);pointer-events:none;
-  background:radial-gradient(circle at 35% 30%,#fff 0,color-mix(in srgb,var(--wc) 70%,#fff) 18%,var(--wc) 45%,color-mix(in srgb,var(--wc) 55%,#000));
-  box-shadow:0 0 0 .7cqw #10121f,0 0 0 1.3cqw #d8b468,0 0 3cqw color-mix(in srgb,var(--wc) 70%,transparent)}
-.card.rar-common .gem{box-shadow:0 0 0 .7cqw #10121f,0 0 0 1.3cqw #b07a4c}
-.card.rar-rare .gem{box-shadow:0 0 0 .7cqw #10121f,0 0 0 1.3cqw #c9d1dc,0 0 3cqw color-mix(in srgb,var(--wc) 60%,transparent)}
+/* 宝石：金属の台座（ひし形）の中に、カットされた世界の色の宝石。カードからはみ出さない */
+.card .crest,.card .gem{position:absolute;z-index:4;left:50%;width:10cqw;height:12cqw;transform:translateX(-50%);pointer-events:none;
+  background:var(--metal);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:none;animation:none}
+.card .crest::before,.card .gem::before{content:"";position:absolute;inset:1cqw .8cqw;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);background:#120e0a}
+.card .crest{top:.6cqw}
+.card .gem{bottom:.6cqw}
+.card .crest::after,.card .gem::after{content:"";position:absolute;inset:1.6cqw 1.3cqw;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  background:radial-gradient(circle at 42% 32%,rgba(255,255,255,.95) 0 9%,transparent 22%),
+    conic-gradient(from 0deg,color-mix(in srgb,var(--wc) 55%,#fff) 0 25%,var(--wc) 0 50%,color-mix(in srgb,var(--wc) 55%,#000) 0 75%,color-mix(in srgb,var(--wc) 80%,#000) 0);
+  box-shadow:none}
 .card.spell .stats.spelltag{padding-bottom:5cqw}
-/* 名前の帯：世界の色の帯（キャラ） */
+/* 名前の帯：世界の色（キャラ） */
 .card.char .nm{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--wc) 62%,#0b0d18) 12%,color-mix(in srgb,var(--wc) 62%,#0b0d18) 88%,transparent);
   border-top-color:color-mix(in srgb,var(--wc) 90%,#fff);border-bottom-color:color-mix(in srgb,var(--wc) 90%,#fff)}
 /* 魔法の巻物は端を世界の色に */
 .card.spell .nm{box-shadow:0 0 0 .6cqw #6b5432,inset 2.2cqw 0 0 color-mix(in srgb,var(--wc) 75%,#000),inset -2.2cqw 0 0 color-mix(in srgb,var(--wc) 75%,#000)}
 .card .nm.long{font-size:9.5cqw}
 .card .nm.xlong{font-size:8.3cqw;padding-left:1.5cqw;padding-right:1.5cqw}
+@media (prefers-reduced-motion:reduce){.card.rar-ur .frame::before{animation:none}}
