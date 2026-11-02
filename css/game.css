@@ -1127,29 +1127,29 @@ body{
 
 /* ---- UR・レジェンドのカットイン（js/motion.js の cutin）
    絵は切り抜かず、カードの絵をまるごと大きく出す。後ろに回る光の筋、金（UR）／虹（レジェンド）の縁 ---- */
-.cutin{position:fixed;inset:0;z-index:65;overflow:hidden;cursor:pointer;display:grid;place-items:center;animation:ci-dim 1.5s ease both}
+.cutin{position:fixed;inset:0;z-index:65;overflow:hidden;cursor:pointer;display:grid;place-items:center;animation:ci-dim 1s ease both}
 @keyframes ci-dim{0%{background:rgba(4,5,12,0)}12%,80%{background:rgba(4,5,12,.82)}100%{background:rgba(4,5,12,0)}}
 .ci-rays{position:absolute;left:50%;top:44%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;pointer-events:none;
-  background:repeating-conic-gradient(from 0deg,rgba(255,226,140,.0) 0 6deg,rgba(255,226,140,.22) 6deg 9deg);
+  background:repeating-conic-gradient(from 0deg,rgba(255,226,140,.0) 0 6deg,rgba(255,226,140,.07) 6deg 9deg);
   -webkit-mask:radial-gradient(circle,#000 0,#000 18%,transparent 45%);mask:radial-gradient(circle,#000 0,#000 18%,transparent 45%);
-  animation:ci-rays 1.5s ease both, ci-spin 6s linear infinite}
-.cutin.r-legend .ci-rays{background:repeating-conic-gradient(from 0deg,transparent 0 6deg,rgba(255,150,220,.22) 6deg 8deg,transparent 8deg 14deg,rgba(130,220,255,.22) 14deg 16deg)}
+  animation:ci-rays 1s ease both, ci-spin 6s linear infinite}
+.cutin.r-legend .ci-rays{background:repeating-conic-gradient(from 0deg,transparent 0 6deg,rgba(255,150,220,.08) 6deg 8deg,transparent 8deg 14deg,rgba(130,220,255,.08) 14deg 16deg)}
 @keyframes ci-rays{0%,8%{opacity:0}25%,80%{opacity:1}100%{opacity:0}}
 @keyframes ci-spin{to{transform:rotate(360deg)}}
 .ci-pic{position:absolute;left:50%;top:44%;width:min(62vw,300px);aspect-ratio:5/7;transform:translate(-50%,-50%);border-radius:10px;overflow:hidden;
-  box-shadow:0 0 0 3px #ffe08a,0 0 0 6px #0b090e,0 0 0 8px #c99530,0 0 40px rgba(255,214,120,.8),0 20px 40px rgba(0,0,0,.7);
-  animation:ci-pic 1.5s cubic-bezier(.2,1.1,.3,1) both}
-.cutin.r-legend .ci-pic{box-shadow:0 0 0 3px #fff,0 0 0 6px #120e1c,0 0 0 9px #ff9ad0,0 0 44px rgba(200,170,255,.85),0 20px 40px rgba(0,0,0,.7)}
+  box-shadow:0 0 0 3px #ffe08a,0 0 0 6px #0b090e,0 0 0 8px #c99530,0 0 14px rgba(255,214,120,.45),0 20px 40px rgba(0,0,0,.7);
+  animation:ci-pic 1s cubic-bezier(.2,1.1,.3,1) both}
+.cutin.r-legend .ci-pic{box-shadow:0 0 0 3px #fff,0 0 0 6px #120e1c,0 0 0 9px #ff9ad0,0 0 16px rgba(200,170,255,.45),0 20px 40px rgba(0,0,0,.7)}
 .cutin.theirs .ci-pic{animation-name:ci-pic-r}
 .ci-pic img{width:100%;height:100%;object-fit:cover;display:block}
 .ci-pic .glyph{display:grid;place-items:center;height:100%;font-size:40vw;background:#141833}
-.ci-pic::after{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.7) 50%,transparent 60%);transform:translateX(-80%);animation:ci-shine 1.5s .3s ease-out both}
+.ci-pic::after{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.3) 50%,transparent 60%);transform:translateX(-80%);animation:ci-shine .7s .2s ease-out both}
 @keyframes ci-pic{0%{opacity:0;transform:translate(-120%,-50%) rotate(-8deg) scale(.8)}18%{opacity:1;transform:translate(-50%,-50%) rotate(2deg) scale(1.04)}26%{transform:translate(-50%,-50%) rotate(0) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
 @keyframes ci-pic-r{0%{opacity:0;transform:translate(20%,-50%) rotate(8deg) scale(.8)}18%{opacity:1;transform:translate(-50%,-50%) rotate(-2deg) scale(1.04)}26%{transform:translate(-50%,-50%) rotate(0) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
 @keyframes ci-shine{to{transform:translateX(80%)}}
-.ci-flash{position:absolute;inset:0;background:#fff8e0;opacity:0;animation:ci-flash .5s .18s ease-out both;pointer-events:none}
+.ci-flash{display:none}
 @keyframes ci-flash{0%{opacity:0}25%{opacity:.6}100%{opacity:0}}
-.ci-text{position:absolute;left:0;right:0;top:calc(44% + min(62vw,300px) * .7 + 18px);display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;animation:ci-text 1.5s ease both}
+.ci-text{position:absolute;left:0;right:0;top:calc(44% + min(62vw,300px) * .7 + 18px);display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;animation:ci-text 1s ease both}
 @keyframes ci-text{0%,16%{opacity:0;transform:translateY(16px) scale(1.2)}28%,82%{opacity:1;transform:none}100%{opacity:0}}
 .ci-text small{font-family:var(--f-display);font-weight:800;letter-spacing:.45em;font-size:13px;color:#ffe08a;text-shadow:0 0 10px rgba(255,214,120,.9)}
 .cutin.r-legend .ci-text small{background:linear-gradient(90deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}

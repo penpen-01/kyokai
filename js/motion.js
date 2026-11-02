@@ -96,7 +96,7 @@ const Motion = {
      斜めの帯が走り、カードの絵が大きく横切って、名前とレア度が出る。タップで飛ばせる */
   cutin(id, pi) {
     const d = DEF[id]; if (!d) return;
-    const mine = pi === ME, ms = this.reduced ? 700 : 1500;
+    const mine = pi === ME, ms = this.reduced ? 600 : 1000;
     const old = document.getElementById("cutin"); if (old) old.remove();
     const w = document.createElement("div");
     w.id = "cutin";
@@ -107,7 +107,7 @@ const Motion = {
     // タップで飛ばしたときだけ、待っている演出をすぐ進める
     w.addEventListener("click", e => { e.stopPropagation(); if (!w.isConnected) return; w.remove(); clearTimeout(this.timer); this.release(); });
     document.body.appendChild(w);
-    if (typeof Sound !== "undefined") { Sound.play("rare"); setTimeout(() => Sound.play("hit"), this.reduced ? 0 : 380); }
+    if (typeof Sound !== "undefined") { Sound.play("rare"); setTimeout(() => Sound.play("hit"), this.reduced ? 0 : 250); }
     setTimeout(() => w.remove(), ms);
     this.hold(ms);
   },
