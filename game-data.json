@@ -1,5 +1,5 @@
 {
- "version": 42,
+ "version": 43,
  "updated": "2026-11-03",
  "config": {
   "PLAYER_HP": 20,
@@ -1850,7 +1850,6 @@
    "rarity": "sr",
    "keywords": [
     "noattack",
-    "guard",
     "elusive"
    ],
    "effects": [
@@ -2022,7 +2021,13 @@
    "limit": 0,
    "rarity": "common",
    "keywords": [],
-   "effects": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 2,
+     "when": "death"
+    }
+   ],
    "token": true,
    "art": "art/tk-spirit-8fe21819ce.webp"
   },
