@@ -318,9 +318,10 @@ img{max-width:100%}
    SR 以下の魔法：絵はアーチの窓、下は紺地に金の線の台（名前と「魔法」）。UR 以上の魔法は絵を全面に */
 .card.rar-ur .nm,.card.rar-legend .nm{text-shadow:0 0 .6cqw #000,0 0 1.2cqw #000,0 .4cqw 1.6cqw #000,0 0 3.5cqw rgba(0,0,0,.95),0 0 6cqw rgba(0,0,0,.7)}
 .card.rar-ur .foot,.card.rar-legend .foot,.card.rar-ur.spell .foot,.card.rar-legend.spell .foot{background:radial-gradient(ellipse 80% 50% at 50% 38%,rgba(8,9,18,.75),rgba(8,9,18,.35) 55%,transparent 80%)}
-/* SR 以下の魔法：名前までは絵の上（案4のまま）、「魔法」の段だけ黒い台にする */
-.card.spell:not(.rar-ur):not(.rar-legend) .art{bottom:calc(var(--rw) + 11cqw);border-bottom-left-radius:0;border-bottom-right-radius:0}
-.card.spell:not(.rar-ur):not(.rar-legend) .foot{padding-bottom:0}
-.card.spell:not(.rar-ur):not(.rar-legend) .stats.spelltag{height:11cqw;padding:0 0 1.5cqw;align-items:center;background:#0b0c15;
-  border-top:.5cqw solid color-mix(in srgb,#e3c27a 80%,transparent);color:#e9cf8f;text-shadow:none;font-size:7.5cqw;letter-spacing:.4em}
-.card.spell:not(.rar-ur):not(.rar-legend) .gem{display:none}
+/* SR 以下の魔法：最初と同じくらい絵を隠す（アーチの窓）。下は紺地の台に名前・「魔法」・宝石 */
+.card.spell:not(.rar-ur):not(.rar-legend){background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--wc) 25%,transparent),transparent 65%),linear-gradient(180deg,#1a1d33,#0b0c17)}
+.card.spell:not(.rar-ur):not(.rar-legend) .art{inset:calc(var(--rw) + 4cqw) calc(var(--rw) + 4cqw) 38cqw;border-radius:50% 50% 2cqw 2cqw / 28% 28% 2cqw 2cqw;
+  box-shadow:0 0 0 .8cqw color-mix(in srgb,var(--wc) 70%,#000),0 0 0 1.5cqw rgba(233,200,115,.7)}
+.card.spell:not(.rar-ur):not(.rar-legend) .foot{background:none;padding:0 0 9cqw;gap:1cqw}
+.card.spell:not(.rar-ur):not(.rar-legend) .nm{flex:none;padding:0 2cqw;text-shadow:0 .4cqw 1cqw #000}
+.card.spell:not(.rar-ur):not(.rar-legend) .stats.spelltag{flex:none;height:auto;padding:0;background:none;border:none;color:#e9cf8f;text-shadow:none;font-size:7.5cqw;letter-spacing:.4em;line-height:1.2}
