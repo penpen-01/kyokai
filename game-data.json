@@ -1,5 +1,5 @@
 {
- "version": 36,
+ "version": 37,
  "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
@@ -1892,7 +1892,8 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
-   "token": true
+   "token": true,
+   "art": "art/tk-spirit-8fe21819ce.webp"
   },
   {
    "id": "tk-drone",
@@ -1960,7 +1961,8 @@
      "kind": "heal",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/n-flowergirl-d47610d1c5.webp"
   },
   {
    "id": "n-dwarf",
@@ -1980,7 +1982,8 @@
      "n": 1,
      "when": "death"
     }
-   ]
+   ],
+   "art": "art/n-dwarf-770bb2972c.webp"
   },
   {
    "id": "n-mist",
@@ -2001,7 +2004,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-mist-20fc3cab1b.webp"
   },
   {
    "id": "n-barkguard",
@@ -2023,7 +2027,8 @@
      "n": 1,
      "when": "death"
     }
-   ]
+   ],
+   "art": "art/n-barkguard-fd33e59bef.webp"
   },
   {
    "id": "n-bear",
@@ -2039,7 +2044,8 @@
    "keywords": [
     "guard"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-bear-0d976431c6.webp"
   },
   {
    "id": "n-trick",
@@ -2060,7 +2066,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-trick-93344dba4e.webp"
   },
   {
    "id": "n-slinger",
@@ -2284,7 +2291,8 @@
    "keywords": [
     "stealth"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-shinobi-3e0240d90a.webp"
   },
   {
    "id": "n-thornwarden",
@@ -2301,7 +2309,8 @@
     "guard",
     "poison"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-thornwarden-01b54eea3e.webp"
   },
   {
    "id": "n-moonwitch",
@@ -2320,7 +2329,8 @@
      "kind": "bounceEnemy",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-moonwitch-224b6d9487.webp"
   },
   {
    "id": "n-spiritcaller",
@@ -2340,7 +2350,8 @@
      "n": 2,
      "card": "tk-spirit"
     }
-   ]
+   ],
+   "art": "art/n-spiritcaller-77394bf304.webp"
   },
   {
    "id": "n-swordpupil",
@@ -2485,7 +2496,8 @@
      "kind": "transform",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-fairyking-aa74614d3a.webp"
   },
   {
    "id": "n-ancienttree",
@@ -2508,7 +2520,8 @@
      "card": "tk-spirit",
      "when": "death"
     }
-   ]
+   ],
+   "art": "art/n-ancienttree-98258e5b56.webp"
   },
   {
    "id": "n-skypaladin",
@@ -2631,7 +2644,8 @@
      "n": 2,
      "when": "attack"
     }
-   ]
+   ],
+   "art": "art/n-kitsune-b5de99c63a.webp"
   },
   {
    "id": "n-timewitch",
@@ -2650,7 +2664,8 @@
      "kind": "silenceAll",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-timewitch-86244bb946.webp"
   },
   {
    "id": "n-heroking",
@@ -2715,7 +2730,8 @@
      "n": 1,
      "when": "turnEnd"
     }
-   ]
+   ],
+   "art": "art/n-fairyqueen-9d274ca084.webp"
   },
   {
    "id": "n-seraph",
