@@ -1814,16 +1814,29 @@ function streakTag(level) {
 
 function showCpuSelect() {
   if (!Decks.readyDeck(msg => Decks.showList(msg))) return;
+  const deck = Decks.selected(), key = Decks.keyCard(deck);
+  // 強さごとの見本の絵：その強さの CPU デッキの代表カード
+  const face = lv => { const d = PRESETS.find(p => p.level === lv && p.id !== CONFIG.STARTER_DECK) || PRESETS.find(p => p.level === lv); const c = d && Decks.keyCard(d); return c && c.art ? c.art : ""; };
+  const stars = { easy: 1, normal: 2, hard: 3 };
   openOverlay(`<div class="panel">
-    <h2 class="title sm">CPUの強さ</h2>
-    <p class="lead">使うデッキ：${esc(Decks.selected().name)}</p>
-    ${Decks.selected().free && Decks.sampleOK() ? `<p class="onl-msg">サンプルデッキで勝っても、Gはもらえません（連勝にも数えません）。Gを集めるときは、自分のカードで組んだデッキを使ってください。</p>` : ""}
+    ${Decks.topbar ? Decks.topbar("CPU戦", "back") : `<h2 class="title sm">CPU戦</h2>`}
+    <div class="cs-deck">
+      <span class="cs-deck-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
+      <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck.name)}</b></span>
+      <button type="button" class="btn sm" data-act="decks">変更</button>
+    </div>
+    ${deck.free && Decks.sampleOK() ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝にも数えません。Gを集めるときは、自分のカードで組んだデッキを使ってください。</p>` : ""}
     <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
       <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}">
-        <b>${v.label}</b><span>${v.desc}</span><em class="lvl-g">勝利で ${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}G${streakTag(k)}</em>
+        <span class="lvl-art" ${face(k) ? `style="background-image:url('${esc(face(k))}')"` : ""}></span>
+        <span class="lvl-body">
+          <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
+          <span class="lvl-desc">${v.desc}</span>
+          <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}</b>G</em>${streakTag(k)}</span>
+        </span>
+        <span class="lvl-go" aria-hidden="true">›</span>
       </button>`).join("")}</div>
-    <p class="datainfo">負けたときは0Gです。${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると、2連勝目から報酬が${CONFIG.STREAK_STEP}%ずつ増えます（最大${CONFIG.STREAK_MAX}%）。負けるか、途中でやめると0に戻ります。` : ""}${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</p>
-    <button type="button" class="btn" data-act="back">戻る</button>
+    <div class="callout"><b>報酬のきまり</b>負けたときは0Gです。${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると、2連勝目から報酬が${CONFIG.STREAK_STEP}%ずつ増えます（最大${CONFIG.STREAK_MAX}%）。負けるか、途中でやめると0に戻ります。` : ""}${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</div>
   </div>`, "start", true);
 }
 

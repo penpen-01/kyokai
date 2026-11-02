@@ -136,7 +136,7 @@ const Shop = {
       <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b><span class="stonetag">魔石 ${Account.stones}</span></div>
       ${this.noteHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
-      <p class="hint">同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>
+      <p class="callout"><b>分解できるのはダブりだけ</b>同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>
       <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.getRate(r)}</span>`).join("")}</p>
       ${sur.length ? `
         <ul class="dislist">${sur.map(x => {
@@ -151,13 +151,21 @@ const Shop = {
             </div>
           </li>`;
         }).join("")}</ul>
-        <div class="disbtns">
-          <button type="button" class="btn primary" data-act="shopDisSel" ${this.usable() && selN ? "" : "disabled"}>${selN ? `選んだ${selN}枚を分解（+${selS}）` : "分解するカードを選んでください"}</button>
-          <button type="button" class="btn" data-act="shopDisAll" ${this.usable() ? "" : "disabled"}>ダブりをまとめて分解（${allN}枚・+${allS}）</button>
-          <button type="button" class="btn sm" data-act="shopSelClear" ${selN ? "" : "disabled"}>選択を解除</button>
+        <div class="disbar">
+          <div class="disbar-sum">${selN ? `<b>${selN}枚</b>を選択中 ・ 魔石 <b>+${selS}</b>` : "分解するカードを選んでください"}${selN ? `<button type="button" class="linkbtn" data-act="shopSelClear">解除</button>` : ""}</div>
+          <div class="disbar-btns">
+            <button type="button" class="btn" data-act="shopDisAllAsk" ${this.usable() ? "" : "disabled"}>ダブりを全部（${allN}枚）</button>
+            <button type="button" class="btn primary" data-act="shopDisSelAsk" ${this.usable() && selN ? "" : "disabled"}>選んだ分を分解</button>
+          </div>
         </div>`
-        : `<p class="hint">今は分解できるカードがありません。</p>`}
-      <button type="button" class="btn" data-act="shopMain">ショップに戻る</button>
+        : `<p class="callout">今は分解できるカードがありません。</p>`}
+      ${this.ask ? `<div class="dmodal" data-act="shopAskNo">
+        <div class="dmodal-in confirmbox" role="alertdialog" aria-label="分解の確認" data-act="noop">
+          <b class="dm-name">${this.ask.n}枚を分解しますか？</b>
+          <p class="dm-text">魔石を<b>${this.ask.s}</b>個手に入れます。分解したカードは元に戻せません。</p>
+          <ul class="asklist">${this.ask.list.map(x => `<li><i class="rtag r-${x.c.rarity}">${RARITY_SHORT[x.c.rarity]}</i>${esc(x.c.name)}<span>×${x.k}</span></li>`).join("")}</ul>
+          <div class="pre-btns"><button type="button" class="btn danger" data-act="shopAskYes">分解する</button><button type="button" class="btn" data-act="shopAskNo">やめる</button></div>
+        </div></div>` : ""}
     </div>`, "start", true);
   },
 
@@ -200,6 +208,15 @@ const Shop = {
       case "shopSelClear": this.sel = {}; this.msg = null; this.showDismantle(); return true;
       case "shopDisSel": this.dismantle(this.sel); return true;
       case "shopDisAll": this.dismantle(null); return true;
+      case "shopDisSelAsk": case "shopDisAllAsk": {
+        const all = act === "shopDisAllAsk", sur = this.surplus();
+        const list = sur.map(x => ({ c: x.c, k: all ? x.n : Math.min(x.n, this.sel[x.c.id] || 0) })).filter(x => x.k > 0);
+        if (!list.length) return true;
+        this.ask = { all, list, n: list.reduce((a, x) => a + x.k, 0), s: list.reduce((a, x) => a + x.k * this.getRate(x.c.rarity), 0) };
+        this.showDismantle(); return true;
+      }
+      case "shopAskNo": this.ask = null; this.showDismantle(); return true;
+      case "shopAskYes": { const a = this.ask; this.ask = null; if (a) this.dismantle(a.all ? null : this.sel); return true; }
       case "shopTicket": this.buyTicket(); return true;
       case "shopRar": this.rar = el.dataset.v; this.show(); return true;
       case "shopNeed": this.onlyNeed = !!el.checked; this.show(); return true;
