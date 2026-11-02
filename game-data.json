@@ -1,5 +1,5 @@
 {
- "version": 35,
+ "version": 36,
  "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
@@ -1922,7 +1922,8 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
-   "token": true
+   "token": true,
+   "art": "art/tk-hero-21804c9a8c.webp"
   },
   {
    "id": "tk-part",
@@ -2078,7 +2079,8 @@
      "kind": "dmgRandom",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-slinger-34548c46af.webp"
   },
   {
    "id": "n-templeguard",
@@ -2094,7 +2096,8 @@
    "keywords": [
     "shield"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-templeguard-054e56d42e.webp"
   },
   {
    "id": "n-lightarrow",
@@ -2115,7 +2118,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-lightarrow-1ae6b8ad44.webp"
   },
   {
    "id": "n-oldknight",
@@ -2137,7 +2141,8 @@
      "n": 3,
      "when": "death"
     }
-   ]
+   ],
+   "art": "art/n-oldknight-0989b8982c.webp"
   },
   {
    "id": "n-blessing",
@@ -2159,7 +2164,8 @@
      "n": 1,
      "kw": "shield"
     }
-   ]
+   ],
+   "art": "art/n-blessing-087a44611d.webp"
   },
   {
    "id": "n-workbot",
@@ -2350,7 +2356,8 @@
    "keywords": [
     "twice"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-swordpupil-e8db1f45aa.webp"
   },
   {
    "id": "n-highpriest",
@@ -2370,7 +2377,8 @@
      "n": 2,
      "when": "turnEnd"
     }
-   ]
+   ],
+   "art": "art/n-highpriest-0c5cf7eb8c.webp"
   },
   {
    "id": "n-seal",
@@ -2387,7 +2395,8 @@
      "kind": "silence",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-seal-5b48decd7e.webp"
   },
   {
    "id": "n-leechdrone",
@@ -2516,7 +2525,8 @@
     "guard",
     "shield"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-skypaladin-2350eafba9.webp"
   },
   {
    "id": "n-return",
@@ -2537,7 +2547,8 @@
      "kind": "draw",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-return-fdeee04b97.webp"
   },
   {
    "id": "n-massprod",
@@ -2660,7 +2671,8 @@
      "card": "tk-hero",
      "when": "death"
     }
-   ]
+   ],
+   "art": "art/n-heroking-c4dbe6cd08.webp"
   },
   {
    "id": "n-hijack",
@@ -2726,7 +2738,8 @@
      "n": 1,
      "when": "attack"
     }
-   ]
+   ],
+   "art": "art/n-seraph-beb1a7d2a5.webp"
   }
  ]
 }
