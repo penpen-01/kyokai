@@ -1669,15 +1669,15 @@ function showMenu() {
   const online = MODE === "online";
   openOverlay(`<div class="panel">
     <h2 class="title sm">メニュー</h2>
-    ${online ? `<p class="lead">部屋の合言葉：<b class="roomcode-inline">${esc(Online.code || "")}</b></p>` : ""}
-    <div class="menu">
-      <button type="button" class="btn primary" data-act="closeOverlay">対戦に戻る</button>
-      <button type="button" class="btn" data-act="log">プレイログ</button>
-      <button type="button" class="btn" data-act="cards">カード一覧</button>
-      <button type="button" class="btn" data-act="rules">ルール</button>
+    ${online ? `<div class="roombox"><span>部屋の合言葉</span><b class="roomcode-inline">${esc(Online.code || "")}</b></div>` : ""}
+    <button type="button" class="btn primary" data-act="closeOverlay">対戦に戻る</button>
+    <div class="menu list">
+      <button type="button" class="mi" data-act="log"><span>プレイログ<small>これまでの行動を見る</small></span></button>
+      <button type="button" class="mi" data-act="cards"><span>カード一覧<small>すべてのカードの効果</small></span></button>
+      <button type="button" class="mi" data-act="rules"><span>ルール<small>遊び方・カードの能力</small></span></button>
       ${online && S && !S.over
-        ? `<button type="button" class="btn danger" data-act="surrender">降参してタイトルに戻る</button>`
-        : `<button type="button" class="btn" data-act="toTitle">タイトルに戻る（この対戦は終了します）</button>`}
+        ? `<button type="button" class="mi danger" data-act="surrender"><span>降参してタイトルに戻る<small>この対戦は負けになります</small></span></button>`
+        : `<button type="button" class="mi" data-act="toTitle"><span>タイトルに戻る<small>この対戦は終了します</small></span></button>`}
     </div>
   </div>`, "game");
   overlayFrom = "menu";
@@ -1816,7 +1816,9 @@ function showCpuSelect() {
   if (!Decks.readyDeck(msg => Decks.showList(msg))) return;
   const deck = Decks.selected(), key = Decks.keyCard(deck);
   // 強さごとの見本の絵：その強さの CPU デッキの代表カード
-  const face = lv => { const d = PRESETS.find(p => p.level === lv && p.id !== CONFIG.STARTER_DECK) || PRESETS.find(p => p.level === lv); const c = d && Decks.keyCard(d); return c && c.art ? c.art : ""; };
+  // 強さごとの見本の絵（オーナー指定：初級＝見習い剣士・中級＝戦神の化身・上級＝審判の熾天使）
+  const FACE = { easy: "squire", normal: "wargod", hard: "n-seraph" };
+  const face = lv => { const c = DEF[FACE[lv]]; return c && c.art ? c.art : ""; };
   const stars = { easy: 1, normal: 2, hard: 3 };
   openOverlay(`<div class="panel">
     ${Decks.topbar ? Decks.topbar("CPU戦", "back") : `<h2 class="title sm">CPU戦</h2>`}

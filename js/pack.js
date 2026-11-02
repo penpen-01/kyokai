@@ -98,6 +98,7 @@ const Packs = {
             <h3>${esc(p.name)}</h3>
             <div class="pk-chips"><span>${pool.length}種</span><span>1パック${p.size}枚</span><span>最後の1枚はレア以上</span></div>
             <div class="pk-rar">${RARITY_ORDER.map(r => `<span class="r-${r}"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}種</span>`).join("")}</div>
+            <button type="button" class="linkbtn pk-listbtn" data-act="packList" data-id="${esc(p.id)}">封入カードを見る（${pool.length}種）</button>
             <details class="pk-odds"><summary>排出率を見る</summary>
               <table><tr><th></th>${RARITY_ORDER.map(r => `<th>${RARITY_SHORT[r]}</th>`).join("")}</tr>
                 <tr><td>1〜${p.size - 1}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.normal[r]}%</td>`).join("")}</tr>
@@ -115,6 +116,25 @@ const Packs = {
     </div>`, "start", true);
   },
 
+  /* 封入カードの一覧（レア度ごと） */
+  showList(id) {
+    const p = PACKS.find(x => x.id === id); if (!p) return this.showShop();
+    this.listId = id;
+    const pool = this.pool(p);
+    const byCost = (a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja");
+    openOverlay(`<div class="panel wide">
+      <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>封入カード</b></div>
+      <p class="lead small">「${esc(p.name)}」から出るカード、全${pool.length}種です。カードを押すと効果を見られます。</p>
+      ${[...RARITY_ORDER].reverse().map(r => {
+        const list = pool.filter(c => c.rarity === r).sort(byCost);
+        if (!list.length) return "";
+        return `<h3 class="sec"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${RARITY[r]}<small class="hint">${list.length}種</small></h3>
+          <div class="pl-grid">${list.map(c => `<button type="button" class="pl-card" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${cardHTML(c, { static: true })}${Account.owned(c.id) ? `<span class="pl-own">所持${Account.owned(c.id)}</span>` : ""}</button>`).join("")}</div>`;
+      }).join("")}
+      ${this.detailHTML()}
+    </div>`, "start", true);
+  },
+
   showOpening() {
     const L = this.last; if (!L) return;
     if (L.multi) return L.stage === "pack" ? this.showPack() : this.showMulti();
@@ -128,15 +148,15 @@ const Packs = {
     const L = this.last;
     openOverlay(`<div class="openstage">
       <div class="os-top"><span class="goldtag">${Account.gold}G</span></div>
-      ${L.multi ? `<span class="bp-x">×${L.multi}</span>` : ""}
+      <div class="bp-wrap">${L.multi ? Array.from({ length: L.multi - 1 }, (_, i) => `<span class="bp-ghost" style="--i:${L.multi - 1 - i}${this.art(L.pack) ? `;background-image:url('${esc(this.art(L.pack))}')` : ""}"></span>`).join("") : ""}
       <button type="button" class="bigpack ${L.multi ? "multi" : ""}" data-act="packTear" aria-label="パックを開ける">
         <span class="bp-tear"></span>
         <span class="bp-body ${this.art(L.pack) ? "has-art" : ""}" ${this.art(L.pack) ? `style="background-image:url('${esc(this.art(L.pack))}')"` : ""}>
           <span class="bp-bands"><i class="w-myth"></i><i class="w-fan"></i><i class="w-mech"></i></span>
           <span class="bp-logo"><small>境界の召喚士</small><b>${esc(L.pack.name)}</b><em>${L.multi ? `${L.multi}パック分 ・ ${L.multi * L.pack.size}枚` : `${L.pack.size}枚入り`}</em></span>
         </span>
-      </button>
-      <p class="os-hint">タップして開ける</p>
+      </button></div>
+      <p class="os-hint">${L.multi ? `${L.multi}パックまとめて開ける` : "タップして開ける"}</p>
     </div>`, "start", true);
   },
 
@@ -183,6 +203,23 @@ const Packs = {
       </div>
       ${this.detailHTML()}
     </div>`, "start", true);
+  },
+
+  /* 10連：UR・レジェンドが出ていたら、結果の前に1枚ずつカットイン（対戦と同じ演出） */
+  multiCutins() {
+    const L = this.last;
+    const hits = L.rows.flat().filter(x => ["ur", "legend"].includes(DEF[x.id].rarity))
+      .sort((a, b) => RARITY_ORDER.indexOf(DEF[a.id].rarity) - RARITY_ORDER.indexOf(DEF[b.id].rarity));
+    if (!hits.length || Motion.reduced) return this.showMulti(true);
+    let i = 0;
+    const step = () => {
+      if (this.last !== L) return;
+      if (i >= hits.length) return this.showMulti(true);
+      const x = hits[i++];
+      Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！");
+      setTimeout(step, 760);
+    };
+    step();
   },
 
   /* 10連の結果：1パック＝1行で、上から順に一気にめくれる。SR 以上は光る。上に当たりのまとめ */
@@ -241,8 +278,8 @@ const Packs = {
     if (bp && !Motion.reduced) {
       this.busy = true;
       bp.classList.add("tearing");
-      setTimeout(() => { this.busy = false; if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }, 700);
-    } else if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; this.showReveal(); }
+      setTimeout(() => { this.busy = false; if (L.multi) { L.stage = "done"; this.multiCutins(); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }, 700);
+    } else if (L.multi) { L.stage = "done"; this.multiCutins(); } else { L.stage = "reveal"; this.showReveal(); }
   },
 
   flip() {
@@ -273,10 +310,11 @@ const Packs = {
 
   handleAct(act, el) {
     switch (act) {
-      case "packs": this.showShop(); return true;
+      case "packs": this.listId = null; this.showShop(); return true;
       case "packOpen": case "packOpenTicket": case "packOpen10": case "packOpenTicket10": {
         const p = PACKS.find(x => x.id === (el && el.dataset.id));
         if (!p) return true;
+        this.listId = null;
         const r = this.open(p, act.startsWith("packOpenTicket"), act.endsWith("10") ? 10 : 1);
         if (!r.ok) { this.showShop(r.msg); return true; }
         this.showOpening();
@@ -286,8 +324,9 @@ const Packs = {
       case "packFlip": this.flip(); return true;
       case "packNext": this.next(); return true;
       case "packSkip": this.skip(); return true;
-      case "packDetail": this.showDetail(el.dataset.id); return true;
-      case "packDetailClose": this.detailId = null; this.showOpening(); return true;
+      case "packDetail": this.detailId = el.dataset.id; if (this.listId) this.showList(this.listId); else this.showOpening(); return true;
+      case "packDetailClose": this.detailId = null; if (this.listId) this.showList(this.listId); else this.showOpening(); return true;
+      case "packList": this.listId = el.dataset.id; this.detailId = null; this.showList(this.listId); return true;
     }
     return false;
   }

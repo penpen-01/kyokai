@@ -38,18 +38,25 @@ const Online = {
     const name = store.get(NAME_KEY) || "";
     openOverlay(`<div class="panel">
       <h2 class="title sm">友達と対戦</h2>
-      <p class="lead">片方が部屋を作り、表示された合言葉をもう片方が入力すると対戦が始まります。</p>
-      <div class="ofield">
-        <label for="onl-name">あなたの名前</label>
-        <input class="otxt" id="onl-name" maxlength="10" placeholder="例：ペンペン" value="${esc(name)}" autocomplete="nickname">
+      <p class="lead small">片方が部屋を作り、表示された合言葉をもう片方が入力すると対戦が始まります。</p>
+      <div class="obox">
+        <div class="ofield">
+          <label for="onl-name">あなたの名前</label>
+          <input class="otxt" id="onl-name" maxlength="10" placeholder="例：ペンペン" value="${esc(name)}" autocomplete="nickname">
+        </div>
       </div>
-      <button type="button" class="btn primary" data-act="onlCreate">部屋を作る</button>
-      <div class="or"><span>または</span></div>
-      <div class="ofield">
-        <label for="onl-code">合言葉（4文字）</label>
-        <div class="joinrow">
-          <input class="otxt code" id="onl-code" maxlength="4" placeholder="ABCD" autocomplete="off" autocapitalize="characters" spellcheck="false">
-          <button type="button" class="btn primary" data-act="onlJoin">参加する</button>
+      <div class="obox">
+        <h3>部屋を作る</h3>
+        <button type="button" class="btn primary" data-act="onlCreate">部屋を作って合言葉を出す</button>
+      </div>
+      <div class="obox">
+        <h3>友達の部屋に入る</h3>
+        <div class="ofield">
+          <label for="onl-code">合言葉（4文字）</label>
+          <div class="joinrow">
+            <input class="otxt code" id="onl-code" maxlength="4" placeholder="ABCD" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button type="button" class="btn primary" data-act="onlJoin">参加する</button>
+          </div>
         </div>
       </div>
       <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
