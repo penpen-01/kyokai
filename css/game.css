@@ -1133,7 +1133,7 @@ body{
   animation:ci-band 1.5s cubic-bezier(.2,.8,.2,1) both}
 .cutin.r-legend .ci-band{border-image:linear-gradient(90deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff) 1;box-shadow:0 0 34px rgba(255,190,240,.8)}
 @keyframes ci-band{0%{clip-path:inset(0 100% 0 0)}14%{clip-path:inset(0 0 0 0)}82%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 100%);opacity:.6}}
-.ci-art{position:absolute;inset:-30% 0;transform:rotate(9deg);background:#141833 center 22%/cover no-repeat;animation:ci-pan 1.5s linear both}
+.ci-art{position:absolute;inset:-30% 0;transform:rotate(9deg);background:#141833 50% 8%/cover no-repeat;animation:ci-pan 1.5s linear both}
 .cutin.theirs .ci-art{animation-name:ci-pan-r}
 @keyframes ci-pan{from{transform:rotate(9deg) translateX(-6%) scale(1.15)}to{transform:rotate(9deg) translateX(6%) scale(1.15)}}
 @keyframes ci-pan-r{from{transform:rotate(9deg) translateX(6%) scale(1.15)}to{transform:rotate(9deg) translateX(-6%) scale(1.15)}}

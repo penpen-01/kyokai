@@ -114,7 +114,7 @@ const Motion = {
 
   /* ---------- ドロー：山札から手札へカードが飛ぶ ---------- */
   draw(pi) {
-    if (this.reduced) return;
+    if (this.reduced || pi !== ME) return;   // 真ん中の山札は自分のものなので、自分が引いたときだけ
     const pile = document.querySelector(".pile .pback");
     if (!pile) return;
     const a = pile.getBoundingClientRect();

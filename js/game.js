@@ -192,7 +192,7 @@ function draw(pi, silent) {
     return;
   }
   p.hand.push(id);
-  if (!silent && S.phase === "play") fx("draw", String(pi), "draw");   // 山札から手札へ飛ぶ（どのカードかは送らない）
+  if (!silent && S.phase === "play") fx("draw", String(pi), "draw");   // 山札から手札へ飛ぶ（自分が引いたときだけ見せる。どのカードかは送らない）
   if (S.phase === "play") trigUnits(pi, "drawn");
   if (!silent) log(`${pname(pi)}はカードを1枚引いた。`, { pi, msg: `${pname(pi)}は${cname(id)}を引いた。` });
 }
