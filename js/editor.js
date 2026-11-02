@@ -102,7 +102,7 @@ function poolStats() {
   const curve = Array(9).fill(0);
   usable.forEach(c => { curve[Math.min(8, Math.max(0, c.cost))]++; });
   return {
-    kinds: usable.length, all: DATA.cards.length,
+    kinds: usable.length, all: DATA.cards.filter(c => !c.token).length, tokens: DATA.cards.filter(c => c.token).length,
     chars: kinds(c => c.type === "char"), spells: kinds(c => c.type === "spell"),
     myth: kinds(c => c.world === "myth"), fan: kinds(c => c.world === "fan"), mech: kinds(c => c.world === "mech"),
     rar: Object.fromEntries(Object.keys(RARITY).map(r => [r, kinds(c => (c.rarity || "common") === r)])),
@@ -116,7 +116,7 @@ function renderSummary() {
   $("#summary").innerHTML = `
     <div class="sum-row">
       <span class="big">使えるカード <b>${s.kinds}</b>種</span>
-      <span>キャラ <b>${s.chars}</b> ・ 魔法 <b>${s.spells}</b>${s.all > s.kinds ? ` ・ 使用不可 <b>${s.all - s.kinds}</b>` : ""}</span>
+      <span>キャラ <b>${s.chars}</b> ・ 魔法 <b>${s.spells}</b>${s.all > s.kinds ? ` ・ 使用不可 <b>${s.all - s.kinds}</b>` : ""}${s.tokens ? ` ・ トークン <b>${s.tokens}</b>` : ""}</span>
     </div>
     <div class="sum-row">
       <span style="color:var(--w-myth)">神話 <b>${s.myth}</b></span>
@@ -135,14 +135,14 @@ function renderSummary() {
 
 function renderList() {
   const list = DATA.cards
-    .filter(c => filter === "all" || c.type === filter)
+    .filter(c => filter === "all" || (filter === "token" ? c.token : c.type === filter && !c.token))
     .slice().sort((a, b) => a.cost - b.cost || (a.type > b.type ? 1 : a.type < b.type ? -1 : 0) || a.name.localeCompare(b.name, "ja"));
   $("#list").innerHTML = list.length ? list.map(c => `
     <li class="row ${c.id === curId ? "cur" : ""} ${c.limit ? "" : "out"} w-${c.world}" data-pick="${esc(c.id)}">
       ${cardHTML(c, { static: true })}
       <div class="row-main">
         <span class="row-name">${esc(c.name)}</span>
-        <span class="row-meta">コスト${c.cost} ・ <span class="w">${WORLDS[c.world]}</span> ・ ${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}${c.limit ? "" : " ・ 使用不可"}</span>
+        <span class="row-meta">コスト${c.cost} ・ <span class="w">${WORLDS[c.world]}</span> ・ ${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}${c.token ? " ・ トークン" : c.limit ? "" : " ・ 使用不可"}</span>
       </div>
       <div class="stepper limit" aria-label="${esc(c.name)}の投入上限">
         <button type="button" data-limit="-1" data-id="${esc(c.id)}" aria-label="上限を1減らす">−</button>
@@ -220,6 +220,7 @@ function renderEditor() {
             <div class="field"><span class="lab">体力</span>${stepper("hp", c.hp, "体力")}</div>` : ""}
             <div class="field"><span class="lab">1デッキの投入上限</span><div class="limit">${stepper("limit", c.limit, "投入上限")}</div></div>
           </div>
+          <label class="check"><input type="checkbox" data-token ${c.token ? "checked" : ""}><span><b>トークン</b><span>効果で出すだけのカード。デッキに入らず、パックからも出ません（投入上限は0になります）。</span></span></label>
           <p class="hint">投入上限は、1つのデッキに何枚まで入れられるか。ルール設定の「同じカードを入れられる上限」（今は${DATA.config.COPY_MAX}枚）より大きくしても、そちらが優先されます。0にすると、データには残りますがデッキに入れられなくなります。</p>
           <div class="field grow">
             <span class="lab">レア度</span>
@@ -262,8 +263,9 @@ function renderEditor() {
               <select data-eff-kind="${i}" aria-label="効果${i + 1}の種類" id="ef-k-${i}">
                 ${[...new Set(Object.values(EFFECTS).filter(v => isChar || !v.self).map(v => v.group))].map(g => `<optgroup label="${g}">${Object.entries(EFFECTS).filter(([, v]) => v.group === g && (isChar || !v.self)).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${v.label}${v.target ? "（対象を選ぶ）" : ""}</option>`).join("")}</optgroup>`).join("")}
               </select>
-              ${def.noN ? "" : stepper("eff-" + i, e.n, `効果${i + 1}の数値`)}
+              ${effNoN(def, e) ? "" : stepper("eff-" + i, e.n, `効果${i + 1}の数値`)}
               <button type="button" class="iconbtn" data-eff-del="${i}" aria-label="効果${i + 1}を削除">✕</button>
+              ${effOptsHTML(e, i)}
             </div>`; }).join("")}
           </div>
           ${targetWarn(c)}
@@ -315,11 +317,33 @@ function renderRules() {
     <div><button type="button" class="btn sm" data-act="cfgReset">すべて初期値に戻す</button></div>`;
 }
 
+/* 効果の追加の設定（トークン・与える能力・世界・カードの種類） */
+function effOptsHTML(e, i) {
+  const def = EFFECTS[e.kind], o = def.opts || [];
+  if (!o.length) return "";
+  const sel = (opt, label, items, val) => `<label class="eff-opt"><span>${label}</span><select data-eff-opt="${i}" data-opt="${opt}" id="ef-${opt}-${i}">${items.map(([k, v]) => `<option value="${esc(k)}" ${val === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label>`;
+  const out = [];
+  if (o.includes("token")) {
+    const toks = DATA.cards.filter(c => c.token && (!def.tokenType || c.type === def.tokenType));
+    out.push(toks.length || e.card
+      ? sel("card", "トークン", [["", def.tokenOptional ? "（なし：1/1にする）" : "選んでください"], ...toks.map(c => [c.id, `${c.name}（${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}）`])], e.card || "")
+      : `<span class="hint small">トークンのカードがまだありません。新しいカードを作って「トークン」にチェックを入れてください${def.tokenType === "char" ? "（キャラ）" : ""}。</span>`);
+  }
+  if (o.includes("kw")) out.push(sel("kw", "能力", [["", "選んでください"], ...Object.entries(KEYWORDS).map(([k, v]) => [k, v.label]), ["armor", "装甲（数値）"]], e.kw || ""));
+  if (o.includes("world")) out.push(sel("world", "世界", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
+  if (o.includes("ctype")) out.push(sel("ctype", "種類", [["", "すべて"], ...Object.entries(TYPES)], e.ctype || ""));
+  return `<div class="eff-opts">${out.join("")}</div>`;
+}
 function targetWarn(c) {
   const sides = playEffects(c).map(e => EFFECTS[e.kind].target).filter(Boolean);
   const msgs = [];
   if (sides.filter(x => x === "enemyUnit").length > 1) msgs.push("相手キャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
   if (sides.filter(x => x === "ownUnit").length > 1) msgs.push("自分のキャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
+  c.effects.forEach((e, i) => {
+    const o = EFFECTS[e.kind].opts || [];
+    if (o.includes("token") && !e.card && !EFFECTS[e.kind].tokenOptional) msgs.push(`効果${i + 1}：出すトークンを選んでください。`);
+    if (o.includes("kw") && !e.kw) msgs.push(`効果${i + 1}：与える能力を選んでください。`);
+  });
   if (c.pay && c.pay.kind === "sacrifice" && sides.includes("ownUnit")) msgs.push("代償でキャラを破壊するカードでは、「自分のキャラを選ぶ効果」は発動しません。");
   return msgs.map(m => `<p class="warn">${m}</p>`).join("");
 }
@@ -447,13 +471,19 @@ document.addEventListener("change", e => {
   if (t.dataset.ai && AiTools.input(t)) return;
   if (t.dataset.num) { setNum(t.dataset.num, t.value); return; }
   if (t.dataset.limitIn) { setCopies(t.dataset.limitIn, t.value); return; }
+  if (t.dataset.token != null && t.type === "checkbox") {
+    const c = curCard(); c.token = t.checked; if (c.token) c.limit = 0; else if (!c.limit) c.limit = 3;
+    changed(); renderEditor(); renderList(); return;
+  }
   if (t.dataset.kw) {
     const c = curCard(), k = t.dataset.kw;
     c.keywords = t.checked ? [...new Set([...c.keywords, k])] : c.keywords.filter(x => x !== k);
     changed(); return;
   }
+  if (t.dataset.effOpt != null) { const e = curCard().effects[+t.dataset.effOpt]; if (t.value) e[t.dataset.opt] = t.value; else delete e[t.dataset.opt]; changed(); renderEditor(); return; }
   if (t.dataset.effWhen != null) { const e = curCard().effects[+t.dataset.effWhen]; if (t.value === "play") delete e.when; else e.when = t.value; changed(); renderEditor(); return; }
-  if (t.dataset.effKind != null) { const e = curCard().effects[+t.dataset.effKind]; e.kind = t.value; e.n = Math.max(EFFECTS[e.kind].min ?? 1, e.n); changed(); renderEditor(); return; }
+  if (t.dataset.effKind != null) { const e = curCard().effects[+t.dataset.effKind]; e.kind = t.value; e.n = Math.max(EFFECTS[e.kind].min ?? 1, e.n);
+    const o = EFFECTS[e.kind].opts || []; if (!o.includes("token")) delete e.card; if (!o.includes("kw")) delete e.kw; if (!o.includes("world")) delete e.world; if (!o.includes("ctype")) delete e.ctype; changed(); renderEditor(); return; }
   if (t.dataset.text === "name" || t.dataset.text === "glyph") {
     const c = curCard();
     if (!c[t.dataset.text].trim()) { c[t.dataset.text] = t.dataset.text === "name" ? "名前なし" : "？"; t.value = c[t.dataset.text]; changed(); }
@@ -555,6 +585,7 @@ function exportJSON() {
     if (c.type === "char") { o.atk = c.atk; o.hp = c.hp; }
     Object.assign(o, { glyph: c.glyph, limit: c.limit, rarity: c.rarity, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });
     if (c.type === "char" && c.armor) o.armor = c.armor;
+    if (c.token) o.token = true;
     if (c.pay) o.pay = c.pay;
     if (c.note) o.note = c.note;
     if (c.art) o.art = c.art;

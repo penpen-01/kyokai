@@ -257,8 +257,9 @@ function returnFromVoid(pi) {
 }
 
 /* ---------- カードを使う ---------- */
-const kw = (u, k) => !!(DEF[u.id] && DEF[u.id].keywords.includes(k));
-const armorOf = u => (DEF[u.id] && DEF[u.id].armor) || 0;
+/* キャラの能力：カードの能力＋効果で与えられた能力（u.kws）。沈黙したキャラは何も持たない */
+const kw = (u, k) => !!(u && !u.silenced && DEF[u.id] && (DEF[u.id].keywords.includes(k) || (u.kws || []).includes(k)));
+const armorOf = u => (u.silenced ? 0 : ((DEF[u.id] && DEF[u.id].armor) || 0) + (u.armorPlus || 0));
 function effCost(pi, d) { return Math.max(0, d.cost - (S.players[pi].discount || 0)); }
 
 /* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか */
@@ -404,6 +405,69 @@ function effect(pi, e, targets, self) {
     }
     case "energyNow": me.e += n; log(`${pname(pi)}はエナジーを${n}得た。`); fx(playerSel(pi), `エナジー+${n}`, "heal"); break;
     case "banishOwn": banishOwn(pi); break;
+    case "grantSelf": if (self && self.hp > 0) grant(self, e); break;
+    case "grantOwn": { const u = ownT(); if (u) grant(u, e); break; }
+    case "grantAll": me.field.filter(u => !e.world || (DEF[u.id] && DEF[u.id].world === e.world)).forEach(u => grant(u, e)); break;
+    case "tokenField": {
+      const t = DEF[e.card];
+      if (!t || t.type !== "char") break;
+      let k = 0;
+      for (let i = 0; i < n && !fieldFull(me); i++) { addUnit(pi, t.id); k++; }
+      log(k ? `${cname(t.id)}が${k}体現れた。` : "場に空いている場所がなく、トークンを出せなかった。");
+      break;
+    }
+    case "tokenHand": {
+      if (!DEF[e.card]) break;
+      let k = 0;
+      for (let i = 0; i < n && me.hand.length < CONFIG.HAND_MAX; i++) { me.hand.push(e.card); k++; }
+      if (k) log(`${pname(pi)}は${cname(e.card)}を${k}枚手札に加えた。`);
+      break;
+    }
+    case "tutor": {
+      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => { const c = DEF[x.id]; return c && c.cost <= n && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype); });
+      if (!cands.length) { log("条件に合うカードが山札になかった。"); break; }
+      const pick = cands[Math.floor(Math.random() * cands.length)];
+      me.deck.splice(pick.i, 1);
+      if (me.hand.length >= CONFIG.HAND_MAX) { log(`手札がいっぱいで、${cname(pick.id)}は捨て札へ。`); break; }
+      me.hand.push(pick.id);
+      log(`${pname(pi)}は山札からカードを1枚手札に加えた。`, { pi, msg: `${pname(pi)}は山札から${cname(pick.id)}を手札に加えた。` });
+      break;
+    }
+    case "bounceEnemy": { const u = enemyT(); if (u) bounce(opp(pi), u, "hand"); break; }
+    case "bounceOwn": { const u = ownT(); if (u) bounce(pi, u, "hand"); break; }
+    case "shuffleEnemy": { const u = enemyT(); if (u) bounce(opp(pi), u, "deck"); break; }
+    case "steal": {
+      const u = enemyT(); if (!u) break;
+      if (fieldFull(me)) { log("自分の場に空きがなく、奪えなかった。"); break; }
+      en.field = en.field.filter(x => x !== u);
+      u.ready = false; u.frozen = false;
+      me.field.push(u);
+      log(`${pname(pi)}は${cname(u.id)}を奪った！`); fx(unitSel(u.uid), "奪った", "heal");
+      break;
+    }
+    case "silence": { const u = enemyT(); if (u) { u.silenced = true; u.kws = []; u.armorPlus = 0; log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "dmg"); } break; }
+    case "transform": {
+      const u = enemyT(); if (!u) break;
+      const t = DEF[e.card], before = cname(u.id);
+      if (t && t.type === "char") { u.id = t.id; u.atk = t.atk; u.hp = t.hp; u.maxHp = t.hp; u.silenced = false; }
+      else { u.atk = 1; u.hp = 1; u.maxHp = 1; u.silenced = true; }
+      u.kws = []; u.armorPlus = 0; u.frozen = false;
+      log(`${before}は${t ? cname(t.id) : "1/1"}に変身した。`); fx(unitSel(u.uid), "変身", "dmg");
+      break;
+    }
+    case "swapEnemy": { const u = enemyT(); if (u) swapStats(u); break; }
+    case "swapOwn": { const u = ownT(); if (u) swapStats(u); break; }
+    case "revive": {
+      if (fieldFull(me)) { log("場に空いている場所がなく、復活できなかった。"); break; }
+      const g = me.grave || [];
+      const cands = g.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && !DEF[x.id].token && DEF[x.id].cost <= n);
+      if (!cands.length) { log("復活できるキャラがいなかった。"); break; }
+      const pick = cands[Math.floor(Math.random() * cands.length)];
+      g.splice(pick.i, 1);
+      addUnit(pi, pick.id);
+      log(`${cname(pick.id)}が復活した！`);
+      break;
+    }
     case "discount": me.discount = (me.discount || 0) + n; log(`${pname(pi)}の次のカードのコストが${n}下がる。`); break;
     case "summon": {
       if (fieldFull(me)) { log("場に空いている場所がなく、キャラを出せなかった。"); break; }
@@ -422,6 +486,30 @@ function effect(pi, e, targets, self) {
       break;
     }
   }
+}
+
+/* 能力を与える（装甲は数値を足す） */
+function grant(u, e) {
+  if (e.kw === "armor") { u.armorPlus = (u.armorPlus || 0) + e.n; log(`${cname(u.id)}は装甲${e.n}を得た。`); fx(unitSel(u.uid), `装甲+${e.n}`, "heal"); return; }
+  if (!KEYWORDS[e.kw]) return;
+  log(`${cname(u.id)}は${KEYWORDS[e.kw].label}を得た。`);
+  u.kws = [...new Set([...(u.kws || []), e.kw])];
+  if (e.kw === "haste" && !u.frozen) u.ready = true;
+  fx(unitSel(u.uid), KEYWORDS[e.kw].label, "heal");
+}
+/* 場のキャラを手札（to="hand"）か山札（"deck"）へ。トークンは消える。手札があふれたら捨て札 */
+function bounce(pi, u, to) {
+  const p = S.players[pi];
+  p.field = p.field.filter(x => x !== u);
+  fx(unitSel(u.uid), to === "hand" ? "手札へ" : "山札へ", "heal");
+  if (DEF[u.id] && DEF[u.id].token) { log(`${cname(u.id)}（トークン）は消えた。`); return; }
+  if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
+  if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); return; }
+  p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
+}
+function swapStats(u) {
+  const a = u.atk; u.atk = Math.max(0, u.hp); u.hp = a; u.maxHp = Math.max(u.maxHp, a);
+  log(`${cname(u.id)}の攻撃力と体力が入れ替わった（${u.atk}/${u.hp}）。`); fx(unitSel(u.uid), "入れ替え", "heal");
 }
 
 function hitUnit(u, n) {
@@ -619,11 +707,11 @@ function simulate(fn) {
 function unitValue(u) {
   const d = DEF[u.id]; if (!d) return 0;
   let v = u.atk * 1.2 + Math.max(0, u.hp) * 0.9 + 1;
-  if (d.keywords.includes("guard")) v += 1.5 + u.hp * 0.2;
-  if (d.keywords.includes("pierce")) v += u.atk * 0.4;
-  if (d.keywords.includes("trample")) v += 0.5;
-  v += (d.armor || 0) * 1.5;
-  v += d.effects.filter(e => whenOf(e) !== "play").length * 0.8;   // 場に残ると働く効果
+  if (kw(u, "guard")) v += 1.5 + u.hp * 0.2;
+  if (kw(u, "pierce")) v += u.atk * 0.4;
+  if (kw(u, "trample")) v += 0.5;
+  v += armorOf(u) * 1.5;
+  if (!u.silenced) v += d.effects.filter(e => whenOf(e) !== "play").length * 0.8;   // 場に残ると働く効果
   if (u.frozen) v -= u.atk * 0.6;
   return v;
 }
@@ -640,13 +728,13 @@ function evaluate(st, pi) {
   s += me.maxE * 0.9;
   // 相手の次の攻撃で負けそうなら大きく減点
   // 相手の次のターンに本体へ届きそうなダメージ（守護がいれば防げる）
-  const myGuard = me.field.some(u => DEF[u.id] && DEF[u.id].keywords.includes("guard"));
-  const reach = en.field.reduce((a, u) => a + ((!myGuard || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) && !u.frozen ? u.atk : 0), 0);
+  const myGuard = me.field.some(u => kw(u, "guard"));
+  const reach = en.field.reduce((a, u) => a + ((!myGuard || kw(u, "pierce")) && !u.frozen ? u.atk : 0), 0);
   if (reach >= me.hp) s -= 60;
   else s -= reach * 0.4;
   // 自分の次のターンに届くダメージ（とどめを狙う）
-  const enGuard = en.field.some(u => DEF[u.id] && DEF[u.id].keywords.includes("guard"));
-  const myReach = me.field.reduce((a, u) => a + ((!enGuard || (DEF[u.id] && DEF[u.id].keywords.includes("pierce"))) ? u.atk : 0), 0);
+  const enGuard = en.field.some(u => kw(u, "guard"));
+  const myReach = me.field.reduce((a, u) => a + ((!enGuard || kw(u, "pierce")) ? u.atk : 0), 0);
   if (myReach >= en.hp) s += 25;
   return s;
 }
@@ -1016,7 +1104,8 @@ function detailHTML(id, unit, owner) {
       <div class="sh-name">${esc(d.name)}</div>
       <div class="sh-meta">${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}</div>
       ${statLine}
-      <p class="sh-text">${esc(cardText(d))}</p>`;
+      ${unit && unit.silenced ? `<p class="sh-text">沈黙：効果と能力をすべて失っています。</p>` : `<p class="sh-text">${esc(cardText(d))}</p>`}
+      ${unit && !unit.silenced && ((unit.kws || []).length || unit.armorPlus) ? `<p class="sh-text">与えられた能力：${[...(unit.kws || []).filter(k => KEYWORDS[k]).map(k => `${KEYWORDS[k].label}（${KEYWORDS[k].text}）`), ...(unit.armorPlus ? [`装甲+${unit.armorPlus}`] : [])].join("／")}</p>` : ""}`;
 }
 
 function renderSheet() {

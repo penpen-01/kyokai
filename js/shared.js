@@ -24,6 +24,14 @@ const PAYS = {
 /* 効果の種類。キャラは「登場時」、魔法は「使ったとき」に発動する。
    target があるものは、使うときに対象のキャラを選ぶ（相手側と自分側を1体ずつまで）。
    noN は数値を使わない効果、min は数値の下限。 */
+/* 効果の文で使う：カード名（ゲームでは DEF、工房では DATA から探す）・世界・能力の名前 */
+const cardRef = id => (typeof DEF !== "undefined" && DEF[id]) || (typeof DATA !== "undefined" && DATA && Array.isArray(DATA.cards) && DATA.cards.find(c => c.id === id)) || null;
+const tokName = e => { const c = e && e.card && cardRef(e.card); return c ? c.name : "（トークン未設定）"; };
+const worldNo = e => (e && WORLDS[e.world] ? WORLDS[e.world] + "の" : "");
+const ctypeName = e => (e && e.ctype === "char" ? "キャラ" : e && e.ctype === "spell" ? "魔法" : "カード");
+const kwName = e => (!e ? "能力" : e.kw === "armor" ? `装甲${e.n}` : KEYWORDS[e.kw] ? KEYWORDS[e.kw].label : "（能力未設定）");
+const effNoN = (def, e) => (typeof def.noN === "function" ? def.noN(e) : !!def.noN);
+
 const EFFECTS = {
   draw:        { group: "ドロー", label: "カードを引く",                  text: n => `カードを${n}枚引く。` },
   refresh:     { group: "ドロー", label: "手札を入れ替える",              text: n => n ? `手札をすべて山札に戻して切り直し、その枚数より${n}枚多く引く。` : "手札をすべて山札に戻して切り直し、同じ枚数を引く。", min: 0 },
@@ -42,8 +50,8 @@ const EFFECTS = {
   buffAtk:     { group: "強化",   label: "自分のキャラの攻撃力を上げる",  text: n => `自分のキャラ1体の攻撃力を+${n}する。`, target: "ownUnit" },
   buffHp:      { group: "強化",   label: "自分のキャラの体力を上げる",    text: n => `自分のキャラ1体の体力を+${n}する。`, target: "ownUnit" },
   buffBoth:    { group: "強化",   label: "自分のキャラを+N/+N",           text: n => `自分のキャラ1体を+${n}/+${n}する。`, target: "ownUnit" },
-  buffAllAtk:  { group: "強化",   label: "自分のキャラ全体の攻撃力を上げる", text: n => `自分のキャラ全体の攻撃力を+${n}する。` },
-  buffAllBoth: { group: "強化",   label: "自分のキャラ全体を+N/+N",       text: n => `自分のキャラ全体を+${n}/+${n}する。` },
+  buffAllAtk:  { group: "強化",   label: "自分のキャラ全体の攻撃力を上げる", text: (n, e) => `自分の${worldNo(e)}キャラ全体の攻撃力を+${n}する。`, opts: ["world"] },
+  buffAllBoth: { group: "強化",   label: "自分のキャラ全体を+N/+N",       text: (n, e) => `自分の${worldNo(e)}キャラ全体を+${n}/+${n}する。`, opts: ["world"] },
   heal:        { group: "回復",   label: "自分の体力を回復",              text: n => `自分の体力を${n}回復する。` },
   healUnits:   { group: "回復",   label: "自分のキャラ全体を回復",        text: n => `自分のキャラ全体の体力を${n}回復する。` },
   ramp:        { group: "エナジー", label: "エナジー最大値を増やす",      text: n => `エナジーの最大値を${n}増やす（上限まで）。` },
@@ -53,6 +61,21 @@ const EFFECTS = {
   buffSelfAtk: { group: "このキャラ", label: "このキャラの攻撃力を上げる", text: n => `このキャラの攻撃力を+${n}する。`, self: true },
   buffSelfBoth:{ group: "このキャラ", label: "このキャラを+N/+N",          text: n => `このキャラを+${n}/+${n}する。`, self: true },
   readySelf:   { group: "このキャラ", label: "このキャラはもう一度攻撃できる", text: () => "このキャラは、このターンもう一度攻撃できる。", self: true, noN: true },
+  grantSelf:   { group: "このキャラ", label: "このキャラに能力を与える",   text: (n, e) => `このキャラに「${kwName(e)}」を与える。`, self: true, opts: ["kw"], noN: e => !e || e.kw !== "armor" },
+  grantOwn:    { group: "能力",   label: "自分のキャラ1体に能力を与える", text: (n, e) => `自分のキャラ1体に「${kwName(e)}」を与える。`, target: "ownUnit", opts: ["kw"], noN: e => !e || e.kw !== "armor" },
+  grantAll:    { group: "能力",   label: "自分のキャラ全体に能力を与える", text: (n, e) => `自分の${worldNo(e)}キャラ全体に「${kwName(e)}」を与える。`, opts: ["kw", "world"], noN: e => !e || e.kw !== "armor" },
+  tokenField:  { group: "トークン", label: "トークンを場に出す",         text: (n, e) => `「${tokName(e)}」を${n}体出す。`, opts: ["token"], tokenType: "char" },
+  tokenHand:   { group: "トークン", label: "トークンを手札に加える",     text: (n, e) => `「${tokName(e)}」を${n}枚手札に加える。`, opts: ["token"] },
+  tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札からコスト${n}以下の${worldNo(e)}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype"], min: 0 },
+  bounceEnemy: { group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
+  shuffleEnemy:{ group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
+  transform:   { group: "除去",   label: "相手キャラを変身させる",       text: (n, e) => e && e.card ? `相手キャラ1体を「${tokName(e)}」に変身させる。` : "相手キャラ1体を、効果も能力もない1/1に変身させる。", target: "enemyUnit", noN: true, opts: ["token"], tokenType: "char", tokenOptional: true },
+  steal:       { group: "除去",   label: "相手キャラを奪う",             text: () => "相手キャラ1体を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。", target: "enemyUnit", noN: true },
+  silence:     { group: "妨害",   label: "相手キャラを沈黙させる",       text: () => "相手キャラ1体を沈黙させる（効果と能力をすべて失う）。", target: "enemyUnit", noN: true },
+  swapEnemy:   { group: "妨害",   label: "相手キャラの攻撃力と体力を入れ替える", text: () => "相手キャラ1体の攻撃力と体力を入れ替える。", target: "enemyUnit", noN: true },
+  swapOwn:     { group: "強化",   label: "自分のキャラの攻撃力と体力を入れ替える", text: () => "自分のキャラ1体の攻撃力と体力を入れ替える。", target: "ownUnit", noN: true },
+  bounceOwn:   { group: "強化",   label: "自分のキャラを手札に戻す",     text: () => "自分のキャラ1体を手札に戻す（トークンは消える）。", target: "ownUnit", noN: true },
+  revive:      { group: "召喚",   label: "破壊された自分のキャラを復活させる", text: n => `この対戦で破壊された自分のコスト${n}以下のキャラをランダムに1体、場に出す（登場時効果は発動しない）。` },
   banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true }
 };
 
@@ -182,8 +205,8 @@ function effectsText(card, list, auto) {
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     let k = 1;
-    while (i + k < list.length && list[i + k].kind === e.kind && list[i + k].n === e.n) k++;
-    let t = EFFECTS[e.kind].text(e.n);
+    while (i + k < list.length && list[i + k].kind === e.kind && list[i + k].n === e.n && JSON.stringify(list[i + k]) === JSON.stringify(e)) k++;
+    let t = EFFECTS[e.kind].text(e.n, e);
     // キャラの効果で「自分のキャラ1体」を選ぶものは、そのキャラ自身は選べない
     if (card.type === "char" && EFFECTS[e.kind].target === "ownUnit") t = t.replace("自分のキャラ1体", "このキャラ以外の自分のキャラ1体");
     // 登場時以外は対象を選べないので、ランダム
@@ -245,23 +268,37 @@ function cardHTML(card, o = {}) {
     stats = `<span class="stats spelltag">魔法</span>`;
   }
   const tag = o.static ? "div" : "button";
+  // 場のキャラは、与えられた能力も見せる。沈黙したキャラは能力なし
+  const kwl = u && u.silenced ? [] : [...new Set([...(card.keywords || []), ...((u && u.kws) || [])])];
+  const arm = u ? (u.silenced ? 0 : (card.armor || 0) + (u.armorPlus || 0)) : card.armor;
   const marks = card.type === "char"
-    ? (card.keywords || []).filter(k => KEYWORDS[k]).map(k => `<i class="mk mk-${k}">${KEYWORDS[k].short}</i>`).join("")
-      + (card.armor ? `<i class="mk mk-armor">甲${card.armor}</i>` : "")
+    ? kwl.filter(k => KEYWORDS[k]).map(k => `<i class="mk mk-${k}">${KEYWORDS[k].short}</i>`).join("")
+      + (arm ? `<i class="mk mk-armor">甲${arm}</i>` : "")
       + ((card.effects || []).some(e => whenOf(e) !== "play") && !(u && u.silenced) ? `<i class="mk mk-trig" title="登場時以外にも働く効果があります">効</i>` : "")
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
-  const guard = card.type === "char" && (card.keywords || []).includes("guard");
+  const guard = card.type === "char" && kwl.includes("guard");
   return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
     <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span>
     ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
-    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}
+    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}
     <span class="foot"><span class="nm">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
+/* 効果1つの欠けを補う（追加の設定：card＝トークン、kw＝与える能力、world＝世界の絞り込み、ctype＝カードの種類） */
+function normEffect(e, type) {
+  const def = EFFECTS[e.kind], o = def.opts || [];
+  const out = { kind: e.kind, n: Math.max(def.min ?? 1, +e.n || 0) };
+  if (type !== "spell" && WHENS[e.when] && e.when !== "play") out.when = e.when;
+  if (o.includes("token") && e.card) out.card = String(e.card);
+  if (o.includes("kw") && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
+  if (o.includes("world") && WORLDS[e.world]) out.world = e.world;
+  if (o.includes("ctype") && TYPES[e.ctype]) out.ctype = e.ctype;
+  return out;
+}
 /* 読み込んだデータの欠けを補う */
 function normalizeData(data) {
   const d = data && typeof data === "object" ? data : {};
@@ -276,12 +313,13 @@ function normalizeData(data) {
     hp: c.type === "spell" ? undefined : Math.max(1, +c.hp || 1),
     glyph: String(c.glyph || "？"),
     // 1デッキに入れられる上限（0なら使えない）。古い形式の copies（共通山札の枚数）からも読める
-    limit: Math.max(0, c.limit != null ? +c.limit || 0 : c.copies != null ? Math.min(3, +c.copies || 0) : 3),
+    token: !!c.token,   // トークン：効果で出すだけのカード（デッキに入らない・パックから出ない）
+    limit: c.token ? 0 : Math.max(0, c.limit != null ? +c.limit || 0 : c.copies != null ? Math.min(3, +c.copies || 0) : 3),
     rarity: RARITY[c.rarity] ? c.rarity : (+c.cost >= 7 ? "legend" : +c.cost >= 5 ? "rare" : "common"),
     keywords: Array.isArray(c.keywords) ? c.keywords.filter(k => KEYWORDS[k]) : [],
     armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
-    effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => ({ kind: e.kind, n: Math.max(EFFECTS[e.kind].min ?? 1, +e.n || 0), ...(c.type !== "spell" && WHENS[e.when] && e.when !== "play" ? { when: e.when } : {}) })) : [],
+    effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],
     note: c.note ? String(c.note) : "",
     artNote: c.artNote ? String(c.artNote) : "",   // イラストの指定（Gemini への依頼文に使う）
     art: c.art ? String(c.art) : ""

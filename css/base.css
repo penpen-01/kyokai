@@ -165,6 +165,8 @@ img{max-width:100%}
   position:absolute;z-index:3;left:50%;top:40%;transform:translate(-50%,-50%);font-weight:800;font-size:13cqw;letter-spacing:.1em;
   color:#dff3ff;background:rgba(40,90,140,.75);padding:1.5cqw 4cqw;border-radius:2cqw;
 }
+.card .frz.sil{top:56%;color:#efe3ff;background:rgba(80,50,120,.8)}
+.card .frz + .frz.sil{top:58%}
 .cost.down{background:var(--heal)!important}
 
 /* ---- レア度ごとの枠 ----

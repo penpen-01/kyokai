@@ -70,7 +70,7 @@ ${cards.map((c, i) => this.artLine(c, i + 1)).join("\n")}`;
       o.cost !== "" ? `コスト：${o.cost}` : ""
     ].filter(Boolean);
     const effList = Object.entries(EFFECTS).map(([k, e]) =>
-      `- ${k}：${e.label}（例：${e.text(2)}）${e.noN ? "　※ n は使わない（1にしておく）" : ""}${e.min === 0 ? "　※ n は0も可" : ""}${e.target ? "　※ 使うときに対象を選ぶ" : ""}`).join("\n");
+      `- ${k}：${e.label}（例：${e.text(2)}）${e.noN === true ? "　※ n は使わない（1にしておく）" : ""}${e.opts ? `　※ 追加の設定：${e.opts.map(o => ({ token: "card（トークンのカードの id）", kw: "kw（与える能力。armor なら n が装甲の値）", world: "world（myth/fan/mech。なければすべて）", ctype: "ctype（char/spell。なければすべて）" }[o])).join("、")}` : ""}${e.min === 0 ? "　※ n は0も可" : ""}${e.target ? "　※ 使うときに対象を選ぶ" : ""}`).join("\n");
     const whenList = Object.entries(WHENS).map(([k, v]) => `- ${k}：${v.label}`).join("\n");
     const kwList = Object.entries(KEYWORDS).map(([k, v]) => `- ${k}：${v.label}。${v.text}`).join("\n");
     const payList = Object.entries(PAYS).map(([k, v]) => `- ${k}：${v.label}`).join("\n");
