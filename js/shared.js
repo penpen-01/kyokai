@@ -216,7 +216,7 @@ function cardTargetRoles(card) {
 
 /* 後攻の人だけが最初に持つ、使い切りのカード（パックやデッキには入らない） */
 const COIN_CARD = {
-  id: "coin", name: "境界の欠片", world: "fan", type: "spell", cost: 0, glyph: "欠", limit: 0, rarity: "common",
+  id: "coin", name: "境界の欠片", world: "fan", type: "spell", cost: 0, glyph: "欠", limit: 0, rarity: "common", art: "art/coin-e8ebaefc8f.webp",
   keywords: [], effects: [{ kind: "energyNow", n: 1 }], note: "後攻の人だけが最初に持っている。好きなときに1回だけ使える。"
 };
 
