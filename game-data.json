@@ -1,5 +1,5 @@
 {
- "version": 38,
+ "version": 39,
  "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
@@ -2317,7 +2317,7 @@
     "poison"
    ],
    "effects": [],
-   "art": "art/n-thornwarden-01b54eea3e.webp"
+   "art": "art/n-thornwarden-0a2cc0e743.webp"
   },
   {
    "id": "n-moonwitch",
