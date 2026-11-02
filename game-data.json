@@ -1,5 +1,5 @@
 {
- "version": 39,
+ "version": 40,
  "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
@@ -185,17 +185,79 @@
    "id": "starter",
    "name": "スターターデッキ",
    "cards": {
-    "st-recruit": 3,
     "squire": 3,
-    "st-golem": 3,
-    "st-guard": 3,
+    "st-recruit": 2,
+    "st-spark": 2,
+    "st-water": 1,
+    "st-golem": 2,
+    "st-guard": 2,
+    "n-dwarf": 2,
     "st-infantry": 3,
-    "st-wolf": 3,
-    "st-rockman": 3,
+    "st-wolf": 2,
+    "n-barkguard": 2,
+    "st-rockman": 2,
     "st-knight": 3,
     "st-giant": 2,
-    "st-spark": 2,
-    "st-water": 2
+    "n-bear": 2
+   },
+   "level": "easy"
+  },
+  {
+   "id": "e-myth",
+   "name": "見習いたちの行進",
+   "cards": {
+    "st-recruit": 3,
+    "squire": 3,
+    "n-slinger": 3,
+    "rally": 2,
+    "pegasus": 3,
+    "st-guard": 2,
+    "n-templeguard": 2,
+    "sage": 3,
+    "m-valkyrie": 2,
+    "st-knight": 3,
+    "st-giant": 2,
+    "n-oldknight": 1,
+    "berserker": 1
+   },
+   "level": "easy"
+  },
+  {
+   "id": "e-fan",
+   "name": "森の仲間たち",
+   "cards": {
+    "squire": 3,
+    "n-flowergirl": 3,
+    "st-water": 2,
+    "archer": 3,
+    "n-dwarf": 3,
+    "n-mist": 2,
+    "st-wolf": 3,
+    "n-barkguard": 2,
+    "f-spring": 2,
+    "n-spiritcaller": 2,
+    "st-giant": 3,
+    "n-bear": 2
+   },
+   "level": "easy"
+  },
+  {
+   "id": "e-mech",
+   "name": "見習い工場",
+   "cards": {
+    "eye": 3,
+    "n-workbot": 3,
+    "st-golem": 1,
+    "n-leechdrone": 2,
+    "x-drone": 2,
+    "x-rush": 3,
+    "n-assembly": 2,
+    "x-repair": 2,
+    "st-infantry": 3,
+    "x-armored": 2,
+    "n-scoutbike": 2,
+    "st-rockman": 3,
+    "turret": 2
    },
    "level": "easy"
   },
@@ -203,18 +265,20 @@
    "id": "p-myth",
    "name": "神話の進軍",
    "cards": {
-    "pegasus": 3,
-    "thunder": 3,
-    "sage": 3,
-    "berserker": 3,
-    "wargod": 2,
-    "endragon": 1,
-    "rally": 2,
-    "bolt": 3,
-    "judgment": 1,
     "squire": 3,
-    "archer": 3,
-    "turret": 3
+    "n-slinger": 2,
+    "rally": 2,
+    "n-lightarrow": 1,
+    "pegasus": 3,
+    "bolt": 3,
+    "st-guard": 2,
+    "thunder": 3,
+    "sage": 2,
+    "berserker": 3,
+    "n-highpriest": 2,
+    "wargod": 2,
+    "n-heroking": 1,
+    "endragon": 1
    },
    "level": "normal"
   },
@@ -223,17 +287,20 @@
    "name": "機械の要塞",
    "cards": {
     "eye": 3,
-    "turret": 3,
-    "sentinel": 3,
+    "x-rush": 2,
+    "turret": 2,
+    "x-repair": 2,
+    "quantum": 2,
+    "n-assembly": 2,
+    "n-leechdrone": 2,
+    "n-scoutbike": 1,
+    "x-jammer": 2,
+    "n-interceptor": 3,
+    "x-armored": 2,
     "garm": 2,
-    "omega": 2,
-    "crystal": 3,
-    "quantum": 3,
-    "bolt": 3,
-    "squire": 3,
-    "archer": 1,
-    "sage": 2,
-    "wargod": 2
+    "x-tank": 2,
+    "x-executor": 2,
+    "omega": 1
    },
    "level": "normal"
   },
@@ -241,19 +308,45 @@
    "id": "p-fan",
    "name": "幻想の森",
    "cards": {
-    "squire": 3,
-    "archer": 3,
-    "shadow": 3,
-    "priestess": 3,
-    "dragon": 2,
-    "cmvr35s2x5dv": 2,
-    "cmvr3jwcugk8": 2,
+    "squire": 2,
     "stargaze": 2,
-    "spring": 2,
-    "crystal": 3,
-    "eye": 2,
-    "sentinel": 2,
-    "bolt": 1
+    "archer": 3,
+    "n-dwarf": 2,
+    "n-shinobi": 2,
+    "n-mist": 2,
+    "shadow": 2,
+    "n-barkguard": 2,
+    "n-moonwitch": 2,
+    "priestess": 2,
+    "dragon": 2,
+    "n-bear": 2,
+    "cmvr35s2x5dv": 2,
+    "n-kitsune": 1,
+    "n-ancienttree": 1,
+    "cmvr3jwcugk8": 1
+   },
+   "level": "normal"
+  },
+  {
+   "id": "n-guard",
+   "name": "精霊と盾の砦",
+   "cards": {
+    "st-recruit": 3,
+    "n-templeguard": 3,
+    "n-lightarrow": 2,
+    "bolt": 1,
+    "st-guard": 2,
+    "n-dwarf": 2,
+    "m-shield": 2,
+    "n-blessing": 2,
+    "n-spiritcaller": 2,
+    "n-barkguard": 2,
+    "n-oldknight": 2,
+    "st-wolf": 2,
+    "st-giant": 1,
+    "n-fairyking": 1,
+    "n-bear": 2,
+    "n-ancienttree": 1
    },
    "level": "normal"
   },
@@ -261,19 +354,20 @@
    "id": "h-gods",
    "name": "神々の軍勢",
    "cards": {
-    "m-prayer": 3,
-    "m-shield": 3,
-    "m-valkyrie": 3,
-    "pegasus": 2,
-    "m-phoenix": 3,
-    "m-oracle": 2,
-    "m-order": 2,
-    "m-anthem": 2,
-    "m-hammer": 2,
     "bolt": 3,
+    "pegasus": 2,
+    "n-templeguard": 2,
+    "m-shield": 3,
+    "n-blessing": 2,
+    "m-phoenix": 2,
+    "m-oracle": 3,
+    "n-oldknight": 2,
+    "m-hammer": 2,
+    "n-skypaladin": 2,
+    "m-anthem": 2,
     "wargod": 2,
     "m-titan": 2,
-    "m-sungod": 1
+    "n-seraph": 1
    },
    "level": "hard"
   },
@@ -282,18 +376,22 @@
    "name": "永久凍土",
    "cards": {
     "f-twins": 2,
-    "f-healer": 2,
-    "f-thief": 3,
+    "n-mist": 2,
+    "f-curse": 2,
+    "f-thief": 2,
+    "f-spring": 2,
     "f-icewitch": 3,
-    "f-curse": 3,
-    "f-treeguard": 3,
+    "n-thornwarden": 1,
+    "n-moonwitch": 2,
     "f-blizzard": 2,
-    "f-horn": 3,
+    "n-fairyking": 2,
+    "f-treeguard": 2,
     "f-unicorn": 2,
     "cmvr35s2x5dv": 2,
-    "f-spring": 2,
-    "f-dragonwake": 2,
-    "f-spirit": 1
+    "n-ancienttree": 1,
+    "n-timewitch": 1,
+    "f-spirit": 1,
+    "n-fairyqueen": 1
    },
    "level": "hard"
   },
@@ -301,19 +399,44 @@
    "id": "h-steel",
    "name": "鋼鉄の軍団",
    "cards": {
-    "x-drone": 3,
-    "x-rush": 3,
-    "x-armored": 3,
-    "x-jammer": 3,
-    "x-repair": 3,
     "x-overcharge": 2,
+    "x-drone": 2,
+    "x-rush": 1,
+    "n-leechdrone": 3,
+    "x-repair": 2,
+    "quantum": 2,
+    "x-armored": 2,
+    "x-jammer": 2,
+    "n-interceptor": 3,
     "x-emp": 2,
+    "garm": 2,
     "x-tank": 2,
     "x-executor": 2,
-    "garm": 2,
-    "quantum": 2,
+    "n-hijack": 1,
     "x-gigas": 1,
-    "turret": 2
+    "omega": 1
+   },
+   "level": "hard"
+  },
+  {
+   "id": "h-border",
+   "name": "境界の覇者",
+   "cards": {
+    "bolt": 3,
+    "st-recruit": 2,
+    "m-shield": 3,
+    "n-templeguard": 2,
+    "n-oldknight": 3,
+    "n-highpriest": 2,
+    "m-oracle": 2,
+    "dragon": 2,
+    "n-skypaladin": 2,
+    "judgment": 2,
+    "cmvr35s2x5dv": 2,
+    "m-titan": 2,
+    "endragon": 1,
+    "m-sungod": 1,
+    "f-spirit": 1
    },
    "level": "hard"
   }
@@ -498,9 +621,9 @@
    "name": "世界樹の巫女",
    "world": "fan",
    "type": "char",
-   "cost": 4,
+   "cost": 3,
    "atk": 2,
-   "hp": 4,
+   "hp": 2,
    "glyph": "樹",
    "limit": 3,
    "rarity": "rare",
@@ -749,10 +872,6 @@
    "rarity": "sr",
    "keywords": [],
    "effects": [
-    {
-     "kind": "dmgRandom",
-     "n": 2
-    },
     {
      "kind": "dmgRandom",
      "n": 2
@@ -1035,7 +1154,7 @@
    "world": "myth",
    "type": "char",
    "cost": 3,
-   "atk": 2,
+   "atk": 1,
    "hp": 3,
    "glyph": "聖",
    "limit": 3,
@@ -1096,10 +1215,6 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "draw",
-     "n": 1
-    },
-    {
      "kind": "buffAllAtk",
      "n": 1
     }
@@ -1121,7 +1236,6 @@
     "guard"
    ],
    "effects": [],
-   "armor": 1,
    "art": "art/m-titan-cc1ac993f0.webp"
   },
   {
@@ -2137,7 +2251,7 @@
    "type": "char",
    "cost": 4,
    "atk": 3,
-   "hp": 4,
+   "hp": 3,
    "glyph": "老",
    "limit": 3,
    "rarity": "common",
@@ -2158,7 +2272,7 @@
    "name": "祝福の儀式",
    "world": "myth",
    "type": "spell",
-   "cost": 3,
+   "cost": 2,
    "glyph": "祝",
    "limit": 3,
    "rarity": "common",
@@ -2166,7 +2280,7 @@
    "effects": [
     {
      "kind": "buffBoth",
-     "n": 2
+     "n": 1
     },
     {
      "kind": "grantOwn",
@@ -2384,7 +2498,7 @@
    "type": "char",
    "cost": 4,
    "atk": 3,
-   "hp": 5,
+   "hp": 4,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -2540,7 +2654,7 @@
    "world": "myth",
    "type": "char",
    "cost": 5,
-   "atk": 4,
+   "atk": 3,
    "hp": 4,
    "glyph": "天",
    "limit": 3,
@@ -2579,7 +2693,7 @@
    "name": "量産指令",
    "world": "mech",
    "type": "spell",
-   "cost": 4,
+   "cost": 3,
    "glyph": "量",
    "limit": 3,
    "rarity": "sr",
@@ -2655,7 +2769,7 @@
    "effects": [
     {
      "kind": "dmgRandom",
-     "n": 2,
+     "n": 3,
      "when": "attack"
     }
    ],
@@ -2667,8 +2781,8 @@
    "world": "fan",
    "type": "char",
    "cost": 5,
-   "atk": 3,
-   "hp": 4,
+   "atk": 4,
+   "hp": 5,
    "glyph": "封",
    "limit": 3,
    "rarity": "ur",
