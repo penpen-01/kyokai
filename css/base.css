@@ -158,6 +158,7 @@ img{max-width:100%}
 }
 .card .mk-guard{background:#e9dcb4;color:#2a2108;border-color:#e9dcb4}
 .card .mk-armor{background:#8aa0b8;color:#0e1520;border-color:#8aa0b8}
+.card .mk-trig{background:#ffd56a;color:#2a1d08;border-color:#ffd56a}
 .card.guard .art{box-shadow:inset 0 0 0 2.2cqw color-mix(in srgb,#e9dcb4 55%,transparent)}
 .card.frozen .art{filter:saturate(.3) brightness(1.1) hue-rotate(160deg)}
 .card .frz{

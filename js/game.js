@@ -192,6 +192,7 @@ function draw(pi, silent) {
     return;
   }
   p.hand.push(id);
+  if (S.phase === "play") trigUnits(pi, "drawn");
   if (!silent) log(`${pname(pi)}はカードを1枚引いた。`, { pi, msg: `${pname(pi)}は${cname(id)}を引いた。` });
 }
 
@@ -206,6 +207,8 @@ function startTurn(pi, skipDraw) {
   p.field.forEach(u => { if (u.frozen) { u.ready = false; u.frozen = false; } else u.ready = true; });
   S.log.push({ sep: true, msg: `ターン${S.turnNo}：${pname(pi)}（エナジー${p.e}）` });
   if (!skipDraw) draw(pi);
+  trigUnits(pi, "turnStart");
+  cleanup();
   if (checkWin()) return;
   render();
   if (pi === 1 && MODE === "cpu") cpuTurn();
@@ -214,6 +217,9 @@ function startTurn(pi, skipDraw) {
 function endTurn(pi) {
   if (S.over || S.phase !== "play" || S.turn !== pi) return;
   if (pi === ME) ui = { sel: null, mode: null };
+  trigUnits(pi, "turnEnd");
+  cleanup();
+  if (checkWin()) return;
   startTurn(opp(pi), false);
 }
 
@@ -243,9 +249,11 @@ function returnFromVoid(pi) {
   const p = S.players[pi];
   if (!voidOf(p).length) return;
   const slots = slotLayout(p);
+  const back = voidOf(p).map(v => v.u);
   p.field = slots.filter(Boolean).map(x => x.u);
   p.voidU = [];
   log(`${pname(pi)}のキャラが亜空間から戻った。`);
+  back.forEach(u => queueTrig(pi, "voidBack", u));
 }
 
 /* ---------- カードを使う ---------- */
@@ -310,15 +318,16 @@ function playCard(pi, idx, targetsIn) {
   if (d.pay && d.pay.kind === "life") { p.hp -= d.pay.n; log(`代償として${pname(pi)}の体力を${d.pay.n}払った。`); fx(playerSel(pi), "-" + d.pay.n, "dmg"); }
   if (d.pay && d.pay.kind === "sacrifice") {
     const u = p.field.find(x => x.uid === targets.sacrifice);
-    if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); }
+    if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); onDeath(pi, u); }
   }
   let self = null;
   if (d.type === "char") {
     self = addUnit(pi, id);
     // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
-    if (d.effects.length) fx(unitSel(self.uid), id, "land");
+    if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
   }
   runEffects(pi, d, targets, self);
+  if (d.type === "spell") trigUnits(pi, "spell");
   cleanup();
   if (!checkWin()) render();
   return true;
@@ -328,11 +337,12 @@ function addUnit(pi, id) {
   const d = DEF[id];
   const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") };
   S.players[pi].field.push(u);
+  trigUnits(pi, "allyEnter", u);
   return u;
 }
 
 function runEffects(pi, d, targets, self) {
-  d.effects.forEach(e => effect(pi, e, targets, self));
+  playEffects(d).forEach(e => effect(pi, e, targets, self));
 }
 
 function effect(pi, e, targets, self) {
@@ -381,7 +391,10 @@ function effect(pi, e, targets, self) {
     case "buffBoth": { const u = ownT(); if (u) buff(u, n, n); break; }
     case "buffAllAtk": me.field.forEach(u => buff(u, n, 0)); break;
     case "buffAllBoth": me.field.forEach(u => buff(u, n, n)); break;
-    case "heal": me.hp += n; log(`${pname(pi)}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); break;
+    case "heal": me.hp += n; log(`${pname(pi)}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); trigUnits(pi, "healed"); break;
+    case "buffSelfAtk": if (self && self.hp > 0) buff(self, n, 0); break;
+    case "buffSelfBoth": if (self && self.hp > 0) buff(self, n, n); break;
+    case "readySelf": if (self && self.hp > 0 && me.field.includes(self) && !self.ready) { self.ready = true; log(`${cname(self.id)}はもう一度攻撃できる。`); fx(unitSel(self.uid), "もう一度", "heal"); } break;
     case "healUnits": me.field.forEach(u => { const h = Math.min(n, u.maxHp - u.hp); if (h > 0) { u.hp += h; fx(unitSel(u.uid), "+" + h, "heal"); } }); break;
     case "ramp": {
       const before = me.maxE;
@@ -405,7 +418,7 @@ function effect(pi, e, targets, self) {
       if (en.field.length) auto.enemy = en.field[Math.floor(Math.random() * en.field.length)].uid;
       const others = me.field.filter(x => x !== u);
       if (others.length) auto.own = others[Math.floor(Math.random() * others.length)].uid;
-      DEF[pick.id].effects.filter(x => x.kind !== "summon").forEach(x => effect(pi, x, auto, u));
+      playEffects(DEF[pick.id]).filter(x => x.kind !== "summon").forEach(x => effect(pi, x, auto, u));
       break;
     }
   }
@@ -415,6 +428,7 @@ function hitUnit(u, n) {
   const dmg = Math.max(0, n - armorOf(u));
   u.hp -= dmg;
   fx(unitSel(u.uid), dmg < n ? `-${dmg}（装甲）` : "-" + dmg, "dmg");
+  if (dmg > 0 && u.hp > 0) { const pi = S.players.findIndex(p => p.field.includes(u)); if (pi >= 0) queueTrig(pi, "survive", u); }
   return dmg;
 }
 function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); }
@@ -426,15 +440,66 @@ function buff(u, a, h) {
   fx(unitSel(u.uid), a && h ? `+${a}/+${h}` : a ? `攻撃+${a}` : `体力+${h}`, "heal");
 }
 
-function cleanup() {
+/* ---------- 効果の連鎖（倒されたとき・ターンの始めなど） ----------
+   発動を S.q に積んでおき、cleanup で順番に処理する。倒れたキャラを場から外すと「倒されたとき」が積まれるので、
+   積まれたものがなくなるまで繰り返す（無限に続く組み合わせは 60 回で打ち切る） */
+const hasTrig = (u, when) => !!(u && !u.silenced && DEF[u.id] && DEF[u.id].effects.some(e => whenOf(e) === when));
+function queueTrig(pi, when, u) {
+  if (!hasTrig(u, when)) return;
+  (S.q || (S.q = [])).push({ pi, when, uid: u.uid, snap: when === "death" ? JSON.parse(JSON.stringify(u)) : null });
+}
+/* pi の場のキャラ全員（except 以外）に、そのタイミングの発動を積む */
+function trigUnits(pi, when, except) {
+  if (!S || S.phase !== "play") return;
+  S.players[pi].field.forEach(u => { if (u !== except) queueTrig(pi, when, u); });
+}
+/* 登場時以外の効果の対象：ランダムに選ぶ（倒れかけのキャラは選ばない） */
+function autoTargets(pi, self) {
+  const pick = a => a.length ? a[Math.floor(Math.random() * a.length)].uid : undefined;
+  return { enemy: pick(S.players[opp(pi)].field.filter(x => x.hp > 0)), own: pick(S.players[pi].field.filter(x => x.hp > 0 && x !== self)) };
+}
+function fireTrig(t) {
+  const p = S.players[t.pi];
+  const u = t.snap || p.field.find(x => x.uid === t.uid);
+  if (!u || u.silenced || !DEF[u.id]) return;
+  if (t.when === "survive" && u.hp <= 0) return;
+  const list = DEF[u.id].effects.filter(e => whenOf(e) === t.when);
+  if (!list.length) return;
+  log(`${cname(u.id)}の効果（${WHENS[t.when].label}）。`);
+  fx(unitSel(u.uid), WHENS[t.when].label, "trig");
+  const auto = autoTargets(t.pi, u);
+  list.forEach(e => effect(t.pi, e, auto, u));
+}
+/* キャラが場から消えたとき（倒れた・代償で破壊された） */
+function onDeath(pi, u) {
+  const p = S.players[pi];
+  (p.grave || (p.grave = [])).push(u.id);   // この対戦で破壊された自分のキャラ（復活の効果で使う）
+  queueTrig(pi, "death", u);
+  trigUnits(pi, "allyDeath", u);
+}
+function reap() {
+  let any = false;
   S.players.forEach((p, pi) => {
-    p.field = p.field.filter(u => {
-      if (u.hp > 0) return true;
+    const dead = p.field.filter(u => u.hp <= 0);
+    if (!dead.length) return;
+    any = true;
+    p.field = p.field.filter(u => u.hp > 0);
+    dead.forEach(u => {
       fx(unitSel(u.uid), "", "die");
       log(`${pname(pi)}の${cname(u.id)}は${u.destroyed ? "破壊された" : "倒れた"}。`);
-      return false;
+      onDeath(pi, u);
     });
   });
+  return any;
+}
+function cleanup() {
+  for (let loop = 0; loop < 60; loop++) {
+    if (reap()) continue;   // 先に倒れたキャラを場から外す（「倒されたとき」が積まれる）
+    if (!S.q || !S.q.length) break;
+    fireTrig(S.q.shift());
+  }
+  if (S.q && S.q.length) log("効果の連鎖が長すぎるため、ここで打ち切った。");
+  S.q = [];
 }
 
 /* ---------- 攻撃 ---------- */
@@ -465,6 +530,8 @@ function attack(pi, uid, target) {
     fx(unitSel(a.uid), playerSel(opp(pi)), "lunge");
     log(`${cname(a.id)}が${pname(opp(pi))}に${a.atk}ダメージ！`);
     hitPlayer(opp(pi), a.atk);
+    queueTrig(pi, "attack", a);
+    if (a.atk > 0) queueTrig(pi, "face", a);
   } else {
     const d = en.field.find(u => u.uid === target);
     if (!d || !canAttackUnit(pi, d, a)) return false;
@@ -479,6 +546,9 @@ function attack(pi, uid, target) {
       hitPlayer(opp(pi), over);
     }
     hitUnit(a, d.atk);
+    queueTrig(pi, "attack", a);
+    if (before > 0 && d.hp <= 0) queueTrig(pi, "kill", a);
+    if (kw(a, "trample") && dealt > before && before > 0) queueTrig(pi, "face", a);
   }
   cleanup();
   if (!checkWin()) render();
@@ -553,6 +623,7 @@ function unitValue(u) {
   if (d.keywords.includes("pierce")) v += u.atk * 0.4;
   if (d.keywords.includes("trample")) v += 0.5;
   v += (d.armor || 0) * 1.5;
+  v += d.effects.filter(e => whenOf(e) !== "play").length * 0.8;   // 場に残ると働く効果
   if (u.frozen) v -= u.atk * 0.6;
   return v;
 }
@@ -1247,6 +1318,7 @@ function runFx(sel, text, cls) {
   if (cls === "land") { Motion.land(); return; }
   if (cls === "die") { const el = document.querySelector(sel); if (el) Motion.shatter(el); return; }
   if (cls === "dmg") Sound.play(text === "破壊" ? "destroy" : sel.startsWith("[data-player") ? "face" : "hit");
+  else if (cls === "trig") Sound.play("flip");
   else if (cls === "heal") Sound.play(/^[+＋]\d+$/.test(text) ? "heal" : "buff");
   const el = document.querySelector(sel);
   if (!el) return;
@@ -1268,7 +1340,13 @@ function runFx(sel, text, cls) {
   t.style.left = r.left + r.width / 2 + "px";
   t.style.top = r.top + r.height / 2 + "px";
   layer.appendChild(t);
-  setTimeout(() => t.remove(), 1000);
+  if (cls === "trig") {
+    // 効果の札はカードの上の縁に出す。画面の端からはみ出さないように寄せる
+    const w = t.offsetWidth, vw = document.documentElement.clientWidth;
+    t.style.left = Math.min(Math.max(r.left + r.width / 2, w / 2 + 6), vw - w / 2 - 6) + "px";
+    t.style.top = Math.max(r.top + 4, 14) + "px";
+  }
+  setTimeout(() => t.remove(), cls === "trig" ? 1350 : 1000);
 }
 
 /* ---------- 画面（開始・メニュー・ルール・カード一覧・ログ・結果） ---------- */

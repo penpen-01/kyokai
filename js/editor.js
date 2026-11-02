@@ -253,11 +253,14 @@ function renderEditor() {
 
         <div class="fgroup">
           <span class="gl">効果</span>
-          <p class="hint">${isChar ? "キャラの効果は、場に出たとき（登場時）に1回だけ発動します。" : "魔法の効果は、使ったときに発動します。"}上から順に発動します。</p>
+          <p class="hint">${isChar ? "キャラの効果は、効果ごとに発動するタイミングを選べます（ふつうは登場時）。登場時以外で対象を選ぶ効果は、対象がランダムになります。" : "魔法の効果は、使ったときに発動します。"}上から順に発動します。</p>
           <div class="effects">
             ${c.effects.map((e, i) => { const def = EFFECTS[e.kind]; return `<div class="eff">
+              ${isChar ? `<select class="eff-when" data-eff-when="${i}" aria-label="効果${i + 1}のタイミング" id="ef-w-${i}">
+                ${Object.entries(WHENS).map(([k, v]) => `<option value="${k}" ${whenOf(e) === k ? "selected" : ""}>${v.label}</option>`).join("")}
+              </select>` : ""}
               <select data-eff-kind="${i}" aria-label="効果${i + 1}の種類" id="ef-k-${i}">
-                ${[...new Set(Object.values(EFFECTS).map(v => v.group))].map(g => `<optgroup label="${g}">${Object.entries(EFFECTS).filter(([, v]) => v.group === g).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${v.label}${v.target ? "（対象を選ぶ）" : ""}</option>`).join("")}</optgroup>`).join("")}
+                ${[...new Set(Object.values(EFFECTS).filter(v => isChar || !v.self).map(v => v.group))].map(g => `<optgroup label="${g}">${Object.entries(EFFECTS).filter(([, v]) => v.group === g && (isChar || !v.self)).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${v.label}${v.target ? "（対象を選ぶ）" : ""}</option>`).join("")}</optgroup>`).join("")}
               </select>
               ${def.noN ? "" : stepper("eff-" + i, e.n, `効果${i + 1}の数値`)}
               <button type="button" class="iconbtn" data-eff-del="${i}" aria-label="効果${i + 1}を削除">✕</button>
@@ -313,7 +316,7 @@ function renderRules() {
 }
 
 function targetWarn(c) {
-  const sides = c.effects.map(e => EFFECTS[e.kind].target).filter(Boolean);
+  const sides = playEffects(c).map(e => EFFECTS[e.kind].target).filter(Boolean);
   const msgs = [];
   if (sides.filter(x => x === "enemyUnit").length > 1) msgs.push("相手キャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
   if (sides.filter(x => x === "ownUnit").length > 1) msgs.push("自分のキャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
@@ -409,7 +412,7 @@ document.addEventListener("click", e => {
     if (c.type !== nt) {
       c.type = nt;
       if (nt === "char") { c.atk = c.atk ?? 2; c.hp = c.hp ?? 2; }
-      else { c.keywords = []; c.armor = 0; }
+      else { c.keywords = []; c.armor = 0; c.effects = c.effects.filter(e => !EFFECTS[e.kind].self).map(({ when, ...e }) => e); }
       changed(); renderEditor();
     }
     return;
@@ -449,6 +452,7 @@ document.addEventListener("change", e => {
     c.keywords = t.checked ? [...new Set([...c.keywords, k])] : c.keywords.filter(x => x !== k);
     changed(); return;
   }
+  if (t.dataset.effWhen != null) { const e = curCard().effects[+t.dataset.effWhen]; if (t.value === "play") delete e.when; else e.when = t.value; changed(); renderEditor(); return; }
   if (t.dataset.effKind != null) { const e = curCard().effects[+t.dataset.effKind]; e.kind = t.value; e.n = Math.max(EFFECTS[e.kind].min ?? 1, e.n); changed(); renderEditor(); return; }
   if (t.dataset.text === "name" || t.dataset.text === "glyph") {
     const c = curCard();

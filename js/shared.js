@@ -50,8 +50,33 @@ const EFFECTS = {
   energyNow:   { group: "エナジー", label: "このターンのエナジーを増やす", text: n => `このターンだけ、エナジーを${n}得る。` },
   discount:    { group: "エナジー", label: "次に使うカードのコストを下げる", text: n => `次に使うカード1枚のコストを${n}下げる。` },
   summon:      { group: "召喚",   label: "山札からキャラを無料で出す",    text: n => `山札からコスト${n}以下のキャラをランダムに1体、コストを払わずに出す。` },
+  buffSelfAtk: { group: "このキャラ", label: "このキャラの攻撃力を上げる", text: n => `このキャラの攻撃力を+${n}する。`, self: true },
+  buffSelfBoth:{ group: "このキャラ", label: "このキャラを+N/+N",          text: n => `このキャラを+${n}/+${n}する。`, self: true },
+  readySelf:   { group: "このキャラ", label: "このキャラはもう一度攻撃できる", text: () => "このキャラは、このターンもう一度攻撃できる。", self: true, noN: true },
   banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true }
 };
+
+/* キャラの効果が発動するタイミング（effect.when）。魔法はいつも「使ったとき」（play）。
+   play 以外で対象を選ぶ効果は、対象をランダムに選ぶ */
+const WHENS = {
+  play:      { label: "登場時",                       head: "登場時" },
+  death:     { label: "倒されたとき",                 head: "倒されたとき" },
+  turnStart: { label: "自分のターンの始め",           head: "自分のターンの始めに" },
+  turnEnd:   { label: "自分のターンの終わり",         head: "自分のターンの終わりに" },
+  attack:    { label: "攻撃したとき",                 head: "攻撃したとき" },
+  kill:      { label: "攻撃で敵キャラを倒したとき",   head: "攻撃で敵キャラを倒したとき" },
+  survive:   { label: "ダメージを受けて生き残ったとき", head: "ダメージを受けて生き残ったとき" },
+  allyEnter: { label: "ほかの味方が出たとき",         head: "ほかの自分のキャラが出たとき" },
+  allyDeath: { label: "ほかの味方が倒されたとき",     head: "ほかの自分のキャラが倒されたとき" },
+  spell:     { label: "自分が魔法を使ったとき",       head: "自分が魔法を使ったとき" },
+  face:      { label: "相手プレイヤーにダメージを与えたとき", head: "このキャラが相手プレイヤーにダメージを与えたとき" },
+  drawn:     { label: "自分がカードを引いたとき",     head: "自分がカードを引いたとき" },
+  healed:    { label: "自分の体力が回復したとき",     head: "自分の体力が回復したとき" },
+  voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" }
+};
+const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
+/* 使ったとき（登場時）の効果だけ */
+const playEffects = card => (card.effects || []).filter(e => whenOf(e) === "play");
 
 const DEFAULT_CONFIG = {
   PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
@@ -129,7 +154,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 
 /* カードの対象（効果のうち、最初に見つかった対象付きのもの） */
 function cardTarget(card) {
-  for (const e of card.effects || []) { const t = EFFECTS[e.kind] && EFFECTS[e.kind].target; if (t) return t; }
+  for (const e of playEffects(card)) { const t = EFFECTS[e.kind] && EFFECTS[e.kind].target; if (t) return t; }
   return null;
 }
 /* カードを使うときに選ぶ対象の並び：代償で破壊する自分のキャラ → 相手キャラ → 自分のキャラ */
@@ -137,7 +162,7 @@ function cardTargetRoles(card) {
   const roles = [];
   const sac = card.pay && card.pay.kind === "sacrifice";
   if (sac) roles.push("sacrifice");
-  const kinds = (card.effects || []).map(e => EFFECTS[e.kind] && EFFECTS[e.kind].target).filter(Boolean);
+  const kinds = playEffects(card).map(e => EFFECTS[e.kind] && EFFECTS[e.kind].target).filter(Boolean);
   if (kinds.includes("enemyUnit")) roles.push("enemy");
   if (kinds.includes("ownUnit") && !sac) roles.push("own");
   return roles;
@@ -149,18 +174,20 @@ const COIN_CARD = {
   keywords: [], effects: [{ kind: "energyNow", n: 1 }], note: "後攻の人だけが最初に持っている。好きなときに1回だけ使える。"
 };
 
-/* 効果テキストを自動で作る */
-function effectsText(card) {
+/* 効果テキストを自動で作る（list：同じタイミングの効果の並び。auto：対象をランダムに選ぶタイミング） */
+function effectsText(card, list, auto) {
   // 同じ効果が続くときは「〜を4回」にまとめる（天罰の光など）
-  const list = (card.effects || []).filter(e => EFFECTS[e.kind]);
+  list = (list || card.effects || []).filter(e => EFFECTS[e.kind]);
   const out = [];
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     let k = 1;
     while (i + k < list.length && list[i + k].kind === e.kind && list[i + k].n === e.n) k++;
     let t = EFFECTS[e.kind].text(e.n);
-    // キャラの登場時効果で「自分のキャラ1体」を選ぶものは、そのキャラ自身は選べない
+    // キャラの効果で「自分のキャラ1体」を選ぶものは、そのキャラ自身は選べない
     if (card.type === "char" && EFFECTS[e.kind].target === "ownUnit") t = t.replace("自分のキャラ1体", "このキャラ以外の自分のキャラ1体");
+    // 登場時以外は対象を選べないので、ランダム
+    if (auto && EFFECTS[e.kind].target) t = t.replace("相手キャラ1体", "ランダムな相手キャラ1体").replace("このキャラ以外の自分のキャラ1体", "このキャラ以外のランダムな自分のキャラ1体");
     if (k > 1) t = e.kind === "dmgRandom" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
     out.push(t);
     i += k - 1;
@@ -174,8 +201,16 @@ function cardTextLines(card) {
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
-  const eff = effectsText(card);
-  if (eff) lines.push(card.type === "char" ? `登場時：${eff}` : eff);
+  if (card.type === "char") {
+    // タイミングごとに1行（登場時 → ほかのタイミングの順）
+    Object.keys(WHENS).forEach(w => {
+      const t = effectsText(card, (card.effects || []).filter(e => whenOf(e) === w), w !== "play");
+      if (t) lines.push(`${WHENS[w].head}：${t}`);
+    });
+  } else {
+    const eff = effectsText(card);
+    if (eff) lines.push(eff);
+  }
   if (card.note) lines.push(card.note);
   return lines;
 }
@@ -213,6 +248,7 @@ function cardHTML(card, o = {}) {
   const marks = card.type === "char"
     ? (card.keywords || []).filter(k => KEYWORDS[k]).map(k => `<i class="mk mk-${k}">${KEYWORDS[k].short}</i>`).join("")
       + (card.armor ? `<i class="mk mk-armor">甲${card.armor}</i>` : "")
+      + ((card.effects || []).some(e => whenOf(e) !== "play") && !(u && u.silenced) ? `<i class="mk mk-trig" title="登場時以外にも働く効果があります">効</i>` : "")
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
   const guard = card.type === "char" && (card.keywords || []).includes("guard");
@@ -245,7 +281,7 @@ function normalizeData(data) {
     keywords: Array.isArray(c.keywords) ? c.keywords.filter(k => KEYWORDS[k]) : [],
     armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
-    effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => ({ kind: e.kind, n: Math.max(EFFECTS[e.kind].min ?? 1, +e.n || 0) })) : [],
+    effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => ({ kind: e.kind, n: Math.max(EFFECTS[e.kind].min ?? 1, +e.n || 0), ...(c.type !== "spell" && WHENS[e.when] && e.when !== "play" ? { when: e.when } : {}) })) : [],
     note: c.note ? String(c.note) : "",
     artNote: c.artNote ? String(c.artNote) : "",   // イラストの指定（Gemini への依頼文に使う）
     art: c.art ? String(c.art) : ""

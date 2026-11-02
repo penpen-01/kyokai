@@ -260,6 +260,8 @@ body{
 .float{position:fixed;transform:translate(-50%,-50%);font-family:var(--f-display);font-weight:800;font-size:26px;white-space:nowrap;animation:rise .95s ease-out forwards;text-shadow:0 2px 6px #000}
 .float.dmg{color:#ff8a7a}
 .float.heal{color:var(--heal)}
+.float.trig{color:#ffe7a3;font-size:15px;letter-spacing:.04em;padding:3px 10px;border-radius:999px;background:rgba(40,28,6,.85);box-shadow:0 0 0 1px rgba(255,213,106,.6),0 0 14px rgba(255,213,106,.45);animation:trigpop 1.3s ease-out forwards;z-index:2}
+@keyframes trigpop{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}20%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%)}}
 .flash{position:fixed;border-radius:6px;background:color-mix(in srgb,var(--danger) 45%,transparent);animation:fade .45s ease-out forwards}
 .ghost{position:fixed;z-index:36;pointer-events:none;transform:translate(-50%,-55%) rotate(-3deg) scale(1.08);box-shadow:0 14px 30px rgba(0,0,0,.6)}
 .arrow{position:fixed;inset:0;width:100%;height:100%;z-index:36;pointer-events:none;overflow:visible}

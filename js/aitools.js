@@ -71,6 +71,7 @@ ${cards.map((c, i) => this.artLine(c, i + 1)).join("\n")}`;
     ].filter(Boolean);
     const effList = Object.entries(EFFECTS).map(([k, e]) =>
       `- ${k}：${e.label}（例：${e.text(2)}）${e.noN ? "　※ n は使わない（1にしておく）" : ""}${e.min === 0 ? "　※ n は0も可" : ""}${e.target ? "　※ 使うときに対象を選ぶ" : ""}`).join("\n");
+    const whenList = Object.entries(WHENS).map(([k, v]) => `- ${k}：${v.label}`).join("\n");
     const kwList = Object.entries(KEYWORDS).map(([k, v]) => `- ${k}：${v.label}。${v.text}`).join("\n");
     const payList = Object.entries(PAYS).map(([k, v]) => `- ${k}：${v.label}`).join("\n");
     const cardLine = c => `${c.name}｜${WORLDS[c.world]}｜${TYPES[c.type]}｜${RARITY[c.rarity]}｜コスト${c.cost}${c.type === "char" ? `｜${c.atk}/${c.hp}` : ""}｜${cardText(c) || "能力なし"}`;
@@ -89,7 +90,8 @@ ${want.length ? want.join("／") : ""}
 ・毎ターン、エナジーの最大値が1増えて全回復する（上限${cfg.ENERGY_MAX}）。カードはコストぶんのエナジーを払って出す
 ・キャラは場に${cfg.FIELD_MAX}体まで。出したターンは攻撃できない（速攻を除く）。攻撃すると、お互いの攻撃力ぶんのダメージを与え合う
 ・相手の場に守護がいなければ、相手プレイヤーを直接攻撃できる
-・キャラの効果は「登場時（場に出たとき1回）」に発動する。魔法は使ったときに発動する
+・キャラの効果は、効果ごとに発動するタイミング（when）を選べる。書かなければ「登場時（場に出たとき1回）」。魔法は使ったときに発動する（when は書かない）
+・登場時以外のタイミングで「対象を選ぶ」効果は、対象がランダムになる
 ・世界は3つ：神話（金色・神々と英雄）、幻想（緑・剣と魔法の森）、機械（青・SFの機械と兵器）
 ・レア度は5つ：コモン、レア、SR、UR、レジェンド
 
@@ -102,6 +104,9 @@ ${payList}
 
 【使える効果（この中からだけ選ぶ。1枚に1〜3個）】
 ${effList}
+
+【キャラの効果のタイミング（when。キャラだけ）】
+${whenList}
 
 【強さの目安】
 ・キャラの「攻撃力＋体力」の平均：${curveText}
@@ -118,7 +123,7 @@ ${DATA.cards.filter(c => c.limit > 0).map(cardLine).join("\n")}
 
 【答え方】
 説明は書かず、次の形の JSON だけを返してください。
-{"cards":[{"name":"名前","world":"myth か fan か mech","type":"char か spell","rarity":"common か rare か sr か ur か legend","cost":3,"atk":2,"hp":3,"keywords":["guard"],"armor":0,"pay":null,"effects":[{"kind":"draw","n":1}],"artNote":"絵の指定","note":"このカードの狙い（短く）"}]}
+{"cards":[{"name":"名前","world":"myth か fan か mech","type":"char か spell","rarity":"common か rare か sr か ur か legend","cost":3,"atk":2,"hp":3,"keywords":["guard"],"armor":0,"pay":null,"effects":[{"kind":"draw","n":1},{"kind":"dmgRandom","n":2,"when":"death"}],"artNote":"絵の指定","note":"このカードの狙い（短く）"}]}
 ・魔法（spell）のときは atk・hp・keywords・armor を書かない
 ・代償があるときは "pay":{"kind":"life","n":2} のように書く`;
   },
