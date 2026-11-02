@@ -355,5 +355,5 @@ img{max-width:100%}
   -webkit-mask:linear-gradient(115deg,rgba(0,0,0,.35) 0%,#000 40%,rgba(0,0,0,.35) 60%,rgba(0,0,0,.35) 100%) 0 0/300% 300%;
           mask:linear-gradient(115deg,rgba(0,0,0,.35) 0%,#000 40%,rgba(0,0,0,.35) 60%,rgba(0,0,0,.35) 100%) 0 0/300% 300%;
   animation:holo 4s ease-in-out infinite}
-@keyframes holo{0%,100%{background-position:0 0;-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.45}50%{background-position:6cqw -8cqw;-webkit-mask-position:0% 0%;mask-position:0% 0%;opacity:.75}}
+@keyframes holo{0%,100%{background-position:0 0;-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.3}50%{background-position:6cqw -8cqw;-webkit-mask-position:0% 0%;mask-position:0% 0%;opacity:.52}}
 @media (prefers-reduced-motion:reduce){.card.rar-legend .art::after{animation:none}}

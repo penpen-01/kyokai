@@ -125,6 +125,7 @@ const Shop = {
 
   /* 分解の画面：カードごとに枚数を選んで分解、またはまとめて分解 */
   showDismantle(msg) {
+    const ov = $("#overlay"), y = this.view === "dis" && !ov.hidden ? ov.scrollTop : 0;   // 選ぶたびに一番上へ戻らないように
     this.view = "dis";
     if (msg !== undefined) this.msg = msg;
     const sur = this.surplus(), cap = this.cap();
@@ -167,6 +168,7 @@ const Shop = {
           <div class="pre-btns"><button type="button" class="btn danger" data-act="shopAskYes">分解する</button><button type="button" class="btn" data-act="shopAskNo">やめる</button></div>
         </div></div>` : ""}
     </div>`, "start", true);
+    ov.scrollTop = y;
   },
 
   detailHTML() {

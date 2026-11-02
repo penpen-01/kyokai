@@ -73,6 +73,8 @@ const Account = {
       // ショップ：魔石とパック券
       stones: Math.max(0, Math.floor(+d.stones || 0)),
       tickets: Math.max(0, Math.floor(+d.tickets || 0)),
+      // パックの開封履歴（直近100パック）{ t: 時刻, p: パックID, c: [カードID] }
+      packLog: (Array.isArray(d.packLog) ? d.packLog : Object.values(d.packLog || {})).filter(e => e && Array.isArray(e.c)).slice(-100).map(e => ({ t: +e.t || 0, p: String(e.p || ""), c: e.c.map(String).slice(0, 10) })),
       // CPU戦の連勝数（強さごと）と、終わっていないCPU戦の強さ（途中でやめたら連勝が途切れる）
       streak: Object.fromEntries(STREAK_LEVELS.map(k => [k, Math.max(0, Math.floor(+(d.streak || {})[k] || 0))])),
       ...(STREAK_LEVELS.includes(d.streakLive) ? { streakLive: d.streakLive } : {})

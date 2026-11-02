@@ -1688,33 +1688,53 @@ function showRules() {
     <button type="button" class="btn primary" data-act="back">戻る</button></div>`, null, !S);
 }
 
+/* 図鑑：カードを絵で並べる（検索・絞り込み）。押すと効果。「効果も表示」で前の1行ずつの一覧にもできる */
+const CL = { q: "", w: "", t: "", own: "", text: false, detail: null };
 function showCardList() {
   const usable = CARDS.filter(c => c.limit > 0);
-  const byCost = (a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja");
-  // 図鑑：まだ持っていないカードはイラストを隠す（名前・効果は見られる）
   const collect = ["ready", "offline"].includes(Account.status);
   const hide = c => collect && Account.owned(c.id) <= 0;
   const ownedN = usable.filter(c => Account.owned(c.id) > 0).length;
-  const group = (type, label) => {
-    const list = usable.filter(c => c.type === type).sort(byCost);
-    return `<h3 class="sec">${label}（${list.length}種）</h3>
-      <div class="clist">${list.map(c => `
-        <div class="citem ${hide(c) ? "unowned" : ""}">
-          ${cardHTML(c, { static: true, hidden: hide(c) })}
-          <div class="cbody">
-            <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount" title="1デッキに入れられる枚数">${Account.status === "free" ? "" : `所持${Account.owned(c.id)} ・ `}上限${cardLimit(c, CONFIG)}</span></div>
-            <div class="cmeta">${WORLDS[c.world]} ・ ${RARITY[c.rarity]} ・ コスト${c.cost}${c.type === "char" ? ` ・ 攻撃${c.atk} ／ 体力${c.hp}` : ""}</div>
-            <div class="ctext">${esc(cardText(c))}</div>
-          </div>
-        </div>`).join("")}</div>`;
-  };
+  const q = CL.q.trim();
+  const list = usable.filter(c => (!CL.w || c.world === CL.w) && (!CL.t || c.type === CL.t)
+      && (!CL.own || (CL.own === "y" ? Account.owned(c.id) > 0 : Account.owned(c.id) <= 0))
+      && (!q || c.name.includes(q) || cardText(c).includes(q)))
+    .sort((a, b) => a.cost - b.cost || (a.type > b.type ? 1 : -1) || a.name.localeCompare(b.name, "ja"));
+  const chip = (k, v, label) => `<button type="button" data-act="clFilter" data-k="${k}" data-v="${v}" aria-pressed="${CL[k] === v}">${label}</button>`;
+  const ownTxt = c => Account.status === "free" ? "" : `所持${Account.owned(c.id)}`;
+  const grid = `<div class="dgrid cl-grid">${list.map(c => `<button type="button" class="dtile ${hide(c) ? "unowned" : ""}" data-act="clDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">
+      ${cardHTML(c, { static: true, hidden: hide(c) })}<span class="dmeta"><span class="obadge">${ownTxt(c)}</span></span></button>`).join("")}</div>`;
+  const rows = `<div class="clist">${list.map(c => `
+      <div class="citem ${hide(c) ? "unowned" : ""}">
+        ${cardHTML(c, { static: true, hidden: hide(c) })}
+        <div class="cbody">
+          <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount">${ownTxt(c)}</span></div>
+          <div class="cmeta">${WORLDS[c.world]} ・ ${RARITY[c.rarity]} ・ コスト${c.cost}${c.type === "char" ? ` ・ 攻撃${c.atk} ／ 体力${c.hp}` : ""}</div>
+          <div class="ctext">${esc(cardText(c))}</div>
+        </div>
+      </div>`).join("")}</div>`;
+  const d = CL.detail && DEF[CL.detail];
+  const o = $("#overlay"), y = o.hidden ? 0 : o.scrollTop, keep = !o.hidden && o.querySelector(".cl-tools");
   openOverlay(`<div class="panel wide">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>カード一覧</b></div>
     <div class="totals"><span>${collect ? `集めたカード <b>${ownedN}</b> / ${usable.length}種` : `全<b>${usable.length}</b>種`}</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
-    ${group("char", "キャラクター")}
-    ${group("spell", "魔法")}
-    <button type="button" class="btn primary" data-act="back">戻る</button>
+    <div class="cl-tools">
+      <input class="otxt" id="cl-q" type="search" placeholder="名前や効果で探す（例：守護、ドロー）" value="${esc(CL.q)}" autocomplete="off">
+      <div class="seg wide">${chip("w", "", "全世界")}${chip("w", "myth", "神話")}${chip("w", "fan", "幻想")}${chip("w", "mech", "機械")}</div>
+      <div class="seg wide">${chip("t", "", "全種類")}${chip("t", "char", "キャラ")}${chip("t", "spell", "魔法")}${collect ? chip("own", "", "すべて") + chip("own", "y", "所持") + chip("own", "n", "未所持") : ""}</div>
+      <label class="cl-text"><input type="checkbox" data-act="clText" ${CL.text ? "checked" : ""}> 効果も一覧で表示</label>
+    </div>
+    <p class="hint">${list.length}種 ・ ${CL.text ? "" : "カードを押すと効果を見られます"}</p>
+    ${list.length ? (CL.text ? rows : grid) : `<p class="callout">条件に合うカードがありません。</p>`}
+    ${d ? `<div class="dmodal" data-act="clClose"><div class="dmodal-in" role="dialog" aria-label="${esc(d.name)}" data-act="noop">
+      <div class="dmodal-card">${cardHTML(d, { static: true, hidden: hide(d) })}</div>
+      <div class="dmodal-body"><b class="dm-name">${esc(d.name)}</b>
+        <span class="pmeta">${RARITY[d.rarity]} ・ ${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}${d.type === "char" ? ` ・ ${d.atk}/${d.hp}` : ""}</span>
+        <p class="dm-text">${esc(cardText(d))}</p>
+        <span class="pmeta">${Account.status === "free" ? "" : `所持 ${Account.owned(d.id)}枚 ・ `}1デッキに${cardLimit(d, CONFIG)}枚まで</span>
+        <button type="button" class="btn" data-act="clClose">閉じる</button></div></div></div>` : ""}
   </div>`, null, !S);
+  if (keep) o.scrollTop = y;
 }
 
 function showLog() {
@@ -1859,6 +1879,10 @@ function startCpuGame(level) {
 /* ---------- 入力（タップ操作） ---------- */
 function handleAct(act, el) {
   switch (act) {
+    case "clFilter": CL[el.dataset.k] = el.dataset.v; showCardList(); return;
+    case "clText": CL.text = !!el.checked; showCardList(); return;
+    case "clDetail": CL.detail = el.dataset.id; showCardList(); return;
+    case "clClose": CL.detail = null; showCardList(); return;
     case "start": showCpuSelect(); break;
     case "cpuLevel": startCpuGame(el && el.dataset.v); break;
     case "cpuAgain": startCpuGame(CPU_LEVEL); break;
@@ -1943,3 +1967,11 @@ document.addEventListener("click", e => {
 });
 
 window.addEventListener("resize", () => { if (S && !(drag && drag.started)) render(); });
+
+/* 図鑑の検索：入力のたびに絞り込む（文字入力中にカーソルが飛ばないよう、入力欄を戻す） */
+document.addEventListener("input", e => {
+  if (e.target.id !== "cl-q") return;
+  CL.q = e.target.value; const pos = e.target.selectionStart;
+  showCardList();
+  const n = document.getElementById("cl-q"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
+});

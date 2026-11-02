@@ -56,6 +56,11 @@ const Packs = {
       }
       rows.push(row);
     }
+    // 開封の履歴（直近100パック分）。カードと同じ保存で一緒に残す
+    const log = Array.isArray(Account.data.packLog) ? Account.data.packLog : [];
+    const t = Date.now();
+    rows.forEach(row => log.push({ t, p: pack.id, c: row.map(x => x.id) }));
+    Account.data.packLog = log.slice(-100);
     if (n > 1) {
       if (byTicket) Account.data.tickets -= n; else Account.data.gold -= pack.price * n;
       Account.addCards(ids);
@@ -77,6 +82,7 @@ const Packs = {
 
   /* ---------- 画面 ---------- */
   showShop(msg) {
+    this.logOpen = false;
     const open = PACKS.filter(p => p.open);
     const acctNote = Account.status === "ready" ? "" : Account.status === "offline" ? `<p class="callout warn"><b>オフラインです</b>通信できるところで開き直してから、パックを開けてください。</p>`
       : Account.status === "free" ? `<p class="callout"><b>試遊モード</b>パックは開けません（すべてのカードを使えます）。</p>`
@@ -98,6 +104,7 @@ const Packs = {
             <h3>${esc(p.name)}</h3>
             <div class="pk-chips"><span>${pool.length}種</span><span>1パック${p.size}枚</span><span>最後の1枚はレア以上</span></div>
             <div class="pk-rar">${RARITY_ORDER.map(r => `<span class="r-${r}"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}種</span>`).join("")}</div>
+            <button type="button" class="linkbtn pk-listbtn" data-act="packLog">開封履歴</button>
             <button type="button" class="linkbtn pk-listbtn" data-act="packList" data-id="${esc(p.id)}">封入カードを見る（${pool.length}種）</button>
             <details class="pk-odds"><summary>排出率を見る</summary>
               <table><tr><th></th>${RARITY_ORDER.map(r => `<th>${RARITY_SHORT[r]}</th>`).join("")}</tr>
@@ -116,10 +123,30 @@ const Packs = {
     </div>`, "start", true);
   },
 
+  /* 開封履歴：直近100パック。新しい順、10連は1つにまとめる */
+  showLog() {
+    this.listId = null;
+    const log = (Account.data && Account.data.packLog) || [];
+    const groups = [];
+    log.slice().reverse().forEach(e => { const g = groups[groups.length - 1]; if (g && g.t === e.t && g.p === e.p) g.rows.push(e.c); else groups.push({ t: e.t, p: e.p, rows: [e.c] }); });
+    const fmt = t => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+    openOverlay(`<div class="panel wide">
+      <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>開封履歴</b></div>
+      <p class="lead small">直近${Math.min(log.length, 100)}パック分（最大100パック）。新しい順です。名前を押すと効果を見られます。</p>
+      ${groups.length ? groups.map(g => {
+        const all = g.rows.flat(), pk = PACKS.find(x => x.id === g.p);
+        return `<section class="lg-item"><div class="lg-head"><b>${g.rows.length > 1 ? `${g.rows.length}パック` : "1パック"}</b><span>${esc(pk ? pk.name : g.p)}</span><time>${fmt(g.t)}</time></div>
+          <div class="lg-cards">${[...all].sort((a, b) => RARITY_ORDER.indexOf((DEF[b] || {}).rarity) - RARITY_ORDER.indexOf((DEF[a] || {}).rarity)).map(id => DEF[id] ? `<button type="button" class="lg-c r-${DEF[id].rarity}" data-act="packDetail" data-id="${esc(id)}"><i class="rtag r-${DEF[id].rarity}">${RARITY_SHORT[DEF[id].rarity]}</i>${esc(DEF[id].name)}</button>` : "").join("")}</div></section>`;
+      }).join("") : `<p class="callout">まだ履歴はありません（この機能を入れたあとに開けたパックから残ります）。</p>`}
+      ${this.detailHTML()}
+    </div>`, "start", true);
+    this.logOpen = true;
+  },
+
   /* 封入カードの一覧（レア度ごと） */
   showList(id) {
     const p = PACKS.find(x => x.id === id); if (!p) return this.showShop();
-    this.listId = id;
+    this.listId = id; this.logOpen = false;
     const pool = this.pool(p);
     const byCost = (a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja");
     openOverlay(`<div class="panel wide">
@@ -207,6 +234,7 @@ const Packs = {
 
   /* 10連の結果：1パック＝1行で、上から順に一気にめくれる。SR 以上は光る。上に当たりのまとめ */
   showMulti(anim) {
+    this.logOpen = false;
     const L = this.last;
     const all = L.rows.flat();
     const cnt = r => all.filter(x => DEF[x.id].rarity === r).length;
@@ -234,10 +262,13 @@ const Packs = {
   },
 
   /* 10連：上から順にめくる。UR・レジェンドの番が来たら、めくる直前にカットインを入れる。画面をタップすると残りを一気に表示 */
+  stopReveal() { if (this.revealStop) this.revealStop(); this.revealStop = null; const c = document.getElementById("cutin"); if (c) c.remove(); },
   revealMulti(all) {
+    this.stopReveal();
     const L = this.last, slots = [...document.querySelectorAll(".mslot.wait")];
     let i = 0, stop = false, t = null;
     const finish = () => { stop = true; clearTimeout(t); document.querySelectorAll(".mslot.wait").forEach(el => el.classList.remove("wait")); };
+    this.revealStop = () => { stop = true; clearTimeout(t); };
     document.querySelector(".ms-grid").addEventListener("click", e => { if (document.querySelector(".mslot.wait")) { e.stopPropagation(); finish(); } }, { capture: true, once: true });
     const step = () => {
       if (stop || this.last !== L || i >= slots.length) return;
@@ -307,10 +338,15 @@ const Packs = {
 
   handleAct(act, el) {
     switch (act) {
-      case "packs": this.listId = null; this.showShop(); return true;
+      case "packs": this.listId = null; this.stopReveal(); this.showShop(); return true;
+      case "packLog": this.stopReveal(); this.showLog(); return true;
       case "packOpen": case "packOpenTicket": case "packOpen10": case "packOpenTicket10": {
         const p = PACKS.find(x => x.id === (el && el.dataset.id));
         if (!p) return true;
+        // 連打で2回開けないように（2026-11-03：10連のあと「もう10パック」でGだけ減った報告への対策）
+        if (Date.now() < (this.lockUntil || 0)) return true;
+        this.lockUntil = Date.now() + 1200;
+        this.stopReveal();
         this.listId = null;
         const r = this.open(p, act.startsWith("packOpenTicket"), act.endsWith("10") ? 10 : 1);
         if (!r.ok) { this.showShop(r.msg); return true; }
@@ -321,8 +357,8 @@ const Packs = {
       case "packFlip": this.flip(); return true;
       case "packNext": this.next(); return true;
       case "packSkip": this.skip(); return true;
-      case "packDetail": this.detailId = el.dataset.id; if (this.listId) this.showList(this.listId); else this.showOpening(); return true;
-      case "packDetailClose": this.detailId = null; if (this.listId) this.showList(this.listId); else this.showOpening(); return true;
+      case "packDetail": { this.detailId = el.dataset.id; const o = $("#overlay"), y = o.scrollTop; if (this.logOpen) this.showLog(); else if (this.listId) this.showList(this.listId); else this.showOpening(); o.scrollTop = y; return true; }
+      case "packDetailClose": this.detailId = null; if (this.logOpen) this.showLog(); else if (this.listId) this.showList(this.listId); else this.showOpening(); return true;
       case "packList": this.listId = el.dataset.id; this.detailId = null; this.showList(this.listId); return true;
     }
     return false;

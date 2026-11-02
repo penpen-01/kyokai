@@ -101,7 +101,7 @@ const Motion = {
     const w = document.createElement("div");
     w.id = "cutin";
     w.className = `cutin ${mine ? "mine" : "theirs"} r-${d.rarity} w-${d.world}${this.reduced ? " reduced" : ""}`;
-    const art = d.art ? `url('${esc(d.art)}')` : "none";
+    const art = d.art ? `url('${esc(new URL(d.art, location.href).href)}')` : "none";
     w.innerHTML = `<div class="ci-band" style="--art:${art}">
         <div class="ci-pic">${d.art ? `<img src="${esc(d.art)}" alt="" draggable="false">` : `<span class="glyph">${esc(d.glyph || "？")}</span>`}</div>
         <div class="ci-text"><small>${d.rarity === "legend" ? "LEGEND" : "ULTRA RARE"}</small><b>${esc(d.name)}</b><span>${label ? esc(label) : `${esc(S && S.players[pi] ? S.players[pi].name : "")}が${d.type === "char" ? "召喚" : "使用"}`}</span></div>
