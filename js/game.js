@@ -270,6 +270,8 @@ const hidden = u => kw(u, "stealth") && !u.revealed;
 const shielded = u => kw(u, "shield") && !u.shieldUsed;
 /* 相手が対象に選べるか（隠密・呪文耐性は選べない） */
 const canTarget = u => !hidden(u) && !kw(u, "elusive");
+/* ランダムな1体に選ばれるか（隠密は選ばれない。呪文耐性は選ばれる） */
+const canRandom = u => !hidden(u);
 /* 対象を選ぶ役割で、選べるキャラ */
 function targetables(pi, role) {
   const f = S.players[roleSide(pi, role)].field;
@@ -400,7 +402,7 @@ function effect(pi, e, targets, self) {
     case "dmgTarget": { const u = enemyT(); if (u) hitUnit(u, n); break; }
     case "dmgRandom": {
       // すでに倒れている（体力0以下の）キャラは選ばない
-      const alive = en.field.filter(x => x.hp > 0 && canTarget(x));
+      const alive = en.field.filter(x => x.hp > 0 && canRandom(x));
       if (alive.length) {
         const u = alive[Math.floor(Math.random() * alive.length)];
         log(`${cname(u.id)}に${n}ダメージ。`);
@@ -511,7 +513,7 @@ function effect(pi, e, targets, self) {
       log(`山札から${cname(pick.id)}が現れた！`);
       // 出てきたキャラの登場時効果は、対象をランダムに選んで発動する
       const auto = {};
-      const et = en.field.filter(canTarget);
+      const et = en.field.filter(canRandom);
       if (et.length) auto.enemy = et[Math.floor(Math.random() * et.length)].uid;
       const others = me.field.filter(x => x !== u);
       if (others.length) auto.own = others[Math.floor(Math.random() * others.length)].uid;
@@ -586,7 +588,7 @@ function trigUnits(pi, when, except) {
 /* 登場時以外の効果の対象：ランダムに選ぶ（倒れかけのキャラは選ばない） */
 function autoTargets(pi, self) {
   const pick = a => a.length ? a[Math.floor(Math.random() * a.length)].uid : undefined;
-  return { enemy: pick(S.players[opp(pi)].field.filter(x => x.hp > 0 && canTarget(x))), own: pick(S.players[pi].field.filter(x => x.hp > 0 && x !== self)) };
+  return { enemy: pick(S.players[opp(pi)].field.filter(x => x.hp > 0 && canRandom(x))), own: pick(S.players[pi].field.filter(x => x.hp > 0 && x !== self)) };
 }
 function fireTrig(t) {
   const p = S.players[t.pi];
@@ -670,7 +672,6 @@ function attack(pi, uid, target) {
     fx(unitSel(a.uid), playerSel(opp(pi)), "lunge");
     log(`${cname(a.id)}が${pname(opp(pi))}に${a.atk}ダメージ！`);
     hitPlayer(opp(pi), a.atk);
-    steal(a, pi, a.atk);
     queueTrig(pi, "attack", a);
     if (a.atk > 0) queueTrig(pi, "face", a);
   } else {
@@ -679,16 +680,18 @@ function attack(pi, uid, target) {
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
     const before = d.hp;
     const dealt = hitUnit(d, a.atk);
+    const dRealHit = Math.min(dealt, Math.max(0, before));   // 吸収は相手の残りの体力まで
     if (kw(a, "trample") && dealt > before && before > 0) {
       const over = dealt - before;
       log(`貫通！${pname(opp(pi))}に${over}ダメージ。`);
       hitPlayer(opp(pi), over);
     }
     if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); destroyUnit(d); }
-    steal(a, pi, dealt);
+    steal(a, pi, dRealHit);
+    const aBefore = a.hp;
     const back = hitUnit(a, d.atk);
     if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); destroyUnit(a); }
-    steal(d, opp(pi), back);
+    steal(d, opp(pi), Math.min(back, Math.max(0, aBefore)));
     queueTrig(pi, "attack", a);
     if (before > 0 && d.hp <= 0) queueTrig(pi, "kill", a);
     if (kw(a, "trample") && dealt > before && before > 0) queueTrig(pi, "face", a);
