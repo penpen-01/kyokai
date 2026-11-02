@@ -349,3 +349,11 @@ img{max-width:100%}
 .card.rar-legend{box-shadow:0 0 6px rgba(255,120,200,.55),0 0 12px rgba(120,200,255,.35)}
 .card.rar-legend .art::after{opacity:.75;mix-blend-mode:plus-lighter}
 @keyframes lgsparkle{0%,100%{opacity:.45;background-position:0 0,4cqw 5cqw,2cqw 7cqw,0% 0%}50%{opacity:.9;background-position:1cqw -1cqw,3cqw 6cqw,3cqw 6cqw,100% 100%}}
+/* レジェンドのホログラム：自作のかけら模様（ui/holo.webp）を絵に薄く重ね、光の帯が通ったところだけ強くギラつく（ラメの粒は使わない） */
+.card.rar-legend .art::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:url("../ui/holo.webp") 0 0/70cqw 70cqw repeat;mix-blend-mode:color-dodge;opacity:.5;
+  -webkit-mask:linear-gradient(115deg,rgba(0,0,0,.35) 0%,#000 40%,rgba(0,0,0,.35) 60%,rgba(0,0,0,.35) 100%) 0 0/300% 300%;
+          mask:linear-gradient(115deg,rgba(0,0,0,.35) 0%,#000 40%,rgba(0,0,0,.35) 60%,rgba(0,0,0,.35) 100%) 0 0/300% 300%;
+  animation:holo 4s ease-in-out infinite}
+@keyframes holo{0%,100%{background-position:0 0;-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.45}50%{background-position:6cqw -8cqw;-webkit-mask-position:0% 0%;mask-position:0% 0%;opacity:.75}}
+@media (prefers-reduced-motion:reduce){.card.rar-legend .art::after{animation:none}}

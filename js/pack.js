@@ -205,23 +205,6 @@ const Packs = {
     </div>`, "start", true);
   },
 
-  /* 10連：UR・レジェンドが出ていたら、結果の前に1枚ずつカットイン（対戦と同じ演出） */
-  multiCutins() {
-    const L = this.last;
-    const hits = L.rows.flat().filter(x => ["ur", "legend"].includes(DEF[x.id].rarity))
-      .sort((a, b) => RARITY_ORDER.indexOf(DEF[a.id].rarity) - RARITY_ORDER.indexOf(DEF[b.id].rarity));
-    if (!hits.length || Motion.reduced) return this.showMulti(true);
-    let i = 0;
-    const step = () => {
-      if (this.last !== L) return;
-      if (i >= hits.length) return this.showMulti(true);
-      const x = hits[i++];
-      Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！");
-      setTimeout(step, 760);
-    };
-    step();
-  },
-
   /* 10連の結果：1パック＝1行で、上から順に一気にめくれる。SR 以上は光る。上に当たりのまとめ */
   showMulti(anim) {
     const L = this.last;
@@ -232,8 +215,8 @@ const Packs = {
     const play = anim && !L.shown && !Motion.reduced;
     L.shown = true;
     let k = 0;
-    const cell = x => { const c = DEF[x.id], d = play ? k++ * 45 : 0;
-      return `<button type="button" class="mslot r-${c.rarity} ${play ? "anim" : ""}" style="--d:${d}ms" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${x.isNew ? `<span class="newtag">NEW</span>` : ""}${cardHTML(c, { static: true })}</button>`; };
+    const cell = x => { const c = DEF[x.id];
+      return `<button type="button" class="mslot r-${c.rarity} ${play ? "wait" : ""}" data-n="${k++}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${x.isNew ? `<span class="newtag">NEW</span>` : ""}${cardHTML(c, { static: true })}</button>`; };
     const again = L.byTicket
       ? `<button type="button" class="btn primary" data-act="packOpenTicket10" data-id="${esc(L.pack.id)}" ${Account.tickets >= 10 ? "" : "disabled"}>もう10パック（パック券 残り${Account.tickets}枚）</button>`
       : `<button type="button" class="btn primary" data-act="packOpen10" data-id="${esc(L.pack.id)}" ${Account.gold >= L.pack.price * 10 ? "" : "disabled"}>もう10パック（${L.pack.price * 10}G）</button>`;
@@ -247,10 +230,24 @@ const Packs = {
       <div class="pre-btns">${again}<button type="button" class="btn" data-act="packs">パック一覧へ</button></div>
       ${this.detailHTML()}
     </div>`, "start", true);
-    if (play) {
-      const top = RARITY_ORDER.indexOf(best.length ? DEF[best[0].id].rarity : "common");
-      setTimeout(() => Sound.play(top >= 2 ? "rare" : "flip", top), Math.min(k * 45, 2000));
-    }
+    if (play) this.revealMulti(all);
+  },
+
+  /* 10連：上から順にめくる。UR・レジェンドの番が来たら、めくる直前にカットインを入れる。画面をタップすると残りを一気に表示 */
+  revealMulti(all) {
+    const L = this.last, slots = [...document.querySelectorAll(".mslot.wait")];
+    let i = 0, stop = false, t = null;
+    const finish = () => { stop = true; clearTimeout(t); document.querySelectorAll(".mslot.wait").forEach(el => el.classList.remove("wait")); };
+    document.querySelector(".ms-grid").addEventListener("click", e => { if (document.querySelector(".mslot.wait")) { e.stopPropagation(); finish(); } }, { capture: true, once: true });
+    const step = () => {
+      if (stop || this.last !== L || i >= slots.length) return;
+      const x = all[i], el = slots[i], c = DEF[x.id], r = RARITY_ORDER.indexOf(c.rarity);
+      i++;
+      const show = () => { el.classList.remove("wait"); el.classList.add("pop"); if (r >= 2) Sound.play("rare", r); t = setTimeout(step, r >= 2 ? 160 : 45); };
+      if (r >= 3) { el.scrollIntoView({ block: "center", behavior: "smooth" }); Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！"); t = setTimeout(show, 760); }
+      else show();
+    };
+    step();
   },
 
   showDetail(id) { this.detailId = id; this.showOpening(); },
@@ -278,8 +275,8 @@ const Packs = {
     if (bp && !Motion.reduced) {
       this.busy = true;
       bp.classList.add("tearing");
-      setTimeout(() => { this.busy = false; if (L.multi) { L.stage = "done"; this.multiCutins(); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }, 700);
-    } else if (L.multi) { L.stage = "done"; this.multiCutins(); } else { L.stage = "reveal"; this.showReveal(); }
+      setTimeout(() => { this.busy = false; if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }, 700);
+    } else if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; this.showReveal(); }
   },
 
   flip() {
