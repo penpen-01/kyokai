@@ -1,5 +1,5 @@
 {
- "version": 37,
+ "version": 38,
  "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
@@ -1908,7 +1908,8 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
-   "token": true
+   "token": true,
+   "art": "art/tk-drone-ff5b2194a9.webp"
   },
   {
    "id": "tk-hero",
@@ -1942,7 +1943,8 @@
      "n": 1
     }
    ],
-   "token": true
+   "token": true,
+   "art": "art/tk-part-42a603cccf.webp"
   },
   {
    "id": "n-flowergirl",
@@ -2193,7 +2195,8 @@
      "card": "tk-part",
      "when": "death"
     }
-   ]
+   ],
+   "art": "art/n-workbot-8a1ab6e478.webp"
   },
   {
    "id": "n-autoturret",
@@ -2215,7 +2218,8 @@
      "n": 1,
      "when": "turnEnd"
     }
-   ]
+   ],
+   "art": "art/n-autoturret-2d3fb5f2db.webp"
   },
   {
    "id": "n-assembly",
@@ -2233,7 +2237,8 @@
      "n": 2,
      "card": "tk-drone"
     }
-   ]
+   ],
+   "art": "art/n-assembly-e1d5402ca1.webp"
   },
   {
    "id": "n-scoutbike",
@@ -2255,7 +2260,8 @@
      "n": 1,
      "when": "face"
     }
-   ]
+   ],
+   "art": "art/n-scoutbike-f23925232e.webp"
   },
   {
    "id": "n-mechanic",
@@ -2275,7 +2281,8 @@
      "n": 1,
      "when": "turnEnd"
     }
-   ]
+   ],
+   "art": "art/n-mechanic-a9cdca75f7.webp"
   },
   {
    "id": "n-shinobi",
@@ -2423,7 +2430,8 @@
    "keywords": [
     "lifesteal"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-leechdrone-bb60739f8a.webp"
   },
   {
    "id": "n-analyzer",
@@ -2439,7 +2447,8 @@
    "keywords": [
     "elusive"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-analyzer-8734df77c4.webp"
   },
   {
    "id": "n-salvage",
@@ -2457,7 +2466,8 @@
      "n": 4,
      "ctype": "char"
     }
-   ]
+   ],
+   "art": "art/n-salvage-afdcec5555.webp"
   },
   {
    "id": "n-bomber",
@@ -2477,7 +2487,8 @@
      "n": 3,
      "when": "death"
     }
-   ]
+   ],
+   "art": "art/n-bomber-11c11e9008.webp"
   },
   {
    "id": "n-fairyking",
@@ -2584,7 +2595,8 @@
      "n": 1,
      "kw": "armor"
     }
-   ]
+   ],
+   "art": "art/n-massprod-dc55e924af.webp"
   },
   {
    "id": "n-interceptor",
@@ -2606,7 +2618,8 @@
      "n": 2,
      "when": "survive"
     }
-   ]
+   ],
+   "art": "art/n-interceptor-d98d1e221a.webp"
   },
   {
    "id": "n-zero",
@@ -2622,7 +2635,8 @@
    "keywords": [
     "doom"
    ],
-   "effects": []
+   "effects": [],
+   "art": "art/n-zero-2f0f101270.webp"
   },
   {
    "id": "n-kitsune",
@@ -2704,7 +2718,8 @@
      "kind": "steal",
      "n": 1
     }
-   ]
+   ],
+   "art": "art/n-hijack-bfcd995de5.webp"
   },
   {
    "id": "n-fairyqueen",
