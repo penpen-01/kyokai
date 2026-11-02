@@ -1,6 +1,6 @@
 {
- "version": 40,
- "updated": "2026-11-02",
+ "version": 41,
+ "updated": "2026-11-03",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -449,6 +449,14 @@
    "cards": {},
    "until": "2026-11-01",
    "created": "2026-10-31"
+  },
+  {
+   "h": "ab96f55d0a87bb7e48f4fd0c5ed0050861828815dca19af0eb78211a69ddb1e5",
+   "label": "テスト用ゴールド",
+   "gold": 20000,
+   "cards": {},
+   "until": "2026-11-04",
+   "created": "2026-11-03"
   }
  ],
  "cards": [
@@ -2306,8 +2314,8 @@
     {
      "kind": "tokenHand",
      "n": 1,
-     "card": "tk-part",
-     "when": "death"
+     "when": "death",
+     "card": "tk-part"
     }
    ],
    "art": "art/n-workbot-8a1ab6e478.webp"
@@ -2642,8 +2650,8 @@
     {
      "kind": "tokenField",
      "n": 3,
-     "card": "tk-spirit",
-     "when": "death"
+     "when": "death",
+     "card": "tk-spirit"
     }
    ],
    "art": "art/n-ancienttree-98258e5b56.webp"
@@ -2811,8 +2819,8 @@
     {
      "kind": "tokenField",
      "n": 2,
-     "card": "tk-hero",
-     "when": "death"
+     "when": "death",
+     "card": "tk-hero"
     }
    ],
    "art": "art/n-heroking-c4dbe6cd08.webp"
@@ -2851,8 +2859,8 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-spirit",
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "card": "tk-spirit"
     },
     {
      "kind": "buffAllBoth",
