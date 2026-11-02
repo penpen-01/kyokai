@@ -288,3 +288,28 @@ img{max-width:100%}
 .card .mk-armor{width:auto;padding:0 2cqw;border-radius:6cqw;background:radial-gradient(circle at 40% 30%,#c6d3e2,#5d7088 70%);color:#0e1520;text-shadow:none}
 .card .mk-trig{background:radial-gradient(circle at 40% 30%,#ffe9a8,#e09a1c 70%);color:#2a1d08;text-shadow:none}
 .card .marks{top:calc(var(--rw) + 1.6cqw);right:calc(var(--rw) + 1.6cqw)}
+
+/* ---- 2026-11-03 案4 ----
+   ・世界の色はコストの宝石で見せる（大きく、小さい表示でも分かる）。上の宝石は小さく戻して絵を隠さない
+   ・名前は帯をなくして文字だけ（影で読ませる）
+   ・UR とレジェンドは下の暗い影をなくして、絵を下まで見せる
+   ・魔法は絵の窓を下まで広げ、紫の台をなくす */
+.card .crest{top:.4cqw;width:9cqw;height:11cqw}
+.card .crest::after{inset:1.5cqw 1.2cqw}
+.card .crest::before{inset:.9cqw .7cqw}
+.card .cost::before,.card.spell .cost::before{background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--wc) 55%,#fff),color-mix(in srgb,var(--wc) 80%,#000) 55%,color-mix(in srgb,var(--wc) 35%,#000))}
+.card.char .nm,.card .nm{background:none;border:none;clip-path:none;box-shadow:none;color:#fff;
+  text-shadow:0 0 .8cqw #000,0 .4cqw 1.2cqw #000,0 0 2.5cqw rgba(0,0,0,.85)}
+.card.rar-ur .foot,.card.rar-legend .foot{background:linear-gradient(to bottom,transparent 55%,rgba(8,9,18,.35))}
+.card.spell{background:#120e22}
+.card.spell .art{inset:calc(var(--rw) + 1.6cqw);border-radius:40% 40% 2.5cqw 2.5cqw / 22% 22% 2.5cqw 2.5cqw;padding-top:12cqw;
+  box-shadow:0 0 0 .8cqw color-mix(in srgb,var(--wc) 75%,#000)}
+.card.spell.has-art .art{padding:0}
+.card.spell .foot{background:linear-gradient(to bottom,transparent,rgba(8,9,18,.55) 45%,rgba(8,9,18,.85))}
+.card.rar-ur.spell .foot,.card.rar-legend.spell .foot{background:linear-gradient(to bottom,transparent 50%,rgba(8,9,18,.4))}
+.card.spell .stats.spelltag{padding-bottom:5.5cqw;color:#fff;text-shadow:0 0 1cqw #000,0 .4cqw 1.2cqw #000;font-size:8.5cqw}
+.card.spell .stats.spelltag::before,.card.spell .stats.spelltag::after{background:linear-gradient(90deg,transparent,#e3c27a)}
+.card.coin .art{box-shadow:0 0 0 .8cqw #a8781f}
+.card.spell .nm{background:none;border:none;box-shadow:none;color:#fff;margin:0 2cqw;
+  text-shadow:0 0 .8cqw #000,0 .4cqw 1.2cqw #000,0 0 2.5cqw rgba(0,0,0,.85)}
+.card.rar-ur .foot,.card.rar-legend .foot,.card.rar-ur.spell .foot,.card.rar-legend.spell .foot{background:radial-gradient(ellipse 70% 45% at 50% 40%,rgba(8,9,18,.55),transparent 75%)}
