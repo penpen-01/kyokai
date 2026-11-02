@@ -762,6 +762,32 @@ function simulate(fn) {
 }
 
 /* 盤面の評価（pi から見て大きいほど有利） */
+/* 効果1つのおおまかな価値（CPU の盤面評価用。体力1点≒1） */
+function effValue(e) {
+  const n = e.n || 1, k = e.kind;
+  if (/^dmg(Target|Random)$/.test(k)) return n * 0.9;
+  if (k === "dmgAll") return n * 1.6;
+  if (k === "dmgFace") return n * 0.8;
+  if (k === "draw" || k === "tutor") return n * 1.2;
+  if (k === "heal") return n * 0.45;
+  if (k === "healUnits") return n * 0.6;
+  if (/^buff(Self)?(Atk|Hp)$/.test(k)) return n * 0.9;
+  if (/^buff(Self)?Both$/.test(k)) return n * 1.6;
+  if (/^buffAll/.test(k)) return n * 2.2;
+  if (k === "tokenField") { const t = DEF[e.card]; return t ? n * (t.atk * 1.2 + t.hp * 0.9 + 1) : 0; }
+  if (k === "tokenHand") return n * 1.0;
+  if (k === "readySelf") return 1.5;
+  if (/^(destroyTarget|transform|steal|bounceEnemy|shuffleEnemy|silence)$/.test(k)) return 3;
+  if (k === "revive") return 3;
+  if (/^(grant|freeze|debuff)/.test(k)) return 1.2;
+  if (k === "ramp" || k === "energyNow") return n * 0.8;
+  return 0.8;
+}
+/* 登場時以外の効果の価値。何度も働くタイミングは高く、倒されたときは1回分 */
+const TRIG_WEIGHT = { death: 0.8, voidBack: 0.3, allyDeath: 0.6, kill: 0.6, survive: 0.7 };
+function trigValue(d) {
+  return d.effects.filter(e => whenOf(e) !== "play").reduce((a, e) => a + effValue(e) * (TRIG_WEIGHT[whenOf(e)] ?? 1) * (e.cond ? 0.6 : 1), 0);
+}
 function unitValue(u) {
   const d = DEF[u.id]; if (!d) return 0;
   let v = u.atk * 1.2 + Math.max(0, u.hp) * 0.9 + 1;
@@ -778,7 +804,7 @@ function unitValue(u) {
   if (kw(u, "regen")) v += 1 + u.maxHp * 0.15;
   if (kw(u, "doom")) v -= (u.atk + u.hp) * (u.doomArmed ? 0.6 : 0.3);
   v += armorOf(u) * 1.5;
-  if (!u.silenced) v += d.effects.filter(e => whenOf(e) !== "play").length * 0.8;   // 場に残ると働く効果
+  if (!u.silenced) v += trigValue(d);   // 場に残ると働く効果（倒されたとき・ターンの終わりなど）
   if (u.frozen) v -= u.atk * 0.6;
   return v;
 }
@@ -869,7 +895,9 @@ function cpuChoose(pi) {
       const st = simulate(() => applyAction(pi, a));
       sum += look(st, isResource(a));
     }
-    return { a, v: sum / tries };
+    // 盤面の点数に表れない得（山札から選んで手札に加える＝手札の質が上がる）
+    const bonus = a.t === "play" && DEF[a.id] ? playEffects(DEF[a.id]).filter(e => e.kind === "tutor").length * 0.9 : 0;
+    return { a, v: sum / tries + bonus };
   }).sort((x, y) => y.v - x.v);
   if (CPU_LEVEL === "normal") {
     // 中級：ときどき2番目以降の手を選ぶ
