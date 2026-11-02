@@ -198,3 +198,12 @@ img{max-width:100%}
 /* まだ持っていないカード（図鑑・デッキ編成）：イラストの代わりに「？」 */
 .card.unknown .art{background:repeating-linear-gradient(45deg,rgba(255,255,255,.03) 0 3cqw,transparent 3cqw 8cqw),linear-gradient(170deg,#23263c,#12131f)}
 .card.unknown .glyph{color:rgba(255,255,255,.18);font-size:50cqw}
+
+/* ---- 境界の欠片：どの世界でもない共通のカード。紺地に、3つの世界の色（金・緑・青）が流れる縁。飾り石も3色 ---- */
+.card.coin{--wc:#8fb0ff;--rw:2.8cqw;--rim:linear-gradient(160deg,#ffe9a8,#d6a64c 22%,#4f9e74 50%,#4f8fd0 78%,#bcd6ff);
+  background:radial-gradient(circle at 50% 40%,rgba(120,150,255,.28),transparent 60%),linear-gradient(170deg,#1b2a5c,#0b1230 80%)}
+.card.coin .crest::after{background:conic-gradient(from 0deg,#e9c873 0 33%,#5db588 0 66%,#62a3e0 0);box-shadow:0 0 2cqw rgba(255,226,140,.8)}
+.card.coin .art{box-shadow:0 0 0 1cqw #a8781f,0 0 0 1.8cqw rgba(255,226,140,.55)}
+.card.coin .stats.spelltag{color:#ffe7a3}
+.card.coin .stats.spelltag::before,.card.coin .stats.spelltag::after{background:linear-gradient(90deg,transparent,#e3c27a)}
+
