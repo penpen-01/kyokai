@@ -108,6 +108,9 @@ ${effList}
 【キャラの効果のタイミング（when。キャラだけ）】
 ${whenList}
 
+【効果の条件（なくてよい。効果ごとに "cond" と数値 "cn" を書く。worldGE は "cworld" も）】
+${Object.entries(CONDS).map(([k, v]) => `- ${k}：${v.label}`).join("\n")}
+
 【強さの目安】
 ・キャラの「攻撃力＋体力」の平均：${curveText}
 ・効果や能力があるカードは、そのぶん攻撃力＋体力を下げる。レア度が高いほど、少し強くてよい

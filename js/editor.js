@@ -266,6 +266,7 @@ function renderEditor() {
               ${effNoN(def, e) ? "" : stepper("eff-" + i, e.n, `効果${i + 1}の数値`)}
               <button type="button" class="iconbtn" data-eff-del="${i}" aria-label="効果${i + 1}を削除">✕</button>
               ${effOptsHTML(e, i)}
+              ${effCondHTML(e, i)}
             </div>`; }).join("")}
           </div>
           ${targetWarn(c)}
@@ -334,6 +335,17 @@ function effOptsHTML(e, i) {
   if (o.includes("ctype")) out.push(sel("ctype", "種類", [["", "すべて"], ...Object.entries(TYPES)], e.ctype || ""));
   return `<div class="eff-opts">${out.join("")}</div>`;
 }
+/* 効果の条件（なし／体力N以下 など） */
+function effCondHTML(e, i) {
+  const cd = CONDS[e.cond];
+  return `<div class="eff-opts eff-cond">
+    <label class="eff-opt"><span>条件</span><select data-eff-cond="${i}" id="ef-cond-${i}">
+      <option value="">なし（いつも発動）</option>${Object.entries(CONDS).map(([k, v]) => `<option value="${k}" ${e.cond === k ? "selected" : ""}>${v.label}</option>`).join("")}
+    </select></label>
+    ${cd && !cd.noN ? `<label class="eff-opt"><span>N</span>${stepper("cnd-" + i, e.cn ?? 1, `効果${i + 1}の条件の数値`)}</label>` : ""}
+    ${cd && cd.world ? `<label class="eff-opt"><span>世界</span><select data-eff-opt="${i}" data-opt="cworld" id="ef-cworld-${i}"><option value="">すべて</option>${Object.entries(WORLDS).map(([k, v]) => `<option value="${k}" ${e.cworld === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}
+  </div>`;
+}
 function targetWarn(c) {
   const sides = playEffects(c).map(e => EFFECTS[e.kind].target).filter(Boolean);
   const msgs = [];
@@ -364,7 +376,9 @@ function setNum(name, value) {
   const c = curCard();
   if (!c) return;
   let v;
-  if (name.startsWith("eff-")) {
+  if (name.startsWith("cnd-")) {
+    v = c.effects[+name.slice(4)].cn = clamp(value, 0, 30);
+  } else if (name.startsWith("eff-")) {
     const i = +name.slice(4);
     v = c.effects[i].n = clamp(value, EFFECTS[c.effects[i].kind].min ?? 1, 20);
   } else if (name === "cost") v = c.cost = clamp(value, 0, 15);
@@ -426,6 +440,7 @@ document.addEventListener("click", e => {
       if (name === "hp") inp.value = c.hp;
       if (name === "limit") inp.value = c.limit;
       if (name.startsWith("eff-")) inp.value = c.effects[+name.slice(4)].n;
+      if (name.startsWith("cnd-")) inp.value = c.effects[+name.slice(4)].cn;
     }
     return;
   }
@@ -481,6 +496,7 @@ document.addEventListener("change", e => {
     changed(); return;
   }
   if (t.dataset.effOpt != null) { const e = curCard().effects[+t.dataset.effOpt]; if (t.value) e[t.dataset.opt] = t.value; else delete e[t.dataset.opt]; changed(); renderEditor(); return; }
+  if (t.dataset.effCond != null) { const e = curCard().effects[+t.dataset.effCond]; if (t.value) { e.cond = t.value; if (e.cn == null) e.cn = 1; } else { delete e.cond; delete e.cn; delete e.cworld; } changed(); renderEditor(); return; }
   if (t.dataset.effWhen != null) { const e = curCard().effects[+t.dataset.effWhen]; if (t.value === "play") delete e.when; else e.when = t.value; changed(); renderEditor(); return; }
   if (t.dataset.effKind != null) { const e = curCard().effects[+t.dataset.effKind]; e.kind = t.value; e.n = Math.max(EFFECTS[e.kind].min ?? 1, e.n);
     const o = EFFECTS[e.kind].opts || []; if (!o.includes("token")) delete e.card; if (!o.includes("kw")) delete e.kw; if (!o.includes("world")) delete e.world; if (!o.includes("ctype")) delete e.ctype; changed(); renderEditor(); return; }

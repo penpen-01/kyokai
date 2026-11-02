@@ -127,6 +127,7 @@ textarea.txt{min-height:64px;line-height:1.6;white-space:pre-wrap}
 }
 .eff select:focus-visible{outline:2px solid var(--gold)}
 .eff select.eff-when{flex:0 1 auto;min-width:150px;border-color:rgba(255,213,106,.45);color:#ffe7a3}
+.effects .eff + .eff{border-top:1px dashed var(--line);padding-top:12px;margin-top:6px}
 .eff-opts{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;padding-left:4px}
 .eff-opt{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
 .eff .eff-opt select{flex:none;min-width:140px;padding:6px 8px}

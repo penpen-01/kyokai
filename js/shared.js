@@ -106,6 +106,16 @@ const WHENS = {
   healed:    { label: "自分の体力が回復したとき",     head: "自分の体力が回復したとき" },
   voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" }
 };
+/* 効果ごとの条件（effect.cond）。満たしていないとその効果は発動しない。cn＝数値、cworld＝世界 */
+const CONDS = {
+  hpLE:    { label: "自分の体力がN以下",          text: e => `自分の体力が${e.cn}以下なら` },
+  worldGE: { label: "自分の場に（世界の）キャラがN体以上", text: e => `自分の場に${WORLDS[e.cworld] ? WORLDS[e.cworld] + "の" : ""}キャラが${e.cn}体以上いれば（このキャラも数える）` , world: true },
+  combo:   { label: "このターン、すでにほかのカードを使った（コンボ）", text: () => "このターン、すでにほかのカードを使っていれば", noN: true },
+  handZero:{ label: "手札が0枚",                  text: () => "自分の手札が0枚なら", noN: true },
+  handGE:  { label: "手札がN枚以上",              text: e => `自分の手札が${e.cn}枚以上なら` },
+  maxEGE:  { label: "最大エナジーがN以上",        text: e => `自分のエナジーの最大値が${e.cn}以上なら` }
+};
+const condText = e => (e && CONDS[e.cond] ? CONDS[e.cond].text(e) : "");
 const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
 /* 使ったとき（登場時）の効果だけ */
 const playEffects = card => (card.effects || []).filter(e => whenOf(e) === "play");
@@ -220,6 +230,7 @@ function effectsText(card, list, auto) {
     if (card.type === "char" && EFFECTS[e.kind].target === "ownUnit") t = t.replace("自分のキャラ1体", "このキャラ以外の自分のキャラ1体");
     // 登場時以外は対象を選べないので、ランダム
     if (auto && EFFECTS[e.kind].target) t = t.replace("相手キャラ1体", "ランダムな相手キャラ1体").replace("このキャラ以外の自分のキャラ1体", "このキャラ以外のランダムな自分のキャラ1体");
+    if (e.cond && CONDS[e.cond]) t = `${condText(e)}、${t}`;
     if (k > 1) t = e.kind === "dmgRandom" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
     out.push(t);
     i += k - 1;
@@ -307,6 +318,11 @@ function normEffect(e, type) {
   if (o.includes("kw") && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
   if (o.includes("world") && WORLDS[e.world]) out.world = e.world;
   if (o.includes("ctype") && TYPES[e.ctype]) out.ctype = e.ctype;
+  if (CONDS[e.cond]) {
+    out.cond = e.cond;
+    if (!CONDS[e.cond].noN) out.cn = Math.max(0, Math.min(30, Math.round(+e.cn || 0)));
+    if (CONDS[e.cond].world && WORLDS[e.cworld]) out.cworld = e.cworld;
+  }
   return out;
 }
 /* 読み込んだデータの欠けを補う */

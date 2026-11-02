@@ -200,6 +200,7 @@ function startTurn(pi, skipDraw) {
   if (S.over) return;
   S.turn = pi; S.turnNo++;
   const p = S.players[pi];
+  p.played = 0;
   p.maxE = Math.min(CONFIG.ENERGY_MAX, p.maxE + 1);
   p.e = p.maxE;
   returnFromVoid(pi);   // 亜空間のキャラは、元から場にいた扱いで戻る
@@ -324,6 +325,7 @@ function playCard(pi, idx, targetsIn) {
   const cost = effCost(pi, d);
   p.hand.splice(idx, 1);
   p.e -= cost;
+  p.played = (p.played || 0) + 1;   // このターンに使ったカードの数（コンボの条件）
   p.discount = 0;
   const tnames = roles.filter(r => r !== "sacrifice").map(r => { const u = S.players[roleSide(pi, r)].field.find(x => x.uid === targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
   log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
@@ -360,7 +362,21 @@ function runEffects(pi, d, targets, self) {
   playEffects(d).forEach(e => effect(pi, e, targets, self));
 }
 
+/* 効果の条件を満たしているか */
+function condOK(pi, e, self) {
+  const p = S.players[pi];
+  switch (e.cond) {
+    case "hpLE": return p.hp <= e.cn;
+    case "worldGE": return p.field.filter(u => u.hp > 0 && (!e.cworld || (DEF[u.id] && DEF[u.id].world === e.cworld))).length >= e.cn;
+    case "combo": return (p.played || 0) >= 2;   // いま使っているカードを含めて2枚目以上
+    case "handZero": return p.hand.length === 0;
+    case "handGE": return p.hand.length >= e.cn;
+    case "maxEGE": return p.maxE >= e.cn;
+  }
+  return true;
+}
 function effect(pi, e, targets, self) {
+  if (e.cond && !condOK(pi, e, self)) return;
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;
   const enemyT = () => en.field.find(x => x.uid === targets.enemy);
   const ownT = () => me.field.find(x => x.uid === targets.own && x !== self);
