@@ -1124,3 +1124,31 @@ body{
 .dworlds{display:flex;width:120px;height:5px;border-radius:99px;overflow:hidden;background:var(--line)}
 .dworlds i{display:block;height:100%}
 .dworlds .w-myth{background:var(--w-myth)} .dworlds .w-fan{background:var(--w-fan)} .dworlds .w-mech{background:var(--w-mech)}
+
+/* ---- UR・レジェンドのカットイン（js/motion.js の cutin） ---- */
+.cutin{position:fixed;inset:0;z-index:65;overflow:hidden;cursor:pointer;background:rgba(4,5,12,.0);animation:ci-dim 1.5s ease both}
+@keyframes ci-dim{0%{background:rgba(4,5,12,0)}12%,80%{background:rgba(4,5,12,.6)}100%{background:rgba(4,5,12,0)}}
+.ci-band{position:absolute;left:-20%;right:-20%;top:50%;height:44vh;margin-top:-22vh;transform:rotate(-9deg);overflow:hidden;
+  border-top:3px solid #ffe08a;border-bottom:3px solid #ffe08a;box-shadow:0 0 30px rgba(255,214,120,.8),0 0 0 9999px transparent;
+  animation:ci-band 1.5s cubic-bezier(.2,.8,.2,1) both}
+.cutin.r-legend .ci-band{border-image:linear-gradient(90deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff) 1;box-shadow:0 0 34px rgba(255,190,240,.8)}
+@keyframes ci-band{0%{clip-path:inset(0 100% 0 0)}14%{clip-path:inset(0 0 0 0)}82%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 100%);opacity:.6}}
+.ci-art{position:absolute;inset:-30% 0;transform:rotate(9deg);background:#141833 center 22%/cover no-repeat;animation:ci-pan 1.5s linear both}
+.cutin.theirs .ci-art{animation-name:ci-pan-r}
+@keyframes ci-pan{from{transform:rotate(9deg) translateX(-6%) scale(1.15)}to{transform:rotate(9deg) translateX(6%) scale(1.15)}}
+@keyframes ci-pan-r{from{transform:rotate(9deg) translateX(6%) scale(1.15)}to{transform:rotate(9deg) translateX(-6%) scale(1.15)}}
+.ci-band::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.55) 48%,transparent 56%);transform:translateX(-100%);animation:ci-shine 1.5s .25s ease-out both}
+@keyframes ci-shine{to{transform:translateX(100%)}}
+.ci-flash{position:absolute;inset:0;background:#fff8e0;opacity:0;animation:ci-flash .5s .12s ease-out both;pointer-events:none}
+@keyframes ci-flash{0%{opacity:0}25%{opacity:.75}100%{opacity:0}}
+.ci-text{position:absolute;left:0;right:0;bottom:16vh;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;animation:ci-text 1.5s ease both}
+.cutin.theirs .ci-text{bottom:auto;top:14vh}
+@keyframes ci-text{0%,12%{opacity:0;transform:translateY(16px) scale(1.2)}26%,82%{opacity:1;transform:none}100%{opacity:0}}
+.ci-text small{font-family:var(--f-display);font-weight:800;letter-spacing:.45em;font-size:13px;color:#ffe08a;text-shadow:0 0 10px rgba(255,214,120,.9)}
+.cutin.r-legend .ci-text small{background:linear-gradient(90deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}
+.ci-text b{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,8vw,44px);color:#fff;letter-spacing:.06em;text-shadow:0 0 4px #000,0 3px 14px #000,0 0 24px rgba(255,214,120,.6)}
+.ci-text span{font-size:13px;color:#e6d9b8;text-shadow:0 1px 4px #000}
+.cutin.reduced,.cutin.reduced *{animation-duration:.01ms!important;animation-delay:0s!important}
+.cutin.reduced{background:rgba(4,5,12,.6)}
+/* ---- ドロー：山札から飛ぶカードの裏面 ---- */
+.drawfly{position:fixed;z-index:3;border-radius:4px;pointer-events:none;background:#14183a url("../ui/card-back.webp") center/cover no-repeat;box-shadow:0 6px 18px rgba(0,0,0,.6),0 0 12px rgba(140,180,255,.5)}

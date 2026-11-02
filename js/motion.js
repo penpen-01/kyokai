@@ -92,6 +92,50 @@ const Motion = {
     this.hold(this.reduced ? 500 : 800);
   },
 
+  /* ---------- UR・レジェンドのカットイン ----------
+     斜めの帯が走り、カードの絵が大きく横切って、名前とレア度が出る。タップで飛ばせる */
+  cutin(id, pi) {
+    const d = DEF[id]; if (!d) return;
+    const mine = pi === ME, ms = this.reduced ? 700 : 1500;
+    const old = document.getElementById("cutin"); if (old) old.remove();
+    const w = document.createElement("div");
+    w.id = "cutin";
+    w.className = `cutin ${mine ? "mine" : "theirs"} r-${d.rarity} w-${d.world}${this.reduced ? " reduced" : ""}`;
+    w.innerHTML = `<div class="ci-band"><div class="ci-art" ${d.art ? `style="background-image:url('${esc(d.art)}')"` : ""}></div></div>
+      <div class="ci-flash"></div>
+      <div class="ci-text"><small>${d.rarity === "legend" ? "LEGEND" : "ULTRA RARE"}</small><b>${esc(d.name)}</b><span>${esc(S && S.players[pi] ? S.players[pi].name : "")}が${d.type === "char" ? "召喚" : "使用"}</span></div>`;
+    // タップで飛ばしたときだけ、待っている演出をすぐ進める
+    w.addEventListener("click", e => { e.stopPropagation(); if (!w.isConnected) return; w.remove(); clearTimeout(this.timer); this.release(); });
+    document.body.appendChild(w);
+    if (typeof Sound !== "undefined") { Sound.play("rare"); setTimeout(() => Sound.play("hit"), this.reduced ? 0 : 380); }
+    setTimeout(() => w.remove(), ms);
+    this.hold(ms);
+  },
+
+  /* ---------- ドロー：山札から手札へカードが飛ぶ ---------- */
+  draw(pi) {
+    if (this.reduced) return;
+    const pile = document.querySelector(".pile .pback");
+    if (!pile) return;
+    const a = pile.getBoundingClientRect();
+    const to = pi === ME ? document.querySelector(".hand") : document.querySelector(`[data-player="${pi}"]`);
+    if (!to || !a.width) return;
+    const b = to.getBoundingClientRect();
+    const c = document.createElement("div");
+    c.className = "drawfly";
+    Object.assign(c.style, { left: a.left + "px", top: a.top + "px", width: a.width + "px", height: a.height + "px" });
+    $("#fx").appendChild(c);
+    const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
+    const big = pi === ME ? 2.2 : 1.2;
+    c.animate([
+      { transform: "translate(0,0) scale(1) rotate(0)", opacity: 0 },
+      { transform: `translate(${dx * .35}px,${dy * .35 - 30}px) scale(${big}) rotate(-8deg)`, opacity: 1, offset: .45 },
+      { transform: `translate(${dx}px,${dy}px) scale(${big * .8}) rotate(0)`, opacity: 0 }
+    ], { duration: 560, easing: "cubic-bezier(.3,.7,.3,1)", fill: "forwards" });
+    setTimeout(() => c.remove(), 600);
+    if (typeof Sound !== "undefined") Sound.play("flip");
+  },
+
   /* ---------- 撃破：砕けて消える ---------- */
   shatter(el) {
     const r = el.getBoundingClientRect();

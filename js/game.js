@@ -192,6 +192,7 @@ function draw(pi, silent) {
     return;
   }
   p.hand.push(id);
+  if (!silent && S.phase === "play") fx("draw", String(pi), "draw");   // 山札から手札へ飛ぶ（どのカードかは送らない）
   if (S.phase === "play") trigUnits(pi, "drawn");
   if (!silent) log(`${pname(pi)}はカードを1枚引いた。`, { pi, msg: `${pname(pi)}は${cname(id)}を引いた。` });
 }
@@ -332,7 +333,8 @@ function playCard(pi, idx, targetsIn) {
   const tnames = roles.filter(r => r !== "sacrifice").map(r => { const u = S.players[roleSide(pi, r)].field.find(x => x.uid === targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
   log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
   sfx("play");
-  fx("cast", id, "cast" + pi);
+  if (["ur", "legend"].includes(d.rarity) && !d.token) fx("cutin", id, "cutin" + pi);   // UR・レジェンドはカットイン
+  else fx("cast", id, "cast" + pi);
   // 代償
   if (d.pay && d.pay.kind === "life") { p.hp -= d.pay.n; log(`代償として${pname(pi)}の体力を${d.pay.n}払った。`); fx(playerSel(pi), "-" + d.pay.n, "dmg"); }
   if (d.pay && d.pay.kind === "sacrifice") {
@@ -1496,6 +1498,8 @@ function runFx(sel, text, cls) {
   if (sel === "sfx") { Sound.play(text); return; }
   if (cls === "lunge") { Motion.lunge(sel, text); return; }
   if (sel === "cast") { Motion.cast(text, +cls.slice(4)); return; }
+  if (sel === "cutin") { Motion.cutin(text, +cls.slice(5)); return; }
+  if (sel === "draw") { Motion.draw(+text); return; }
   if (cls === "land") { Motion.land(); return; }
   if (cls === "die") { const el = document.querySelector(sel); if (el) Motion.shatter(el); return; }
   if (cls === "dmg") Sound.play(text === "破壊" ? "destroy" : sel.startsWith("[data-player") ? "face" : "hit");
