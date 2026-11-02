@@ -1,5 +1,5 @@
 {
- "version": 41,
+ "version": 42,
  "updated": "2026-11-03",
  "config": {
   "PLAYER_HP": 20,
@@ -159,7 +159,8 @@
     "n-heroking",
     "n-hijack",
     "n-fairyqueen",
-    "n-seraph"
+    "n-seraph",
+    "cmvy5b8qb40p"
    ],
    "odds": {
     "normal": {
@@ -593,8 +594,8 @@
    "world": "fan",
    "type": "char",
    "cost": 3,
-   "atk": 2,
-   "hp": 3,
+   "atk": 3,
+   "hp": 1,
    "glyph": "影",
    "limit": 3,
    "rarity": "rare",
@@ -749,8 +750,8 @@
    "world": "mech",
    "type": "char",
    "cost": 8,
-   "atk": 6,
-   "hp": 7,
+   "atk": 7,
+   "hp": 6,
    "glyph": "極",
    "limit": 3,
    "rarity": "legend",
@@ -963,10 +964,6 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgRandom",
-     "n": 5
-    },
-    {
      "kind": "dmgFace",
      "n": 5
     },
@@ -975,6 +972,10 @@
      "n": 5
     }
    ],
+   "pay": {
+    "kind": "life",
+    "n": 5
+   },
    "art": "art/cmvr3qeaobf2-492c003566.webp"
   },
   {
@@ -1046,8 +1047,8 @@
    "world": "fan",
    "type": "char",
    "cost": 3,
-   "atk": 3,
-   "hp": 3,
+   "atk": 4,
+   "hp": 2,
    "glyph": "狼",
    "limit": 3,
    "rarity": "common",
@@ -1215,7 +1216,7 @@
    "world": "myth",
    "type": "char",
    "cost": 4,
-   "atk": 3,
+   "atk": 2,
    "hp": 4,
    "glyph": "託",
    "limit": 3,
@@ -1575,7 +1576,7 @@
    "effects": [
     {
      "kind": "heal",
-     "n": 6
+     "n": 5
     },
     {
      "kind": "buffAllBoth",
@@ -1843,17 +1844,25 @@
    "type": "char",
    "cost": 5,
    "atk": 0,
-   "hp": 6,
+   "hp": 10,
    "glyph": "工",
    "limit": 3,
    "rarity": "sr",
    "keywords": [
-    "guard"
+    "noattack",
+    "guard",
+    "elusive"
    ],
    "effects": [
     {
      "kind": "tokenField",
      "n": 2,
+     "card": "tk-drone"
+    },
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "when": "turnStart",
      "card": "tk-drone"
     }
    ],
@@ -1879,7 +1888,7 @@
   },
   {
    "id": "x-repair",
-   "name": "ナノ修復",
+   "name": "ナノ改造",
    "world": "mech",
    "type": "spell",
    "cost": 2,
@@ -1978,7 +1987,7 @@
     },
     {
      "kind": "summon",
-     "n": 5
+     "n": 6
     }
    ],
    "art": "art/x-warp-1ab22df710.webp"
@@ -2028,7 +2037,9 @@
    "glyph": "量",
    "limit": 0,
    "rarity": "common",
-   "keywords": [],
+   "keywords": [
+    "haste"
+   ],
    "effects": [],
    "token": true,
    "art": "art/tk-drone-ff5b2194a9.webp"
@@ -2054,7 +2065,7 @@
    "name": "修理パーツ",
    "world": "mech",
    "type": "spell",
-   "cost": 1,
+   "cost": 0,
    "glyph": "修",
    "limit": 0,
    "rarity": "common",
@@ -2287,8 +2298,8 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffBoth",
-     "n": 1
+     "kind": "buffHp",
+     "n": 2
     },
     {
      "kind": "grantOwn",
@@ -2448,7 +2459,7 @@
    "type": "char",
    "cost": 4,
    "atk": 2,
-   "hp": 2,
+   "hp": 3,
    "glyph": "月",
    "limit": 3,
    "rarity": "rare",
@@ -2627,7 +2638,8 @@
    "effects": [
     {
      "kind": "transform",
-     "n": 1
+     "n": 1,
+     "card": "tk-spirit"
     }
    ],
    "art": "art/n-fairyking-aa74614d3a.webp"
@@ -2687,11 +2699,7 @@
    "effects": [
     {
      "kind": "revive",
-     "n": 6
-    },
-    {
-     "kind": "draw",
-     "n": 1
+     "n": 7
     }
    ],
    "art": "art/n-return-fdeee04b97.webp"
@@ -2755,7 +2763,8 @@
    "limit": 3,
    "rarity": "sr",
    "keywords": [
-    "doom"
+    "doom",
+    "guard"
    ],
    "effects": [],
    "art": "art/n-zero-2f0f101270.webp"
@@ -2789,7 +2798,7 @@
    "world": "fan",
    "type": "char",
    "cost": 5,
-   "atk": 4,
+   "atk": 5,
    "hp": 5,
    "glyph": "封",
    "limit": 3,
@@ -2814,7 +2823,9 @@
    "glyph": "不",
    "limit": 3,
    "rarity": "ur",
-   "keywords": [],
+   "keywords": [
+    "shield"
+   ],
    "effects": [
     {
      "kind": "tokenField",
@@ -2830,7 +2841,7 @@
    "name": "支配のコード",
    "world": "mech",
    "type": "spell",
-   "cost": 7,
+   "cost": 8,
    "glyph": "支",
    "limit": 3,
    "rarity": "ur",
