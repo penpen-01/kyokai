@@ -1,5 +1,5 @@
 {
- "version": 34,
+ "version": 35,
  "updated": "2026-11-02",
  "config": {
   "PLAYER_HP": 20,
@@ -119,7 +119,47 @@
     "x-reboot",
     "x-overcharge",
     "x-emp",
-    "x-warp"
+    "x-warp",
+    "n-flowergirl",
+    "n-dwarf",
+    "n-mist",
+    "n-barkguard",
+    "n-bear",
+    "n-trick",
+    "n-slinger",
+    "n-templeguard",
+    "n-lightarrow",
+    "n-oldknight",
+    "n-blessing",
+    "n-workbot",
+    "n-autoturret",
+    "n-assembly",
+    "n-scoutbike",
+    "n-mechanic",
+    "n-shinobi",
+    "n-thornwarden",
+    "n-moonwitch",
+    "n-spiritcaller",
+    "n-swordpupil",
+    "n-highpriest",
+    "n-seal",
+    "n-leechdrone",
+    "n-analyzer",
+    "n-salvage",
+    "n-bomber",
+    "n-fairyking",
+    "n-ancienttree",
+    "n-skypaladin",
+    "n-return",
+    "n-massprod",
+    "n-interceptor",
+    "n-zero",
+    "n-kitsune",
+    "n-timewitch",
+    "n-heroking",
+    "n-hijack",
+    "n-fairyqueen",
+    "n-seraph"
    ],
    "odds": {
     "normal": {
@@ -428,7 +468,7 @@
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "pierce"
+    "stealth"
    ],
    "effects": [],
    "art": "art/shadow-3c851b4f14.webp"
@@ -996,12 +1036,13 @@
    "type": "char",
    "cost": 3,
    "atk": 2,
-   "hp": 4,
+   "hp": 3,
    "glyph": "聖",
    "limit": 3,
    "rarity": "common",
    "keywords": [
-    "guard"
+    "guard",
+    "shield"
    ],
    "effects": [],
    "art": "art/m-shield-ab19209854.webp"
@@ -1365,12 +1406,13 @@
    "type": "char",
    "cost": 5,
    "atk": 2,
-   "hp": 7,
+   "hp": 6,
    "glyph": "樹",
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "guard"
+    "guard",
+    "regen"
    ],
    "effects": [],
    "art": "art/f-treeguard-50d4145d68.webp"
@@ -1688,8 +1730,9 @@
    ],
    "effects": [
     {
-     "kind": "summon",
-     "n": 3
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-drone"
     }
    ],
    "art": "art/x-factory-1a4312c2ed.webp"
@@ -1835,6 +1878,855 @@
     }
    ],
    "art": "art/cmvy5b8qb40p-ed90803b25.webp"
+  },
+  {
+   "id": "tk-spirit",
+   "name": "小さな精霊",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "小",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "token": true
+  },
+  {
+   "id": "tk-drone",
+   "name": "量産型ドローン",
+   "world": "mech",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "量",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "token": true
+  },
+  {
+   "id": "tk-hero",
+   "name": "英霊",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "英",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "token": true
+  },
+  {
+   "id": "tk-part",
+   "name": "修理パーツ",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "修",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "buffBoth",
+     "n": 1
+    }
+   ],
+   "token": true
+  },
+  {
+   "id": "n-flowergirl",
+   "name": "花摘みの少女",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "花",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 2
+    }
+   ]
+  },
+  {
+   "id": "n-dwarf",
+   "name": "森の小人",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "森",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 1,
+     "when": "death"
+    }
+   ]
+  },
+  {
+   "id": "n-mist",
+   "name": "迷いの霧",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "迷",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "freezeTarget",
+     "n": 1
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-barkguard",
+   "name": "樹皮の盾兵",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "樹",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 1,
+     "when": "death"
+    }
+   ]
+  },
+  {
+   "id": "n-bear",
+   "name": "森の大熊",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 5,
+   "hp": 5,
+   "glyph": "森",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-trick",
+   "name": "妖精の悪戯",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "妖",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "swapEnemy",
+     "n": 1
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-slinger",
+   "name": "投石の少年",
+   "world": "myth",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "投",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-templeguard",
+   "name": "神殿の衛士",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "shield"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-lightarrow",
+   "name": "光の矢",
+   "world": "myth",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "光",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgTarget",
+     "n": 1
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-oldknight",
+   "name": "老騎士",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "老",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 3,
+     "when": "death"
+    }
+   ]
+  },
+  {
+   "id": "n-blessing",
+   "name": "祝福の儀式",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "祝",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "buffBoth",
+     "n": 2
+    },
+    {
+     "kind": "grantOwn",
+     "n": 1,
+     "kw": "shield"
+    }
+   ]
+  },
+  {
+   "id": "n-workbot",
+   "name": "作業用ロボ",
+   "world": "mech",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "作",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-part",
+     "when": "death"
+    }
+   ]
+  },
+  {
+   "id": "n-autoturret",
+   "name": "自走砲台",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 0,
+   "hp": 4,
+   "glyph": "自",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ]
+  },
+  {
+   "id": "n-assembly",
+   "name": "組立ライン",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "組",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-drone"
+    }
+   ]
+  },
+  {
+   "id": "n-scoutbike",
+   "name": "偵察バイク",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "偵",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "haste"
+   ],
+   "effects": [
+    {
+     "kind": "draw",
+     "n": 1,
+     "when": "face"
+    }
+   ]
+  },
+  {
+   "id": "n-mechanic",
+   "name": "整備士ロボ",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "整",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "healUnits",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ]
+  },
+  {
+   "id": "n-shinobi",
+   "name": "影走りの忍",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "影",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "stealth"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-thornwarden",
+   "name": "茨の番人",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "茨",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard",
+    "poison"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-moonwitch",
+   "name": "月夜の魔女",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "月",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "bounceEnemy",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-spiritcaller",
+   "name": "精霊使いの少女",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "精",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-spirit"
+    }
+   ]
+  },
+  {
+   "id": "n-swordpupil",
+   "name": "剣聖の弟子",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "剣",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "twice"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-highpriest",
+   "name": "神官長",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "heal",
+     "n": 2,
+     "when": "turnEnd"
+    }
+   ]
+  },
+  {
+   "id": "n-seal",
+   "name": "封印の言葉",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "封",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "silence",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-leechdrone",
+   "name": "吸血ドローン",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "吸",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "lifesteal"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-analyzer",
+   "name": "解析ドローン",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "解",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "elusive"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-salvage",
+   "name": "部品回収",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "部",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 4,
+     "ctype": "char"
+    }
+   ]
+  },
+  {
+   "id": "n-bomber",
+   "name": "自爆ロボ",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "自",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 3,
+     "when": "death"
+    }
+   ]
+  },
+  {
+   "id": "n-fairyking",
+   "name": "幻惑の妖精王",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "transform",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-ancienttree",
+   "name": "精霊宿りの大樹",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 3,
+   "hp": 7,
+   "glyph": "精",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 3,
+     "card": "tk-spirit",
+     "when": "death"
+    }
+   ]
+  },
+  {
+   "id": "n-skypaladin",
+   "name": "天空の聖騎士",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "天",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "guard",
+    "shield"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-return",
+   "name": "冥府からの帰還",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "冥",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "revive",
+     "n": 6
+    },
+    {
+     "kind": "draw",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-massprod",
+   "name": "量産指令",
+   "world": "mech",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "量",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 3,
+     "card": "tk-drone"
+    },
+    {
+     "kind": "grantAll",
+     "n": 1,
+     "kw": "armor"
+    }
+   ]
+  },
+  {
+   "id": "n-interceptor",
+   "name": "迎撃システム",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 5,
+   "glyph": "迎",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 2,
+     "when": "survive"
+    }
+   ]
+  },
+  {
+   "id": "n-zero",
+   "name": "試作兵器ゼロ",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 6,
+   "hp": 6,
+   "glyph": "試",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "doom"
+   ],
+   "effects": []
+  },
+  {
+   "id": "n-kitsune",
+   "name": "千年妖狐",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 5,
+   "hp": 5,
+   "glyph": "千",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "stealth"
+   ],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 2,
+     "when": "attack"
+    }
+   ]
+  },
+  {
+   "id": "n-timewitch",
+   "name": "封魔の大魔女",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "封",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "silenceAll",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-heroking",
+   "name": "不死の英雄王",
+   "world": "myth",
+   "type": "char",
+   "cost": 7,
+   "atk": 6,
+   "hp": 6,
+   "glyph": "不",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-hero",
+     "when": "death"
+    }
+   ]
+  },
+  {
+   "id": "n-hijack",
+   "name": "支配のコード",
+   "world": "mech",
+   "type": "spell",
+   "cost": 7,
+   "glyph": "支",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "steal",
+     "n": 1
+    }
+   ]
+  },
+  {
+   "id": "n-fairyqueen",
+   "name": "妖精女王ルミナ",
+   "world": "fan",
+   "type": "char",
+   "cost": 8,
+   "atk": 6,
+   "hp": 8,
+   "glyph": "妖",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-spirit",
+     "when": "turnEnd"
+    },
+    {
+     "kind": "buffAllBoth",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ]
+  },
+  {
+   "id": "n-seraph",
+   "name": "審判の熾天使",
+   "world": "myth",
+   "type": "char",
+   "cost": 8,
+   "atk": 6,
+   "hp": 7,
+   "glyph": "審",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "shield",
+    "lifesteal"
+   ],
+   "effects": [
+    {
+     "kind": "dmgAll",
+     "n": 1,
+     "when": "attack"
+    }
+   ]
   }
  ]
 }

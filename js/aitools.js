@@ -58,7 +58,7 @@ ${worlds.map(w => `${WORLDS[w]}：${ART_WORLD[w]}`).join("\n")}
 【描いてほしいカード】
 ${cards.map((c, i) => this.artLine(c, i + 1)).join("\n")}`;
   },
-  missingArt() { return DATA.cards.filter(c => c.limit > 0 && !c.art); },
+  missingArt() { return DATA.cards.filter(c => (c.limit > 0 || c.token) && !c.art); },
 
   /* ---------- カードの案の依頼文 ---------- */
   ideaPrompt() {
