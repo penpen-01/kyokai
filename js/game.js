@@ -860,16 +860,8 @@ function applyAction(pi, a) {
 function cpuChoose(pi) {
   const acts = legalActions(pi);
   if (!acts.length) return null;
-  if (CPU_LEVEL === "easy") {
-    // 出せるカードがあれば7割の確率で出す。攻撃は対象を適当に選ぶ
-    const plays = acts.filter(a => a.t === "play"), atks = acts.filter(a => a.t === "attack");
-    if (plays.length && Math.random() < 0.7) return plays[Math.floor(Math.random() * plays.length)];
-    if (atks.length) {
-      const face = atks.find(a => a.target === "player");
-      return face && Math.random() < 0.6 ? face : atks[Math.floor(Math.random() * atks.length)];
-    }
-    return null;
-  }
+  // 初級：手の良し悪しはざっくり見るが、得になる手の上位3つからでたらめに選ぶ（2026-11-02：前の「完全にでたらめ」は弱すぎた）
+  const easy = CPU_LEVEL === "easy";
   const base = evaluate(S, pi);
   const hard = CPU_LEVEL === "hard";
   const tries = hard ? 2 : 1; // ランダムな効果があるので、上級は複数回試して平均をとる
@@ -899,6 +891,10 @@ function cpuChoose(pi) {
     const bonus = a.t === "play" && DEF[a.id] ? playEffects(DEF[a.id]).filter(e => e.kind === "tutor").length * 0.9 : 0;
     return { a, v: sum / tries + bonus };
   }).sort((x, y) => y.v - x.v);
+  if (easy) {
+    const ok = scored.filter(x => x.v > base + 0.05).slice(0, 3);
+    return ok.length ? ok[Math.floor(Math.random() * ok.length)].a : null;
+  }
   if (CPU_LEVEL === "normal") {
     // 中級：ときどき2番目以降の手を選ぶ
     const ok = scored.filter(x => x.v > base - 0.5 && !(isResource(x.a) && x.v <= base + 0.05));
