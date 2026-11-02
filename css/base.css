@@ -318,18 +318,9 @@ img{max-width:100%}
    SR 以下の魔法：絵はアーチの窓、下は紺地に金の線の台（名前と「魔法」）。UR 以上の魔法は絵を全面に */
 .card.rar-ur .nm,.card.rar-legend .nm{text-shadow:0 0 .6cqw #000,0 0 1.2cqw #000,0 .4cqw 1.6cqw #000,0 0 3.5cqw rgba(0,0,0,.95),0 0 6cqw rgba(0,0,0,.7)}
 .card.rar-ur .foot,.card.rar-legend .foot,.card.rar-ur.spell .foot,.card.rar-legend.spell .foot{background:radial-gradient(ellipse 80% 50% at 50% 38%,rgba(8,9,18,.75),rgba(8,9,18,.35) 55%,transparent 80%)}
-.card.spell:not(.rar-ur):not(.rar-legend){background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--wc) 22%,transparent),transparent 60%),linear-gradient(180deg,#17192c,#0b0c17)}
-.card.spell:not(.rar-ur):not(.rar-legend) .art{inset:calc(var(--rw) + 1.6cqw) calc(var(--rw) + 1.6cqw) calc(var(--rw) + 25cqw);border-radius:40% 40% 1.5cqw 1.5cqw / 24% 24% 1.5cqw 1.5cqw;
-  box-shadow:0 0 0 .7cqw color-mix(in srgb,var(--wc) 70%,#000),0 0 0 1.3cqw rgba(255,226,150,.55)}
-.card.spell:not(.rar-ur):not(.rar-legend) .foot{background:none;padding-top:0;height:25cqw;justify-content:center;gap:.5cqw}
-.card.spell:not(.rar-ur):not(.rar-legend) .foot::before{content:"";position:absolute;left:12%;right:12%;top:.4cqw;height:.5cqw;
-  background:linear-gradient(90deg,transparent,#e3c27a 30%,#fff3cf 50%,#e3c27a 70%,transparent)}
-.card.spell:not(.rar-ur):not(.rar-legend) .nm{text-shadow:0 .4cqw 1cqw #000}
-.card.spell:not(.rar-ur):not(.rar-legend) .stats.spelltag{padding:0 0 4.5cqw;color:#e9cf8f;text-shadow:none}
-.card.spell:not(.rar-ur):not(.rar-legend) .foot{height:auto;bottom:var(--rw);padding:2.5cqw 0 3.5cqw;gap:0}
-.card.spell:not(.rar-ur):not(.rar-legend) .nm{flex:none;padding-top:0;padding-bottom:0}
-.card.spell:not(.rar-ur):not(.rar-legend) .stats.spelltag{flex:none;padding:0;font-size:7.5cqw;line-height:1.2}
-.card.spell:not(.rar-ur):not(.rar-legend) .art{bottom:calc(var(--rw) + 31cqw)}
-.card.spell:not(.rar-ur):not(.rar-legend) .foot{padding:0 0 9cqw;gap:1.2cqw}
-.card.spell:not(.rar-ur):not(.rar-legend) .foot::before{top:auto;bottom:calc(100% + 2.5cqw)}
-.card.spell:not(.rar-ur):not(.rar-legend) .stats.spelltag{font-size:8cqw;letter-spacing:.4em}
+/* SR 以下の魔法：名前までは絵の上（案4のまま）、「魔法」の段だけ黒い台にする */
+.card.spell:not(.rar-ur):not(.rar-legend) .art{bottom:calc(var(--rw) + 11cqw);border-bottom-left-radius:0;border-bottom-right-radius:0}
+.card.spell:not(.rar-ur):not(.rar-legend) .foot{padding-bottom:0}
+.card.spell:not(.rar-ur):not(.rar-legend) .stats.spelltag{height:11cqw;padding:0 0 1.5cqw;align-items:center;background:#0b0c15;
+  border-top:.5cqw solid color-mix(in srgb,#e3c27a 80%,transparent);color:#e9cf8f;text-shadow:none;font-size:7.5cqw;letter-spacing:.4em}
+.card.spell:not(.rar-ur):not(.rar-legend) .gem{display:none}
