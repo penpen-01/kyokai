@@ -96,18 +96,20 @@ const Motion = {
      斜めの帯が走り、カードの絵が大きく横切って、名前とレア度が出る。タップで飛ばせる */
   cutin(id, pi) {
     const d = DEF[id]; if (!d) return;
-    const mine = pi === ME, ms = this.reduced ? 600 : 1000;
+    const mine = pi === ME, ms = this.reduced ? 500 : 700;
     const old = document.getElementById("cutin"); if (old) old.remove();
     const w = document.createElement("div");
     w.id = "cutin";
     w.className = `cutin ${mine ? "mine" : "theirs"} r-${d.rarity} w-${d.world}${this.reduced ? " reduced" : ""}`;
-    w.innerHTML = `<div class="ci-rays"></div><div class="ci-pic">${d.art ? `<img src="${esc(d.art)}" alt="" draggable="false">` : `<span class="glyph">${esc(d.glyph || "？")}</span>`}</div>
-      <div class="ci-flash"></div>
-      <div class="ci-text"><small>${d.rarity === "legend" ? "LEGEND" : "ULTRA RARE"}</small><b>${esc(d.name)}</b><span>${esc(S && S.players[pi] ? S.players[pi].name : "")}が${d.type === "char" ? "召喚" : "使用"}</span></div>`;
+    const art = d.art ? `url('${esc(d.art)}')` : "none";
+    w.innerHTML = `<div class="ci-band" style="--art:${art}">
+        <div class="ci-pic">${d.art ? `<img src="${esc(d.art)}" alt="" draggable="false">` : `<span class="glyph">${esc(d.glyph || "？")}</span>`}</div>
+        <div class="ci-text"><small>${d.rarity === "legend" ? "LEGEND" : "ULTRA RARE"}</small><b>${esc(d.name)}</b><span>${esc(S && S.players[pi] ? S.players[pi].name : "")}が${d.type === "char" ? "召喚" : "使用"}</span></div>
+      </div>`;
     // タップで飛ばしたときだけ、待っている演出をすぐ進める
     w.addEventListener("click", e => { e.stopPropagation(); if (!w.isConnected) return; w.remove(); clearTimeout(this.timer); this.release(); });
     document.body.appendChild(w);
-    if (typeof Sound !== "undefined") { Sound.play("rare"); setTimeout(() => Sound.play("hit"), this.reduced ? 0 : 250); }
+    if (typeof Sound !== "undefined") { Sound.play("rare"); setTimeout(() => Sound.play("hit"), this.reduced ? 0 : 120); }
     setTimeout(() => w.remove(), ms);
     this.hold(ms);
   },

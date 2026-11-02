@@ -1126,36 +1126,37 @@ body{
 .dworlds .w-myth{background:var(--w-myth)} .dworlds .w-fan{background:var(--w-fan)} .dworlds .w-mech{background:var(--w-mech)}
 
 /* ---- UR・レジェンドのカットイン（js/motion.js の cutin）
-   絵は切り抜かず、カードの絵をまるごと大きく出す。後ろに回る光の筋、金（UR）／虹（レジェンド）の縁 ---- */
-.cutin{position:fixed;inset:0;z-index:65;overflow:hidden;cursor:pointer;display:grid;place-items:center;animation:ci-dim 1s ease both}
-@keyframes ci-dim{0%{background:rgba(4,5,12,0)}12%,80%{background:rgba(4,5,12,.82)}100%{background:rgba(4,5,12,0)}}
-.ci-rays{position:absolute;left:50%;top:44%;width:160vmax;height:160vmax;margin:-80vmax 0 0 -80vmax;pointer-events:none;
-  background:repeating-conic-gradient(from 0deg,rgba(255,226,140,.0) 0 6deg,rgba(255,226,140,.07) 6deg 9deg);
-  -webkit-mask:radial-gradient(circle,#000 0,#000 18%,transparent 45%);mask:radial-gradient(circle,#000 0,#000 18%,transparent 45%);
-  animation:ci-rays 1s ease both, ci-spin 6s linear infinite}
-.cutin.r-legend .ci-rays{background:repeating-conic-gradient(from 0deg,transparent 0 6deg,rgba(255,150,220,.08) 6deg 8deg,transparent 8deg 14deg,rgba(130,220,255,.08) 14deg 16deg)}
-@keyframes ci-rays{0%,8%{opacity:0}25%,80%{opacity:1}100%{opacity:0}}
-@keyframes ci-spin{to{transform:rotate(360deg)}}
-.ci-pic{position:absolute;left:50%;top:44%;width:min(62vw,300px);aspect-ratio:5/7;transform:translate(-50%,-50%);border-radius:10px;overflow:hidden;
-  box-shadow:0 0 0 3px #ffe08a,0 0 0 6px #0b090e,0 0 0 8px #c99530,0 0 14px rgba(255,214,120,.45),0 20px 40px rgba(0,0,0,.7);
-  animation:ci-pic 1s cubic-bezier(.2,1.1,.3,1) both}
-.cutin.r-legend .ci-pic{box-shadow:0 0 0 3px #fff,0 0 0 6px #120e1c,0 0 0 9px #ff9ad0,0 0 16px rgba(200,170,255,.45),0 20px 40px rgba(0,0,0,.7)}
-.cutin.theirs .ci-pic{animation-name:ci-pic-r}
+   斜めの帯が画面を横切る（後ろの盤面は少しだけ暗く、隠しすぎない）。
+   帯の地はカードの絵をぼかして敷き、帯の中にカードの絵を「切らずに丸ごと」置く。約0.7秒 ---- */
+.cutin{--t:.7s;position:fixed;inset:0;z-index:65;overflow:hidden;cursor:pointer;animation:ci-dim var(--t) ease both}
+@keyframes ci-dim{0%{background:rgba(4,5,12,0)}15%,80%{background:rgba(4,5,12,.35)}100%{background:rgba(4,5,12,0)}}
+.ci-band{position:absolute;left:-15%;right:-15%;top:50%;height:min(34vh,300px);transform:translateY(-50%) rotate(-8deg);overflow:hidden;
+  background:#0b0d18;border-top:3px solid #ffe08a;border-bottom:3px solid #ffe08a;box-shadow:0 0 18px rgba(255,214,120,.45);
+  animation:ci-band var(--t) cubic-bezier(.2,.8,.2,1) both}
+.cutin.theirs .ci-band{transform:translateY(-50%) rotate(8deg);animation-name:ci-band-r}
+.cutin.r-legend .ci-band{border-image:linear-gradient(90deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff) 1;box-shadow:0 0 18px rgba(255,190,240,.45)}
+.ci-band::before{content:"";position:absolute;inset:-20px;background:var(--art) center 30%/cover no-repeat;filter:blur(8px) brightness(.7) saturate(1.3)}
+.ci-band::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.25) 48%,transparent 58%);transform:translateX(-100%);animation:ci-shine var(--t) .1s ease-out both}
+@keyframes ci-band{0%{clip-path:inset(0 100% 0 0)}20%,78%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 0 0 100%);opacity:.5}}
+@keyframes ci-band-r{0%{clip-path:inset(0 0 0 100%)}20%,78%{clip-path:inset(0 0 0 0);opacity:1}100%{clip-path:inset(0 100% 0 0);opacity:.5}}
+@keyframes ci-shine{to{transform:translateX(100%)}}
+/* 帯の中：左に絵（丸ごと）、右に名前。帯の傾きを打ち消してまっすぐ立てる */
+.ci-pic{position:absolute;z-index:1;top:50%;left:calc(15% / 1.3 + 8vw);height:86%;aspect-ratio:5/7;transform:translateY(-50%) rotate(8deg);border-radius:6px;overflow:hidden;
+  box-shadow:0 0 0 2px #ffe08a,0 6px 18px rgba(0,0,0,.7);animation:ci-pic var(--t) cubic-bezier(.2,1.1,.3,1) both}
+.cutin.theirs .ci-pic{left:auto;right:calc(15% / 1.3 + 8vw);transform:translateY(-50%) rotate(-8deg)}
+.cutin.r-legend .ci-pic{box-shadow:0 0 0 2px #fff,0 0 10px rgba(255,170,230,.6),0 6px 18px rgba(0,0,0,.7)}
 .ci-pic img{width:100%;height:100%;object-fit:cover;display:block}
-.ci-pic .glyph{display:grid;place-items:center;height:100%;font-size:40vw;background:#141833}
-.ci-pic::after{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.3) 50%,transparent 60%);transform:translateX(-80%);animation:ci-shine .7s .2s ease-out both}
-@keyframes ci-pic{0%{opacity:0;transform:translate(-120%,-50%) rotate(-8deg) scale(.8)}18%{opacity:1;transform:translate(-50%,-50%) rotate(2deg) scale(1.04)}26%{transform:translate(-50%,-50%) rotate(0) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
-@keyframes ci-pic-r{0%{opacity:0;transform:translate(20%,-50%) rotate(8deg) scale(.8)}18%{opacity:1;transform:translate(-50%,-50%) rotate(-2deg) scale(1.04)}26%{transform:translate(-50%,-50%) rotate(0) scale(1)}82%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)}}
-@keyframes ci-shine{to{transform:translateX(80%)}}
-.ci-flash{display:none}
-@keyframes ci-flash{0%{opacity:0}25%{opacity:.6}100%{opacity:0}}
-.ci-text{position:absolute;left:0;right:0;top:calc(44% + min(62vw,300px) * .7 + 18px);display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;animation:ci-text 1s ease both}
-@keyframes ci-text{0%,16%{opacity:0;transform:translateY(16px) scale(1.2)}28%,82%{opacity:1;transform:none}100%{opacity:0}}
-.ci-text small{font-family:var(--f-display);font-weight:800;letter-spacing:.45em;font-size:13px;color:#ffe08a;text-shadow:0 0 10px rgba(255,214,120,.9)}
-.cutin.r-legend .ci-text small{background:linear-gradient(90deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}
-.ci-text b{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,7.5vw,40px);color:#fff;letter-spacing:.06em;text-shadow:0 0 4px #000,0 3px 14px #000,0 0 24px rgba(255,214,120,.6)}
-.ci-text span{font-size:13px;color:#e6d9b8;text-shadow:0 1px 4px #000}
-.cutin.reduced,.cutin.reduced *{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important}
-.cutin.reduced{background:rgba(4,5,12,.82)}
+.ci-pic .glyph{display:grid;place-items:center;height:100%;font-size:60px;background:#141833}
+@keyframes ci-pic{0%,10%{opacity:0;translate:-40px 0}30%,80%{opacity:1;translate:0 0}100%{opacity:0;translate:30px 0}}
+.ci-text{position:absolute;z-index:1;top:50%;left:calc(15% / 1.3 + 8vw + min(34vh,300px) * .86 * 5 / 7 + 16px);right:calc(15% / 1.3 + 4vw);transform:translateY(-50%) rotate(8deg);
+  display:flex;flex-direction:column;gap:2px;text-align:left;animation:ci-text var(--t) ease both}
+.cutin.theirs .ci-text{left:calc(15% / 1.3 + 4vw);right:calc(15% / 1.3 + 8vw + min(34vh,300px) * .86 * 5 / 7 + 16px);text-align:right;transform:translateY(-50%) rotate(-8deg)}
+@keyframes ci-text{0%,15%{opacity:0;translate:24px 0}35%,80%{opacity:1;translate:0 0}100%{opacity:0}}
+.ci-text small{font-family:var(--f-display);font-weight:800;letter-spacing:.35em;font-size:12px;color:#ffe08a;text-shadow:0 0 8px rgba(255,214,120,.7)}
+.cutin.r-legend .ci-text small{background:linear-gradient(90deg,#ff6b9b,#ffcf5c,#7dffb0,#6bc8ff,#b48bff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.ci-text b{font-family:var(--f-display);font-weight:800;font-size:clamp(22px,6.5vw,36px);line-height:1.2;color:#fff;letter-spacing:.04em;text-shadow:0 0 4px #000,0 3px 12px #000}
+.ci-text span{font-size:12px;color:#e6d9b8;text-shadow:0 1px 4px #000}
+.cutin.reduced,.cutin.reduced *{animation-duration:.01ms!important;animation-delay:0s!important}
+.cutin.reduced{background:rgba(4,5,12,.35)}
 /* ---- ドロー：山札から飛ぶカードの裏面 ---- */
 .drawfly{position:fixed;z-index:3;border-radius:4px;pointer-events:none;background:#14183a url("../ui/card-back.webp") center/cover no-repeat;box-shadow:0 6px 18px rgba(0,0,0,.6),0 0 12px rgba(140,180,255,.5)}
