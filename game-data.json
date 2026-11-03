@@ -1,5 +1,5 @@
 {
- "version": 43,
+ "version": 44,
  "updated": "2026-11-03",
  "config": {
   "PLAYER_HP": 20,
@@ -1276,8 +1276,8 @@
    "world": "myth",
    "type": "char",
    "cost": 6,
-   "atk": 10,
-   "hp": 7,
+   "atk": 7,
+   "hp": 6,
    "glyph": "魔",
    "limit": 3,
    "rarity": "ur",
@@ -1287,12 +1287,13 @@
    "effects": [
     {
      "kind": "discard",
-     "n": 1
+     "n": 2,
+     "when": "death"
     }
    ],
    "pay": {
     "kind": "life",
-    "n": 7
+    "n": 5
    },
    "art": "art/m-demonlord-058239e5fd.webp"
   },
@@ -1978,15 +1979,11 @@
    "effects": [
     {
      "kind": "discard",
-     "n": 1
+     "n": 2
     },
     {
      "kind": "draw",
-     "n": 1
-    },
-    {
-     "kind": "summon",
-     "n": 6
+     "n": 2
     }
    ],
    "art": "art/x-warp-1ab22df710.webp"
