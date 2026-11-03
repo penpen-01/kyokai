@@ -4,6 +4,7 @@
    ・入れられる枚数は「所持数」と「1デッキの投入上限」の少ないほう
    ・ベータ中（SAMPLE_DECKS）は、所持に関係なく全カードで組める「サンプルデッキ」も作れる
    ・操作：一覧のカードをタップで1枚追加、デッキの中のカードをタップで1枚減らす、長押しで詳細
+   ・持っていないカードも入れて保存できる（目指すデッキ）。イラストは隠れたまま。全部そろうまで対戦には使えない
    ========================================================= */
 
 const DECKS_KEY = "kyokai-decks-v1";
@@ -42,13 +43,14 @@ const Decks = {
   /* 保存できない理由。30枚に足りないのは「未完成」として保存できる（対戦には使えない） */
   saveProblems(deck) {
     const n = deckCount(deck), size = CONFIG.DECK_SIZE;
-    return this.problems(deck).filter(p => !(n < size && p.startsWith(`${size}枚ちょうど`)));
+    return this.problems(deck).filter(p => !(n < size && p.startsWith(`${size}枚ちょうど`)) && !p.startsWith(MISSING_PREFIX));
   },
   /* デッキの状態の一文。30枚に足りないときは「未完成」と伝える */
   probText(deck, all) {
     const pr = this.problems(deck), n = deckCount(deck), size = CONFIG.DECK_SIZE;
     if (!pr.length) return "";
     if (n < size && pr.length === 1) return `未完成：あと${size - n}枚。${size}枚そろうと対戦に使えます`;
+    if (n < size) return [`未完成：あと${size - n}枚`, ...pr.filter(p => !p.startsWith(`${size}枚ちょうど`))].map(esc).join(all ? "<br>" : "／");
     return all ? pr.map(esc).join("<br>") : esc(pr[0]);
   },
   wantCount(deck) { return Object.values((deck && deck.want) || {}).reduce((a, b) => a + b, 0); },
@@ -66,7 +68,9 @@ const Decks = {
   owned(id) { return Account.owned(id); },
   problems(deck) { return deckProblems(deck, DEF, CONFIG, this.unbound(deck) ? null : id => this.owned(id)); },
   isValid(deck) { return !!deck && this.problems(deck).length === 0; },
-  maxFor(c, deck) { return this.unbound(deck) ? cardLimit(c, CONFIG, deck) : Math.min(cardLimit(c, CONFIG, deck), this.owned(c.id)); },
+  // 入れられる枚数：持っていないカードも上限まで入れられる（保存はできる・対戦には使えない）
+  maxFor(c, deck) { return cardLimit(c, CONFIG, deck); },
+  missing(deck) { return this.unbound(deck) ? 0 : deckMissing(deck, id => this.owned(id)); },
 
   selectedId() { try { return localStorage.getItem(DECK_SEL_KEY); } catch { return null; } },
   select(id) { try { localStorage.setItem(DECK_SEL_KEY, id); } catch {} },
@@ -117,17 +121,17 @@ const Decks = {
       ${cardHTML(c, { static: true, hidden })}<span class="dmeta">${badge}</span></button>`;
   },
   /* デッキの中身の1行（コスト・名前・絵の帯・枚数）。重ならず、名前がはっきり読める */
-  stripHTML(c, n, act, hidden = false, cls = "") {
+  stripHTML(c, n, act, hidden = false, cls = "", miss = 0) {
     const art = c.art && !hidden ? `style="background-image:url('${esc(c.art)}')"` : "";
     return `<button type="button" class="dstrip w-${esc(c.world)} r-${esc(c.rarity || "common")} ${cls}" data-act="${act}" data-id="${esc(c.id)}" aria-label="${esc(c.name)} ${n}枚">
       <span class="ds-cost">${c.cost}</span><span class="ds-art" ${art}></span>
       <span class="ds-name">${esc(c.name)}${c.type === "spell" ? `<small>魔法</small>` : `<small>${c.atk}/${c.hp}</small>`}</span>
-      <span class="ds-n">×${n}</span></button>`;
+      <span class="ds-n">×${n}${miss ? `<small>未所持${miss}</small>` : ""}</span></button>`;
   },
   stripsHTML(cards, act, deck) {
-    const list = this.sorted(cards);
+    const list = this.sorted(cards), unb = this.unbound(deck);
     return list.length ? `<div class="dstrips">${list.map(({ c, n, id }) => c
-      ? this.stripHTML(c, n, act, this.hideArt(c, deck))
+      ? this.stripHTML(c, n, act, this.hideArt(c, deck), !unb && n > this.owned(id) ? "short" : "", !unb && n > this.owned(id) ? n - this.owned(id) : 0)
       : `<button type="button" class="dstrip missing" data-act="${act === "deckTapDec" ? "deckDec" : "noop"}" data-id="${esc(id)}"><span class="ds-cost">？</span><span class="ds-name">今は使えないカード</span><span class="ds-n">×${n}</span></button>`).join("")}</div>` : "";
   },
   /* デッキの代表カード：自分で選んだカード（deck.key）。選んでいなければレア度・コストの高い、絵のあるカード */
@@ -154,7 +158,9 @@ const Decks = {
   deckTileHTML(d, sel, movable) {
     const pr = this.problems(d), n = deckCount(d), size = CONFIG.DECK_SIZE;
     const using = sel && sel.id === d.id, key = this.keyCard(d);
+    const miss = this.missing(d);
     const st = n < size ? `<span class="dbt-st wip">未完成 ${n}/${size}</span>`
+      : miss && pr.length === 1 ? `<span class="dbt-st miss">未所持 ${miss}枚</span>`
       : pr.length ? `<span class="dbt-st bad" title="${esc(pr[0])}">⚠ 使えない</span>` : `<span class="dbt-st ok">${n}/${size}</span>`;
     return `<div class="dbt ${using ? "using" : ""}" ${movable ? `data-deck="${esc(d.id)}"` : ""}>
       <button type="button" class="dbt-open" data-act="deckView" data-id="${esc(d.id)}" aria-label="${esc(d.name)}${using ? "（使用中）" : ""}">
@@ -185,7 +191,7 @@ const Decks = {
       </div>` : ""}
       <p class="hint dl-hint">${tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです（ベータ限定）。勝ってもGはもらえません。"
         : tab === "cpu" ? "CPU が使っているデッキです。"
-        : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っている枚数まで入れられます。"}`}
+        : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っていないカードも入れて保存できます（そろうまで対戦には使えません）。"}`}
         ${tab !== "cpu" && list.length > 1 ? "<br>デッキを長押しすると、順番を並び替えられます。" : ""}</p>
       <div class="dbgrid" id="dbgrid" data-tab="${tab}">${list.map(d => this.deckTileHTML(d, sel, tab !== "cpu")).join("")}${newTile}</div>
       ${tab === "cpu" ? "" : `<div class="pre-btns">
@@ -270,7 +276,14 @@ const Decks = {
 
   /* ---------- 編集 ---------- */
   startEdit(deck, isNew) {
-    this.editing = { id: deck.id, name: deck.name, cards: { ...deck.cards }, want: { ...(deck.want || {}) }, key: deck.key || null, isNew, free: !!deck.free, confirmDel: false };
+    // 前の「まだ持っていないカード（want）」は、デッキの中身にまとめる（今は持っていないカードもそのまま入れられるため）
+    const cards = { ...deck.cards };
+    Object.entries(deck.want || {}).forEach(([id, n]) => {
+      const c = DEF[id]; if (!c || c.limit <= 0) return;
+      const room = Math.min(cardLimit(c, CONFIG, deck) - (cards[id] || 0), CONFIG.DECK_SIZE - deckCount({ cards }));
+      if (room > 0) cards[id] = (cards[id] || 0) + Math.min(n, room);
+    });
+    this.editing = { id: deck.id, name: deck.name, cards, want: {}, key: deck.key || null, isNew, free: !!deck.free, confirmDel: false };
     this.editTab = isNew && !deckCount(deck) ? "pool" : (deckCount(deck) ? "deck" : "pool");
     this.detail = null;
     this.renderEdit();
@@ -294,7 +307,7 @@ const Decks = {
       const k = ed.cards[c.id] || 0, own = this.owned(c.id), max = this.maxFor(c, ed);
       const none = !unb && own <= 0;
       return this.tileHTML(c, `<span class="dbadge ${k ? "in" : ""}">${k ? `デッキ${k}` : "＋"}<small>/${max}</small></span>${unb ? "" : `<span class="obadge">所持${own}</span>`}`,
-        `${none ? "unowned" : k ? "has" : ""} ${k >= max ? "maxed" : ""}`, "deckTapAdd", this.hideArt(c, ed));
+        `${none ? "unowned" : k ? "has" : ""} ${k >= max ? "maxed" : ""} ${!unb && k > own ? "short" : ""}`, "deckTapAdd", this.hideArt(c, ed));
     }).join("") : `<p class="hint">条件に合うカードがありません。</p>`;
   },
 
@@ -346,7 +359,7 @@ const Decks = {
              <button type="button" class="btn" data-act="deckDelNo">やめる</button>`
           : `${ed.isNew ? "" : `<button type="button" class="btn danger" data-act="deckDel">削除</button>`}
              <button type="button" class="btn" data-act="deckCancel">保存せずに戻る</button>
-             <button type="button" class="btn primary" data-act="deckSave" ${this.saveProblems(ed).length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? "保存" : n < CONFIG.DECK_SIZE ? `未完成のまま保存（あと${CONFIG.DECK_SIZE - n}枚）` : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
+             <button type="button" class="btn primary" data-act="deckSave" ${this.saveProblems(ed).length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? (this.missing(ed) ? `保存（未所持${this.missing(ed)}枚）` : "保存") : n < CONFIG.DECK_SIZE ? `未完成のまま保存（あと${CONFIG.DECK_SIZE - n}枚）` : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
       </div>
     </div>`, "start", true);
     o.scrollTop = keepScroll;
@@ -379,7 +392,7 @@ const Decks = {
             <span class="dm-k">デッキに <b>${k}</b> 枚</span>
             <button type="button" class="btn primary" data-act="deckInc" data-id="${esc(c.id)}" ${k >= max ? "disabled" : ""}>＋</button>
           </div>
-          ${k >= max && max < cardLimit(c, CONFIG, ed) ? `<span class="hint">持っている枚数までしか入れられません。</span>` : ""}` : ""}
+          ${!unb && k > this.owned(c.id) ? `<span class="hint">持っていない分（${k - this.owned(c.id)}枚）が入っています。そろうまで、このデッキは対戦に使えません。</span>` : ""}` : ""}
           ${this.unbound(ed || this.find(this.viewing)) ? "" : Shop.tradeHTML(c)}
           ${this.keyBtn(c)}
           <button type="button" class="btn" data-act="deckDetailClose">閉じる</button>
@@ -399,18 +412,9 @@ const Decks = {
   inc(id, quick) {
     const ed = this.editing, c = DEF[id]; if (!c || !ed) return;
     const k = ed.cards[id] || 0, max = this.maxFor(c, ed);
-    if (k >= max) {
-      if (quick && !this.unbound(ed) && this.owned(id) <= k && k < cardLimit(c, CONFIG, ed) && Shop.canTrade(c)) {
-        this.snapIds(document.querySelector(`#deck-pool [data-id="${CSS.escape(id)}"]`)); this.detail = id; this.renderEdit(); return;   // 持っていない分は、詳細から魔石で交換できる
-      }
-      if (quick) {
-        const own = this.owned(id);
-        toast(!this.unbound(ed) && own <= k && k < cardLimit(c, CONFIG, ed)
-          ? (own ? `${c.name}は${own}枚しか持っていません` : `${c.name}はまだ持っていません`)
-          : `${c.name}は1デッキに${cardLimit(c, CONFIG, ed)}枚までです`);
-      }
-      return;
-    }
+    if (k >= max) { if (quick) toast(`${c.name}は1デッキに${cardLimit(c, CONFIG, ed)}枚までです`); return; }
+    if (deckCount(ed) >= CONFIG.DECK_SIZE) { if (quick) toast(`${CONFIG.DECK_SIZE}枚になっています。先に何かを減らしてください`); return; }
+    if (quick && !this.unbound(ed) && this.owned(id) <= k) toast(`${c.name}はまだ${this.owned(id) ? `${this.owned(id)}枚しか` : ""}持っていません。保存はできますが、そろうまで対戦には使えません`);
     ed.cards[id] = k + 1;
     if (ed.want && ed.want[id] > 0 && --ed.want[id] <= 0) delete ed.want[id];   // 欲しかったカードを入れたら、その分を減らす
     Sound.play("click");
@@ -465,19 +469,18 @@ const Decks = {
         if (this.full(asSample)) return true;
         // 今は使えないカード・持っていないカードは外して、何を外したかを知らせる
         const draftDeck = { free: asSample };
-        // 持っていない分は「まだ持っていないカード（want）」としてデッキに残す。手に入れたら入れられる
+        // 持っていないカードもそのまま入れる（保存はできる。そろうまで対戦には使えない）
         const cards = {}, want = {};
         let gone = 0, wantN = 0;
         Object.entries(d.cards).forEach(([cid, n]) => {
           const c = DEF[cid];
           if (!c || c.limit <= 0) { gone += n; return; }
           const cap = Math.min(n, cardLimit(c, CONFIG, draftDeck));
-          const k = Math.min(cap, this.maxFor(c, draftDeck));
-          if (k > 0) cards[cid] = k;
-          if (cap > k) { want[cid] = cap - k; wantN += cap - k; }
+          if (cap > 0) cards[cid] = cap;
+          if (!asSample && !this.free()) wantN += Math.max(0, cap - this.owned(cid));
         });
         this.startEdit({ id: (asSample ? "s" : "d") + Date.now().toString(36), name: d.name, cards, want, free: asSample }, true);
-        if (wantN) toast(`持っていないカード${wantN}枚は「まだ持っていないカード」に入れました。未完成のまま保存できます`);
+        if (wantN) toast(`持っていないカードが${wantN}枚入っています。保存はできます。そろうと対戦に使えます`);
         if (gone) setTimeout(() => toast(`今は使えないカード${gone}枚は外しました`), 1900);
         return true;
       }
@@ -539,7 +542,9 @@ const Decks = {
         const saved = ed;
         this.editing = null; this.detail = null;
         this.showView(saved.id);
-        toast(deckCount(saved) === CONFIG.DECK_SIZE ? "保存しました" : `未完成のまま保存しました（あと${CONFIG.DECK_SIZE - deckCount(saved)}枚）`);
+        const ms = this.missing(saved);
+        toast(deckCount(saved) < CONFIG.DECK_SIZE ? `未完成のまま保存しました（あと${CONFIG.DECK_SIZE - deckCount(saved)}枚）`
+          : ms ? `保存しました。持っていないカード${ms}枚がそろうと対戦に使えます` : "保存しました");
         return true;
       }
       case "deckCancel": { const back = ed && !ed.isNew ? ed.id : null; this.editing = null; this.detail = null; back ? this.showView(back) : this.showList(); return true; }

@@ -393,6 +393,9 @@ function cleanDeckCards(cards) {
 }
 
 /* デッキの枚数とルール違反を調べる。cardsById は id→カード */
+const MISSING_PREFIX = "持っていないカードが";
+/* デッキに入っている、まだ持っていないカードの枚数 */
+function deckMissing(deck, owned) { return owned ? Object.entries(deck.cards || {}).reduce((a, [id, n]) => a + Math.max(0, n - owned(id)), 0) : 0; }
 function deckCount(deck) { return Object.values(deck.cards || {}).reduce((s, n) => s + n, 0); }
 function deckProblems(deck, cardsById, config, owned) {
   const probs = [];
@@ -402,12 +405,15 @@ function deckProblems(deck, cardsById, config, owned) {
   }
   const total = deckCount(deck);
   if (total !== config.DECK_SIZE) probs.push(`${config.DECK_SIZE}枚ちょうどにしてください（今 ${total}枚）`);
+  let miss = 0;
   Object.entries(deck.cards || {}).forEach(([id, n]) => {
     const c = cardsById[id];
     if (!c || c.limit <= 0) probs.push("今は使えないカードが入っています");
     else if (n > cardLimit(c, config, deck)) probs.push(`${c.name}は${cardLimit(c, config, deck)}枚までです`);
-    else if (owned && n > owned(id)) probs.push(`${c.name}を${n}枚持っていません（所持${owned(id)}枚）`);
+    else if (owned && n > owned(id)) miss += n - owned(id);
   });
+  // 持っていないカードも入れて保存はできる（目指すデッキ）。対戦には、全部そろってから使える
+  if (miss) probs.push(`${MISSING_PREFIX}${miss}枚入っています（パックやショップで手に入れると使えます）`);
   return [...new Set(probs)];
 }
 function cardLimit(c, config, deck) {

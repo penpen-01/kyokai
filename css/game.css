@@ -1480,3 +1480,11 @@ html.nofx .card .shine{display:none}
 .dm-nav:active{transform:scale(.94)}
 .dm-pos{position:absolute;top:8px;right:12px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 @media (min-width:421px){.dm-nav{top:50%;margin-top:-28px}.dm-nav.prev{left:-20px}.dm-nav.next{right:-20px}}
+
+/* ---- デッキに入れた、まだ持っていないカード ---- */
+.dbt-st.miss{color:#d9ceff}
+.dstrip.short{box-shadow:inset 0 0 0 1px rgba(138,118,224,.6)}
+.dstrip.short .ds-name{color:#cfc6ea}
+.ds-n small{display:block;font-size:9.5px;font-weight:700;color:#b9a6ff;line-height:1.1}
+.dtile.short .dbadge{background:#6a55c0;color:#fff}
+.dtile .dmeta{flex-wrap:wrap;justify-content:center;row-gap:2px;min-width:0}
