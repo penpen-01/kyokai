@@ -1622,7 +1622,7 @@ function showStart() {
   openOverlay(`<div class="homebg" aria-hidden="true"></div>
   <div class="panel home">
     <div class="homebar">
-      <div class="hb-left">${goldOK ? `<span class="goldtag">${Account.gold}G</span><span class="stonetag">魔石 ${Account.stones}</span>` : ""}</div>
+      <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}</div>
       <div class="hb-me">
         ${goldOK ? `<button type="button" class="homeicon" data-act="icons" data-from="start" aria-label="アイコンを変える">
           <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : `<span class="glyph">任</span>`}</span></button>` : ""}
@@ -1982,8 +1982,19 @@ function handleAct(act, el) {
   }
 }
 
+/* 詳細に出ているカードをタップすると、効果や枠のないイラストだけを大きく見られる（もう一度タップで閉じる） */
+function showArtView(card) {
+  const img = card.querySelector(".art img"); if (!img) return;
+  const v = document.createElement("div");
+  v.className = "artview"; v.setAttribute("role", "dialog"); v.setAttribute("aria-label", card.getAttribute("aria-label") || "イラスト");
+  v.innerHTML = `<img src="${esc(img.getAttribute("src"))}" alt="${esc(card.getAttribute("aria-label") || "")}"><b>${esc(card.getAttribute("aria-label") || "")}</b><small>タップで閉じる</small>`;
+  v.addEventListener("click", ev => { ev.stopPropagation(); v.remove(); });
+  document.body.appendChild(v);
+}
 document.addEventListener("click", e => {
   if (Date.now() < suppressClickUntil) { e.preventDefault(); return; }
+  const zc = e.target.closest(".dmodal-card .card.has-art, #sheet .sheet-card .card.has-art");
+  if (zc) { showArtView(zc); return; }
   const act = e.target.closest("[data-act]");
   if (act) { if (!act.disabled) handleAct(act.dataset.act, act); return; }
   if (!S || S.over) return;
@@ -2029,3 +2040,4 @@ document.addEventListener("input", e => {
   showCardList();
   const n = document.getElementById("cl-q"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
 });
+document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".artview").forEach(v => v.remove()); });

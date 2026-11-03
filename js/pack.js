@@ -89,7 +89,7 @@ const Packs = {
       : `<p class="callout warn"><b>アカウントを読み込めていません</b>通信状態を確認して、開き直してください。</p>`;
     const can = ["ready", "offline"].includes(Account.status);
     openOverlay(`<div class="panel wide">
-      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>パック</b><span class="goldtag">${Account.gold}G</span></div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>パック</b>${goldTag(Account.gold)}</div>
       ${acctNote}
       ${msg ? `<p class="callout warn">${esc(msg)}</p>` : ""}
       ${open.length ? open.map(p => {
@@ -177,7 +177,7 @@ const Packs = {
     const ov = $("#overlay"); ov.style.overflow = "hidden"; ov.scrollTop = 0;
     requestAnimationFrame(() => { ov.scrollTop = 0; requestAnimationFrame(() => { ov.scrollTop = 0; ov.style.overflow = ""; }); });
     openOverlay(`<div class="openstage">
-      <div class="os-top"><span class="goldtag">${Account.gold}G</span></div>
+      <div class="os-top">${goldTag(Account.gold)}</div>
       <div class="bp-wrap">${L.multi ? Array.from({ length: L.multi - 1 }, (_, i) => `<span class="bp-ghost" style="--i:${L.multi - 1 - i}${this.art(L.pack) ? `;background-image:url('${esc(this.art(L.pack))}')` : ""}"></span>`).join("") : ""}
       <button type="button" class="bigpack ${L.multi ? "multi" : ""}" data-act="packTear" aria-label="パックを開ける">
         <span class="bp-tear"></span>
@@ -219,7 +219,7 @@ const Packs = {
   showSummary() {
     const L = this.last;
     openOverlay(`<div class="panel wide">
-      <div class="shophead"><h2 class="title sm">${esc(L.pack.name)}</h2><span class="goldtag">${Account.gold}G</span></div>
+      <div class="shophead"><h2 class="title sm">${esc(L.pack.name)}</h2>${goldTag(Account.gold)}</div>
       <p class="lead">開封結果（カードをタップすると効果を見られます）</p>
       <div class="opened">${L.cards.map(x => {
         const c = DEF[x.id];
@@ -252,7 +252,7 @@ const Packs = {
       ? `<button type="button" class="btn primary" data-act="packOpenTicket10" data-id="${esc(L.pack.id)}" ${Account.tickets >= 10 ? "" : "disabled"}>もう10パック（パック券 残り${Account.tickets}枚）</button>`
       : `<button type="button" class="btn primary" data-act="packOpen10" data-id="${esc(L.pack.id)}" ${Account.gold >= L.pack.price * 10 ? "" : "disabled"}>もう10パック（${L.pack.price * 10}G）</button>`;
     openOverlay(`<div class="panel wide">
-      <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>10パックの結果</b><span class="goldtag">${Account.gold}G</span></div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>10パックの結果</b>${goldTag(Account.gold)}</div>
       <div class="ms-grid">${L.rows.map((row, i) => `<div class="ms-row"><span class="ms-no">${i + 1}</span>${row.map(cell).join("")}</div>`).join("")}</div>
       <div class="ms-sum ${play ? "hidden-until" : ""}">
         <div class="ms-counts">${RARITY_ORDER.map(r => `<span class="r-${r}"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}</span>`).join("")}<span class="ms-new">NEW ${newN}</span></div>

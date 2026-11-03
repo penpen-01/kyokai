@@ -487,3 +487,16 @@ function copyText(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(() => true, () => fallback());
   return Promise.resolve(fallback());
 }
+
+/* G・魔石・パック券の絵（ホームの所持数やログインボーナスで使う）。グラデーションの id は呼ぶたびに変える */
+let _curN = 0;
+function curIcon(kind, cls) {
+  const g = "cu" + (++_curN), c = cls || "cur-ic";
+  if (kind === "ticket") return `<svg class="${c}" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#b8862e"/></linearGradient></defs><rect x="5" y="9" width="30" height="22" rx="3" fill="url(#${g})" stroke="#5a3d0c" stroke-width="1.5"/><path d="M26 9v22" stroke="#5a3d0c" stroke-width="1.2" stroke-dasharray="2 2"/><path d="M12 15h10M12 20h8M12 25h10" stroke="#5a3d0c" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  if (kind === "stone") return `<svg class="${c}" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6dcff"/><stop offset=".5" stop-color="#9b7cf0"/><stop offset="1" stop-color="#4a2f9a"/></linearGradient></defs><path d="M20 4 33 15 20 36 7 15z" fill="url(#${g})" stroke="#2a1a5a" stroke-width="1.5"/><path d="M7 15h26M20 4l-5 11 5 21 5-21z" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1"/></svg>`;
+  return `<svg class="${c}" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="${g}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff6d6"/><stop offset=".55" stop-color="#e2b54e"/><stop offset="1" stop-color="#8a6418"/></radialGradient></defs><circle cx="20" cy="20" r="15" fill="url(#${g})" stroke="#5a3d0c" stroke-width="1.5"/><circle cx="20" cy="20" r="11" fill="none" stroke="rgba(90,61,12,.5)" stroke-width="1"/><text x="20" y="25.5" text-anchor="middle" font-size="15" font-weight="800" fill="#5a3d0c" font-family="serif">G</text></svg>`;
+}
+/* 所持数の札（絵＋数）。読み上げ用に「1200G」「魔石 30」の名前を付ける */
+function goldTag(n) { return `<span class="goldtag" aria-label="所持 ${n}G">${curIcon("gold")}<span>${n.toLocaleString()}</span></span>`; }
+function stoneTag(n) { return `<span class="stonetag" aria-label="魔石 ${n}個">${curIcon("stone")}<span>${n.toLocaleString()}</span></span>`; }
+function ticketTag(n) { return `<span class="tickettag" aria-label="パック券 ${n}枚">${curIcon("ticket")}<span>${n.toLocaleString()}</span></span>`; }

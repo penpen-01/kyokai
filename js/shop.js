@@ -95,7 +95,7 @@ const Shop = {
     const cap = this.cap(), tc = this.ticketCost();
     const list = this.pool().filter(c => (this.rar === "all" || c.rarity === this.rar) && (!this.onlyNeed || Account.owned(c.id) < cap));
     openOverlay(`<div class="panel wide shop">
-      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b><span class="stonetag">魔石 ${Account.stones}</span></div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
       ${this.noteHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
       <div class="shopacts">
@@ -134,7 +134,7 @@ const Shop = {
     const pick = x => Math.min(x.n, this.sel[x.c.id] || 0);
     const selN = sur.reduce((a, x) => a + pick(x), 0), selS = sur.reduce((a, x) => a + pick(x) * this.getRate(x.c.rarity), 0);
     openOverlay(`<div class="panel wide shop">
-      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b><span class="stonetag">魔石 ${Account.stones}</span></div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b>${stoneTag(Account.stones)}</div>
       ${this.noteHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
       <p class="callout"><b>分解できるのはダブりだけ</b>同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>

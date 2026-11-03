@@ -1401,3 +1401,19 @@ body{
 .lb-guide p::before{content:"";position:absolute;left:-7px;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:#f6ecd2;border-left:0}
 .lb-ok{padding:14px;font-size:16px}
 @media (prefers-reduced-motion:reduce){.lb-day.today,.lb-big{animation:none}}
+
+/* ---- 所持数の札：G は金貨、魔石は紫の宝石の絵＋数 ---- */
+.goldtag,.stonetag,.tickettag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.25));padding-left:4px!important}
+.tickettag{font-weight:800;font-size:13px;color:#f3dca0;padding:4px 10px;border:1px solid #b8862e;border-radius:999px}
+.cur-ic{width:1.45em;height:1.45em;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+.hb-left .goldtag,.hb-left .stonetag{min-width:96px}
+
+/* ---- イラストを大きく見る（詳細のカードをタップ） ---- */
+.dmodal-card .card.has-art,.sheet .sheet-card .card.has-art{cursor:zoom-in}
+.artview{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;
+  background:rgba(4,5,12,.94);cursor:zoom-out;animation:avin .2s ease-out both}
+.artview img{max-width:100%;max-height:calc(100dvh - 90px);object-fit:contain;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.7)}
+.artview b{font-family:var(--f-display);font-size:16px;color:var(--fg)}
+.artview small{font-size:12px;color:var(--muted)}
+@keyframes avin{from{opacity:0}to{opacity:1}}

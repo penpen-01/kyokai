@@ -88,12 +88,8 @@ const Inbox = {
     this.showLogin();
     return true;
   },
-  /* ごほうびの絵（G＝金貨、魔石＝紫の宝石、パック券＝券） */
-  rewardIcon(x) {
-    if (x.tickets) return `<svg class="lb-ic" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lbt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe9a8"/><stop offset="1" stop-color="#b8862e"/></linearGradient></defs><rect x="5" y="9" width="30" height="22" rx="3" fill="url(#lbt)" stroke="#5a3d0c" stroke-width="1.5"/><path d="M26 9v22" stroke="#5a3d0c" stroke-width="1.2" stroke-dasharray="2 2"/><path d="M12 15h10M12 20h8M12 25h10" stroke="#5a3d0c" stroke-width="1.6" stroke-linecap="round"/></svg>`;
-    if (x.stones) return `<svg class="lb-ic" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lbs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6dcff"/><stop offset=".5" stop-color="#9b7cf0"/><stop offset="1" stop-color="#4a2f9a"/></linearGradient></defs><path d="M20 4 33 15 20 36 7 15z" fill="url(#lbs)" stroke="#2a1a5a" stroke-width="1.5"/><path d="M7 15h26M20 4l-5 11 5 21 5-21z" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1"/></svg>`;
-    return `<svg class="lb-ic" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="lbg" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff6d6"/><stop offset=".55" stop-color="#e2b54e"/><stop offset="1" stop-color="#8a6418"/></radialGradient></defs><circle cx="20" cy="20" r="15" fill="url(#lbg)" stroke="#5a3d0c" stroke-width="1.5"/><circle cx="20" cy="20" r="11" fill="none" stroke="rgba(90,61,12,.5)" stroke-width="1"/><text x="20" y="25.5" text-anchor="middle" font-size="15" font-weight="800" fill="#5a3d0c" font-family="serif">G</text></svg>`;
-  },
+  /* ごほうびの絵（G＝金貨、魔石＝紫の宝石、パック券＝券）。絵は shared.js の curIcon */
+  rewardIcon(x) { return curIcon(x.tickets ? "ticket" : x.stones ? "stone" : "gold", "lb-ic"); },
   rewardNum(x) { return x.tickets ? `×${x.tickets}` : x.stones ? `×${x.stones}` : `×${x.gold}`; },
   showLogin() {
     const L = this.loginShown; if (!L) return showStart();
