@@ -134,6 +134,7 @@ const Admin = {
         </div>
       </div>
       <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
+      <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
       <div class="fgroup">
         <span class="gl">シーズン</span>
         <p class="hint">シーズン名を変えて書き出し・アップロードすると、<b>全員の所持カード・G・デッキがリセット</b>され、新規スタートになります（前のシーズンのデータはFirebaseに残ります）。正式公開のときに使います。</p>
@@ -207,6 +208,46 @@ const Admin = {
   },
   renderSerials() { const el = $("#serial-box"); if (el) el.innerHTML = this.serialHTML(); },
 
+  /* ---------- お知らせ・メール（ゲームのホーム右上に届く） ---------- */
+  ib: { kind: "news", title: "", body: "", gold: 0, stones: 0, tickets: 0, until: "", cards: {} },
+  readIb() {
+    const v = id => { const el = $("#" + id); return el ? el.value : ""; };
+    const b = this.ib; b.title = v("ib-title").slice(0, 40); b.body = v("ib-body").slice(0, 2000);
+    if (b.kind === "mail") { b.gold = Math.max(0, Math.floor(+v("ib-gold") || 0)); b.stones = Math.max(0, Math.floor(+v("ib-stones") || 0)); b.tickets = Math.max(0, Math.floor(+v("ib-tickets") || 0)); b.until = v("ib-until"); }
+  },
+  inboxHTML() {
+    if (!DATA.news) DATA.news = []; if (!DATA.mail) DATA.mail = [];
+    const b = this.ib, cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
+    const gift = m => [m.gold ? `${m.gold}G` : "", m.stones ? `魔石${m.stones}` : "", m.tickets ? `パック券${m.tickets}` : "", ...Object.entries(m.cards || {}).map(([id, n]) => `${cards[id] ? cards[id].name : id}×${n}`)].filter(Boolean).join("、");
+    const item = (m, kind) => `<div class="cpudeck"><div class="frow"><span class="small">${esc(m.date)}</span><b style="flex:1">${esc(m.title)}</b>
+        ${this.confirm && this.confirm.kind === kind && this.confirm.id === m.id ? `<button type="button" class="btn sm danger" data-act="ibDelYes" data-k="${kind}" data-id="${esc(m.id)}">削除する</button><button type="button" class="btn sm" data-act="cancelConfirm">やめる</button>`
+          : `<button type="button" class="btn sm danger" data-act="ibDel" data-k="${kind}" data-id="${esc(m.id)}">削除</button>`}</div>
+        ${kind === "mail" ? `<span class="small">${gift(m) ? `付けたもの：${esc(gift(m))}` : "付けたものなし"}${m.until ? ` ・ ${esc(m.until)}まで` : ""}</span>` : ""}
+        <span class="hint" style="white-space:pre-wrap">${esc(m.body.slice(0, 120))}${m.body.length > 120 ? "…" : ""}</span></div>`;
+    return `<span class="gl">お知らせ・メール</span>
+      <p class="hint">ゲームのホーム右上に届きます。<b>お知らせ</b>はアップデート内容など読むだけのもの。<b>メール</b>は全員に届き、G・魔石・パック券・カードを付けると1アカウント1回だけ受け取れます。公開するとゲームに届きます。</p>
+      <div class="cpudeck">
+        <div class="seg"><button type="button" data-act="ibKind" data-v="news" aria-pressed="${b.kind === "news"}">お知らせ</button><button type="button" data-act="ibKind" data-v="mail" aria-pressed="${b.kind === "mail"}">メール</button></div>
+        <div class="frow"><label class="small" for="ib-title" style="min-width:70px">題名</label><input class="txt" id="ib-title" maxlength="40" value="${esc(b.title)}" placeholder="${b.kind === "news" ? "例：ver.1.2 アップデート" : "例：ベータ参加のお礼"}" style="flex:1;min-width:160px"></div>
+        <div class="frow"><label class="small" for="ib-body" style="min-width:70px">本文</label><textarea class="txt" id="ib-body" rows="5" maxlength="2000" style="flex:1;min-width:200px" placeholder="改行もそのまま表示されます">${esc(b.body)}</textarea></div>
+        ${b.kind === "mail" ? `<div class="frow">
+            <label class="small" for="ib-gold">G</label><input class="txt" id="ib-gold" type="number" min="0" step="10" value="${b.gold}" style="max-width:100px">
+            <label class="small" for="ib-stones">魔石</label><input class="txt" id="ib-stones" type="number" min="0" step="10" value="${b.stones}" style="max-width:100px">
+            <label class="small" for="ib-tickets">パック券</label><input class="txt" id="ib-tickets" type="number" min="0" value="${b.tickets}" style="max-width:80px">
+            <label class="small" for="ib-until">受け取り期限</label><input class="txt" id="ib-until" type="date" value="${esc(b.until)}" style="max-width:170px"><span class="hint">空欄なら期限なし</span></div>
+          <div class="frow"><label class="small" for="ib-card" style="min-width:70px">カード</label>
+            <select class="txt" id="ib-card" style="flex:1;min-width:160px">${DATA.cards.filter(c => c.limit > 0).map(c => `<option value="${esc(c.id)}">${esc(c.name)}（${RARITY[c.rarity] || ""}）</option>`).join("")}</select>
+            <input class="txt" id="ib-n" type="number" min="1" max="9" value="1" style="max-width:70px" aria-label="枚数"><button type="button" class="btn sm" data-act="ibAddCard">追加</button></div>
+          ${Object.keys(b.cards).length ? `<div class="frow">${Object.entries(b.cards).map(([id, n]) => `<span class="tagS">${esc(cards[id] ? cards[id].name : id)}×${n} <button type="button" class="btn sm" data-act="ibDelCard" data-id="${esc(id)}" aria-label="外す">×</button></span>`).join("")}</div>` : ""}` : ""}
+        <div class="frow"><button type="button" class="btn sm primary" data-act="ibCreate">${b.kind === "news" ? "お知らせを追加" : "メールを追加"}</button><span class="warn">${esc(this.ibMsg || "")}</span></div>
+      </div>
+      <b class="small">お知らせ（${DATA.news.length}件）</b>
+      ${DATA.news.length ? `<div class="cpudecks">${DATA.news.slice().reverse().map(m => item(m, "news")).join("")}</div>` : `<p class="hint">まだありません。</p>`}
+      <b class="small">メール（${DATA.mail.length}件）</b>
+      ${DATA.mail.length ? `<div class="cpudecks">${DATA.mail.slice().reverse().map(m => item(m, "mail")).join("")}</div>` : `<p class="hint">まだありません。</p>`}`;
+  },
+  renderInbox() { const el = $("#inbox-box"); if (el) el.innerHTML = this.inboxHTML(); },
+
   /* ---------- 値の変更 ---------- */
   step(name, d) {
     if (name === "pk-price") { const p = this.pack(); p.price = Math.max(0, p.price + d * 10); this.touch(this.renderPacks); return true; }
@@ -242,6 +283,20 @@ const Admin = {
       case "pkNoStarter": this.pack().cards = DATA.cards.filter(c => c.limit > 0 && !c.id.startsWith("st-")).map(c => c.id); this.touch(this.renderPacks); return true;
       case "pkNone": this.pack().cards = []; this.touch(this.renderPacks); return true;
       case "cancelConfirm": this.confirm = null; this.renderPacks(); this.renderEco(); return true;
+      case "ibKind": this.readIb(); this.ib.kind = el.dataset.v; this.ibMsg = ""; this.renderInbox(); return true;
+      case "ibAddCard": { this.readIb(); const cid = $("#ib-card").value, n = Math.max(1, Math.min(9, +$("#ib-n").value || 1)); this.ib.cards[cid] = Math.min(9, (this.ib.cards[cid] || 0) + n); this.renderInbox(); return true; }
+      case "ibDelCard": this.readIb(); delete this.ib.cards[id]; this.renderInbox(); return true;
+      case "ibCreate": {
+        this.readIb(); const b = this.ib;
+        if (!b.title.trim()) { this.ibMsg = "題名を入れてください"; this.renderInbox(); return true; }
+        const base = { id: (b.kind === "news" ? "n" : "m") + Date.now().toString(36), date: localDate(), title: b.title.trim(), body: b.body };
+        if (b.kind === "news") DATA.news.push(base);
+        else DATA.mail.push({ ...base, until: b.until, gold: b.gold, stones: b.stones, tickets: b.tickets, cards: { ...b.cards } });
+        this.ib = { kind: b.kind, title: "", body: "", gold: 0, stones: 0, tickets: 0, until: "", cards: {} };
+        this.ibMsg = "追加しました。「公開する」でゲームに届きます"; this.touch(this.renderInbox); return true;
+      }
+      case "ibDel": this.confirm = { kind: el.dataset.k, id }; this.renderInbox(); return true;
+      case "ibDelYes": { const k = el.dataset.k; DATA[k] = DATA[k].filter(m => m.id !== id); this.confirm = null; this.touch(this.renderInbox); return true; }
       case "cpuDel": this.confirm = { kind: "deck", id }; this.renderEco(); return true;
       case "cpuDelYes": DATA.decks = DATA.decks.filter(d => d.id !== id); this.confirm = null; this.touch(this.renderEco); return true;
       case "cpuCopyCode": {

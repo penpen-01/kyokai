@@ -67,6 +67,8 @@ const Account = {
       decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.key ? { key: String(x.key) } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
       created: d.created || Date.now(),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
+      // 受け取ったメール（メールのID → 受け取った日時）
+      mailGot: Object.fromEntries(Object.entries(d.mailGot || {}).filter(([k]) => /^[\w-]{1,40}$/.test(k)).map(([k, v]) => [k, +v || 1])),
       redeemed: Object.fromEntries(Object.entries(d.redeemed || {}).filter(([k]) => /^[0-9a-f]{64}$/.test(k))),
       // プレイヤーアイコン（キャラカードのID。なければ「おまかせ」）
       ...(typeof d.icon === "string" && /^[\w-]{1,40}$/.test(d.icon) ? { icon: d.icon } : {}),

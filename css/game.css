@@ -1333,3 +1333,26 @@ body{
 @keyframes urpulse{50%{box-shadow:0 0 0 2px #0c0a10,0 0 0 3.5px #fff3c8,0 0 22px 6px rgba(255,214,120,.95)}}
 .ms-b.r-ur{background:#0c0a10;color:#ffd977}
 .lg-c.r-ur{background:#0c0a10}
+
+/* ---- メール・お知らせ ---- */
+.hb-right .iconbtn{position:relative}
+.hb-right .iconbtn .navbadge{top:-4px;left:auto;right:-4px}
+.ib-item{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid #2f3660;background:rgba(255,255,255,.035)}
+.ib-item summary{cursor:pointer;display:flex;flex-direction:column;gap:2px;list-style:none}
+.ib-item summary::-webkit-details-marker{display:none}
+.ib-item b{font-size:15px}
+.ib-date{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ib-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.ib-head small{margin-left:auto;font-size:11px;color:var(--gold)}
+.ib-body{font-size:13px;line-height:1.75;color:#d9d5e6}
+.ib-item.mail.new{border-color:color-mix(in srgb,var(--gold) 50%,#2f3660)}
+.ib-gift{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.25);font-size:13px;font-weight:700;color:#ffe08a}
+.ib-gift span{flex:1}
+.ib-gift em{font-style:normal;font-size:12px;color:var(--muted);font-weight:400}
+/* ---- 練習対戦 ---- */
+.lvl-practice{--lc:#8fb0ff;min-height:72px}
+.pr-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.pr-deck{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:12px;padding:6px 10px 6px 6px;border-radius:10px;border:1px solid #2f3660;background:rgba(255,255,255,.035)}
+.pr-deck.on{border-color:#8fb0ff;background:rgba(143,176,255,.1)}
+.pr-deck:focus-visible{outline:2px solid var(--fg)}
+.pr-more summary{cursor:pointer;font-size:13px;color:#c9c4e0}

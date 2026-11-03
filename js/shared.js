@@ -375,7 +375,12 @@ function normalizeData(data) {
     gold: Math.max(0, Math.floor(+x.gold || 0)), cards: cleanDeckCards(x.cards),
     until: /^\d{4}-\d{2}-\d{2}$/.test(x.until || "") ? x.until : "", created: x.created || ""
   }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials };
+  // お知らせ（アップデート内容など）と、メール（全員に届く。Gや魔石、パック券、カードを付けられる）
+  const date = v => (/^\d{4}-\d{2}-\d{2}$/.test(v || "") ? v : "");
+  const news = (Array.isArray(d.news) ? d.news : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), title: String(x.title || "お知らせ").slice(0, 40), body: String(x.body || "").slice(0, 2000) }));
+  const mail = (Array.isArray(d.mail) ? d.mail : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), until: date(x.until), title: String(x.title || "運営からのメール").slice(0, 40), body: String(x.body || "").slice(0, 1000),
+    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards) }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail };
 }
 
 function cleanDeckCards(cards) {

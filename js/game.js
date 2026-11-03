@@ -50,11 +50,13 @@ async function loadCardData() {
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
+  NEWS = data.news; MAIL = data.mail;
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 let SERIALS = []; // シリアルコード（ハッシュ）
+let NEWS = [], MAIL = [];   // お知らせ・メール（js/inbox.js）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
 /* デッキ（{id: 枚数}）を、シャッフルした山札（idの並び）にする */
@@ -475,6 +477,7 @@ function effect(pi, e, targets, self) {
       if (fieldFull(me)) { log("自分の場に空きがなく、奪えなかった。"); break; }
       en.field = en.field.filter(x => x !== u);
       u.ready = false; u.frozen = false;
+      if (u.owner == null) u.owner = opp(pi);   // 元の持ち主（手札・山札に戻すときは持ち主へ）
       me.field.push(u);
       log(`${pname(pi)}は${cname(u.id)}を奪った！`); fx(unitSel(u.uid), "奪った", "heal");
       break;
@@ -539,8 +542,10 @@ function grant(u, e) {
 }
 /* 場のキャラを手札（to="hand"）か山札（"deck"）へ。トークンは消える。手札があふれたら捨て札 */
 function bounce(pi, u, to) {
+  S.players[pi].field = S.players[pi].field.filter(x => x !== u);
+  // 奪われたキャラは、元の持ち主の手札・山札に戻る（2026-11-04）
+  if (u.owner != null) pi = u.owner;
   const p = S.players[pi];
-  p.field = p.field.filter(x => x !== u);
   fx(unitSel(u.uid), to === "hand" ? "手札へ" : "山札へ", "heal");
   if (DEF[u.id] && DEF[u.id].token) { log(`${cname(u.id)}（トークン）は消えた。`); return; }
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
@@ -606,7 +611,7 @@ function fireTrig(t) {
 }
 /* キャラが場から消えたとき（倒れた・代償で破壊された） */
 function onDeath(pi, u) {
-  const p = S.players[pi];
+  const p = S.players[u.owner != null ? u.owner : pi];   // 奪われたキャラは元の持ち主の墓地へ
   (p.grave || (p.grave = [])).push(u.id);   // この対戦で破壊された自分のキャラ（復活の効果で使う）
   queueTrig(pi, "death", u);
   trigUnits(pi, "allyDeath", u);
@@ -1600,7 +1605,9 @@ const HOME_ICON = {
   cards: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>',
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2 5.5 5.5"/><circle cx="12" cy="12" r="6.6"/></svg>',
   shop: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 18.5 9 12 21.2 5.5 9z"/><path d="M5.5 9h13M12 2.8 9.2 9 12 21.2 14.8 9z"/></svg>',
-  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>'
+  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
+  envelope: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="5.5" width="17.6" height="13" rx="1.6"/><path d="m3.8 6.5 8.2 6.3 8.2-6.3"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.6 1.8H4.4z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>'
 };
 
 /* ホーム：上の段（所持・アイコン・設定）→ 背景の絵を見せる空き → 対戦の2つのボタン → 下のメニュー（片手で届くように下へ寄せる） */
@@ -1621,6 +1628,8 @@ function showStart() {
         <button type="button" class="deckplate" data-act="decks" aria-label="使うデッキ：${esc(deck ? deck.name : "未選択")}（デッキ編成へ）">${HOME_ICON.decks}<span>${esc(deck ? deck.name : "デッキ未選択")}</span></button>
       </div>
       <div class="hb-right">
+        ${goldOK ? `<button type="button" class="iconbtn" data-act="inboxMail" aria-label="メール">${HOME_ICON.envelope}${Inbox.mailBadge()}</button>` : ""}
+        <button type="button" class="iconbtn" data-act="inboxNews" aria-label="お知らせ">${HOME_ICON.bell}${Inbox.newsBadge()}</button>
         ${DATA_INFO.draft ? "" : `<button type="button" class="iconbtn" data-act="fbOpen" aria-label="ご意見・感想を送る">${HOME_ICON.mail}</button>`}
         <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
       </div>
@@ -1795,7 +1804,7 @@ function showResult(res) {
   openOverlay(`<div class="panel">
     <p class="result ${res}">${label}</p>
     ${g ? `<p class="reward">+${g}G <small>（所持 ${Account.gold}G）</small></p>` : ""}
-    ${r.sample && res === "win" ? `<p class="streak lost">サンプルデッキの対戦なので、Gはもらえません</p>` : ""}
+    ${S && S.practice ? `<p class="streak lost">練習対戦なので、Gと連勝はつきません</p>` : r.sample && res === "win" ? `<p class="streak lost">サンプルデッキの対戦なので、Gはもらえません</p>` : ""}
     ${streakHTML(r, res)}
     <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
     ${online
@@ -1858,8 +1867,46 @@ function showCpuSelect() {
         </span>
         <span class="lvl-go" aria-hidden="true">›</span>
       </button>`).join("")}</div>
+    <button type="button" class="lvl lvl-practice" data-act="practice">
+      <span class="lvl-body"><span class="lvl-head"><b>練習対戦</b></span><span class="lvl-desc">自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）</span></span><span class="lvl-go" aria-hidden="true">›</span>
+    </button>
     <div class="callout"><b>報酬のきまり</b>負けたときは0Gです。${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると、2連勝目から報酬が${CONFIG.STREAK_STEP}%ずつ増えます（最大${CONFIG.STREAK_MAX}%）。負けるか、途中でやめると0に戻ります。` : ""}${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</div>
   </div>`, "start", true);
+}
+
+/* 練習対戦：CPU に使わせるデッキ（自分のデッキ・サンプルデッキ・CPU用のデッキ）と強さを選ぶ。報酬・連勝なし */
+const PRACTICE = { deck: null, level: "normal" };
+function showPractice() {
+  if (!Decks.readyDeck(msg => Decks.showList(msg))) return;
+  const mine = Decks.mine().filter(d => !Decks.problems(d).length);
+  const cpu = PRESETS.filter(p => p.level !== "test" && !deckProblems(p, DEF, CONFIG).length);
+  if (!PRACTICE.deck || ![...mine, ...cpu].some(d => d.id === PRACTICE.deck)) PRACTICE.deck = (mine[0] || cpu[0] || {}).id;
+  const row = (d, tag) => { const k = Decks.keyCard(d);
+    return `<button type="button" class="pr-deck ${PRACTICE.deck === d.id ? "on" : ""}" data-act="prDeck" data-id="${esc(d.id)}">
+      <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
+      <span class="cs-deck-txt"><small>${tag}</small><b>${esc(d.name)}</b></span>${PRACTICE.deck === d.id ? `<span class="usingtag">CPU が使う</span>` : ""}</button>`; };
+  const lv = Object.entries(CPU_LEVELS).map(([k, v]) => `<button type="button" data-act="prLevel" data-v="${k}" aria-pressed="${PRACTICE.level === k}">${v.label}</button>`).join("");
+  openOverlay(`<div class="panel">
+    ${Decks.topbar("練習対戦", "cpu")}
+    <p class="lead small">CPU に使わせるデッキと、CPU の強さを選んでください。あなたは「${esc(Decks.selected().name)}」で戦います。練習なので、Gと連勝はつきません。</p>
+    <h3 class="sec">CPU の強さ</h3>
+    <div class="seg wide">${lv}</div>
+    <h3 class="sec">CPU に使わせるデッキ</h3>
+    <div class="pr-list">${mine.map(d => row(d, d.free ? "サンプルデッキ" : "あなたのデッキ")).join("") || `<p class="hint">使えるデッキがありません。</p>`}</div>
+    <details class="pr-more"><summary>CPU 用のデッキから選ぶ</summary><div class="pr-list">${cpu.map(d => row(d, `${CPU_LEVELS[d.level] ? CPU_LEVELS[d.level].label : ""}CPU用`)).join("")}</div></details>
+    <button type="button" class="btn primary" data-act="prStart" ${PRACTICE.deck ? "" : "disabled"}>練習対戦をはじめる</button>
+  </div>`, "start", true);
+}
+function startPractice() {
+  const mine = Decks.readyDeck(msg => Decks.showList(msg));
+  if (!mine) return;
+  const d = Decks.mine().find(x => x.id === PRACTICE.deck) || PRESETS.find(x => x.id === PRACTICE.deck);
+  if (!d) return showPractice();
+  CPU_LEVEL = CPU_LEVELS[PRACTICE.level] ? PRACTICE.level : "normal";
+  MODE = "cpu"; setPerspective(0);
+  $("#overlay").hidden = true;
+  newGame(["あなた", `練習CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [mine, { name: d.name, cards: { ...d.cards } }]);
+  S.practice = true; S.mySample = true;   // 報酬・連勝の対象外（サンプルデッキと同じ扱い）
 }
 
 function startCpuGame(level) {
@@ -1879,13 +1926,18 @@ function startCpuGame(level) {
 /* ---------- 入力（タップ操作） ---------- */
 function handleAct(act, el) {
   switch (act) {
+    case "practice": showPractice(); return;
+    case "prDeck": PRACTICE.deck = el.dataset.id; showPractice(); return;
+    case "prLevel": PRACTICE.level = el.dataset.v; showPractice(); return;
+    case "prStart": startPractice(); return;
+    case "cpu": showCpuSelect(); return;
     case "clFilter": CL[el.dataset.k] = el.dataset.v; showCardList(); return;
     case "clText": CL.text = !!el.checked; showCardList(); return;
     case "clDetail": CL.detail = el.dataset.id; showCardList(); return;
     case "clClose": CL.detail = null; showCardList(); return;
     case "start": showCpuSelect(); break;
     case "cpuLevel": startCpuGame(el && el.dataset.v); break;
-    case "cpuAgain": startCpuGame(CPU_LEVEL); break;
+    case "cpuAgain": if (S && S.practice) startPractice(); else startCpuGame(CPU_LEVEL); break;
     case "online": Online.showLobby(); break;
     case "rules": if (!S) { if (overlayFrom !== "lobby" && overlayFrom !== "options") overlayFrom = "start"; } else if (overlayFrom !== "menu" && overlayFrom !== "result") overlayFrom = "game"; showRules(); break;
     case "cards": if (!S) overlayFrom = "start"; showCardList(); break;
@@ -1922,6 +1974,7 @@ function handleAct(act, el) {
       if (Serial.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
       if (Shop.handleAct(act, el)) return;
+      if (Inbox.handleAct(act, el)) return;
       if (Showcase.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);

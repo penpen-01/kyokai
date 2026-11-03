@@ -54,7 +54,7 @@ const Online = {
         <div class="ofield">
           <label for="onl-code">合言葉（4文字）</label>
           <div class="joinrow">
-            <input class="otxt code" id="onl-code" maxlength="4" placeholder="ABCD" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <input class="otxt code" id="onl-code" placeholder="ABCD" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go">
             <button type="button" class="btn primary" data-act="onlJoin">参加する</button>
           </div>
         </div>
@@ -65,6 +65,11 @@ const Online = {
     </div>`, "lobby", true);
   },
 
+  /* 合言葉の欄：全角・小文字・記号を取り除いて、半角の大文字4文字に */
+  fixCode(el) {
+    const v = normCodeText(el.value).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    if (el.value !== v) el.value = v;
+  },
   lobbyMsg(text) { const m = $("#onl-msg"); if (m) m.textContent = text; else this.showLobby(text); },
 
   showWaiting() {
@@ -167,7 +172,7 @@ const Online = {
   /* ---------- 参加する（ゲスト） ---------- */
   async join(codeArg) {
     const name = this.readName();
-    const code = (codeArg || ($("#onl-code") ? $("#onl-code").value : "")).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const code = normCodeText(codeArg || ($("#onl-code") ? $("#onl-code").value : "")).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     if (code.length !== 4) return this.lobbyMsg("合言葉は4文字です。");
     const deck = Decks.readyDeck(m => this.lobbyMsg(m));
     if (!deck) return;
@@ -417,7 +422,8 @@ showStart = function () {
 
 /* 合言葉の入力欄は大文字にそろえる */
 document.addEventListener("input", e => {
-  if (e.target.id === "onl-code") e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  // 日本語のフリック入力は「変換中」の文字を途中で書き換えると入力が壊れるので、変換が終わってから整える
+  if (e.target.id === "onl-code" && !e.isComposing) Online.fixCode(e.target);
 });
 document.addEventListener("keydown", e => {
   if (e.key === "Enter" && e.target.id === "onl-code") Online.join();
@@ -447,3 +453,6 @@ async function boot() {
 }
 registerSW();
 boot();
+
+document.addEventListener("compositionend", e => { if (e.target.id === "onl-code") Online.fixCode(e.target); });
+document.addEventListener("change", e => { if (e.target.id === "onl-code") Online.fixCode(e.target); });
