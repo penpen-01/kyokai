@@ -147,45 +147,60 @@ const Decks = {
     return `<div class="topbar"><button type="button" class="btn sm" data-act="${backAct}">← 戻る</button><b>${title}</b></div>`;
   },
 
-  /* ---------- 一覧 ---------- */
+  /* ---------- 一覧 ----------
+     「マイデッキ」「サンプル」（「CPU用」）をタブで分ける。デッキは絵の大きい札で2列に並べる。
+     札を長押しすると持ち上がり、指でずらして順番を入れ替えられる（離すと保存） */
+  listTab: "mine",
+  deckTileHTML(d, sel, movable) {
+    const pr = this.problems(d), n = deckCount(d), size = CONFIG.DECK_SIZE;
+    const using = sel && sel.id === d.id, key = this.keyCard(d);
+    const st = n < size ? `<span class="dbt-st wip">未完成 ${n}/${size}</span>`
+      : pr.length ? `<span class="dbt-st bad" title="${esc(pr[0])}">⚠ 使えない</span>` : `<span class="dbt-st ok">${n}/${size}</span>`;
+    return `<div class="dbt ${using ? "using" : ""}" ${movable ? `data-deck="${esc(d.id)}"` : ""}>
+      <button type="button" class="dbt-open" data-act="deckView" data-id="${esc(d.id)}" aria-label="${esc(d.name)}${using ? "（使用中）" : ""}">
+        <span class="dbt-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
+        ${using ? `<span class="dbt-using">使用中</span>` : ""}
+        ${st}
+        <span class="dbt-foot"><b class="dbt-name">${esc(d.name)}</b>${this.worldBar(d)}</span>
+      </button>
+    </div>`;
+  },
   showList(msg) {
     this.editing = null; this.viewing = null; this.detail = null; this.codeFor = null;
-    const sel = this.selected();
-    const all = this.mine();
-    const mine = all.filter(d => !d.free), samples = all.filter(d => d.free);
-    const row = (d, tag) => {
-      const pr = this.problems(d), n = deckCount(d);
-      const using = sel && sel.id === d.id;
-      const key = this.keyCard(d);
-      return `<li class="drow dbox ${using ? "using" : ""}">
-        <button type="button" class="drow-open" data-act="deckView" data-id="${esc(d.id)}">
-          <span class="dbox-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
-          <span class="drow-main"><b>${esc(d.name)}${tag ? `<small class="ptag">${tag}</small>` : ""}</b>${this.worldBar(d)}
-            <span class="${pr.length ? "bad" : "ok"}">${n}/${CONFIG.DECK_SIZE}枚${n < CONFIG.DECK_SIZE ? ` ・ 未完成（あと${CONFIG.DECK_SIZE - n}枚${this.wantCount(d) ? `・まだ持っていないカード${this.wantCount(d)}枚` : ""}）` : pr.length ? " ・ " + esc(pr[0]) : ""}</span></span>
-        </button>
-        <div class="drow-acts">${using ? `<span class="usingtag">使用中</span>` : `<button type="button" class="btn sm" data-act="deckUse" data-id="${esc(d.id)}" ${pr.length ? "disabled" : ""}>使う</button>`}</div>
-      </li>`;
-    };
+    const sel = this.selected(), all = this.mine();
+    const samp = this.sampleOK() && !this.free();
+    if (this.listTab === "sample" && !samp) this.listTab = "mine";
+    if (this.listTab === "cpu" && !this.free()) this.listTab = "mine";
+    const tab = this.listTab;
+    const list = tab === "cpu" ? PRESETS : all.filter(d => !!d.free === (tab === "sample"));
+    const tabBtn = (v, label, n) => `<button type="button" role="tab" data-act="deckListTab" data-v="${v}" aria-pressed="${tab === v}">${label}${n != null ? ` <small>${n}</small>` : ""}</button>`;
+    const newTile = tab === "cpu" ? "" : `<button type="button" class="dbt new" data-act="${tab === "sample" ? "deckNewSample" : "deckNew"}"><span class="dbt-plus" aria-hidden="true">＋</span><b>新しく作る</b></button>`;
     openOverlay(`<div class="panel wide">
       ${this.topbar("デッキ編成", "deckBack")}
-      <p class="lead small">デッキは${CONFIG.DECK_SIZE}枚。同じカードは${CONFIG.COPY_MAX}枚まで（カードによってはそれより少ない）。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っている枚数までしか入れられません。"}</p>
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
-      <h3 class="sec">あなたのデッキ <small class="hint">${mine.length}/${CONFIG.DECK_MAX}</small></h3>
-      <ul class="dlist">${mine.length ? mine.map(d => row(d, "")).join("") : `<li class="hint">デッキがありません。新しく作ってください。</li>`}</ul>
-      <div class="pre-btns">
-        <button type="button" class="btn" data-act="deckNew">＋ 新しいデッキ</button>
+      ${samp || this.free() ? `<div class="seg wide dl-tabs" role="tablist">
+        ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => !d.free).length}/${CONFIG.DECK_MAX}`)}
+        ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
+        ${this.free() ? tabBtn("cpu", "CPU用") : ""}
+      </div>` : ""}
+      <p class="hint dl-hint">${tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです（ベータ限定）。勝ってもGはもらえません。"
+        : tab === "cpu" ? "CPU が使っているデッキです。"
+        : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っている枚数まで入れられます。"}`}
+        ${tab !== "cpu" && list.length > 1 ? "<br>デッキを長押しすると、順番を並び替えられます。" : ""}</p>
+      <div class="dbgrid" id="dbgrid" data-tab="${tab}">${list.map(d => this.deckTileHTML(d, sel, tab !== "cpu")).join("")}${newTile}</div>
+      ${tab === "cpu" ? "" : `<div class="pre-btns">
         <button type="button" class="btn" data-act="deckImport">デッキコードから作る</button>
-      </div>
-      ${this.sampleOK() && !this.free() ? `
-        <h3 class="sec">サンプルデッキ <small class="hint">${samples.length}/${CONFIG.DECK_MAX} ・ 全カード使用可・ベータ限定</small></h3>
-        <p class="lead small">持っていないカードも含めて、すべてのカードで組めるデッキです。カードの強さを試すためのもので、勝ってもGはもらえません。ベータ期間が終わると使えなくなります。</p>
-        <ul class="dlist">${samples.length ? samples.map(d => row(d, "サンプル")).join("") : `<li class="hint">まだありません。</li>`}</ul>
-        <div class="pre-btns">
-          <button type="button" class="btn" data-act="deckNewSample">＋ 新しいサンプルデッキ</button>
-          <button type="button" class="btn" data-act="deckPresets">用意されたデッキから作る</button>
-        </div>` : ""}
-      ${this.free() ? `<h3 class="sec">CPU用のデッキ</h3><ul class="dlist">${PRESETS.map(d => row(d, "CPU用")).join("")}</ul>` : ""}
+        ${tab === "sample" ? `<button type="button" class="btn" data-act="deckPresets">用意されたデッキから作る</button>` : ""}
+      </div>`}
     </div>`, "start", true);
+  },
+  /* 並び替えたあとの順番を保存する（同じタブのデッキだけを、画面の並びのとおりにする） */
+  saveOrder(ids) {
+    const list = this.mine(), sample = this.listTab === "sample";
+    const moved = ids.map(id => list.find(d => d.id === id)).filter(Boolean);
+    let k = 0;
+    const next = list.map(d => (!!d.free === sample ? moved[k++] || d : d));
+    if (!this.saveMine(next)) toast("保存できませんでした（サーバーに接続できていません）");
   },
 
   showPresets() {
@@ -364,6 +379,7 @@ const Decks = {
             <button type="button" class="btn primary" data-act="deckInc" data-id="${esc(c.id)}" ${k >= max ? "disabled" : ""}>＋</button>
           </div>
           ${k >= max && max < cardLimit(c, CONFIG, ed) ? `<span class="hint">持っている枚数までしか入れられません。</span>` : ""}` : ""}
+          ${this.unbound(ed || this.find(this.viewing)) ? "" : Shop.tradeHTML(c)}
           ${this.keyBtn(c)}
           <button type="button" class="btn" data-act="deckDetailClose">閉じる</button>
         </div>
@@ -377,6 +393,9 @@ const Decks = {
     const ed = this.editing, c = DEF[id]; if (!c || !ed) return;
     const k = ed.cards[id] || 0, max = this.maxFor(c, ed);
     if (k >= max) {
+      if (quick && !this.unbound(ed) && this.owned(id) <= k && k < cardLimit(c, CONFIG, ed) && Shop.canTrade(c)) {
+        this.detail = id; this.renderEdit(); return;   // 持っていない分は、詳細から魔石で交換できる
+      }
       if (quick) {
         const own = this.owned(id);
         toast(!this.unbound(ed) && own <= k && k < cardLimit(c, CONFIG, ed)
@@ -410,6 +429,7 @@ const Decks = {
     const ed = this.editing;
     switch (act) {
       case "decks": this.showList(); return true;
+      case "deckListTab": this.listTab = el.dataset.v; this.showList(); return true;
       case "deckBack": this.editing = null; this.viewing = null; showStart(); return true;
       case "deckUse": this.select(id); if (this.viewing) this.showView(this.viewing); else this.showList(); return true;
       case "deckView": this.detail = null; this.codeFor = null; this.showView(id); return true;
@@ -481,7 +501,7 @@ const Decks = {
         return true;
       }
       case "deckEdit": { const d = this.find(id); if (d) { this.viewing = null; this.startEdit(d, false); } return true; }
-      case "deckDetail": this.detail = id; this.rerender(); return true;
+      case "deckDetail": this.detail = id; Shop.tradeAsk = null; this.rerender(); return true;
       case "deckKey": {
         if (this.editing) { this.editing.key = id; this.rerender(); toast("代表カードにしました（保存すると一覧に反映されます）"); return true; }
         const list = this.mine(), d = list.find(x => x.id === this.viewing);
@@ -490,7 +510,7 @@ const Decks = {
         if (!this.saveMine(list)) { toast("保存できませんでした（サーバーに接続できていません）"); return true; }
         this.rerender(); toast("代表カードにしました"); return true;
       }
-      case "deckDetailClose": this.detail = null; this.rerender(); return true;
+      case "deckDetailClose": this.detail = null; Shop.tradeAsk = null; this.rerender(); return true;
       case "deckFilter": this.filter[el.dataset.k] = el.dataset.v; this.renderEdit(); return true;
       case "deckTab": this.editTab = el.dataset.v; this.renderEdit(); return true;
       case "deckTapAdd": this.inc(id, true); return true;
@@ -562,4 +582,62 @@ document.addEventListener("change", e => {
   document.addEventListener("pointermove", e => { if (t && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) clear(); });
   ["pointerup", "pointercancel", "scroll"].forEach(ev => document.addEventListener(ev, clear, true));
   document.addEventListener("contextmenu", e => { if (e.target.closest("#overlay .dtile, #overlay .oslot")) e.preventDefault(); });
+})();
+
+/* デッキ一覧：長押しで持ち上げて、指でずらして並び替える（離すと保存） */
+(() => {
+  let t = null, drag = null, sx = 0, sy = 0;
+  const clear = () => { if (t) { clearTimeout(t); t = null; } };
+  const place = (x, y) => {
+    const el = drag.el, r = el.getBoundingClientRect();
+    drag.tx += x - drag.ox - r.left; drag.ty += y - drag.oy - r.top;
+    el.style.transform = `translate(${drag.tx}px,${drag.ty}px) scale(1.04)`;
+  };
+  document.addEventListener("pointerdown", e => {
+    const el = e.target.closest("#dbgrid .dbt[data-deck]");
+    if (!el || drag) return;
+    sx = e.clientX; sy = e.clientY; clear();
+    t = setTimeout(() => {
+      t = null;
+      const r = el.getBoundingClientRect();
+      drag = { el, ox: sx - r.left, oy: sy - r.top, tx: 0, ty: 0, x: sx, y: sy, moved: false };
+      el.classList.add("lift"); document.getElementById("dbgrid").classList.add("sorting");
+      if (navigator.vibrate) navigator.vibrate(15);
+      blockClick();
+    }, 450);
+  });
+  document.addEventListener("pointermove", e => {
+    if (t && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) clear();
+    if (!drag) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    const grid = document.getElementById("dbgrid"); if (!grid) return;
+    // 指の下の札と入れ替える
+    const over = [...grid.querySelectorAll(".dbt[data-deck]")].find(o => {
+      if (o === drag.el) return false;
+      const r = o.getBoundingClientRect();
+      return e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom;
+    });
+    if (over) {
+      const items = [...grid.querySelectorAll(".dbt[data-deck]")];
+      grid.insertBefore(drag.el, items.indexOf(over) > items.indexOf(drag.el) ? over.nextSibling : over);
+      drag.moved = true;
+    }
+    place(e.clientX, e.clientY);
+    // 画面の上下の端に近づいたら、少しずつスクロールする
+    const o = document.getElementById("overlay");
+    if (e.clientY < 90) o.scrollTop -= 12; else if (e.clientY > innerHeight - 70) o.scrollTop += 12;
+  });
+  const end = () => {
+    clear(); if (!drag) return;
+    const { el, moved } = drag; drag = null;
+    el.classList.remove("lift"); el.style.transform = "";
+    const grid = document.getElementById("dbgrid"); if (grid) grid.classList.remove("sorting");
+    blockClick();
+    if (moved && grid) { Decks.saveOrder([...grid.querySelectorAll(".dbt[data-deck]")].map(x => x.dataset.deck)); Sound.play("click"); }
+  };
+  document.addEventListener("pointerup", end, true);
+  document.addEventListener("pointercancel", end, true);
+  // 持ち上げている間は、画面がスクロールしないようにする（iPhone）
+  document.addEventListener("touchmove", e => { if (drag) e.preventDefault(); }, { passive: false });
+  document.addEventListener("contextmenu", e => { if (e.target.closest("#dbgrid .dbt")) e.preventDefault(); });
 })();

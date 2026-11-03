@@ -1743,6 +1743,7 @@ function showCardList() {
         <span class="pmeta">${RARITY[d.rarity]} ・ ${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}${d.type === "char" ? ` ・ ${d.atk}/${d.hp}` : ""}</span>
         <p class="dm-text">${esc(cardText(d))}</p>
         <span class="pmeta">${Account.status === "free" ? "" : `所持 ${Account.owned(d.id)}枚 ・ `}1デッキに${cardLimit(d, CONFIG)}枚まで</span>
+        ${typeof Shop !== "undefined" && !S ? Shop.tradeHTML(d) : ""}
         <button type="button" class="btn" data-act="clClose">閉じる</button></div></div></div>` : ""}
   </div>`, null, !S);
   if (keep) o.scrollTop = y;
@@ -1935,8 +1936,8 @@ function handleAct(act, el) {
     case "cpu": showCpuSelect(); return;
     case "clFilter": CL[el.dataset.k] = el.dataset.v; showCardList(); return;
     case "clText": CL.text = !!el.checked; showCardList(); return;
-    case "clDetail": CL.detail = el.dataset.id; showCardList(); return;
-    case "clClose": CL.detail = null; showCardList(); return;
+    case "clDetail": CL.detail = el.dataset.id; if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
+    case "clClose": CL.detail = null; if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
     case "start": showCpuSelect(); break;
     case "cpuLevel": startCpuGame(el && el.dataset.v); break;
     case "cpuAgain": if (S && S.practice) startPractice(); else startCpuGame(CPU_LEVEL); break;

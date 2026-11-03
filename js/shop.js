@@ -79,6 +79,45 @@ const Shop = {
     this.show(`${c.name}を手に入れました（所持${Account.owned(id)}枚）。`);
   },
 
+  /* ---------- カード一覧・デッキ編成の詳細から交換する ----------
+     ショップに行かなくても、その場で魔石と交換できる。間違えて押さないように、1回確かめてから交換する */
+  tradeAsk: null,
+  canTrade(c) { return this.usable() && !!c && this.pool().some(x => x.id === c.id); },
+  tradeHTML(c) {
+    if (!this.canTrade(c)) return "";
+    const own = Account.owned(c.id), cost = this.costRate(c.rarity), cap = this.cap();
+    if (own >= cap) return "";
+    const short = Account.stones < cost;
+    if (this.tradeAsk === c.id) return `<div class="trade ask">
+        <p><span>魔石 <b>${cost}</b> を使って、${esc(c.name)}を1枚手に入れます。</span><small>所持 ${curIcon("stone")}${Account.stones} → ${Account.stones - cost}</small></p>
+        <div class="pre-btns"><button type="button" class="btn" data-act="tradeNo">やめる</button><button type="button" class="btn primary" data-act="tradeYes" data-id="${esc(c.id)}">交換する</button></div>
+      </div>`;
+    return `<div class="trade">
+        <button type="button" class="btn trade-btn" data-act="tradeAsk" data-id="${esc(c.id)}" ${short ? "disabled" : ""}>${curIcon("stone")}${short ? `魔石が足りません（あと${cost - Account.stones}）` : `魔石${cost}で${own ? "もう1枚" : ""}交換する`}</button>
+        <small class="hint">所持 ${curIcon("stone")}${Account.stones}</small>
+      </div>`;
+  },
+  /* 交換して、開いていた画面を描き直す */
+  trade(id) {
+    const c = DEF[id]; this.tradeAsk = null;
+    if (!this.canTrade(c)) return;
+    const cost = this.costRate(c.rarity);
+    if (Account.owned(id) >= this.cap()) toast(`${c.name}はもう${this.cap()}枚持っています`);
+    else if (Account.stones < cost) toast(`魔石が足りません（あと${cost - Account.stones}個）`);
+    else {
+      Account.data.stones -= cost;
+      Account.data.cards[id] = (Account.data.cards[id] || 0) + 1;
+      Account.saveNow();
+      Sound.play(RARITY_ORDER.indexOf(c.rarity) >= 2 ? "rare" : "flip", RARITY_ORDER.indexOf(c.rarity));
+      toast(`${c.name}を手に入れました（所持${Account.owned(id)}枚）`);
+    }
+    this.tradeRedraw();
+  },
+  tradeRedraw() {
+    if (Decks.editing || Decks.viewing) Decks.rerender();
+    else if (typeof CL !== "undefined" && CL.detail) showCardList();
+  },
+
   /* ---------- 画面 ---------- */
   noteHTML() {
     return this.usable() ? (Account.status === "offline" ? `<p class="datainfo">オフラインです。交換した内容は、通信できるようになったら保存されます。</p>` : "")
@@ -225,6 +264,9 @@ const Shop = {
       case "shopDetail": this.detailId = el.dataset.id; this.show(); return true;
       case "shopDetailClose": this.detailId = null; this.show(); return true;
       case "shopBuy": this.buy(el.dataset.id); return true;
+      case "tradeAsk": this.tradeAsk = el.dataset.id; this.tradeRedraw(); return true;
+      case "tradeNo": this.tradeAsk = null; this.tradeRedraw(); return true;
+      case "tradeYes": this.trade(el.dataset.id); return true;
     }
     return false;
   }

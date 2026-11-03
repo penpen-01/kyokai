@@ -1429,3 +1429,43 @@ html:not(.noio) :is(.dgrid,.pl-grid) > :not(.vis) .card *::after,
 html.nofx .card *,html.nofx .card *::before,html.nofx .card *::after{animation:none!important}
 html.nofx .card .shine{display:none}
 .dgrid > *,.pl-grid > *{contain:layout style}
+
+/* ---- デッキ一覧：タブ＋絵の大きい札を2列。長押しで並び替え ---- */
+.dl-tabs{margin-bottom:2px}
+.dl-tabs small{font-size:11px;opacity:.7;margin-left:2px}
+.dl-hint{margin:0}
+.dbgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:640px){.dbgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.dbt{position:relative;border-radius:12px;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.dbt-open{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:block;width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;
+  background:#141833;box-shadow:0 0 0 1px #3a4270,0 0 0 3px #0b0d18,0 0 0 4px #8a6a2a,0 6px 14px rgba(0,0,0,.45)}
+.dbt-open:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
+.dbt-art{position:absolute;inset:0;background:#1b2140 50% 22%/cover no-repeat}
+.dbt-open::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,10,22,0) 40%,rgba(8,10,22,.92) 78%)}
+.dbt-foot{position:absolute;left:0;right:0;bottom:0;z-index:1;display:flex;flex-direction:column;gap:5px;padding:0 10px 9px}
+.dbt-name{font-family:var(--f-display);font-size:15px;line-height:1.25;color:#fff;text-shadow:0 1px 4px #000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dbt-foot .dworlds{width:100%;height:4px}
+.dbt-st{position:absolute;z-index:1;right:6px;top:6px;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;background:rgba(8,10,22,.8);font-variant-numeric:tabular-nums}
+.dbt-st.ok{color:#9be3b8}
+.dbt-st.wip{color:#f3d08a}
+.dbt-st.bad{color:#ff9a8a}
+.dbt-using{position:absolute;z-index:1;left:6px;top:6px;font-size:11px;font-weight:800;color:#1a1408;background:var(--gold);padding:2px 8px;border-radius:999px}
+.dbt.using .dbt-open{box-shadow:0 0 0 1.5px #ffe7a6,0 0 0 3px #0b0d18,0 0 0 4.5px var(--gold),0 0 16px rgba(255,213,106,.45)}
+.dbt.new{all:unset;box-sizing:border-box;cursor:pointer;aspect-ratio:4/3;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  border:1.5px dashed #5a6496;color:var(--muted);background:rgba(255,255,255,.02)}
+.dbt.new:focus-visible{outline:2px solid var(--fg)}
+.dbt-plus{font-size:30px;line-height:1;color:var(--gold)}
+.dbt.new b{font-size:13px}
+.dbgrid.sorting .dbt:not(.lift){transition:transform .15s}
+.dbt.lift{z-index:10;pointer-events:none}
+.dbt.lift .dbt-open{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--gold),0 14px 30px rgba(0,0,0,.7)}
+.dbgrid.sorting .dbt:not(.lift) .dbt-open{opacity:.8}
+
+/* ---- 詳細から魔石で交換 ---- */
+.trade{display:flex;flex-direction:column;gap:4px}
+.trade-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-color:#8a76e0;color:#d9ceff}
+.trade .cur-ic{width:1.3em;height:1.3em;vertical-align:-.25em}
+.trade small{display:flex;align-items:center;gap:3px;justify-content:center}
+.trade.ask{padding:10px;border-radius:10px;border:1px solid #8a76e0;background:rgba(138,118,224,.12)}
+.trade.ask p{margin:0;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.trade.ask p small{justify-content:flex-start;color:var(--muted)}
