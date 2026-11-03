@@ -1669,6 +1669,7 @@ function showOptions() {
       <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="fbOpen"><b>ご意見・感想</b><small>不具合の報告や、ほしい機能を送る</small></button>`}
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
+      <button type="button" class="optrow" data-act="fxToggle" aria-pressed="${Fx.on}"><b>カードの光の動き</b><small>現在：${Fx.on ? "オン" : "オフ（UR・レジェンドの光を止めて軽くする）"}</small></button>
     </div>
     <p class="datainfo">${info}</p>
     <p class="datainfo">ベータ版のカードやGは、正式公開のときにリセットされます。</p>
@@ -1963,6 +1964,7 @@ function handleAct(act, el) {
     }
     case "account": Account.showScreen(); break;
     case "soundPanel": Sound.showPanel(); break;
+    case "fxToggle": Fx.toggle(); showOptions(); break;
     case "options": showOptions(); break;
     case "optBack": showStart(); break;
     case "sound": Sound.toggle(); Sound.showPanel(); break;
@@ -2041,3 +2043,28 @@ document.addEventListener("input", e => {
   const n = document.getElementById("cl-q"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".artview").forEach(v => v.remove()); });
+
+/* ---- カードの光の動き（UR・レジェンド）を軽くする ----
+   ・オプションでオフにできる（この端末だけ。html に nofx を付ける）
+   ・一覧（カード一覧・デッキ編成・ショップ・パックの中身）では、画面に見えているカードだけ光らせる（vis）
+   ・スクロールしている間は、すべて止める（scrolling。止まって 0.2 秒で戻る） */
+const Fx = {
+  on: (() => { try { return localStorage.getItem("kyokai-fx") !== "off"; } catch (e) { return true; } })(),
+  apply() { document.documentElement.classList.toggle("nofx", !this.on); },
+  toggle() { this.on = !this.on; try { localStorage.setItem("kyokai-fx", this.on ? "on" : "off"); } catch (e) {} this.apply(); }
+};
+Fx.apply();
+(() => {
+  const o = document.getElementById("overlay"); if (!o) return;
+  let t = 0;
+  o.addEventListener("scroll", () => {
+    o.classList.add("scrolling"); clearTimeout(t);
+    t = setTimeout(() => o.classList.remove("scrolling"), 200);
+  }, { passive: true });
+  if (!("IntersectionObserver" in window)) { document.documentElement.classList.add("noio"); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle("vis", e.isIntersecting)), { root: o, rootMargin: "120px 0px" });
+  new MutationObserver(ms => {
+    if (ms.some(m => m.target === o)) io.disconnect();   // 画面ごと作り直したら、前の一覧の見張りをやめる
+    o.querySelectorAll(".dgrid > :not([data-io]), .pl-grid > :not([data-io])").forEach(el => { el.dataset.io = "1"; io.observe(el); });
+  }).observe(o, { childList: true, subtree: true });
+})();

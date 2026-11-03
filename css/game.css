@@ -1420,9 +1420,12 @@ body{
 .artview small{font-size:12px;color:var(--muted)}
 @keyframes avin{from{opacity:0}to{opacity:1}}
 
-/* ---- 一覧の小さいカード：光の動き・重ねる効果を止める（iPhone で速くスクロールしたとき表示が崩れるのを防ぐ）。
-   大きく見る詳細や対戦では、今までどおり光る ---- */
-.dgrid .card *,.dgrid .card *::before,.dgrid .card *::after,
-.pl-grid .card *,.pl-grid .card *::before,.pl-grid .card *::after{animation:none!important}
-.dgrid .card .shine,.dgrid .card .art::after,.pl-grid .card .shine,.pl-grid .card .art::after{display:none!important}
+/* ---- カードの光の動きを軽くする（js/game.js の Fx） ----
+   一覧では画面の外のカードを止める・スクロール中はすべて止める・オプションでオフにしたら止めて流れる光も消す */
+html:not(.noio) :is(.dgrid,.pl-grid) > :not(.vis) .card *,
+html:not(.noio) :is(.dgrid,.pl-grid) > :not(.vis) .card *::before,
+html:not(.noio) :is(.dgrid,.pl-grid) > :not(.vis) .card *::after,
+.overlay.scrolling .card *,.overlay.scrolling .card *::before,.overlay.scrolling .card *::after{animation-play-state:paused!important}
+html.nofx .card *,html.nofx .card *::before,html.nofx .card *::after{animation:none!important}
+html.nofx .card .shine{display:none}
 .dgrid > *,.pl-grid > *{contain:layout style}
