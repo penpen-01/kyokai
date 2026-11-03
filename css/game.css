@@ -512,8 +512,10 @@ body{
 .topbar{
   position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;flex-shrink:0;
   padding:calc(10px + env(safe-area-inset-top,0px)) 0 10px;background:var(--bg);border-bottom:1px solid var(--line);
-  box-shadow:0 0 0 100vmax var(--bg);clip-path:inset(0 -100vmax);
+  transform:translateZ(0);
 }
+/* 見出しの帯を画面の端まで伸ばす（前は 100vmax の影と clip-path で伸ばしていたが、iPhone で速くスクロールすると表示が崩れた） */
+.topbar::before{content:"";position:absolute;z-index:-1;top:0;bottom:-1px;left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));background:var(--bg);border-bottom:1px solid var(--line)}
 .topbar b{flex:1;font-family:var(--f-display);font-size:20px;min-width:0}
 .topbar .goldtag{font-size:16px;padding:2px 10px}
 
@@ -1417,3 +1419,10 @@ body{
 .artview b{font-family:var(--f-display);font-size:16px;color:var(--fg)}
 .artview small{font-size:12px;color:var(--muted)}
 @keyframes avin{from{opacity:0}to{opacity:1}}
+
+/* ---- 一覧の小さいカード：光の動き・重ねる効果を止める（iPhone で速くスクロールしたとき表示が崩れるのを防ぐ）。
+   大きく見る詳細や対戦では、今までどおり光る ---- */
+.dgrid .card *,.dgrid .card *::before,.dgrid .card *::after,
+.pl-grid .card *,.pl-grid .card *::before,.pl-grid .card *::after{animation:none!important}
+.dgrid .card .shine,.dgrid .card .art::after,.pl-grid .card .shine,.pl-grid .card .art::after{display:none!important}
+.dgrid > *,.pl-grid > *{contain:layout style}
