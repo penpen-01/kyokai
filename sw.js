@@ -1,7 +1,7 @@
 /* オフラインでも遊べるようにするためのサービスワーカー。
    通信できるときは常に最新を取りに行き（ネットワーク優先）、
    通信できないときだけ保存しておいた内容を使う。 */
-const CACHE = "kyokai-v78";
+const CACHE = "kyokai-v79";
 const SHELL = [
   "./", "index.html", "game-data.json",
   "css/base.css", "css/game.css", "js/shared.js", "js/net.js", "js/sound.js", "js/game.js", "js/motion.js", "js/cinema.js", "js/account.js", "js/pack.js", "js/shop.js", "js/showcase.js", "js/deck.js", "js/feedback.js", "js/serial.js", "js/inbox.js", "js/splash.js", "js/online.js", "js/simlab.js",
@@ -35,8 +35,10 @@ self.addEventListener("fetch", e => {
     })));
     return;
   }
+  // 同じサイトのファイルは、端末に残っている分（GitHub Pages は10分残す）を使わず、毎回「変わったか」を確かめる。
+  // 変わっていなければ 304 の小さな返事だけで済む
   e.respondWith(
-    fetch(req)
+    fetch(req, sameOrigin ? { cache: "no-cache" } : undefined)
       .then(res => {
         if (res.ok || res.type === "opaque") {
           const copy = res.clone();
