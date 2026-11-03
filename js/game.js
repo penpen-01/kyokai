@@ -1630,7 +1630,6 @@ function showStart() {
       <div class="hb-right">
         ${goldOK ? `<button type="button" class="iconbtn" data-act="inboxMail" aria-label="メール">${HOME_ICON.envelope}${Inbox.mailBadge()}</button>` : ""}
         <button type="button" class="iconbtn" data-act="inboxNews" aria-label="お知らせ">${HOME_ICON.bell}${Inbox.newsBadge()}</button>
-        ${DATA_INFO.draft ? "" : `<button type="button" class="iconbtn" data-act="fbOpen" aria-label="ご意見・感想を送る">${HOME_ICON.mail}</button>`}
         <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
       </div>
     </div>
@@ -1667,6 +1666,7 @@ function showOptions() {
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="serial"><b>シリアルコード</b><small>配られたコードでGやカードを受け取る</small></button>`}
       ${Account.status === "none" ? "" : `<button type="button" class="optrow" data-act="icons" data-from="options"><b>アイコン</b><small>対戦で表示される顔を、持っているキャラカードの絵から選ぶ</small></button>`}
       <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
+      ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="fbOpen"><b>ご意見・感想</b><small>不具合の報告や、ほしい機能を送る</small></button>`}
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
     </div>
     <p class="datainfo">${info}</p>

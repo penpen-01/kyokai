@@ -115,7 +115,7 @@ const Feedback = {
       <h2 class="title sm">ありがとうございます！</h2>
       <p class="lead">ご意見を受け取りました。正式版に向けて参考にします。思いついたら何回でも送ってください。</p>
       <button type="button" class="btn" data-act="fbOpen">もう1件送る</button>
-      <button type="button" class="btn primary" data-act="fbBack">タイトルに戻る</button>
+      <button type="button" class="btn primary" data-act="fbBack">オプションに戻る</button>
     </div>`, null, true);
   },
 
@@ -123,7 +123,7 @@ const Feedback = {
     switch (act) {
       case "fbOpen": this.show(); return true;
       case "fbSend": this.send(); return true;
-      case "fbBack": if (!this.sending && $("#fb-text")) this.saveDraft(); showStart(); return true;
+      case "fbBack": if (!this.sending && $("#fb-text")) this.saveDraft(); showOptions(); return true;
     }
     return false;
   }
