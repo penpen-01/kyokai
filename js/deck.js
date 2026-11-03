@@ -367,6 +367,7 @@ const Decks = {
     const k = ed ? ed.cards[c.id] || 0 : 0, max = this.maxFor(c, ed);
     return `<div class="dmodal" data-act="deckDetailClose">
       <div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}" data-act="noop">
+        ${detailNavHTML(this.detailIds || [], c.id, "deckStep")}
         <div class="dmodal-card">${cardHTML(c, { static: true, hidden: this.hideArt(c, ed || this.find(this.viewing)) })}</div>
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
@@ -387,6 +388,12 @@ const Decks = {
     </div>`;
   },
 
+  /* 詳細を開いたときに画面に並んでいたカードの順番（左右の矢印で使う） */
+  snapIds(from) {
+    const sel = from && from.closest(".dgrid") ? "#overlay #deck-pool [data-id]"
+      : from && from.closest(".dstrips") ? "#overlay .dstrips [data-id]" : "#overlay .dstrips [data-id], #overlay #deck-pool [data-id]";
+    this.detailIds = [...document.querySelectorAll(sel)].map(x => x.dataset.id).filter((v, k, a) => v && DEF[v] && a.indexOf(v) === k);
+  },
   rerender() { if (this.editing) this.renderEdit(); else if (this.viewing) this.showView(this.viewing); },
 
   inc(id, quick) {
@@ -394,7 +401,7 @@ const Decks = {
     const k = ed.cards[id] || 0, max = this.maxFor(c, ed);
     if (k >= max) {
       if (quick && !this.unbound(ed) && this.owned(id) <= k && k < cardLimit(c, CONFIG, ed) && Shop.canTrade(c)) {
-        this.detail = id; this.renderEdit(); return;   // 持っていない分は、詳細から魔石で交換できる
+        this.snapIds(document.querySelector(`#deck-pool [data-id="${CSS.escape(id)}"]`)); this.detail = id; this.renderEdit(); return;   // 持っていない分は、詳細から魔石で交換できる
       }
       if (quick) {
         const own = this.owned(id);
@@ -501,7 +508,8 @@ const Decks = {
         return true;
       }
       case "deckEdit": { const d = this.find(id); if (d) { this.viewing = null; this.startEdit(d, false); } return true; }
-      case "deckDetail": this.detail = id; Shop.tradeAsk = null; this.rerender(); return true;
+      case "deckDetail": this.snapIds(el); this.detail = id; Shop.tradeAsk = null; this.rerender(); return true;
+      case "deckStep": this.detail = stepId(this.detailIds || [], this.detail, +el.dataset.v); Shop.tradeAsk = null; this.rerender(); return true;
       case "deckKey": {
         if (this.editing) { this.editing.key = id; this.rerender(); toast("代表カードにしました（保存すると一覧に反映されます）"); return true; }
         const list = this.mine(), d = list.find(x => x.id === this.viewing);
@@ -576,7 +584,7 @@ document.addEventListener("change", e => {
       blockClick();
       const id = tile.dataset.id;
       if (tile.classList.contains("oslot")) Packs.showDetail(id);
-      else { Decks.detail = id; Decks.rerender(); }
+      else { Decks.snapIds(tile); Decks.detail = id; Decks.rerender(); }
     }, 420);
   });
   document.addEventListener("pointermove", e => { if (t && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) clear(); });

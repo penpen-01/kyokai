@@ -1700,7 +1700,16 @@ function showRules() {
 }
 
 /* 図鑑：カードを絵で並べる（検索・絞り込み）。押すと効果。「効果も表示」で前の1行ずつの一覧にもできる */
-const CL = { q: "", w: "", t: "", own: "", text: false, detail: null };
+const CL = { q: "", w: "", t: "", own: "", text: false, detail: null, ids: [] };
+/* 詳細の窓の左右の矢印：開いたときの一覧（ids）の並びで、前後のカードへ移る。端まで行ったら反対の端へ回る */
+function detailNavHTML(ids, cur, act) {
+  const i = ids.indexOf(cur);
+  if (i < 0 || ids.length < 2) return "";
+  return `<button type="button" class="dm-nav prev" data-act="${act}" data-v="-1" aria-label="前のカード"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg></button>
+    <button type="button" class="dm-nav next" data-act="${act}" data-v="1" aria-label="次のカード"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8"/></svg></button>
+    <span class="dm-pos">${i + 1} / ${ids.length}</span>`;
+}
+function stepId(ids, cur, d) { const i = ids.indexOf(cur); return i < 0 ? cur : ids[(i + d + ids.length) % ids.length]; }
 function showCardList() {
   const usable = CARDS.filter(c => c.limit > 0);
   const collect = ["ready", "offline"].includes(Account.status);
@@ -1738,6 +1747,7 @@ function showCardList() {
     <p class="hint">${list.length}種 ・ ${CL.text ? "" : "カードを押すと効果を見られます"}</p>
     ${list.length ? (CL.text ? rows : grid) : `<p class="callout">条件に合うカードがありません。</p>`}
     ${d ? `<div class="dmodal" data-act="clClose"><div class="dmodal-in" role="dialog" aria-label="${esc(d.name)}" data-act="noop">
+      ${detailNavHTML(CL.ids, d.id, "clStep")}
       <div class="dmodal-card">${cardHTML(d, { static: true, hidden: hide(d) })}</div>
       <div class="dmodal-body"><b class="dm-name">${esc(d.name)}</b>
         <span class="pmeta">${RARITY[d.rarity]} ・ ${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}${d.type === "char" ? ` ・ ${d.atk}/${d.hp}` : ""}</span>
@@ -1936,7 +1946,8 @@ function handleAct(act, el) {
     case "cpu": showCpuSelect(); return;
     case "clFilter": CL[el.dataset.k] = el.dataset.v; showCardList(); return;
     case "clText": CL.text = !!el.checked; showCardList(); return;
-    case "clDetail": CL.detail = el.dataset.id; if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
+    case "clStep": CL.detail = stepId(CL.ids, CL.detail, +el.dataset.v); if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
+    case "clDetail": CL.detail = el.dataset.id; CL.ids = [...document.querySelectorAll("#overlay [data-act=clDetail]")].map(x => x.dataset.id).filter((v, k, a) => a.indexOf(v) === k); if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
     case "clClose": CL.detail = null; if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
     case "start": showCpuSelect(); break;
     case "cpuLevel": startCpuGame(el && el.dataset.v); break;
@@ -2068,4 +2079,17 @@ Fx.apply();
     if (ms.some(m => m.target === o)) io.disconnect();   // 画面ごと作り直したら、前の一覧の見張りをやめる
     o.querySelectorAll(".dgrid > :not([data-io]), .pl-grid > :not([data-io])").forEach(el => { el.dataset.io = "1"; io.observe(el); });
   }).observe(o, { childList: true, subtree: true });
+})();
+
+/* 詳細の窓を左右にスワイプしても、前後のカードへ移れる */
+(() => {
+  let sx = 0, sy = 0, on = false;
+  document.addEventListener("pointerdown", e => { on = !!e.target.closest(".dmodal-in") && !!document.querySelector(".dmodal .dm-nav"); sx = e.clientX; sy = e.clientY; }, true);
+  document.addEventListener("pointerup", e => {
+    if (!on) return; on = false;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const b = document.querySelector(`.dmodal .dm-nav.${dx < 0 ? "next" : "prev"}`);
+    if (b) { blockClick(); handleAct(b.dataset.act, b); }
+  }, true);
 })();

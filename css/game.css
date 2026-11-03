@@ -1469,3 +1469,14 @@ html.nofx .card .shine{display:none}
 .trade.ask{padding:10px;border-radius:10px;border:1px solid #8a76e0;background:rgba(138,118,224,.12)}
 .trade.ask p{margin:0;font-size:13px;display:flex;flex-direction:column;gap:3px}
 .trade.ask p small{justify-content:flex-start;color:var(--muted)}
+
+/* ---- 詳細の窓の左右の矢印（前後のカードへ） ---- */
+.dmodal-in:has(.dm-nav){position:relative;overflow:visible}
+.dm-nav{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;top:96px;z-index:2;width:40px;height:56px;display:grid;place-items:center;border-radius:10px;
+  background:rgba(12,14,30,.85);box-shadow:0 0 0 1px #8a6a2a,0 4px 10px rgba(0,0,0,.5);color:var(--gold)}
+.dm-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.dm-nav.prev{left:6px} .dm-nav.next{right:6px}
+.dm-nav:focus-visible{outline:2px solid var(--fg)}
+.dm-nav:active{transform:scale(.94)}
+.dm-pos{position:absolute;top:8px;right:12px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+@media (min-width:421px){.dm-nav{top:50%;margin-top:-28px}.dm-nav.prev{left:-20px}.dm-nav.next{right:-20px}}
