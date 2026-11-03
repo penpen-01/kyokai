@@ -72,8 +72,38 @@ const Inbox = {
     this.showMail(`${ok.length}通のメールから受け取りました：${ok.map(m => this.giftText(m)).join("、")}`);
   },
 
+  /* ---------- ログインボーナス ---------- */
+  loginReady() { return LOGIN.length && Account.data && Account.status === "ready" && Account.data.loginLast !== localDate(); },
+  loginGift(x) { return [x.gold ? `${x.gold}G` : "", x.stones ? `魔石${x.stones}` : "", x.tickets ? `パック券${x.tickets}枚` : ""].filter(Boolean).join("・") || "—"; },
+  /* ホームを開いたときに呼ぶ。今日まだなら受け取って、カレンダーを見せる */
+  checkLogin() {
+    if (!this.loginReady()) return false;
+    const d = Account.data; d.loginN = d.loginN || 0;
+    const i = d.loginN % LOGIN.length, x = LOGIN[i];
+    d.gold = (d.gold || 0) + x.gold; d.stones = (d.stones || 0) + x.stones; d.tickets = (d.tickets || 0) + x.tickets;
+    d.loginN += 1; d.loginLast = localDate();
+    Account.saveNow();
+    Sound.play("rare", 2);
+    this.loginShown = { i, x };
+    this.showLogin();
+    return true;
+  },
+  showLogin() {
+    const L = this.loginShown; if (!L) return showStart();
+    const n = LOGIN.length, week = Math.floor((Account.data.loginN - 1) / n) + 1;
+    openOverlay(`<div class="panel lb">
+      <h2 class="title sm">ログインボーナス</h2>
+      <p class="lead small">${week > 1 ? `${week}周目 ・ ` : ""}${L.i + 1}日目を受け取りました。休んでも、進んだ日はそのまま続きから始まります。</p>
+      <div class="lb-grid">${LOGIN.map((x, k) => `<div class="lb-day ${k < L.i ? "done" : k === L.i ? "today" : ""} ${k === n - 1 ? "big" : ""}">
+          <small>${k + 1}日目</small><b>${this.loginGift(x)}</b>${k < L.i ? `<i>受取済</i>` : k === L.i ? `<i>今日</i>` : ""}</div>`).join("")}</div>
+      <div class="lb-got"><small>今日のボーナス</small><b>${this.loginGift(L.x)}</b></div>
+      <button type="button" class="btn primary" data-act="loginOk">受け取った</button>
+    </div>`, "start", true);
+  },
+
   handleAct(act, el) {
     switch (act) {
+      case "loginOk": this.loginShown = null; showStart(); return true;
       case "inboxNews": this.showNews(); return true;
       case "inboxMail": this.showMail(); return true;
       case "inboxTake": this.take([el.dataset.id]); return true;

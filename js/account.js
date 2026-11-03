@@ -68,6 +68,9 @@ const Account = {
       created: d.created || Date.now(),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
       // 受け取ったメール（メールのID → 受け取った日時）
+      // ログインボーナス：受け取った回数（何日目まで進んだか）と最後に受け取った日
+      loginN: Math.max(0, Math.floor(+d.loginN || 0)),
+      ...(/^\d{4}-\d{2}-\d{2}$/.test(d.loginLast || "") ? { loginLast: d.loginLast } : {}),
       mailGot: Object.fromEntries(Object.entries(d.mailGot || {}).filter(([k]) => /^[\w-]{1,40}$/.test(k)).map(([k, v]) => [k, +v || 1])),
       redeemed: Object.fromEntries(Object.entries(d.redeemed || {}).filter(([k]) => /^[0-9a-f]{64}$/.test(k))),
       // プレイヤーアイコン（キャラカードのID。なければ「おまかせ」）

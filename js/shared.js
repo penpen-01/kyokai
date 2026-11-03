@@ -313,6 +313,7 @@ function cardHTML(card, o = {}) {
     <span class="foot"><span class="nm ${card.name.length >= 9 ? "xlong" : card.name.length >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
+const DEFAULT_LOGIN = [{ gold: 50 }, { gold: 50 }, { stones: 20 }, { gold: 100 }, { gold: 50 }, { stones: 30 }, { tickets: 1 }];
 /* 効果1つの欠けを補う（追加の設定：card＝トークン、kw＝与える能力、world＝世界の絞り込み、ctype＝カードの種類） */
 function normEffect(e, type) {
   const def = EFFECTS[e.kind], o = def.opts || [];
@@ -380,7 +381,9 @@ function normalizeData(data) {
   const news = (Array.isArray(d.news) ? d.news : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), title: String(x.title || "お知らせ").slice(0, 40), body: String(x.body || "").slice(0, 2000) }));
   const mail = (Array.isArray(d.mail) ? d.mail : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), until: date(x.until), title: String(x.title || "運営からのメール").slice(0, 40), body: String(x.body || "").slice(0, 1000),
     gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards) }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail };
+  // ログインボーナス（7日で1周。休んでも進んだ分は消えない）
+  const login = (Array.isArray(d.login) && d.login.length ? d.login : DEFAULT_LOGIN).slice(0, 14).map(x => ({ gold: Math.max(0, Math.floor(+(x && x.gold) || 0)), stones: Math.max(0, Math.floor(+(x && x.stones) || 0)), tickets: Math.max(0, Math.floor(+(x && x.tickets) || 0)) }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login };
 }
 
 function cleanDeckCards(cards) {

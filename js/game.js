@@ -50,13 +50,13 @@ async function loadCardData() {
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
-  NEWS = data.news; MAIL = data.mail;
+  NEWS = data.news; MAIL = data.mail; LOGIN = data.login;
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 let SERIALS = []; // シリアルコード（ハッシュ）
-let NEWS = [], MAIL = [];   // お知らせ・メール（js/inbox.js）
+let NEWS = [], MAIL = [], LOGIN = [];   // お知らせ・メール（js/inbox.js）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
 /* デッキ（{id: 枚数}）を、シャッフルした山札（idの並び）にする */
@@ -1612,6 +1612,7 @@ const HOME_ICON = {
 
 /* ホーム：上の段（所持・アイコン・設定）→ 背景の絵を見せる空き → 対戦の2つのボタン → 下のメニュー（片手で届くように下へ寄せる） */
 function showStart() {
+  if (typeof Inbox !== "undefined" && Inbox.checkLogin()) return;   // 今日初めて開いたら、先にログインボーナス
   const deck = Decks.selected();
   const goldOK = Account.status !== "none" && Account.status !== "free";
   const icon = goldOK ? Account.icon() : null;

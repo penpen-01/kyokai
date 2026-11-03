@@ -136,6 +136,13 @@ const Admin = {
       <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
       <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
       <div class="fgroup">
+        <span class="gl">ログインボーナス</span>
+        <p class="hint">1日1回、ホームを開いたときにもらえます。上から順に1日ずつ進み、最後まで行ったら最初に戻ります。休んでも進んだ分は消えません。</p>
+        <table class="lbtbl"><tr><th>日</th><th>G</th><th>魔石</th><th>パック券</th></tr>
+          ${(DATA.login || []).map((x, i) => `<tr><td>${i + 1}日目</td>${["gold", "stones", "tickets"].map(k => `<td><input class="txt" type="number" min="0" step="${k === "tickets" ? 1 : 10}" value="${x[k] || 0}" data-login="${i}" data-k="${k}" style="width:90px" aria-label="${i + 1}日目の${k}"></td>`).join("")}</tr>`).join("")}
+        </table>
+      </div>
+      <div class="fgroup">
         <span class="gl">シーズン</span>
         <p class="hint">シーズン名を変えて書き出し・アップロードすると、<b>全員の所持カード・G・デッキがリセット</b>され、新規スタートになります（前のシーズンのデータはFirebaseに残ります）。正式公開のときに使います。</p>
         <div class="frow">
@@ -375,4 +382,11 @@ document.addEventListener("change", e => {
   if (k === "starter") { DATA.config.STARTER_DECK = t.value; Admin.touch(Admin.renderEco); }
   if (k === "sample") { DATA.config.SAMPLE_DECKS = t.checked; Admin.touch(Admin.renderEco); }
   if (k === "deck-level") { const d = DATA.decks.find(x => x.id === t.dataset.id); if (d) { d.level = t.value; Admin.touch(); } }
+});
+
+document.addEventListener("change", e => {
+  const t = e.target; if (t.dataset.login == null) return;
+  const x = DATA.login[+t.dataset.login]; if (!x) return;
+  x[t.dataset.k] = Math.max(0, Math.floor(+t.value || 0)); t.value = x[t.dataset.k];
+  saveDraft(); renderStatus();
 });
