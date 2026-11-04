@@ -1511,8 +1511,10 @@ html.nofx .card .shine{display:none}
 /* 今いる世界（2つに割れる） */
 .bi-half{position:absolute;inset:-2px;background:url("../ui/bg-home.webp") center/cover no-repeat,#05081a;filter:brightness(.45) saturate(.7)}
 .bi-half::after{content:"";position:absolute;inset:0;background:rgba(80,0,20,.35)}
-.bi-half.a{clip-path:polygon(0 0,100% 0,0 100%);animation:bi-split-a .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards}
-.bi-half.b{clip-path:polygon(100% 0,100% 100%,0 100%);animation:bi-split-b .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards}
+.bi-half.a{clip-path:polygon(0 0,100% 0,0 100%);animation:bi-split-a .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards,bi-open-a .8s 2.7s cubic-bezier(.6,0,.2,1) forwards}
+.bi-half.b{clip-path:polygon(100% 0,100% 100%,0 100%);animation:bi-split-b .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards,bi-open-b .8s 2.7s cubic-bezier(.6,0,.2,1) forwards}
+/* 最後は2つの世界が画面の外まで割れて、ボスの全体が見える */
+.bi-face.full{-webkit-mask-image:none;mask-image:none;animation:bi-faceall .8s 2.8s ease-out forwards}
 /* 亀裂：画面の端から端まで */
 .bi-crack{position:absolute;left:50%;top:50%;width:var(--diag);height:4px;margin:-2px 0 0 calc(var(--diag) / -2);transform:rotate(var(--ang)) scaleX(0);transform-origin:50% 50%;
   background:linear-gradient(90deg,#fff,#ffd1e0 30%,#ff2d6f 50%,#ffd1e0 70%,#fff);box-shadow:0 0 14px 4px rgba(255,40,110,.9),0 0 50px 14px rgba(160,40,255,.55);
@@ -1520,8 +1522,8 @@ html.nofx .card .shine{display:none}
 /* 割れた2つの世界のふち（亀裂の光が2本に分かれて、それぞれの世界と一緒に離れる） */
 .bi-edge{position:absolute;left:50%;top:50%;width:var(--diag);height:3px;margin:-1.5px 0 0 calc(var(--diag) / -2);opacity:0;
   background:linear-gradient(90deg,#ffb3cf,#ff2d6f 50%,#ffb3cf);box-shadow:0 0 10px 3px rgba(255,40,110,.9),0 0 30px 8px rgba(160,40,255,.6);
-  transform:rotate(var(--ang));animation:bi-edge-a .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards,bi-edgeglow 1.2s 2s ease-in-out infinite}
-.bi-edge.b{animation-name:bi-edge-b,bi-edgeglow}
+  transform:rotate(var(--ang));animation:bi-edge-a .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards,bi-edgeglow 1.2s 2s ease-in-out infinite,bi-edge-open-a .8s 2.7s cubic-bezier(.6,0,.2,1) forwards}
+.bi-edge.b{animation-name:bi-edge-b,bi-edgeglow,bi-edge-open-b}
 .bi-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:bi-flash .5s 1.02s ease-out}
 /* 鼓動のように脈打つ赤いふち */
 .bi-pulse{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 rgba(255,0,50,0);animation:bi-beat .8s infinite}
@@ -1533,7 +1535,7 @@ html.nofx .card .shine{display:none}
 .bi-tape.bottom{bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translateX(110%);animation:bi-tapein .35s .15s ease-out forwards}
 .bi-tape.bottom span{animation-direction:reverse}
 /* 文字 */
-.bi-text{position:absolute;left:0;right:0;top:52%;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 16px}
+.bi-text{position:absolute;left:0;right:0;top:52%;z-index:3;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55) 25%,rgba(0,0,0,.55) 75%,transparent);padding-top:14px!important;padding-bottom:14px!important;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 16px}
 .bi-text p{margin:0}
 .bi-warn{font-family:var(--f-display);font-weight:900;font-size:clamp(34px,11vw,56px);letter-spacing:.18em;color:#ff2d55;text-shadow:0 0 16px #ff0a3c,0 0 2px #fff;opacity:0;animation:bi-in .2s .15s forwards,bi-blink .8s .35s infinite}
 .bi-t{font-size:14px;letter-spacing:.4em;color:#ffd0dc;opacity:0;animation:bi-up .4s 1.7s forwards}
@@ -1548,6 +1550,11 @@ html.nofx .card .shine{display:none}
 @keyframes bi-edge-a{from{opacity:1}to{opacity:1;transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1)) rotate(var(--ang))}}
 @keyframes bi-edge-b{from{opacity:1}to{opacity:1;transform:translate(var(--dx),var(--dy)) rotate(var(--ang))}}
 @keyframes bi-edgeglow{50%{filter:brightness(1.6)}}
+@keyframes bi-open-a{from{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1))}to{transform:translate(calc(var(--dx) * -14),calc(var(--dy) * -14))}}
+@keyframes bi-open-b{from{transform:translate(var(--dx),var(--dy))}to{transform:translate(calc(var(--dx) * 14),calc(var(--dy) * 14))}}
+@keyframes bi-edge-open-a{from{opacity:1;transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1)) rotate(var(--ang))}to{opacity:0;transform:translate(calc(var(--dx) * -14),calc(var(--dy) * -14)) rotate(var(--ang))}}
+@keyframes bi-edge-open-b{from{opacity:1;transform:translate(var(--dx),var(--dy)) rotate(var(--ang))}to{opacity:0;transform:translate(calc(var(--dx) * 14),calc(var(--dy) * 14)) rotate(var(--ang))}}
+@keyframes bi-faceall{to{opacity:.9}}
 @keyframes bi-split-a{to{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1))}}
 @keyframes bi-split-b{to{transform:translate(var(--dx),var(--dy))}}
 @keyframes bi-flash{0%{opacity:.9}100%{opacity:0}}
@@ -1562,7 +1569,7 @@ html.nofx .card .shine{display:none}
 @keyframes bi-glitch{0%{clip-path:inset(0 0 70% 0)}25%{clip-path:inset(40% 0 30% 0)}50%{clip-path:inset(80% 0 0 0)}75%{clip-path:inset(10% 0 60% 0)}100%{clip-path:inset(0 0 100% 0)}}
 @media (prefers-reduced-motion:reduce){
   .bossin,.bossin *,.bossin *::before,.bossin *::after{animation:none!important}
-  .bi-crack{opacity:0}.bi-edge{opacity:1}.bi-edge.a{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1)) rotate(var(--ang))}.bi-edge.b{transform:translate(var(--dx),var(--dy)) rotate(var(--ang))}.bi-face{opacity:.85}.bi-half.a{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1))}.bi-half.b{transform:translate(var(--dx),var(--dy))}
+  .bi-crack{opacity:0}.bi-edge{opacity:1}.bi-edge.a{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1)) rotate(var(--ang))}.bi-edge.b{transform:translate(var(--dx),var(--dy)) rotate(var(--ang))}.bi-face{opacity:.85}.bi-half{display:none}.bi-edge{display:none}.bi-face.full{opacity:.9}
   .bi-tape.top,.bi-tape.bottom{transform:none}.bi-warn,.bi-t,.bi-n,.bi-s{opacity:1}
 }
 .boss-sign{text-align:center;margin:0;color:#ff9fb4;font-family:var(--f-display);letter-spacing:.1em}

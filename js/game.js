@@ -1986,11 +1986,12 @@ function startBossGame(mine) {
       if (DEF[BOSS.rift]) { const u = addUnit(1, BOSS.rift); u.ready = false; }
     } }));
 }
-/* 乱入の演出（約4秒・タップで飛ばせる）
+/* 乱入の演出（約5秒・タップで飛ばせる）
    1. 上下に警告の帯が走り、画面のふちが心臓の鼓動のように赤く脈打つ
    2. 右上から左下へ、画面の端から端まで光の亀裂が走る
    3. 白く光って画面が揺れ、亀裂にそって世界が2つにずれて割れる。割れ目の奥（虚ろ）からボスの顔
-   4. 「境界が裂ける──」と、ボスの名前（ノイズのように揺れる） */
+   4. 「境界が裂ける──」と、ボスの名前（ノイズのように揺れる）
+   5. 最後に2つの世界が画面の外まで割れて、ボスの全体が見える */
 function bossIntro(done) {
   const v = document.createElement("div");
   v.className = "bossin"; v.setAttribute("role", "alert");
@@ -2002,7 +2003,7 @@ function bossIntro(done) {
   v.style.cssText = `--ang:${ang}deg;--dx:${nx * gap}px;--dy:${ny * gap}px;--diag:${Math.hypot(w, h) + 40}px`;
   const tape = `<span>${"WARNING ▲ 境界干渉 ▲ ".repeat(8)}</span>`;
   v.innerHTML = `
-    <div class="bi-void">${face ? `<div class="bi-face" style="background-image:url('${esc(face)}')"></div>` : ""}</div>
+    <div class="bi-void">${face ? `<div class="bi-face" style="background-image:url('${esc(face)}')"></div><div class="bi-face full" style="background-image:url('${esc(face)}')"></div>` : ""}</div>
     <div class="bi-half a"></div><div class="bi-half b"></div>
     <div class="bi-crack"></div><div class="bi-edge a"></div><div class="bi-edge b"></div>
     <div class="bi-flash"></div>
@@ -2021,7 +2022,7 @@ function bossIntro(done) {
   document.body.appendChild(v);
   if (typeof Sound !== "undefined") { try { Sound.play("lose"); } catch (e) {} }
   if (navigator.vibrate) { try { navigator.vibrate([60, 120, 60, 500, 200]); } catch (e) {} }
-  setTimeout(go, 4400);
+  setTimeout(go, 5200);
 }
 function bossReward() {
   Account.data.srTickets = Account.srTickets + 1;
