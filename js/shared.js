@@ -47,8 +47,8 @@ const EFFECTS = {
   /* 汎用：「何をするか（act）」と「だれに（to / who）」を選ぶ。2026-11-05 から効果はこの形が基本（古い種類は読み込むときにこの形へ置き換える） */
   unit:        { group: "キャラ", label: "キャラに効果（何をするか・対象を選ぶ）", text: (n, e) => unitText(e), opts: ["act", "to"], min: -20, noN: e => !UACTS[e && e.act] || !UACTS[e.act].n },
   player:      { group: "プレイヤー", label: "プレイヤーに効果（ダメージ・回復・ドロー・捨てる）", text: (n, e) => playerText(e), opts: ["pact", "who"] },
-  merge:       { group: "トークン", label: "合体（場の部品を破壊して、キャラを出す）", text: (n, e) => `自分の場に「${tokName(e)}」が${n}体以上いれば、それを${n}体破壊して、${intoDesc(e)}を出す。`, opts: ["token", "into"], tokenType: "char" },
-  costDown:    { group: "エナジー", label: "自分のカードのコストを下げる（このターン・ずっと）", text: (n, e) => `${e && e.dur === "game" ? "この対戦中ずっと、" : "このターン、"}自分の${worldNo(e)}${ctypeName(e)}のコストを${n}下げる（0より下がらない）。`, opts: ["world", "ctype", "dur"] },
+  merge:       { group: "トークン", label: "合体（場の部品を破壊して、キャラを出す）", text: (n, e) => `自分の場に「${tokName(e)}」が${n}体以上いれば、それを${n}体破壊して、${intoDesc(e)}を出す（登場時の効果も発動する）。`, opts: ["token", "into"], tokenType: "char" },
+  costDown:    { group: "エナジー", label: "手札のカードのコストを下げる（このターン・ずっと）", text: (n, e) => `${e && e.dur === "game" ? "" : "このターン、"}今の自分の手札の${worldNo(e)}${ctypeName(e)}すべてのコストを${n}下げる（0より下がらない${e && e.dur === "game" ? "。手札にある間ずっと" : ""}）。`, opts: ["world", "ctype", "dur"] },
   winTimer:    { group: "このキャラ", label: "特殊勝利（場にいるまま、自分のターンの始めをN回むかえると勝ち）", text: n => `このキャラが場にいるまま、自分のターンの始めを${n}回むかえると、勝利する（場を離れると数え直し）。`, self: true },
   draw:        { legacy: true, group: "ドロー", label: "カードを引く",                  text: n => `カードを${n}枚引く。` },
   refresh:     { group: "ドロー", label: "手札を入れ替える",              text: n => n ? `手札をすべて山札に戻して切り直し、その枚数より${n}枚多く引く。` : "手札をすべて山札に戻して切り直し、同じ枚数を引く。", min: 0 },
@@ -114,7 +114,7 @@ const UACTS = {
   shuffle:   { label: "山札に混ぜる" },
   transform: { label: "変身させる", token: true },
   swap:      { label: "攻撃力と体力を入れ替える" },
-  copy:      { label: "同じキャラを自分の場に出す（複製）" },
+  copy:      { label: "複製を自分の場に出す（今の状態ごと）" },
   steal:     { label: "奪う（相手キャラだけ）", enemyOnly: true }
 };
 /* だれに（to）。role：使うときに選ぶ対象の役割（enemy / own / any / enemyF） */
@@ -167,7 +167,7 @@ function unitText(e, T) {
     case "shuffle": return side === "enemy" ? `${T}を相手の山札に混ぜる（トークンは消える）。` : `${T}を持ち主の山札に混ぜる（トークンは消える）。`;
     case "transform": return e.card ? `${T}を${tokDesc(e)}に変身させる。` : `${T}を、効果も能力もない1/1に変身させる。`;
     case "swap": return `${T}の攻撃力と体力を入れ替える。`;
-    case "copy": return `${T}と同じキャラを、自分の場に1体出す（受けたダメージや強化は写さない）。`;
+    case "copy": return `${T}の複製を、自分の場に1体出す（受けたダメージ・強化・与えられた能力もそのまま写す。登場時の効果は発動しない）。`;
     case "steal": return `${T}を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。`;
   }
   return "（効果未設定）";

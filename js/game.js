@@ -136,7 +136,7 @@ function mulligan(pi, redraw) {
   if (redraw) {
     // 境界の欠片は山札に戻さず、手元に残す
     const coins = p.hand.filter(id => id === "coin");
-    p.deck.push(...p.hand.filter(id => id !== "coin")); p.hand = coins;
+    p.deck.push(...p.hand.filter(id => id !== "coin")); p.hand = coins; handReset(p);
     shuffle(p.deck);
     const k = CONFIG.START_HAND + (pi !== S.first ? (CONFIG.SECOND_BONUS || 0) : 0);
     for (let i = 0; i < k; i++) draw(pi, true);
@@ -238,7 +238,7 @@ function endTurn(pi) {
   if (checkWin()) return;
   // 「このターンだけ」の能力・装甲・コスト低下を消す
   S.players.forEach(p => {
-    p.costMods = (p.costMods || []).filter(m => !m.turn);
+    p.handCutT = [];
     p.field.forEach(u => {
       if (u.tmpKws) { u.kws = (u.kws || []).filter(k => !u.tmpKws.includes(k)); delete u.tmpKws; }
       if (u.tmpArmor) { u.armorPlus = Math.max(0, (u.armorPlus || 0) - u.tmpArmor); delete u.tmpArmor; }
@@ -308,12 +308,23 @@ function roleAllows(pi, role, owner, u) {
   if (owner !== roleSide(pi, role)) return false;
   return role === "enemy" || role === "enemyF" ? canTarget(u) : true;
 }
-/* コスト：次の1枚だけ下げる（discount）＋「コストを下げる」効果（このターン／この対戦中） */
-function effCost(pi, d) {
+/* コスト：次の1枚だけ下げる（discount）＋「コストを下げる」効果。
+   コストを下げる効果は、そのとき手札にあるカード1枚ずつに付く（p.handCut＝ずっと、p.handCutT＝このターンだけ。手札と同じ並び）。
+   山札にあるカードや、あとから引いたカードは下がらない。手札から出ると消える */
+function handCutAt(p, idx) { return idx == null ? 0 : ((p.handCut || [])[idx] || 0) + ((p.handCutT || [])[idx] || 0); }
+function effCost(pi, d, idx) {
   const p = S.players[pi];
-  const mods = (p.costMods || []).filter(m => (!m.world || d.world === m.world) && (!m.ctype || d.type === m.ctype)).reduce((a, m) => a + m.n, 0);
-  return Math.max(0, d.cost - (p.discount || 0) - mods);
+  return Math.max(0, d.cost - (p.discount || 0) - handCutAt(p, idx));
 }
+/* 手札から idx のカードを抜く（コスト低下の並びも一緒に） */
+function handTake(p, idx) {
+  const [id] = p.hand.splice(idx, 1);
+  if (p.handCut) p.handCut.splice(idx, 1);
+  if (p.handCutT) p.handCutT.splice(idx, 1);
+  return id;
+}
+/* 手札を作り直したとき（入れ替え・マリガン）は、コスト低下も消す */
+function handReset(p) { p.handCut = []; p.handCutT = []; }
 
 /* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか（any は両方） */
 function roleSide(pi, role) { return role === "enemy" || role === "enemyF" ? opp(pi) : pi; }
@@ -326,7 +337,7 @@ function canPlay(pi, idx) {
   const p = S.players[pi], d = DEF[p.hand[idx]];
   if (!d) return { ok: false, reason: "そのカードはありません" };
   if (S.over || S.phase !== "play" || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
-  if (effCost(pi, d) > p.e) return { ok: false, reason: "エナジーが足りません" };
+  if (effCost(pi, d, idx) > p.e) return { ok: false, reason: "エナジーが足りません" };
   const sac = d.pay && d.pay.kind === "sacrifice";
   if (sac && !p.field.length) return { ok: false, reason: "代償にする自分のキャラがいません" };
   if (d.pay && d.pay.kind === "life" && p.hp <= d.pay.n) return { ok: false, reason: "代償の体力が足りません" };
@@ -361,8 +372,8 @@ function playCard(pi, idx, targetsIn) {
   for (const r of roles) {
     if (!targetOpts(pi, r).includes(targets[r])) return false;
   }
-  const cost = effCost(pi, d);
-  p.hand.splice(idx, 1);
+  const cost = effCost(pi, d, idx);
+  handTake(p, idx);
   p.e -= cost;
   p.played = (p.played || 0) + 1;   // このターンに使ったカードの数（コンボの条件）
   p.discount = 0;
@@ -478,7 +489,10 @@ function unitEffect(pi, e, targets, self) {
       case "copy": {
         if (fieldFull(me)) { log("場に空いている場所がなく、複製できなかった。"); break; }
         const c = addUnit(pi, u.id);
-        if (DEF[u.id] && DEF[u.id].effects.some(x => x.kind === "winTimer")) c.winIn = null;
+        // 受けたダメージ・強化・与えられた能力・沈黙も写す（行動不能と、特殊勝利の数は写さない）
+        Object.assign(c, { atk: u.atk, hp: u.hp, maxHp: u.maxHp, kws: [...(u.kws || [])], armorPlus: u.armorPlus || 0, silenced: !!u.silenced, shieldUsed: !!u.shieldUsed,
+          ...(u.tmpKws ? { tmpKws: [...u.tmpKws] } : {}), ...(u.tmpArmor ? { tmpArmor: u.tmpArmor } : {}) });
+        c.ready = false;
         log(`${cname(u.id)}の複製が現れた。`); fx(unitSel(c.uid), "複製", "heal");
         break;
       }
@@ -507,7 +521,7 @@ function playerEffect(pi, e) {
       case "draw": for (let i = 0; i < n; i++) draw(q); break;
       case "discard":
         for (let i = 0; i < n && p.hand.length; i++) {
-          const [id] = p.hand.splice(Math.floor(Math.random() * p.hand.length), 1);
+          const id = handTake(p, Math.floor(Math.random() * p.hand.length));
           log(`${pname(q)}は${cname(id)}を捨て${q === pi ? "た" : "させられた"}。`);
         }
         break;
@@ -526,7 +540,7 @@ function effect(pi, e, targets, self) {
     case "refresh": {
       const coins = me.hand.filter(id => id === "coin");
       const k = me.hand.length - coins.length;
-      me.deck.push(...me.hand.filter(id => id !== "coin")); me.hand = coins; shuffle(me.deck);
+      me.deck.push(...me.hand.filter(id => id !== "coin")); me.hand = coins; handReset(me); shuffle(me.deck);
       for (let i = 0; i < k + n; i++) draw(pi, true);
       log(`${pname(pi)}は手札を入れ替えた（${me.hand.length}枚）。`);
       break;
@@ -584,12 +598,17 @@ function effect(pi, e, targets, self) {
       parts.slice(0, n).forEach(u => onDeath(pi, u));
       const c = addUnit(pi, e.into);
       log(`${cname(e.card)}が${n}体合体して、${cname(e.into)}になった！`); fx(unitSel(c.uid), "合体！", "heal");
+      // 合体してできたキャラは、登場時の効果も発動する（対象を選ぶ効果はランダム）
+      runEffects(pi, DEF[e.into], autoTargets(pi, c), c);
       break;
     }
     case "costDown": {
-      (me.costMods || (me.costMods = [])).push({ n, ...(e.world ? { world: e.world } : {}), ...(e.ctype ? { ctype: e.ctype } : {}), ...(e.dur === "game" ? {} : { turn: true }) });
-      log(`${pname(pi)}の${e.world ? WORLDS[e.world] + "の" : ""}${e.ctype === "char" ? "キャラ" : e.ctype === "spell" ? "魔法" : "カード"}のコストが${n}下がった${e.dur === "game" ? "（この対戦中ずっと）" : "（このターン）"}。`);
-      fx(playerSel(pi), `コスト-${n}`, "heal");
+      const key = e.dur === "game" ? "handCut" : "handCutT";
+      const arr = me[key] || (me[key] = []);
+      let k = 0;
+      me.hand.forEach((id, i) => { const c = DEF[id]; if (c && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype)) { arr[i] = (arr[i] || 0) + n; k++; } });
+      log(k ? `${pname(pi)}の手札の${e.world ? WORLDS[e.world] + "の" : ""}${e.ctype === "char" ? "キャラ" : e.ctype === "spell" ? "魔法" : "カード"}${k}枚のコストが${n}下がった${e.dur === "game" ? "" : "（このターン）"}。` : "コストが下がるカードが手札になかった。");
+      if (k) fx(playerSel(pi), `コスト-${n}`, "heal");
       break;
     }
     case "winTimer": if (self && self.hp > 0) { self.winIn = n; log(`${cname(self.id)}：あと${n}回、自分のターンの始めをむかえると勝利。`); fx(unitSel(self.uid), `勝利まで${n}`, "trig"); } break;
@@ -1256,7 +1275,7 @@ function render() {
       // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
       const dim = !DEF[id] || (S.turn === ME && !S.over && !canPlay(ME, i).ok);
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
-      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id]) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
+      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
     }).join("")}</div>
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
@@ -1336,10 +1355,10 @@ function doMull(redraw) {
 /* 手札が多いときはカードを重ねて、全部が手札の幅に収まるようにする */
 /* 手札はコストの安い順に表示する（実際の手札の順番は変えない。data-hand は元の位置） */
 function handOrder(p) {
-  const key = id => DEF[id] ? effCost(ME, DEF[id]) : 99;
+  const key = i => DEF[p.hand[i]] ? effCost(ME, DEF[p.hand[i]], i) : 99;
   return p.hand.map((id, i) => i).sort((a, b) => {
     const A = p.hand[a], B = p.hand[b];
-    return key(A) - key(B) || (DEF[A] && DEF[B] ? (DEF[A].type === DEF[B].type ? 0 : DEF[A].type === "char" ? -1 : 1) || DEF[A].name.localeCompare(DEF[B].name, "ja") : 0) || a - b;
+    return key(a) - key(b) || (DEF[A] && DEF[B] ? (DEF[A].type === DEF[B].type ? 0 : DEF[A].type === "char" ? -1 : 1) || DEF[A].name.localeCompare(DEF[B].name, "ja") : 0) || a - b;
   });
 }
 
