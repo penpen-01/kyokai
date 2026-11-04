@@ -1497,3 +1497,6 @@ html.nofx .card .shine{display:none}
 .lvl-mode .ptag{margin-left:8px}
 .wtag{font-weight:800}
 .wtag.w-myth{color:var(--w-myth)} .wtag.w-fan{color:var(--w-fan)} .wtag.w-mech{color:var(--w-mech)}
+.wpick.w-myth{--lc:var(--w-myth)} .wpick.w-fan{--lc:var(--w-fan)} .wpick.w-mech{--lc:var(--w-mech)}
+.wpick .lvl-head b{color:var(--lc)}
+.dbt-foot .wtag{font-size:10.5px;text-shadow:0 1px 3px #000}

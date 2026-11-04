@@ -34,10 +34,11 @@ const Decks = {
     return Account.setDecks(list);
   },
   /* 作れるデッキの数の上限。いっぱいなら知らせて true を返す（新しく作るときだけ使う） */
-  full(sample) {
-    const n = this.mine().filter(d => !!d.free === !!sample).length;
+  full(kind) {
+    kind = kind === true ? "sample" : kind || "mine";
+    const n = this.mine().filter(d => this.kindOf(d) === kind).length;
     if (n < (CONFIG.DECK_MAX || 10)) return false;
-    toast(`${sample ? "サンプルデッキ" : "デッキ"}は${CONFIG.DECK_MAX}個までです。いらないデッキを消してから作ってください`);
+    toast(`${{ sample: "サンプルデッキ", world: "限定構築のデッキ" }[kind] || "デッキ"}は${CONFIG.DECK_MAX}個までです。いらないデッキを消してから作ってください`);
     return true;
   },
   /* 保存できない理由。30枚に足りないのは「未完成」として保存できる（対戦には使えない） */
@@ -66,7 +67,15 @@ const Decks = {
   },
   find(id) { return this.mine().find(d => d.id === id) || (this.free() ? PRESETS.find(d => d.id === id) : null) || null; },
   owned(id) { return Account.owned(id); },
-  problems(deck) { return deckProblems(deck, DEF, CONFIG, this.unbound(deck) ? null : id => this.owned(id)); },
+  problems(deck) {
+    const pr = deckProblems(deck, DEF, CONFIG, this.unbound(deck) ? null : id => this.owned(id));
+    // 限定構築（世界限定）のデッキ：30枚すべて決めた世界のカード
+    if (deck && deck.fmt === "world" && Object.keys(deck.cards || {}).some(id => DEF[id] && DEF[id].world !== deck.world))
+      pr.push(`限定構築のデッキなので、${WORLDS[deck.world] || ""}のカードだけにしてください`);
+    return pr;
+  },
+  isWorld(deck) { return !!(deck && deck.fmt === "world" && WORLDS[deck.world]); },
+  kindOf(d) { return d.free ? "sample" : d.fmt === "world" ? "world" : "mine"; },
   isValid(deck) { return !!deck && this.problems(deck).length === 0; },
   // 入れられる枚数：持っていないカードも上限まで入れられる（保存はできる・対戦には使えない）
   maxFor(c, deck) { return cardLimit(c, CONFIG, deck); },
@@ -167,7 +176,7 @@ const Decks = {
         <span class="dbt-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
         ${using ? `<span class="dbt-using">使用中</span>` : ""}
         ${st}
-        <span class="dbt-foot"><b class="dbt-name">${esc(d.name)}</b>${this.worldBar(d)}</span>
+        <span class="dbt-foot">${this.isWorld(d) ? `<small class="wtag w-${d.world}">限定・${WORLDS[d.world]}</small>` : ""}<b class="dbt-name">${esc(d.name)}</b>${this.worldBar(d)}</span>
       </button>
     </div>`;
   },
@@ -178,18 +187,20 @@ const Decks = {
     if (this.listTab === "sample" && !samp) this.listTab = "mine";
     if (this.listTab === "cpu" && !this.free()) this.listTab = "mine";
     const tab = this.listTab;
-    const list = tab === "cpu" ? PRESETS : all.filter(d => !!d.free === (tab === "sample"));
+    const list = tab === "cpu" ? PRESETS : all.filter(d => this.kindOf(d) === tab);
     const tabBtn = (v, label, n) => `<button type="button" role="tab" data-act="deckListTab" data-v="${v}" aria-pressed="${tab === v}">${label}${n != null ? ` <small>${n}</small>` : ""}</button>`;
-    const newTile = tab === "cpu" ? "" : `<button type="button" class="dbt new" data-act="${tab === "sample" ? "deckNewSample" : "deckNew"}"><span class="dbt-plus" aria-hidden="true">＋</span><b>新しく作る</b></button>`;
+    const newTile = tab === "cpu" ? "" : `<button type="button" class="dbt new" data-act="${{ sample: "deckNewSample", world: "deckNewWorld" }[tab] || "deckNew"}"><span class="dbt-plus" aria-hidden="true">＋</span><b>新しく作る</b></button>`;
     openOverlay(`<div class="panel wide">
       ${this.topbar("デッキ編成", "deckBack")}
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
-      ${samp || this.free() ? `<div class="seg wide dl-tabs" role="tablist">
-        ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => !d.free).length}/${CONFIG.DECK_MAX}`)}
+      ${true ? `<div class="seg wide dl-tabs" role="tablist">
+        ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => this.kindOf(d) === "mine").length}/${CONFIG.DECK_MAX}`)}
+        ${tabBtn("world", "限定構築", `${all.filter(d => this.kindOf(d) === "world").length}/${CONFIG.DECK_MAX}`)}
         ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
-      <p class="hint dl-hint">${tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです（ベータ限定）。勝ってもGはもらえません。"
+      <p class="hint dl-hint">${tab === "world" ? "世界限定戦で使うデッキです。1つの世界を決めて、その世界のカードだけで30枚を組みます。"
+        : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです（ベータ限定）。勝ってもGはもらえません。"
         : tab === "cpu" ? "CPU が使っているデッキです。"
         : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っていないカードも入れて保存できます（そろうまで対戦には使えません）。"}`}
         ${tab !== "cpu" && list.length > 1 ? "<br>デッキを長押しすると、順番を並び替えられます。" : ""}</p>
@@ -207,6 +218,16 @@ const Decks = {
     let k = 0;
     const next = list.map(d => (!!d.free === sample ? moved[k++] || d : d));
     if (!this.saveMine(next)) toast("保存できませんでした（サーバーに接続できていません）");
+  },
+
+  /* 限定構築：新しいデッキの世界を選ぶ */
+  showWorldPick() {
+    openOverlay(`<div class="panel">
+      ${this.topbar("限定構築：世界を選ぶ", "decks")}
+      <p class="lead small">このデッキで使う世界を選んでください。あとから変えることはできません（変えたいときは新しく作ります）。</p>
+      <div class="lvls">${Object.entries(WORLDS).map(([k, v]) => `<button type="button" class="lvl lvl-mode wpick w-${k}" data-act="deckNewWorldGo" data-v="${k}">
+        <span class="lvl-body"><span class="lvl-head"><b>${v}</b></span><span class="lvl-desc">${v}のカードだけで30枚を組む</span></span><span class="lvl-go" aria-hidden="true">›</span></button>`).join("")}</div>
+    </div>`, "start", true);
   },
 
   showPresets() {
@@ -283,7 +304,10 @@ const Decks = {
       const room = Math.min(cardLimit(c, CONFIG, deck) - (cards[id] || 0), CONFIG.DECK_SIZE - deckCount({ cards }));
       if (room > 0) cards[id] = (cards[id] || 0) + Math.min(n, room);
     });
-    this.editing = { id: deck.id, name: deck.name, cards, want: {}, key: deck.key || null, isNew, free: !!deck.free, confirmDel: false };
+    this.editing = { id: deck.id, name: deck.name, cards, want: {}, key: deck.key || null, isNew, free: !!deck.free, ...(this.isWorld(deck) ? { fmt: "world", world: deck.world } : {}), confirmDel: false };
+    if (this.isWorld(deck)) this.filter.world = deck.world;   // 限定構築は、その世界のカードだけを出す
+    else if (this.filter.world !== "all" && this.lastWorldEdit) this.filter.world = "all";
+    this.lastWorldEdit = this.isWorld(deck);
     this.editTab = isNew && !deckCount(deck) ? "pool" : (deckCount(deck) ? "deck" : "pool");
     this.detail = null;
     this.renderEdit();
@@ -295,6 +319,7 @@ const Decks = {
     return CARDS.filter(c => c.limit > 0)
       .filter(c => f.type === "all" || c.type === f.type)
       .filter(c => f.world === "all" || c.world === f.world)
+      .filter(c => !this.isWorld(ed) || c.world === ed.world)
       .filter(c => f.rarity === "all" || c.rarity === f.rarity)
       .filter(c => f.cost === "all" || (f.cost === "7+" ? c.cost >= 7 : (([a, b]) => c.cost >= a && c.cost <= b)(f.cost.split("-").map(Number))))
       .filter(c => !f.owned || unb || this.owned(c.id) > 0)
@@ -324,6 +349,7 @@ const Decks = {
         <span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span>
       </div>
       ${ed.free ? `<p class="hint">サンプルデッキ：持っていないカードも入れられます（ベータ限定）。</p>` : ""}
+      ${this.isWorld(ed) ? `<p class="hint">限定構築（${WORLDS[ed.world]}）：${WORLDS[ed.world]}のカードだけで組むデッキです。世界限定戦で使えます。</p>` : ""}
       <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(ed) : "このデッキで対戦できます"}</p>
       ${this.curveHTML(ed.cards)}
       <div class="seg dtabs" role="tablist">
@@ -341,7 +367,7 @@ const Decks = {
       <div class="dfilters">
         <input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索（例：守護、ドロー）" value="${esc(f.q)}" autocomplete="off">
         <div class="seg">${seg("type", "all", "すべて")}${seg("type", "char", "キャラ")}${seg("type", "spell", "魔法")}</div>
-        <div class="seg">${seg("world", "all", "全世界")}${Object.entries(WORLDS).map(([k, v]) => seg("world", k, v)).join("")}</div>
+        ${this.isWorld(ed) ? `<p class="hint">限定構築（${WORLDS[ed.world]}）：${WORLDS[ed.world]}のカードだけを出しています</p>` : `<div class="seg">${seg("world", "all", "全世界")}${Object.entries(WORLDS).map(([k, v]) => seg("world", k, v)).join("")}</div>`}
         <div class="seg">${Object.entries(COST_BANDS).map(([k, v]) => seg("cost", k, v)).join("")}</div>
         <div class="seg">${seg("rarity", "all", "全レア")}${Object.keys(RARITY).map(k => seg("rarity", k, RARITY_SHORT[k])).join("")}</div>
         ${unb ? "" : `<label class="ownchk"><input type="checkbox" id="deck-owned" ${f.owned ? "checked" : ""}> 持っているカードだけ</label>`}
@@ -445,6 +471,12 @@ const Decks = {
       case "deckUse": this.select(id); if (this.viewing) this.showView(this.viewing); else this.showList(); return true;
       case "deckView": this.detail = null; this.codeFor = null; this.showView(id); return true;
       case "deckNew": if (this.full(false)) return true; this.startEdit({ id: "d" + Date.now().toString(36), name: "新しいデッキ", cards: {} }, true); return true;
+      case "deckNewWorld": if (this.full("world")) return true; this.showWorldPick(); return true;
+      case "deckNewWorldGo": {
+        const w = el.dataset.v; if (!WORLDS[w] || this.full("world")) return true;
+        this.startEdit({ id: "w" + Date.now().toString(36), name: `${WORLDS[w]}の限定デッキ`, cards: {}, fmt: "world", world: w }, true);
+        return true;
+      }
       case "deckNewSample": if (this.full(true)) return true; this.startEdit({ id: "s" + Date.now().toString(36), name: "サンプルデッキ", cards: {}, free: true }, true); return true;
       case "deckPresets": this.showPresets(); return true;
       case "deckFromPreset": {
@@ -506,8 +538,8 @@ const Decks = {
         return true;
       }
       case "deckCopy": {
-        const p = this.find(id); if (!p || this.full(!!p.free)) return true;
-        this.startEdit({ id: (p.free ? "s" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, want: p.want, free: !!p.free }, true);
+        const p = this.find(id); if (!p || this.full(this.kindOf(p))) return true;
+        this.startEdit({ id: (p.free ? "s" : this.isWorld(p) ? "w" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, want: p.want, free: !!p.free, ...(this.isWorld(p) ? { fmt: "world", world: p.world } : {}) }, true);
         return true;
       }
       case "deckEdit": { const d = this.find(id); if (d) { this.viewing = null; this.startEdit(d, false); } return true; }
@@ -535,10 +567,10 @@ const Decks = {
         if (pr.length) { toast(pr[0]); return true; }
         const list = this.mine().filter(d => d.id !== ed.id);
         const want = cleanDeckCards(ed.want);
-        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}), ...(ed.key ? { key: ed.key } : {}), ...(Object.keys(want).length ? { want } : {}) });
+        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}), ...(this.isWorld(ed) ? { fmt: "world", world: ed.world } : {}), ...(ed.key ? { key: ed.key } : {}), ...(Object.keys(want).length ? { want } : {}) });
         if (!this.saveMine(list)) { this.editing = null; this.showList("保存できませんでした（サーバーに接続できていません）"); return true; }
         // 対戦に使えるデッキになったときだけ「使用中」にする（未完成のデッキは選ばない）
-        if ((ed.isNew || !this.isValid(this.selected())) && !this.problems(this.mine().find(d => d.id === ed.id) || ed).length) this.select(ed.id);
+        if (!this.isWorld(ed) && (ed.isNew || !this.isValid(this.selected())) && !this.problems(this.mine().find(d => d.id === ed.id) || ed).length) this.select(ed.id);
         const saved = ed;
         this.editing = null; this.detail = null;
         this.showView(saved.id);

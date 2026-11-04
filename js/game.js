@@ -1974,7 +1974,7 @@ function showSolo() {
     ${Decks.topbar("一人で対戦", "back")}
     <div class="lvls">
       ${tile("start", "CPU戦", "初級・中級・上級の CPU と戦う。勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
-      ${tile("worldMode", "世界限定戦", "30枚すべて同じ世界のカードで組んだデッキ同士で戦う。勝つとGがもらえる", { art: art("x-gigas") || art("omega"), cls: "m-world" })}
+      ${tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" })}
       ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
       ${tile("noop", "チュートリアル", "遊び方を、実際に対戦しながら覚える", { off: true, tag: "準備中", cls: "m-off" })}
       ${tile("noop", "パック開放戦", "勝つと、その世界の新しいパックが開く", { off: true, tag: "第2弾から", cls: "m-off" })}
@@ -1982,10 +1982,12 @@ function showSolo() {
   </div>`, "start", true);
 }
 
-/* ---------- 世界限定戦：30枚すべて同じ世界のデッキ同士で戦う ---------- */
+/* ---------- 世界限定戦：30枚すべて同じ世界のデッキ同士で戦う ----------
+   CPU 用の世界限定デッキをオーナーが作るまでは、入口を閉じておく（中身はできている） */
+const WORLD_MODE_OPEN = false;
 const WORLDB = { deck: null };
 function worldDecks() {
-  return Decks.mine().filter(d => deckWorld(d) && !Decks.problems(d).length);
+  return Decks.mine().filter(d => Decks.isWorld(d) && !Decks.problems(d).length);
 }
 function showWorldSelect() {
   const list = worldDecks();
@@ -2003,7 +2005,7 @@ function showWorldSelect() {
     <p class="lead small">30枚すべて同じ世界のカードで組んだデッキだけで戦います。相手の CPU も、1つの世界だけのデッキを使います。勝ったときのGは CPU戦と同じで、連勝ボーナスはありません。</p>
     <h3 class="sec">使うデッキ</h3>
     ${list.length ? `<div class="pr-list">${list.map(row).join("")}</div>`
-      : `<p class="callout">30枚すべて同じ世界のカードで組んだデッキがありません。デッキ編成で作ってください。</p>
+      : `<p class="callout">使える限定構築のデッキがありません。デッキ編成の「限定構築」で作ってください。</p>
          <button type="button" class="btn" data-act="decks">デッキ編成へ</button>`}
     ${list.length ? `<h3 class="sec">相手の強さ</h3>
     <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
