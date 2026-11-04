@@ -1,5 +1,5 @@
 {
- "version": 52,
+ "version": 53,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -3100,7 +3100,8 @@
      "when": "turnStart",
      "card": "tk-gate"
     }
-   ]
+   ],
+   "art": "art/b-janus-ad685efc3b.webp"
   },
   {
    "id": "tk-gate",
@@ -3115,7 +3116,8 @@
    "token": true,
    "rarity": "common",
    "keywords": [],
-   "effects": []
+   "effects": [],
+   "art": "art/tk-gate-02ad557331.webp"
   },
   {
    "id": "b-nem",
@@ -3140,7 +3142,8 @@
      "n": 1,
      "when": "spell"
     }
-   ]
+   ],
+   "art": "art/b-nem-cca73a7ee2.webp"
   },
   {
    "id": "b-abyss",
@@ -3167,7 +3170,8 @@
      "n": 2,
      "when": "attack"
     }
-   ]
+   ],
+   "art": "art/b-abyss-f56c8d60a1.webp"
   },
   {
    "id": "b-rift",
@@ -3195,7 +3199,25 @@
      "n": 1,
      "when": "turnStart"
     }
-   ]
+   ],
+   "art": "art/b-rift-e0d070e4cc.webp"
+  },
+  {
+   "id": "b-nezal",
+   "name": "虚ろなる境界王ネザル",
+   "world": "fan",
+   "type": "char",
+   "cost": 0,
+   "atk": 0,
+   "hp": 1,
+   "glyph": "王",
+   "limit": 0,
+   "token": true,
+   "rarity": "legend",
+   "keywords": [],
+   "effects": [],
+   "note": "ボスの顔（対戦画面のアイコン用。場には出ない）",
+   "art": "art/b-nezal-c4b4f142ea.webp"
   }
  ]
 }
