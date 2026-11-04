@@ -1,5 +1,5 @@
 {
- "version": 49,
+ "version": 50,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -491,6 +491,16 @@
    "cards": {},
    "until": "2026-11-04",
    "created": "2026-11-03"
+  },
+  {
+   "h": "bbfecea1141efe8485dea20e593c58cf70ea626ce30215e652a94222396adeb3",
+   "label": "テスト：隠しボスを呼ぶ",
+   "gold": 0,
+   "cards": {},
+   "until": "2026-12-31",
+   "created": "2026-11-05",
+   "boss": true,
+   "repeat": true
   }
  ],
  "cards": [

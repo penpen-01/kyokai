@@ -383,7 +383,9 @@ function normalizeData(data) {
   const serials = (Array.isArray(d.serials) ? d.serials : []).filter(x => x && /^[0-9a-f]{64}$/.test(x.h)).map(x => ({
     h: x.h, label: String(x.label || "シリアルコード").slice(0, 30),
     gold: Math.max(0, Math.floor(+x.gold || 0)), cards: cleanDeckCards(x.cards),
-    until: /^\d{4}-\d{2}-\d{2}$/.test(x.until || "") ? x.until : "", created: x.created || ""
+    until: /^\d{4}-\d{2}-\d{2}$/.test(x.until || "") ? x.until : "", created: x.created || "",
+    // boss：受け取ると次の上級戦で隠しボスが出る（テスト用）。repeat：同じアカウントで何度でも使える
+    ...(x.boss ? { boss: true } : {}), ...(x.repeat ? { repeat: true } : {})
   }));
   // お知らせ（アップデート内容など）と、メール（全員に届く。Gや魔石、パック券、カードを付けられる）
   const date = v => (/^\d{4}-\d{2}-\d{2}$/.test(v || "") ? v : "");

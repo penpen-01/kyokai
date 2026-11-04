@@ -31,6 +31,7 @@ const Serial = {
       <h2 class="title sm">受け取りました</h2>
       <p class="lead">「${esc(r.label)}」</p>
       ${r.gold ? `<p class="serialgold">＋${r.gold}G</p>` : ""}
+      ${r.boss ? `<p class="boss-sign">……境界が、揺らいでいる。<small>次の上級戦で、隠しボスが乱入します</small></p>` : ""}
       ${list.length ? `<div class="serialcards">${list.map(([id, n]) => `<div class="serialcard">${cardHTML(DEF[id], { static: true })}<span>${esc(DEF[id].name)} ×${n}</span></div>`).join("")}</div>` : ""}
       <p class="datainfo">所持G：${Account.gold}G</p>
       <button type="button" class="btn primary" data-act="optBack">ホームに戻る</button>
@@ -54,9 +55,10 @@ const Serial = {
       const today = localDate();
       if (s.until && today > s.until) { say(`このコードの有効期限（${s.until}）は過ぎています`); return; }
       if (!Account.data.redeemed) Account.data.redeemed = {};
-      if (Account.data.redeemed[h]) { say("このコードはもう受け取っています"); return; }
+      if (Account.data.redeemed[h] && !s.repeat) { say("このコードはもう受け取っています"); return; }
       // 受け取り
-      Account.data.redeemed[h] = Date.now();
+      if (!s.repeat) Account.data.redeemed[h] = Date.now();
+      if (s.boss) Account.data.bossNext = true;
       Account.data.gold += s.gold;
       Object.entries(s.cards).forEach(([id, n]) => { if (DEF[id]) Account.data.cards[id] = (Account.data.cards[id] || 0) + n; });
       const saved = await Account.saveNow();
@@ -70,7 +72,7 @@ const Serial = {
         return;
       }
       Sound.play("rare", 3);
-      this.result = { label: s.label, gold: s.gold, cards: s.cards };
+      this.result = { label: s.label, gold: s.gold, cards: s.cards, boss: !!s.boss };
       this.showResult();
     } finally {
       this.busy = false;
