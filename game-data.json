@@ -1,5 +1,5 @@
 {
- "version": 47,
+ "version": 48,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -2938,7 +2938,8 @@
      "n": 1,
      "when": "turnEnd"
     }
-   ]
+   ],
+   "art": "art/x-tochka-5967256dbb.webp"
   },
   {
    "id": "x-junk",
@@ -2964,7 +2965,8 @@
      "when": "death",
      "card": "tk-part"
     }
-   ]
+   ],
+   "art": "art/x-junk-61b09a3e1f.webp"
   },
   {
    "id": "x-commander",
@@ -2989,7 +2991,8 @@
      "n": 1,
      "when": "allyEnter"
     }
-   ]
+   ],
+   "art": "art/x-commander-34a6cf9829.webp"
   },
   {
    "id": "x-cannon",
@@ -3011,7 +3014,8 @@
      "n": 2,
      "when": "turnStart"
     }
-   ]
+   ],
+   "art": "art/x-cannon-313a283737.webp"
   },
   {
    "id": "x-lockcode",
@@ -3032,7 +3036,8 @@
      "kind": "debuffTarget",
      "n": 2
     }
-   ]
+   ],
+   "art": "art/x-lockcode-294b806034.webp"
   }
  ]
 }
