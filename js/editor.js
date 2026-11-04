@@ -223,6 +223,7 @@ function renderEditor() {
             <div class="field"><span class="lab">1デッキの投入上限</span><div class="limit">${stepper("limit", c.limit, "投入上限")}</div></div>
           </div>
           <label class="check"><input type="checkbox" data-token ${c.token ? "checked" : ""}><span><b>トークン</b><span>効果で出すだけのカード。デッキに入らず、パックからも出ません（投入上限は0になります）。</span></span></label>
+          ${c.token ? "" : `<label class="check"><input type="checkbox" data-boss ${c.boss ? "checked" : ""}><span><b>ボス限定</b><span>パックやショップの交換では手に入らず、隠しボスを倒したときだけ手に入ります（パックの封入カードからは外してください）。</span></span></label>`}
           <p class="hint">投入上限は、1つのデッキに何枚まで入れられるか。ルール設定の「同じカードを入れられる上限」（今は${DATA.config.COPY_MAX}枚）より大きくしても、そちらが優先されます。0にすると、データには残りますがデッキに入れられなくなります。</p>
           <div class="field grow">
             <span class="lab">レア度</span>
@@ -488,6 +489,7 @@ document.addEventListener("change", e => {
   if (t.dataset.ai && AiTools.input(t)) return;
   if (t.dataset.num) { setNum(t.dataset.num, t.value); return; }
   if (t.dataset.limitIn) { setCopies(t.dataset.limitIn, t.value); return; }
+  if (t.dataset.boss != null && t.type === "checkbox") { const c = curCard(); c.boss = t.checked; changed(); renderEditor(); renderList(); return; }
   if (t.dataset.token != null && t.type === "checkbox") {
     const c = curCard(); c.token = t.checked; if (c.token) c.limit = 0; else if (!c.limit) c.limit = 3;
     changed(); renderEditor(); renderList(); return;
@@ -604,6 +606,7 @@ function exportJSON() {
     Object.assign(o, { glyph: c.glyph, limit: c.limit, rarity: c.rarity, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });
     if (c.type === "char" && c.armor) o.armor = c.armor;
     if (c.token) o.token = true;
+    if (c.boss) o.boss = true;
     if (c.pay) o.pay = c.pay;
     if (c.note) o.note = c.note;
     if (c.art) o.art = c.art;

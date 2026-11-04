@@ -129,6 +129,7 @@ const DEFAULT_CONFIG = {
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
   STREAK_STEP: 10, STREAK_MAX: 50,
+  BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25,
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
@@ -160,6 +161,9 @@ const CONFIG_INFO = {
   REWARD_ONLINE: { label: "対人戦に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   STREAK_STEP:   { label: "CPU戦の連勝ボーナス：1連勝ごとに増える割合（%）", min: 0, max: 100, group: "eco" },
   STREAK_MAX:    { label: "CPU戦の連勝ボーナス：上限（%）", min: 0, max: 500, group: "eco", step: 10 },
+  BOSS_RATE:     { label: "隠しボス：上級に勝ったとき次に出る確率（%）", min: 0, max: 100, group: "eco" },
+  BOSS_PITY:     { label: "隠しボス：天井（上級でこの回数勝つと必ず出る）", min: 1, max: 999, group: "eco" },
+  BOSS_HP:       { label: "隠しボス：ボスの体力", min: 1, max: 99, group: "eco" },
   STONE_GET_COMMON:  { label: "分解でもらえる魔石：コモン", min: 0, max: 100000, group: "eco" },
   STONE_GET_RARE:    { label: "分解でもらえる魔石：レア", min: 0, max: 100000, group: "eco" },
   STONE_GET_SR:      { label: "分解でもらえる魔石：SR", min: 0, max: 100000, group: "eco", step: 10 },
@@ -348,6 +352,7 @@ function normalizeData(data) {
     hp: c.type === "spell" ? undefined : Math.max(1, +c.hp || 1),
     glyph: String(c.glyph || "？"),
     // 1デッキに入れられる上限（0なら使えない）。古い形式の copies（共通山札の枚数）からも読める
+    boss: !!c.boss && !c.token,   // ボス限定：パックや交換では手に入らず、隠しボスを倒すと手に入る
     token: !!c.token,   // トークン：効果で出すだけのカード（デッキに入らない・パックから出ない）
     limit: c.token ? 0 : Math.max(0, c.limit != null ? +c.limit || 0 : c.copies != null ? Math.min(3, +c.copies || 0) : 3),
     rarity: RARITY[c.rarity] ? c.rarity : (+c.cost >= 7 ? "legend" : +c.cost >= 5 ? "rare" : "common"),
@@ -361,7 +366,7 @@ function normalizeData(data) {
   })).filter(c => c.id);
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
-    level: ["easy", "normal", "hard", "test"].includes(x.level) ? x.level : "normal"   // test = 検証用（CPUもプレイヤーも使わない）
+    level: ["easy", "normal", "hard", "boss", "test"].includes(x.level) ? x.level : "normal"   // test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用
   }));
   const packs = (Array.isArray(d.packs) ? d.packs : []).filter(x => x && x.id).map(x => ({
     id: String(x.id), name: String(x.name || "パック"), price: Math.max(0, +x.price || 0), size: Math.max(1, Math.min(10, +x.size || 5)),

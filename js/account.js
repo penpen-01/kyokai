@@ -33,6 +33,7 @@ const Account = {
   get gold() { return this.data ? this.data.gold || 0 : 0; },
   get stones() { return this.data ? this.data.stones || 0 : 0; },
   get tickets() { return this.data ? this.data.tickets || 0 : 0; },
+  get srTickets() { return this.data ? this.data.srTickets || 0 : 0; },
   usable() { return this.status === "ready" || this.status === "offline" || this.status === "free"; },
 
   async init() {
@@ -78,6 +79,11 @@ const Account = {
       // ショップ：魔石とパック券
       stones: Math.max(0, Math.floor(+d.stones || 0)),
       tickets: Math.max(0, Math.floor(+d.tickets || 0)),
+      // SR以上確定パック券（隠しボスの報酬）
+      srTickets: Math.max(0, Math.floor(+d.srTickets || 0)),
+      // 隠しボス：最後に会ってから上級で勝った回数（天井用）と、次の上級戦でボスが出るか
+      bossPity: Math.max(0, Math.floor(+d.bossPity || 0)),
+      ...(d.bossNext ? { bossNext: true } : {}),
       // パックの開封履歴（直近100パック）{ t: 時刻, p: パックID, c: [カードID] }
       packLog: (Array.isArray(d.packLog) ? d.packLog : Object.values(d.packLog || {})).filter(e => e && Array.isArray(e.c)).slice(-100).map(e => ({ t: +e.t || 0, p: String(e.p || ""), c: e.c.map(String).slice(0, 10) })),
       // CPU戦の連勝数（強さごと）と、終わっていないCPU戦の強さ（途中でやめたら連勝が途切れる）

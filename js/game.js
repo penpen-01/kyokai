@@ -1753,6 +1753,7 @@ function showCardList() {
         <span class="pmeta">${RARITY[d.rarity]} ・ ${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}${d.type === "char" ? ` ・ ${d.atk}/${d.hp}` : ""}</span>
         <p class="dm-text">${esc(cardText(d))}</p>
         <span class="pmeta">${Account.status === "free" ? "" : `所持 ${Account.owned(d.id)}枚 ・ `}1デッキに${cardLimit(d, CONFIG)}枚まで</span>
+        ${d.boss ? `<span class="boss-only">ボス限定：隠しボスを倒すと手に入る</span>` : ""}
         ${typeof Shop !== "undefined" && !S ? Shop.tradeHTML(d) : ""}
         <button type="button" class="btn" data-act="clClose">閉じる</button></div></div></div>` : ""}
   </div>`, null, !S);
@@ -1793,8 +1794,17 @@ function giveReward(res) {
     r.bonus = r.cpu ? Account.streakBonus(r.wins) : 0;
     r.g = Math.round(base * (100 + r.bonus) / 100);
   }
+  // 隠しボス：上級に勝つたびに、次の上級戦でボスが出るかを決める（天井つき）。ボスに勝つと報酬
+  if (counts && B) {
+    if (B.kind === "cpu" && CPU_LEVEL === "hard" && res === "win" && !Account.data.bossNext) {
+      const pity = (Account.data.bossPity || 0) + 1;
+      if (pity >= (CONFIG.BOSS_PITY || 20) || Math.random() * 100 < (CONFIG.BOSS_RATE || 0)) { Account.data.bossNext = true; Account.data.bossPity = 0; r.bossSign = true; }
+      else Account.data.bossPity = pity;
+    }
+    if (B.kind === "boss" && res === "win") r.boss = bossReward();
+  }
   if (r.g) Account.addGold(r.g);       // 連勝数も一緒に保存される
-  else if (r.cpu) Account.saveNow();   // 負け：連勝が0になったことを保存
+  else if (counts) Account.saveNow();   // 負け：連勝が0になったこと・ボスの天井などを保存
   rewarded[S.gid] = r;
   Sound.play(res === "win" ? "win" : res === "lose" ? "lose" : "click");
   return r;
@@ -1820,6 +1830,8 @@ function showResult(res) {
   openOverlay(`<div class="panel">
     <p class="result ${res}">${label}</p>
     ${g ? `<p class="reward">+${g}G <small>（所持 ${Account.gold}G）</small></p>` : ""}
+    ${r.boss ? bossRewardHTML(r.boss) : ""}
+    ${r.bossSign ? `<p class="boss-sign">……境界が、揺らいでいる。<small>次の上級戦で、何かが起こるかもしれない</small></p>` : ""}
     ${S && S.battle && S.battle.kind === "world" && !r.sample ? `<p class="streak lost">世界限定戦（連勝ボーナスはありません）</p>` : ""}
     ${S && S.practice ? `<p class="streak lost">練習対戦なので、Gと連勝はつきません</p>` : r.sample && res === "win" ? `<p class="streak lost">サンプルデッキの対戦なので、Gはもらえません</p>` : ""}
     ${streakHTML(r, res)}
@@ -1924,6 +1936,7 @@ function startCpuGame(level) {
   const mine = Decks.readyDeck(msg => Decks.showList(msg));
   if (!mine) return;
   const lv = CPU_LEVELS[level] ? level : "normal";
+  if (lv === "hard" && Account.data && Account.data.bossNext && !mine.sample && ["ready", "offline"].includes(Account.status)) return startBossGame(mine);
   const cpu = Decks.randomPreset(lv);
   if (!cpu) return Decks.showList("CPU用のサンプルデッキがありません");
   startBattle({ kind: "cpu", level: lv, mine, opp: cpu, streak: true });
@@ -1955,7 +1968,56 @@ function battleAgain() {
   const k = S && S.battle ? S.battle.kind : (S && S.practice ? "practice" : "cpu");
   if (k === "practice") startPractice();
   else if (k === "world") startWorldGame(CPU_LEVEL);
-  else startCpuGame(CPU_LEVEL);
+  else startCpuGame(k === "boss" ? "hard" : CPU_LEVEL);
+}
+
+/* ---------- 隠しボス ----------
+   上級に勝つと BOSS_RATE% で（BOSS_PITY 回勝てば必ず）、次の上級戦にボスが乱入する。
+   ボス：体力 BOSS_HP、最初から「境界の裂け目」が場にいる。勝つと SR以上確定パック券1枚＋ボス限定レジェンド1枚（3枚そろったら魔石） */
+const BOSS = { deck: "boss-nezal", name: "虚ろなる境界王ネザル", rift: "b-rift" };
+function startBossGame(mine) {
+  const deck = PRESETS.find(p => p.id === BOSS.deck);
+  if (!deck) { Account.data.bossNext = false; return startCpuGame("hard"); }
+  Account.data.bossNext = false; Account.saveNow();   // 会ったら消える（途中でやめても、もう一度は出ない）
+  bossIntro(() => startBattle({ kind: "boss", level: "hard", mine, opp: deck, oppName: BOSS.name, reward: CONFIG.REWARD_HARD, streak: false,
+    setup: S => {
+      const b = S.players[1];
+      b.hp = CONFIG.BOSS_HP || 25; b.maxHp = b.hp;
+      if (DEF[BOSS.rift]) { const u = addUnit(1, BOSS.rift); u.ready = false; }
+    } }));
+}
+/* 乱入の演出：画面が赤く明滅して、境界が裂ける */
+function bossIntro(done) {
+  const v = document.createElement("div");
+  v.className = "bossin"; v.setAttribute("role", "alert");
+  v.innerHTML = `<div class="bossin-crack"></div><p class="bossin-warn">WARNING</p><p class="bossin-t">境界が裂ける──</p><p class="bossin-n">${esc(BOSS.name)} が乱入した！</p><small>タップで進む</small>`;
+  let fin = false;
+  const go = () => { if (fin) return; fin = true; v.remove(); done(); };
+  v.addEventListener("click", go);
+  document.body.appendChild(v);
+  setTimeout(go, 3200);
+}
+function bossReward() {
+  Account.data.srTickets = Account.srTickets + 1;
+  const legends = CARDS.filter(c => c.boss && c.limit > 0);
+  const want = legends.filter(c => Account.owned(c.id) < (CONFIG.COPY_MAX || 3));
+  if (want.length) {
+    const c = want[Math.floor(Math.random() * want.length)];
+    Account.addCards([c.id]);
+    return { card: c.id };
+  }
+  const st = CONFIG.STONE_GET_LEGEND || 0;
+  Account.data.stones = Account.stones + st;
+  return { stones: st };
+}
+function bossRewardHTML(b) {
+  const c = b.card && DEF[b.card];
+  return `<div class="boss-reward">
+    <p class="boss-win">境界王を退けた！</p>
+    <p>SR以上確定パック券 ×1（パックの画面で使えます）</p>
+    ${c ? `<div class="boss-card">${cardHTML(c, { static: true })}</div><p>ボス限定レジェンド「${esc(c.name)}」を手に入れた！</p>`
+      : `<p>ボス限定レジェンドはすべて3枚そろっているので、代わりに魔石 ${b.stones} 個</p>`}
+  </div>`;
 }
 function battleReselect() {
   const k = S && S.battle ? S.battle.kind : "cpu";

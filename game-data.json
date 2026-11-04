@@ -1,5 +1,5 @@
 {
- "version": 48,
+ "version": 49,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -33,7 +33,10 @@
   "STONE_TICKET": 150,
   "SEASON": "beta",
   "STARTER_DECK": "starter",
-  "SAMPLE_DECKS": true
+  "SAMPLE_DECKS": true,
+  "BOSS_RATE": 5,
+  "BOSS_PITY": 20,
+  "BOSS_HP": 25
  },
  "packs": [
   {
@@ -445,6 +448,31 @@
     "f-spirit": 1
    },
    "level": "hard"
+  },
+  {
+   "id": "boss-nezal",
+   "name": "裂け目の軍勢",
+   "level": "boss",
+   "cards": {
+    "bolt": 2,
+    "n-shinobi": 2,
+    "n-thornwarden": 2,
+    "x-tochka": 2,
+    "n-interceptor": 2,
+    "f-abyss": 2,
+    "m-phoenix": 2,
+    "n-skypaladin": 2,
+    "n-timewitch": 2,
+    "garm": 1,
+    "m-demonlord": 2,
+    "n-kitsune": 2,
+    "judgment": 1,
+    "x-executor": 2,
+    "m-titan": 1,
+    "n-heroking": 1,
+    "omega": 1,
+    "endragon": 1
+   }
   }
  ],
  "serials": [
@@ -3038,6 +3066,125 @@
     }
    ],
    "art": "art/x-lockcode-294b806034.webp"
+  },
+  {
+   "id": "b-janus",
+   "name": "天門の守護神ヤヌス",
+   "world": "myth",
+   "type": "char",
+   "cost": 7,
+   "atk": 5,
+   "hp": 7,
+   "glyph": "門",
+   "limit": 3,
+   "rarity": "legend",
+   "boss": true,
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "when": "turnStart",
+     "card": "tk-gate"
+    }
+   ]
+  },
+  {
+   "id": "tk-gate",
+   "name": "天門の番兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 0,
+   "atk": 5,
+   "hp": 3,
+   "glyph": "番",
+   "limit": 0,
+   "token": true,
+   "rarity": "common",
+   "keywords": [],
+   "effects": []
+  },
+  {
+   "id": "b-nem",
+   "name": "夢渡りの魔女ネム",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 6,
+   "glyph": "夢",
+   "limit": 3,
+   "rarity": "legend",
+   "boss": true,
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "energyNow",
+     "n": 3
+    },
+    {
+     "kind": "draw",
+     "n": 1,
+     "when": "spell"
+    }
+   ]
+  },
+  {
+   "id": "b-abyss",
+   "name": "次元掘削機アビス",
+   "world": "mech",
+   "type": "char",
+   "cost": 8,
+   "atk": 7,
+   "hp": 7,
+   "glyph": "掘",
+   "limit": 3,
+   "rarity": "legend",
+   "boss": true,
+   "keywords": [
+    "trample"
+   ],
+   "effects": [
+    {
+     "kind": "dmgAll",
+     "n": 3
+    },
+    {
+     "kind": "dmgFace",
+     "n": 2,
+     "when": "attack"
+    }
+   ]
+  },
+  {
+   "id": "b-rift",
+   "name": "境界の裂け目",
+   "world": "fan",
+   "type": "char",
+   "cost": 0,
+   "atk": 0,
+   "hp": 8,
+   "glyph": "裂",
+   "limit": 0,
+   "token": true,
+   "rarity": "legend",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "dmgRandom",
+     "n": 2,
+     "when": "turnStart"
+    },
+    {
+     "kind": "dmgFace",
+     "n": 1,
+     "when": "turnStart"
+    }
+   ]
   }
  ]
 }

@@ -41,7 +41,9 @@ const Packs = {
   /* n パックまとめて開ける（10連は n=10）。結果は1パックずつ（rows）にも分けて持つ */
   open(pack, byTicket, n = 1) {
     if (Account.status !== "ready" && Account.status !== "offline") return { ok: false, msg: "アカウントを読み込めていないため、パックを開けられません。" };
-    if (byTicket && Account.tickets < n) return { ok: false, msg: n > 1 ? `パック券が${n}枚ありません。` : "パック券を持っていません。" };
+    const sr = byTicket === "sr";   // SR以上確定パック券：最後の1枚が必ず SR 以上
+    if (sr && Account.srTickets < n) return { ok: false, msg: "SR以上確定パック券を持っていません。" };
+    if (byTicket && !sr && Account.tickets < n) return { ok: false, msg: n > 1 ? `パック券が${n}枚ありません。` : "パック券を持っていません。" };
     if (!byTicket && Account.gold < pack.price * n) return { ok: false, msg: `Gが足りません（あと${pack.price * n - Account.gold}G）` };
     const before = { ...Account.data.cards };
     const seen = {};
@@ -49,7 +51,8 @@ const Packs = {
     for (let k = 0; k < n; k++) {
       const row = [];
       for (let i = 0; i < pack.size; i++) {
-        const id = this.rollCard(pack, i === pack.size - 1 ? pack.odds.last : pack.odds.normal);
+        const last = sr ? { ...pack.odds.last, common: 0, rare: 0 } : pack.odds.last;
+        const id = this.rollCard(pack, i === pack.size - 1 ? last : pack.odds.normal);
         if (!id) continue;
         const isNew = !before[id] && !seen[id]; seen[id] = true;
         row.push({ id, isNew }); ids.push(id);
@@ -72,7 +75,7 @@ const Packs = {
     // めくる順番：レア度の低い順（いちばんレアなカードが最後に出る）
     const rank = x => RARITY_ORDER.indexOf(DEF[x.id].rarity);
     cards.sort((a, b) => rank(a) - rank(b));
-    if (byTicket) Account.data.tickets -= 1; else Account.data.gold -= pack.price;
+    if (sr) Account.data.srTickets -= 1; else if (byTicket) Account.data.tickets -= 1; else Account.data.gold -= pack.price;
     Account.addCards(cards.map(x => x.id));
     // stage: pack（未開封）→ reveal（1枚ずつ）→ done（一覧）
     this.last = { pack, cards, stage: "pack", idx: 0, faceUp: false, byTicket: !!byTicket };
@@ -115,6 +118,7 @@ const Packs = {
           <div class="pk-buy">
             <button type="button" class="pk-btn one" data-act="packOpen" data-id="${esc(p.id)}" ${Account.gold < p.price || !can ? "disabled" : ""}><small>1パック</small><b>${p.price}G</b></button>
             <button type="button" class="pk-btn ten" data-act="packOpen10" data-id="${esc(p.id)}" ${Account.gold < ten || !can ? "disabled" : ""}><small>10パック</small><b>${ten}G</b></button>
+            ${Account.srTickets > 0 ? `<button type="button" class="pk-btn tk sr" data-act="packOpenSR" data-id="${esc(p.id)}" ${can ? "" : "disabled"}><small>SR以上確定パック券で1パック</small><b>残り${Account.srTickets}枚</b></button>` : ""}
             ${Account.tickets > 0 ? `<button type="button" class="pk-btn tk" data-act="packOpenTicket" data-id="${esc(p.id)}" ${can ? "" : "disabled"}><small>パック券で1パック</small><b>残り${Account.tickets}枚</b></button>` : ""}
             ${Account.tickets >= 10 ? `<button type="button" class="pk-btn tk" data-act="packOpenTicket10" data-id="${esc(p.id)}" ${can ? "" : "disabled"}><small>パック券で10パック</small><b>10枚使う</b></button>` : ""}
           </div>
@@ -350,7 +354,7 @@ const Packs = {
     switch (act) {
       case "packs": this.listId = null; this.stopReveal(); this.showShop(); return true;
       case "packLog": this.stopReveal(); this.showLog(); return true;
-      case "packOpen": case "packOpenTicket": case "packOpen10": case "packOpenTicket10": {
+      case "packOpen": case "packOpenTicket": case "packOpen10": case "packOpenTicket10": case "packOpenSR": {
         const p = PACKS.find(x => x.id === (el && el.dataset.id));
         if (!p) return true;
         // 連打で2回開けないように（2026-11-03：10連のあと「もう10パック」でGだけ減った報告への対策）
@@ -358,7 +362,7 @@ const Packs = {
         this.lockUntil = Date.now() + 1200;
         this.stopReveal();
         this.listId = null;
-        const r = this.open(p, act.startsWith("packOpenTicket"), act.endsWith("10") ? 10 : 1);
+        const r = this.open(p, act === "packOpenSR" ? "sr" : act.startsWith("packOpenTicket"), act.endsWith("10") ? 10 : 1);
         if (!r.ok) { this.showShop(r.msg); return true; }
         this.showOpening();
         return true;
