@@ -1525,3 +1525,7 @@ html.nofx .card .shine{display:none}
 .boss-only{font-size:12px;font-weight:700;color:#ff9fb4}
 .pk-btn.sr{border-color:#ff9fb4;background:linear-gradient(180deg,#5a1530,#2a0a18)}
 .pk-btn.sr b{color:#ffd36e}
+.bossin-face{position:absolute;inset:0;background:50% 20%/cover no-repeat;opacity:0;filter:saturate(1.1);animation:bossface 1.2s .7s ease-out forwards;
+  -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,#000 40%,transparent 80%);mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,#000 40%,transparent 80%)}
+@keyframes bossface{to{opacity:.55}}
+.bossin p,.bossin small{position:relative;z-index:1}

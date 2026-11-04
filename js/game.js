@@ -1955,7 +1955,7 @@ function startBattle(spec) {
   CPU_LEVEL = CPU_LEVELS[spec.level] ? spec.level : "normal";
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
-  newGame(["あなた", spec.oppName || `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [spec.mine, { name: spec.opp.name, cards: { ...spec.opp.cards } }]);
+  newGame(["あなた", spec.oppName || `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [spec.mine, { name: spec.opp.name, cards: { ...spec.opp.cards }, ...(spec.opp.icon ? { icon: spec.opp.icon } : {}) }]);
   S.battle = { kind: spec.kind, level: CPU_LEVEL, ...(spec.reward != null ? { reward: spec.reward } : {}), streak: !!spec.streak, ...(spec.extra || {}) };
   if (spec.practice) { S.practice = true; S.mySample = true; }
   else S.mySample = !!spec.mine.sample;
@@ -1974,12 +1974,12 @@ function battleAgain() {
 /* ---------- 隠しボス ----------
    上級に勝つと BOSS_RATE% で（BOSS_PITY 回勝てば必ず）、次の上級戦にボスが乱入する。
    ボス：体力 BOSS_HP、最初から「境界の裂け目」が場にいる。勝つと SR以上確定パック券1枚＋ボス限定レジェンド1枚（3枚そろったら魔石） */
-const BOSS = { deck: "boss-nezal", name: "虚ろなる境界王ネザル", rift: "b-rift" };
+const BOSS = { deck: "boss-nezal", name: "虚ろなる境界王ネザル", rift: "b-rift", face: "b-nezal" };
 function startBossGame(mine) {
   const deck = PRESETS.find(p => p.id === BOSS.deck);
   if (!deck) { Account.data.bossNext = false; return startCpuGame("hard"); }
   Account.data.bossNext = false; Account.saveNow();   // 会ったら消える（途中でやめても、もう一度は出ない）
-  bossIntro(() => startBattle({ kind: "boss", level: "hard", mine, opp: deck, oppName: BOSS.name, reward: CONFIG.REWARD_HARD, streak: false,
+  bossIntro(() => startBattle({ kind: "boss", level: "hard", mine, opp: { ...deck, icon: BOSS.face }, oppName: BOSS.name, reward: CONFIG.REWARD_HARD, streak: false,
     setup: S => {
       const b = S.players[1];
       b.hp = CONFIG.BOSS_HP || 25; b.maxHp = b.hp;
@@ -1990,7 +1990,8 @@ function startBossGame(mine) {
 function bossIntro(done) {
   const v = document.createElement("div");
   v.className = "bossin"; v.setAttribute("role", "alert");
-  v.innerHTML = `<div class="bossin-crack"></div><p class="bossin-warn">WARNING</p><p class="bossin-t">境界が裂ける──</p><p class="bossin-n">${esc(BOSS.name)} が乱入した！</p><small>タップで進む</small>`;
+  const face = DEF[BOSS.face] && DEF[BOSS.face].art;
+  v.innerHTML = `${face ? `<div class="bossin-face" style="background-image:url('${esc(face)}')"></div>` : ""}<div class="bossin-crack"></div><p class="bossin-warn">WARNING</p><p class="bossin-t">境界が裂ける──</p><p class="bossin-n">${esc(BOSS.name)} が乱入した！</p><small>タップで進む</small>`;
   let fin = false;
   const go = () => { if (fin) return; fin = true; v.remove(); done(); };
   v.addEventListener("click", go);
