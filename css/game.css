@@ -1502,19 +1502,69 @@ html.nofx .card .shine{display:none}
 .dbt-foot .wtag{font-size:10.5px;text-shadow:0 1px 3px #000}
 
 /* ---- 隠しボス ---- */
-.bossin{position:fixed;inset:0;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:#fff;
-  background:radial-gradient(circle at 50% 50%,rgba(70,0,20,.93),rgba(5,0,10,.98) 70%);animation:bossflash .45s steps(2) 3;cursor:pointer;overflow:hidden}
-.bossin-crack{position:absolute;left:50%;top:-10%;width:6px;height:120%;background:linear-gradient(180deg,transparent,#fff 20%,#ff3b6b 50%,#fff 80%,transparent);
-  transform:translateX(-50%) rotate(14deg) scaleY(0);transform-origin:50% 0;box-shadow:0 0 30px 10px rgba(255,40,90,.7);animation:bosscrack .6s .5s cubic-bezier(.2,1,.3,1) forwards}
-.bossin-warn{margin:0;font-family:var(--f-display);font-weight:900;font-size:44px;letter-spacing:.2em;color:#ff3b5b;text-shadow:0 0 18px #ff1f4a;animation:bosswarn .9s ease-in-out infinite}
-.bossin-t{margin:0;font-size:15px;letter-spacing:.3em;color:#ffd0da;opacity:0;animation:bossup .5s .9s forwards}
-.bossin-n{margin:0;font-family:var(--f-display);font-size:24px;font-weight:900;text-shadow:0 2px 10px #000;opacity:0;animation:bossup .5s 1.3s forwards}
-.bossin small{position:absolute;bottom:40px;color:rgba(255,255,255,.6)}
-@keyframes bossflash{50%{background-color:rgba(255,0,40,.25)}}
-@keyframes bosscrack{to{transform:translateX(-50%) rotate(14deg) scaleY(1)}}
-@keyframes bosswarn{50%{opacity:.45}}
-@keyframes bossup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.bossin,.bossin *{animation:none!important;opacity:1!important}.bossin-crack{transform:translateX(-50%) rotate(14deg)}}
+.bossin{position:fixed;inset:0;z-index:300;overflow:hidden;cursor:pointer;color:#fff;background:#000;animation:bi-shake .5s 1.05s both}
+.bossin.out{opacity:0;transition:opacity .25s}
+/* 割れ目の奥の「虚ろ」とボスの顔 */
+.bi-void{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#5a1240,#14031a 60%,#000)}
+.bi-face{position:absolute;inset:0;background:50% 20%/cover no-repeat;opacity:0;animation:bi-face 1.4s 1.25s ease-out forwards;
+  -webkit-mask-image:radial-gradient(ellipse 75% 65% at 50% 40%,#000 45%,transparent 85%);mask-image:radial-gradient(ellipse 75% 65% at 50% 40%,#000 45%,transparent 85%)}
+/* 今いる世界（2つに割れる） */
+.bi-half{position:absolute;inset:-2px;background:url("../ui/bg-home.webp") center/cover no-repeat,#05081a;filter:brightness(.45) saturate(.7)}
+.bi-half::after{content:"";position:absolute;inset:0;background:rgba(80,0,20,.35)}
+.bi-half.a{clip-path:polygon(0 0,100% 0,0 100%);animation:bi-split-a .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards}
+.bi-half.b{clip-path:polygon(100% 0,100% 100%,0 100%);animation:bi-split-b .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards}
+/* 亀裂：画面の端から端まで */
+.bi-crack{position:absolute;left:50%;top:50%;width:var(--diag);height:4px;margin:-2px 0 0 calc(var(--diag) / -2);transform:rotate(var(--ang)) scaleX(0);transform-origin:50% 50%;
+  background:linear-gradient(90deg,#fff,#ffd1e0 30%,#ff2d6f 50%,#ffd1e0 70%,#fff);box-shadow:0 0 14px 4px rgba(255,40,110,.9),0 0 50px 14px rgba(160,40,255,.55);
+  animation:bi-crack .45s .55s cubic-bezier(.6,0,.3,1) forwards,bi-crackout .35s 1.1s ease-out forwards}
+/* 割れた2つの世界のふち（亀裂の光が2本に分かれて、それぞれの世界と一緒に離れる） */
+.bi-edge{position:absolute;left:50%;top:50%;width:var(--diag);height:3px;margin:-1.5px 0 0 calc(var(--diag) / -2);opacity:0;
+  background:linear-gradient(90deg,#ffb3cf,#ff2d6f 50%,#ffb3cf);box-shadow:0 0 10px 3px rgba(255,40,110,.9),0 0 30px 8px rgba(160,40,255,.6);
+  transform:rotate(var(--ang));animation:bi-edge-a .9s 1.1s cubic-bezier(.2,1.4,.3,1) forwards,bi-edgeglow 1.2s 2s ease-in-out infinite}
+.bi-edge.b{animation-name:bi-edge-b,bi-edgeglow}
+.bi-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:bi-flash .5s 1.02s ease-out}
+/* 鼓動のように脈打つ赤いふち */
+.bi-pulse{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 0 0 rgba(255,0,50,0);animation:bi-beat .8s infinite}
+/* 警告の帯 */
+.bi-tape{position:absolute;left:0;right:0;height:30px;overflow:hidden;display:flex;align-items:center;z-index:2;
+  background:repeating-linear-gradient(-45deg,#c4102e 0 16px,#14020a 16px 32px);box-shadow:0 0 18px rgba(255,0,50,.6)}
+.bi-tape span{white-space:nowrap;font-family:var(--f-display);font-weight:900;font-size:14px;letter-spacing:.25em;color:#fff;text-shadow:0 0 4px #000,0 0 2px #000;padding-left:100%;animation:bi-tape 6s linear infinite}
+.bi-tape.top{top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-110%);animation:bi-tapein .35s .05s ease-out forwards}
+.bi-tape.bottom{bottom:calc(env(safe-area-inset-bottom,0px) + 10px);transform:translateX(110%);animation:bi-tapein .35s .15s ease-out forwards}
+.bi-tape.bottom span{animation-direction:reverse}
+/* 文字 */
+.bi-text{position:absolute;left:0;right:0;top:52%;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;padding:0 16px}
+.bi-text p{margin:0}
+.bi-warn{font-family:var(--f-display);font-weight:900;font-size:clamp(34px,11vw,56px);letter-spacing:.18em;color:#ff2d55;text-shadow:0 0 16px #ff0a3c,0 0 2px #fff;opacity:0;animation:bi-in .2s .15s forwards,bi-blink .8s .35s infinite}
+.bi-t{font-size:14px;letter-spacing:.4em;color:#ffd0dc;opacity:0;animation:bi-up .4s 1.7s forwards}
+.bi-n{position:relative;font-family:var(--f-display);font-weight:900;font-size:clamp(24px,7.5vw,34px);color:#fff;text-shadow:0 2px 12px #000,0 0 20px rgba(200,40,255,.7);opacity:0;animation:bi-up .4s 2.1s forwards}
+.bi-n::before,.bi-n::after{content:attr(data-t);position:absolute;inset:0;opacity:.8;mix-blend-mode:screen;animation:bi-glitch 1.4s 2.2s steps(2) infinite}
+.bi-n::before{color:#ff2d6f;transform:translate(-2px,0)}
+.bi-n::after{color:#3cf0ff;transform:translate(2px,0);animation-delay:2.35s}
+.bi-s{font-size:16px;font-weight:800;color:#ffd36e;opacity:0;animation:bi-up .4s 2.4s forwards}
+.bi-skip{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);text-align:center;font-size:11px;color:rgba(255,255,255,.55);z-index:3}
+@keyframes bi-crack{to{transform:rotate(var(--ang)) scaleX(1)}}
+@keyframes bi-crackout{to{opacity:0;height:14px}}
+@keyframes bi-edge-a{from{opacity:1}to{opacity:1;transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1)) rotate(var(--ang))}}
+@keyframes bi-edge-b{from{opacity:1}to{opacity:1;transform:translate(var(--dx),var(--dy)) rotate(var(--ang))}}
+@keyframes bi-edgeglow{50%{filter:brightness(1.6)}}
+@keyframes bi-split-a{to{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1))}}
+@keyframes bi-split-b{to{transform:translate(var(--dx),var(--dy))}}
+@keyframes bi-flash{0%{opacity:.9}100%{opacity:0}}
+@keyframes bi-shake{0%,100%{transform:none}15%{transform:translate(-8px,5px)}30%{transform:translate(7px,-6px)}45%{transform:translate(-5px,-3px)}60%{transform:translate(4px,4px)}80%{transform:translate(-2px,1px)}}
+@keyframes bi-beat{0%,100%{box-shadow:inset 0 0 40px 6px rgba(255,0,50,.25)}15%{box-shadow:inset 0 0 90px 24px rgba(255,0,50,.75)}30%{box-shadow:inset 0 0 50px 8px rgba(255,0,50,.3)}45%{box-shadow:inset 0 0 80px 20px rgba(255,0,50,.6)}}
+@keyframes bi-tapein{to{transform:none}}
+@keyframes bi-tape{to{transform:translateX(-100%)}}
+@keyframes bi-in{to{opacity:1}}
+@keyframes bi-blink{50%{opacity:.35}}
+@keyframes bi-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes bi-face{to{opacity:.85}}
+@keyframes bi-glitch{0%{clip-path:inset(0 0 70% 0)}25%{clip-path:inset(40% 0 30% 0)}50%{clip-path:inset(80% 0 0 0)}75%{clip-path:inset(10% 0 60% 0)}100%{clip-path:inset(0 0 100% 0)}}
+@media (prefers-reduced-motion:reduce){
+  .bossin,.bossin *,.bossin *::before,.bossin *::after{animation:none!important}
+  .bi-crack{opacity:0}.bi-edge{opacity:1}.bi-edge.a{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1)) rotate(var(--ang))}.bi-edge.b{transform:translate(var(--dx),var(--dy)) rotate(var(--ang))}.bi-face{opacity:.85}.bi-half.a{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1))}.bi-half.b{transform:translate(var(--dx),var(--dy))}
+  .bi-tape.top,.bi-tape.bottom{transform:none}.bi-warn,.bi-t,.bi-n,.bi-s{opacity:1}
+}
 .boss-sign{text-align:center;margin:0;color:#ff9fb4;font-family:var(--f-display);letter-spacing:.1em}
 .boss-sign small{display:block;font-family:var(--f-body);font-size:12px;color:var(--muted);letter-spacing:0}
 .boss-reward{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;border-radius:12px;border:1px solid #ff6f8f;background:rgba(120,0,30,.25);text-align:center}
@@ -1525,7 +1575,3 @@ html.nofx .card .shine{display:none}
 .boss-only{font-size:12px;font-weight:700;color:#ff9fb4}
 .pk-btn.sr{border-color:#ff9fb4;background:linear-gradient(180deg,#5a1530,#2a0a18)}
 .pk-btn.sr b{color:#ffd36e}
-.bossin-face{position:absolute;inset:0;background:50% 20%/cover no-repeat;opacity:0;filter:saturate(1.1);animation:bossface 1.2s .7s ease-out forwards;
-  -webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,#000 40%,transparent 80%);mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,#000 40%,transparent 80%)}
-@keyframes bossface{to{opacity:.55}}
-.bossin p,.bossin small{position:relative;z-index:1}
