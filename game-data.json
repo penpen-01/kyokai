@@ -1,5 +1,5 @@
 {
- "version": 46,
+ "version": 47,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -2996,7 +2996,7 @@
    "name": "据置砲台カノン",
    "world": "mech",
    "type": "char",
-   "cost": 6,
+   "cost": 5,
    "atk": 0,
    "hp": 7,
    "glyph": "砲",

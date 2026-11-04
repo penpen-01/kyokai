@@ -225,6 +225,7 @@ function effectsText(card, list, auto) {
   // 同じ効果が続くときは「〜を4回」にまとめる（天罰の光など）
   list = (list || card.effects || []).filter(e => EFFECTS[e.kind]);
   const out = [];
+  const seen = {};   // 同じカードで2つ目以降の「選んだ相手（自分）のキャラ」は、最初に選んだのと同じキャラ → 「そのキャラ」と書く
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     let k = 1;
@@ -233,6 +234,9 @@ function effectsText(card, list, auto) {
     // キャラの効果で「自分のキャラ1体」を選ぶものは、そのキャラ自身は選べない
     if (card.type === "char" && EFFECTS[e.kind].target === "ownUnit") t = t.replace("自分のキャラ1体", "このキャラ以外の自分のキャラ1体");
     // 登場時以外は対象を選べないので、ランダム
+    const tg = EFFECTS[e.kind].target;
+    if (!auto && tg && seen[tg]) t = t.replace(/相手キャラ1体|このキャラ以外の自分のキャラ1体|自分のキャラ1体/, "そのキャラ");
+    if (tg) seen[tg] = true;
     if (auto && EFFECTS[e.kind].target) t = t.replace("相手キャラ1体", "ランダムな相手キャラ1体").replace("このキャラ以外の自分のキャラ1体", "このキャラ以外のランダムな自分のキャラ1体");
     if (e.cond && CONDS[e.cond]) t = `${condText(e)}、${t}`;
     if (k > 1) t = e.kind === "dmgRandom" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
