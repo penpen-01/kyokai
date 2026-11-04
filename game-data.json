@@ -1,5 +1,5 @@
 {
- "version": 51,
+ "version": 52,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -456,23 +456,23 @@
    "cards": {
     "bolt": 2,
     "n-shinobi": 2,
-    "n-thornwarden": 1,
-    "x-tochka": 2,
+    "x-tochka": 1,
     "n-interceptor": 2,
-    "f-abyss": 2,
+    "f-abyss": 1,
     "m-phoenix": 2,
     "n-skypaladin": 2,
-    "n-timewitch": 2,
     "m-demonlord": 2,
     "n-kitsune": 2,
-    "judgment": 1,
     "x-executor": 2,
-    "m-titan": 1,
     "n-heroking": 1,
-    "b-janus": 1,
-    "b-nem": 1,
-    "b-abyss": 1,
-    "omega": 1
+    "b-janus": 2,
+    "b-nem": 2,
+    "b-abyss": 2,
+    "f-unicorn": 1,
+    "x-junk": 1,
+    "priestess": 1,
+    "crystal": 1,
+    "f-thief": 1
    }
   }
  ],
