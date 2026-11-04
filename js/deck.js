@@ -15,7 +15,7 @@ const Decks = {
   editing: null,     // 編集中のデッキ（コピー）
   viewing: null,     // 閲覧中のデッキid
   detail: null,      // 詳細を開いているカードid
-  filter: { type: "all", world: "all", cost: "all", rarity: "all", owned: true, q: "" },
+  filter: { type: "all", world: "all", cost: "all", rarity: "all", owned: false, q: "" },
 
   free() { return Account.status === "free"; },
   sampleOK() { return !!CONFIG.SAMPLE_DECKS; },
@@ -337,13 +337,37 @@ const Decks = {
   },
 
   renderEdit() {
-    const ed = this.editing; if (!ed) return;
+    if (!this.editing) return;
+    const o = $("#overlay");
+    const keepScroll = o.scrollTop;
+    openOverlay(this.editHTML(), "start", true);
+    o.scrollTop = keepScroll;
+  },
+  /* カードを1枚足したり減らしたりしたときは、画面を作り直さずに変わったところだけ差し替える
+     （一覧のカードの絵を作り直さないので、絵が消えたり重くなったりしない） */
+  refreshEdit() {
+    const o = $("#overlay"), cur = o.querySelector(".dedit");
+    if (!cur || this.detail || cur.querySelector(".dmodal")) return this.renderEdit();
+    const tmp = document.createElement("div"); tmp.innerHTML = this.editHTML();
+    const nu = tmp.querySelector(".dedit");
+    [".dedit-top .dcount", ".dprob", ".dsum", ".dtabs", ".deckpane", ".dedit-bar"].forEach(sel => {
+      const a = cur.querySelector(sel), b = nu.querySelector(sel);
+      if (a && b) a.replaceWith(b);
+    });
+    nu.querySelectorAll("#deck-pool .dtile[data-id]").forEach(nt => {
+      const ot = cur.querySelector(`#deck-pool .dtile[data-id="${CSS.escape(nt.dataset.id)}"]`);
+      if (!ot) return;
+      ot.className = nt.className;
+      const a = ot.querySelector(".dmeta"), b = nt.querySelector(".dmeta");
+      if (a && b && a.innerHTML !== b.innerHTML) a.innerHTML = b.innerHTML;
+    });
+  },
+  editHTML() {
+    const ed = this.editing;
     const n = deckCount(ed), pr = this.problems(ed);
     const f = this.filter, unb = this.unbound(ed);
     const seg = (key, val, label) => `<button type="button" data-act="deckFilter" data-k="${key}" data-v="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
-    const o = $("#overlay");
-    const keepScroll = o.scrollTop;
-    openOverlay(`<div class="panel wide dedit">
+    return `<div class="panel wide dedit">
       <div class="dedit-top">
         <input class="otxt dname" id="deck-name" maxlength="16" value="${esc(ed.name)}" aria-label="デッキの名前">
         <span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span>
@@ -387,8 +411,7 @@ const Decks = {
              <button type="button" class="btn" data-act="deckCancel">保存せずに戻る</button>
              <button type="button" class="btn primary" data-act="deckSave" ${this.saveProblems(ed).length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? (this.missing(ed) ? `保存（未所持${this.missing(ed)}枚）` : "保存") : n < CONFIG.DECK_SIZE ? `未完成のまま保存（あと${CONFIG.DECK_SIZE - n}枚）` : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
       </div>
-    </div>`, "start", true);
-    o.scrollTop = keepScroll;
+    </div>`;
   },
 
   /* 代表カード（デッキ一覧の絵）にするボタン：自分のデッキに入っている、絵のあるカードだけ */
@@ -439,19 +462,17 @@ const Decks = {
     const ed = this.editing, c = DEF[id]; if (!c || !ed) return;
     const k = ed.cards[id] || 0, max = this.maxFor(c, ed);
     if (k >= max) { if (quick) toast(`${c.name}は1デッキに${cardLimit(c, CONFIG, ed)}枚までです`); return; }
-    if (deckCount(ed) >= CONFIG.DECK_SIZE) { if (quick) toast(`${CONFIG.DECK_SIZE}枚になっています。先に何かを減らしてください`); return; }
     if (quick && !this.unbound(ed) && this.owned(id) <= k) toast(`${c.name}はまだ${this.owned(id) ? `${this.owned(id)}枚しか` : ""}持っていません。保存はできますが、そろうまで対戦には使えません`);
     ed.cards[id] = k + 1;
     if (ed.want && ed.want[id] > 0 && --ed.want[id] <= 0) delete ed.want[id];   // 欲しかったカードを入れたら、その分を減らす
     Sound.play("click");
-    this.renderEdit();
-    if (quick) this.pulse(id);
+    if (quick) { this.refreshEdit(); this.pulse(id); } else this.renderEdit();
   },
   dec(id) {
     const ed = this.editing; if (!ed || !ed.cards[id]) return;
     ed.cards[id]--; if (ed.cards[id] <= 0) delete ed.cards[id];
     Sound.play("click");
-    this.renderEdit();
+    if (this.detail) this.renderEdit(); else this.refreshEdit();
   },
   /* 入れたカードがデッキのどこに入ったか分かるように光らせる */
   pulse(id) {
@@ -531,7 +552,6 @@ const Decks = {
       case "deckWantAdd": {
         const c = DEF[id]; if (!ed || !c) return true;
         if (this.maxFor(c, ed) <= (ed.cards[id] || 0)) { this.detail = id; this.renderEdit(); return true; }   // まだ持っていない：詳細を見せる
-        if (deckCount(ed) >= CONFIG.DECK_SIZE) { toast(`${CONFIG.DECK_SIZE}枚になっています。先に何かを減らしてください`); return true; }
         ed.cards[id] = (ed.cards[id] || 0) + 1;
         if (--ed.want[id] <= 0) delete ed.want[id];
         this.renderEdit();
