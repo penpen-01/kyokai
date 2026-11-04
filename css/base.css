@@ -357,3 +357,9 @@ img{max-width:100%}
   animation:holo 4s ease-in-out infinite}
 @keyframes holo{0%,100%{background-position:0 0;-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.3}50%{background-position:6cqw -8cqw;-webkit-mask-position:0% 0%;mask-position:0% 0%;opacity:.52}}
 @media (prefers-reduced-motion:reduce){.card.rar-legend .art::after{animation:none}}
+
+/* 特殊勝利の残り回数 */
+.card .wintag{position:absolute;left:50%;top:38%;transform:translateX(-50%);z-index:6;white-space:nowrap;font-size:9cqw;font-weight:900;padding:1cqw 3.5cqw;border-radius:99px;
+  color:#fff;background:linear-gradient(180deg,#ffcc4d,#d9480f);box-shadow:0 0 3cqw rgba(255,180,60,.9);animation:winpulse 1.2s ease-in-out infinite}
+@keyframes winpulse{50%{box-shadow:0 0 6cqw rgba(255,180,60,1)}}
+@media (prefers-reduced-motion:reduce){.card .wintag{animation:none}}

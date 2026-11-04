@@ -44,53 +44,162 @@ const kwName = e => (!e ? "能力" : e.kw === "armor" ? `装甲${e.n}` : KEYWORD
 const effNoN = (def, e) => (typeof def.noN === "function" ? def.noN(e) : !!def.noN);
 
 const EFFECTS = {
-  draw:        { group: "ドロー", label: "カードを引く",                  text: n => `カードを${n}枚引く。` },
+  /* 汎用：「何をするか（act）」と「だれに（to / who）」を選ぶ。2026-11-05 から効果はこの形が基本（古い種類は読み込むときにこの形へ置き換える） */
+  unit:        { group: "キャラ", label: "キャラに効果（何をするか・対象を選ぶ）", text: (n, e) => unitText(e), opts: ["act", "to"], min: -20, noN: e => !UACTS[e && e.act] || !UACTS[e.act].n },
+  player:      { group: "プレイヤー", label: "プレイヤーに効果（ダメージ・回復・ドロー・捨てる）", text: (n, e) => playerText(e), opts: ["pact", "who"] },
+  merge:       { group: "トークン", label: "合体（場の部品を破壊して、キャラを出す）", text: (n, e) => `自分の場に「${tokName(e)}」が${n}体以上いれば、それを${n}体破壊して、${intoDesc(e)}を出す。`, opts: ["token", "into"], tokenType: "char" },
+  costDown:    { group: "エナジー", label: "自分のカードのコストを下げる（このターン・ずっと）", text: (n, e) => `${e && e.dur === "game" ? "この対戦中ずっと、" : "このターン、"}自分の${worldNo(e)}${ctypeName(e)}のコストを${n}下げる（0より下がらない）。`, opts: ["world", "ctype", "dur"] },
+  winTimer:    { group: "このキャラ", label: "特殊勝利（場にいるまま、自分のターンの始めをN回むかえると勝ち）", text: n => `このキャラが場にいるまま、自分のターンの始めを${n}回むかえると、勝利する（場を離れると数え直し）。`, self: true },
+  draw:        { legacy: true, group: "ドロー", label: "カードを引く",                  text: n => `カードを${n}枚引く。` },
   refresh:     { group: "ドロー", label: "手札を入れ替える",              text: n => n ? `手札をすべて山札に戻して切り直し、その枚数より${n}枚多く引く。` : "手札をすべて山札に戻して切り直し、同じ枚数を引く。", min: 0 },
-  discard:     { group: "妨害",   label: "相手の手札を捨てさせる",        text: n => `相手の手札をランダムに${n}枚捨てさせる。` },
-  dmgTarget:   { group: "ダメージ", label: "選んだ相手キャラにダメージ",  text: n => `相手キャラ1体に${n}ダメージ。`, target: "enemyUnit" },
-  dmgRandom:   { group: "ダメージ", label: "ランダムな相手キャラにダメージ", text: n => `ランダムな相手キャラ1体に${n}ダメージ。` },
-  dmgAll:      { group: "ダメージ", label: "相手キャラ全体にダメージ",    text: n => `相手キャラ全体に${n}ダメージ。` },
-  dmgAllBoth:  { group: "ダメージ", label: "全キャラにダメージ（自分側も）", text: n => `すべてのキャラ（自分のキャラも含む）に${n}ダメージ。` },
-  dmgFace:     { group: "ダメージ", label: "相手プレイヤーにダメージ",    text: n => `相手プレイヤーに${n}ダメージ。` },
-  destroyTarget: { group: "除去", label: "選んだ相手キャラを破壊",       text: () => "相手キャラ1体を破壊する。", target: "enemyUnit", noN: true },
-  destroyAll:  { group: "除去",   label: "全キャラを破壊（自分側も）",    text: () => "すべてのキャラ（自分のキャラも含む）を破壊する。", noN: true },
-  freezeTarget:{ group: "妨害",   label: "選んだ相手キャラを行動不能に",  text: () => "相手キャラ1体は、次の相手のターンに攻撃できない。", target: "enemyUnit", noN: true },
-  freezeAll:   { group: "妨害",   label: "相手キャラ全体を行動不能に",    text: () => "相手キャラ全体は、次の相手のターンに攻撃できない。", noN: true },
-  debuffTarget:{ group: "妨害",   label: "選んだ相手キャラの攻撃力を下げる", text: n => `相手キャラ1体の攻撃力を-${n}する。`, target: "enemyUnit" },
-  debuffAll:   { group: "妨害",   label: "相手キャラ全体の攻撃力を下げる", text: n => `相手キャラ全体の攻撃力を-${n}する。` },
-  buffAtk:     { group: "強化",   label: "自分のキャラの攻撃力を上げる",  text: n => `自分のキャラ1体の攻撃力を+${n}する。`, target: "ownUnit" },
-  buffHp:      { group: "強化",   label: "自分のキャラの体力を上げる",    text: n => `自分のキャラ1体の体力を+${n}する。`, target: "ownUnit" },
-  buffBoth:    { group: "強化",   label: "自分のキャラを+N/+N",           text: n => `自分のキャラ1体を+${n}/+${n}する。`, target: "ownUnit" },
-  buffAllAtk:  { group: "強化",   label: "自分のキャラ全体の攻撃力を上げる", text: (n, e) => `自分の${worldNo(e)}キャラ全体の攻撃力を+${n}する。`, opts: ["world"] },
-  buffAllBoth: { group: "強化",   label: "自分のキャラ全体を+N/+N",       text: (n, e) => `自分の${worldNo(e)}キャラ全体を+${n}/+${n}する。`, opts: ["world"] },
-  heal:        { group: "回復",   label: "自分の体力を回復",              text: n => `自分の体力を${n}回復する。` },
-  healUnits:   { group: "回復",   label: "自分のキャラ全体を回復",        text: n => `自分のキャラ全体の体力を${n}回復する。` },
+  discard:     { legacy: true, group: "妨害",   label: "相手の手札を捨てさせる",        text: n => `相手の手札をランダムに${n}枚捨てさせる。` },
+  dmgTarget:   { legacy: true, group: "ダメージ", label: "選んだ相手キャラにダメージ",  text: n => `相手キャラ1体に${n}ダメージ。`, target: "enemyUnit" },
+  dmgRandom:   { legacy: true, group: "ダメージ", label: "ランダムな相手キャラにダメージ", text: n => `ランダムな相手キャラ1体に${n}ダメージ。` },
+  dmgAll:      { legacy: true, group: "ダメージ", label: "相手キャラ全体にダメージ",    text: n => `相手キャラ全体に${n}ダメージ。` },
+  dmgAllBoth:  { legacy: true, group: "ダメージ", label: "全キャラにダメージ（自分側も）", text: n => `すべてのキャラ（自分のキャラも含む）に${n}ダメージ。` },
+  dmgFace:     { legacy: true, group: "ダメージ", label: "相手プレイヤーにダメージ",    text: n => `相手プレイヤーに${n}ダメージ。` },
+  destroyTarget: { legacy: true, group: "除去", label: "選んだ相手キャラを破壊",       text: () => "相手キャラ1体を破壊する。", target: "enemyUnit", noN: true },
+  destroyAll:  { legacy: true, group: "除去",   label: "全キャラを破壊（自分側も）",    text: () => "すべてのキャラ（自分のキャラも含む）を破壊する。", noN: true },
+  freezeTarget:{ legacy: true, group: "妨害",   label: "選んだ相手キャラを行動不能に",  text: () => "相手キャラ1体は、次の相手のターンに攻撃できない。", target: "enemyUnit", noN: true },
+  freezeAll:   { legacy: true, group: "妨害",   label: "相手キャラ全体を行動不能に",    text: () => "相手キャラ全体は、次の相手のターンに攻撃できない。", noN: true },
+  debuffTarget:{ legacy: true, group: "妨害",   label: "選んだ相手キャラの攻撃力を下げる", text: n => `相手キャラ1体の攻撃力を-${n}する。`, target: "enemyUnit" },
+  debuffAll:   { legacy: true, group: "妨害",   label: "相手キャラ全体の攻撃力を下げる", text: n => `相手キャラ全体の攻撃力を-${n}する。` },
+  buffAtk:     { legacy: true, group: "強化",   label: "自分のキャラの攻撃力を上げる",  text: n => `自分のキャラ1体の攻撃力を+${n}する。`, target: "ownUnit" },
+  buffHp:      { legacy: true, group: "強化",   label: "自分のキャラの体力を上げる",    text: n => `自分のキャラ1体の体力を+${n}する。`, target: "ownUnit" },
+  buffBoth:    { legacy: true, group: "強化",   label: "自分のキャラを+N/+N",           text: n => `自分のキャラ1体を+${n}/+${n}する。`, target: "ownUnit" },
+  buffAllAtk:  { legacy: true, group: "強化",   label: "自分のキャラ全体の攻撃力を上げる", text: (n, e) => `自分の${worldNo(e)}キャラ全体の攻撃力を+${n}する。`, opts: ["world"] },
+  buffAllBoth: { legacy: true, group: "強化",   label: "自分のキャラ全体を+N/+N",       text: (n, e) => `自分の${worldNo(e)}キャラ全体を+${n}/+${n}する。`, opts: ["world"] },
+  heal:        { legacy: true, group: "回復",   label: "自分の体力を回復",              text: n => `自分の体力を${n}回復する。` },
+  healUnits:   { legacy: true, group: "回復",   label: "自分のキャラ全体を回復",        text: n => `自分のキャラ全体の体力を${n}回復する。` },
   ramp:        { group: "エナジー", label: "エナジー最大値を増やす",      text: n => `エナジーの最大値を${n}増やす（上限まで）。` },
   energyNow:   { group: "エナジー", label: "このターンのエナジーを増やす", text: n => `このターンだけ、エナジーを${n}得る。` },
   discount:    { group: "エナジー", label: "次に使うカードのコストを下げる", text: n => `次に使うカード1枚のコストを${n}下げる。` },
   summon:      { group: "召喚",   label: "山札からキャラを無料で出す",    text: n => `山札からコスト${n}以下のキャラをランダムに1体、コストを払わずに出す。` },
-  buffSelfAtk: { group: "このキャラ", label: "このキャラの攻撃力を上げる", text: n => `このキャラの攻撃力を+${n}する。`, self: true },
-  buffSelfBoth:{ group: "このキャラ", label: "このキャラを+N/+N",          text: n => `このキャラを+${n}/+${n}する。`, self: true },
+  buffSelfAtk: { legacy: true, group: "このキャラ", label: "このキャラの攻撃力を上げる", text: n => `このキャラの攻撃力を+${n}する。`, self: true },
+  buffSelfBoth:{ legacy: true, group: "このキャラ", label: "このキャラを+N/+N",          text: n => `このキャラを+${n}/+${n}する。`, self: true },
   readySelf:   { group: "このキャラ", label: "このキャラはもう一度攻撃できる", text: () => "このキャラは、このターンもう一度攻撃できる。", self: true, noN: true },
-  grantSelf:   { group: "このキャラ", label: "このキャラに能力を与える",   text: (n, e) => `このキャラに「${kwName(e)}」を与える。`, self: true, opts: ["kw"], noN: e => !e || e.kw !== "armor" },
-  grantOwn:    { group: "能力",   label: "自分のキャラ1体に能力を与える", text: (n, e) => `自分のキャラ1体に「${kwName(e)}」を与える。`, target: "ownUnit", opts: ["kw"], noN: e => !e || e.kw !== "armor" },
-  grantAll:    { group: "能力",   label: "自分のキャラ全体に能力を与える", text: (n, e) => `自分の${worldNo(e)}キャラ全体に「${kwName(e)}」を与える。`, opts: ["kw", "world"], noN: e => !e || e.kw !== "armor" },
+  grantSelf:   { legacy: true, group: "このキャラ", label: "このキャラに能力を与える",   text: (n, e) => `このキャラに「${kwName(e)}」を与える。`, self: true, opts: ["kw"], noN: e => !e || e.kw !== "armor" },
+  grantOwn:    { legacy: true, group: "能力",   label: "自分のキャラ1体に能力を与える", text: (n, e) => `自分のキャラ1体に「${kwName(e)}」を与える。`, target: "ownUnit", opts: ["kw"], noN: e => !e || e.kw !== "armor" },
+  grantAll:    { legacy: true, group: "能力",   label: "自分のキャラ全体に能力を与える", text: (n, e) => `自分の${worldNo(e)}キャラ全体に「${kwName(e)}」を与える。`, opts: ["kw", "world"], noN: e => !e || e.kw !== "armor" },
   tokenField:  { group: "トークン", label: "トークンを場に出す",         text: (n, e) => `${tokDesc(e)}を${n}体出す。`, opts: ["token"], tokenType: "char" },
   tokenHand:   { group: "トークン", label: "トークンを手札に加える",     text: (n, e) => `${tokDesc(e)}を${n}枚手札に加える。`, opts: ["token"] },
   tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札からコスト${n}以下の${worldNo(e)}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype"], min: 0 },
-  bounceEnemy: { group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
-  shuffleEnemy:{ group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
-  transform:   { group: "除去",   label: "相手キャラを変身させる",       text: (n, e) => e && e.card ? `相手キャラ1体を${tokDesc(e)}に変身させる。` : "相手キャラ1体を、効果も能力もない1/1に変身させる。", target: "enemyUnit", noN: true, opts: ["token"], tokenType: "char", tokenOptional: true },
-  steal:       { group: "除去",   label: "相手キャラを奪う",             text: () => "相手キャラ1体を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。", target: "enemyUnit", noN: true },
-  silence:     { group: "妨害",   label: "相手キャラを沈黙させる",       text: () => "相手キャラ1体を沈黙させる（効果と能力をすべて失う）。", target: "enemyUnit", noN: true },
-  silenceAll:  { group: "妨害",   label: "相手キャラ全体を沈黙させる",   text: () => "相手キャラ全体を沈黙させる（効果と能力をすべて失う）。", noN: true },
-  silenceOwn:  { group: "強化",   label: "自分のキャラを沈黙させる",     text: () => "自分のキャラ1体を沈黙させる（効果と能力をすべて失う。不動や死の宣告も消える）。", target: "ownUnit", noN: true },
-  swapEnemy:   { group: "妨害",   label: "相手キャラの攻撃力と体力を入れ替える", text: () => "相手キャラ1体の攻撃力と体力を入れ替える。", target: "enemyUnit", noN: true },
-  swapOwn:     { group: "強化",   label: "自分のキャラの攻撃力と体力を入れ替える", text: () => "自分のキャラ1体の攻撃力と体力を入れ替える。", target: "ownUnit", noN: true },
-  bounceOwn:   { group: "強化",   label: "自分のキャラを手札に戻す",     text: () => "自分のキャラ1体を手札に戻す（トークンは消える）。", target: "ownUnit", noN: true },
+  bounceEnemy: { legacy: true, group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
+  shuffleEnemy:{ legacy: true, group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
+  transform:   { legacy: true, group: "除去",   label: "相手キャラを変身させる",       text: (n, e) => e && e.card ? `相手キャラ1体を${tokDesc(e)}に変身させる。` : "相手キャラ1体を、効果も能力もない1/1に変身させる。", target: "enemyUnit", noN: true, opts: ["token"], tokenType: "char", tokenOptional: true },
+  steal:       { legacy: true, group: "除去",   label: "相手キャラを奪う",             text: () => "相手キャラ1体を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。", target: "enemyUnit", noN: true },
+  silence:     { legacy: true, group: "妨害",   label: "相手キャラを沈黙させる",       text: () => "相手キャラ1体を沈黙させる（効果と能力をすべて失う）。", target: "enemyUnit", noN: true },
+  silenceAll:  { legacy: true, group: "妨害",   label: "相手キャラ全体を沈黙させる",   text: () => "相手キャラ全体を沈黙させる（効果と能力をすべて失う）。", noN: true },
+  silenceOwn:  { legacy: true, group: "強化",   label: "自分のキャラを沈黙させる",     text: () => "自分のキャラ1体を沈黙させる（効果と能力をすべて失う。不動や死の宣告も消える）。", target: "ownUnit", noN: true },
+  swapEnemy:   { legacy: true, group: "妨害",   label: "相手キャラの攻撃力と体力を入れ替える", text: () => "相手キャラ1体の攻撃力と体力を入れ替える。", target: "enemyUnit", noN: true },
+  swapOwn:     { legacy: true, group: "強化",   label: "自分のキャラの攻撃力と体力を入れ替える", text: () => "自分のキャラ1体の攻撃力と体力を入れ替える。", target: "ownUnit", noN: true },
+  bounceOwn:   { legacy: true, group: "強化",   label: "自分のキャラを手札に戻す",     text: () => "自分のキャラ1体を手札に戻す（トークンは消える）。", target: "ownUnit", noN: true },
   revive:      { group: "召喚",   label: "破壊された自分のキャラを復活させる", text: n => `この対戦で破壊された自分のコスト${n}以下のキャラをランダムに1体、場に出す（登場時効果は発動しない）。` },
   banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true }
 };
+
+/* 汎用「キャラに効果」の、何をするか（act）。n：数値を使う、signed：マイナスも使える、faceOK：「リーダーかキャラ」を選べる */
+const UACTS = {
+  dmg:       { label: "ダメージを与える", n: true, faceOK: true },
+  destroy:   { label: "破壊する" },
+  freeze:    { label: "行動不能にする（次のターン攻撃できない）" },
+  unfreeze:  { label: "行動不能を解除する" },
+  atk:       { label: "攻撃力を変える（−で下げる）", n: true, signed: true },
+  hp:        { label: "体力を変える（−で下げる）", n: true, signed: true },
+  both:      { label: "攻撃力と体力を変える（+N/+N、−も）", n: true, signed: true },
+  heal:      { label: "体力を回復する", n: true },
+  grant:     { label: "能力を与える", kw: true },
+  silence:   { label: "沈黙させる（効果と能力を消す）" },
+  bounce:    { label: "手札に戻す" },
+  shuffle:   { label: "山札に混ぜる" },
+  transform: { label: "変身させる", token: true },
+  swap:      { label: "攻撃力と体力を入れ替える" },
+  copy:      { label: "同じキャラを自分の場に出す（複製）" },
+  steal:     { label: "奪う（相手キャラだけ）", enemyOnly: true }
+};
+/* だれに（to）。role：使うときに選ぶ対象の役割（enemy / own / any / enemyF） */
+const UTOS = {
+  enemy1:    { label: "選んだ相手キャラ", role: "enemy", side: "enemy" },
+  own1:      { label: "選んだ自分のキャラ", role: "own", side: "own" },
+  any1:      { label: "選んだキャラ（自分か相手）", role: "any" },
+  enemyF:    { label: "選んだ相手（キャラか相手プレイヤー）", role: "enemyF", side: "enemy", faceOnly: true },
+  enemyRand: { label: "ランダムな相手キャラ", side: "enemy" },
+  ownRand:   { label: "ランダムな自分のキャラ", side: "own" },
+  enemyAll:  { label: "相手キャラ全体", side: "enemy", world: true },
+  ownAll:    { label: "自分のキャラ全体", side: "own", world: true },
+  all:       { label: "すべてのキャラ（自分のキャラも）", world: true },
+  self:      { label: "このキャラ", side: "own", charOnly: true }
+};
+/* 汎用「プレイヤーに効果」 */
+const PACTS = { dmg: "ダメージを与える", heal: "体力を回復する", draw: "カードを引かせる", discard: "手札をランダムに捨てさせる" };
+const PWHO = { opp: "相手", self: "自分", both: "おたがい" };
+const intoDesc = e => { const c = e && e.into && cardRef(e.into); return c ? `「${c.name}」${c.type === "char" ? `（${c.atk}/${c.hp}）` : ""}` : "（合体先未設定）"; };
+/* 対象の言い方。own は、キャラの効果ならそのキャラ自身は選べない */
+function toPhrase(e, isChar, auto) {
+  const w = worldNo(e), to = e.to;
+  if (auto && to === "enemy1") return "ランダムな相手キャラ1体";
+  if (auto && to === "own1") return isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体";
+  if (auto && to === "any1") return "ランダムなキャラ1体";
+  if (auto && to === "enemyF") return "ランダムな相手キャラ1体か相手プレイヤー";
+  return {
+    enemy1: "相手キャラ1体", own1: isChar ? "このキャラ以外の自分のキャラ1体" : "自分のキャラ1体", any1: isChar ? "このキャラ以外のキャラ1体（自分か相手）" : "キャラ1体（自分か相手）",
+    enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
+    enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
+  }[to] || "（対象未設定）";
+}
+const sideOfTo = to => (UTOS[to] && UTOS[to].side) || "";
+function unitText(e, T) {
+  const a = e && e.act, n = e ? e.n : 0, sg = v => (v >= 0 ? "+" + v : String(v));
+  T = T || toPhrase(e || {}, false, false);
+  const side = sideOfTo(e && e.to);
+  switch (a) {
+    case "dmg": return `${T}に${n}ダメージ。`;
+    case "destroy": return `${T}を破壊する。`;
+    case "freeze": return side === "enemy" ? `${T}は、次の相手のターンに攻撃できない。` : side === "own" ? `${T}は、次の自分のターンに攻撃できない。` : `${T}は、持ち主の次のターンに攻撃できない。`;
+    case "unfreeze": return `${T}の行動不能を解除する（このターンに攻撃できなかったキャラは、攻撃できるようになる）。`;
+    case "atk": return `${T}の攻撃力を${sg(n)}する。`;
+    case "hp": return `${T}の体力を${sg(n)}する。`;
+    case "both": return `${T}を${sg(n)}/${sg(n)}する。`;
+    case "heal": return `${T}の体力を${n}回復する。`;
+    case "grant": return `${T}に「${kwName(e)}」を与える${e.turn ? "（このターンだけ）" : ""}。`;
+    case "silence": return side === "own" ? `${T}を沈黙させる（効果と能力をすべて失う。不動や死の宣告も消える）。` : `${T}を沈黙させる（効果と能力をすべて失う）。`;
+    case "bounce": return side === "own" ? `${T}を手札に戻す（トークンは消える）。` : `${T}を持ち主の手札に戻す（トークンは消える）。`;
+    case "shuffle": return side === "enemy" ? `${T}を相手の山札に混ぜる（トークンは消える）。` : `${T}を持ち主の山札に混ぜる（トークンは消える）。`;
+    case "transform": return e.card ? `${T}を${tokDesc(e)}に変身させる。` : `${T}を、効果も能力もない1/1に変身させる。`;
+    case "swap": return `${T}の攻撃力と体力を入れ替える。`;
+    case "copy": return `${T}と同じキャラを、自分の場に1体出す（受けたダメージや強化は写さない）。`;
+    case "steal": return `${T}を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。`;
+  }
+  return "（効果未設定）";
+}
+function playerText(e) {
+  const n = e.n, w = e.who || "opp";
+  switch (e.act) {
+    case "dmg": return w === "opp" ? `相手プレイヤーに${n}ダメージ。` : w === "self" ? `自分に${n}ダメージ。` : `おたがいのプレイヤーに${n}ダメージ。`;
+    case "heal": return w === "self" ? `自分の体力を${n}回復する。` : w === "opp" ? `相手の体力を${n}回復する。` : `おたがいの体力を${n}回復する。`;
+    case "draw": return w === "self" ? `カードを${n}枚引く。` : w === "opp" ? `相手はカードを${n}枚引く。` : `おたがいにカードを${n}枚引く。`;
+    case "discard": return w === "opp" ? `相手の手札をランダムに${n}枚捨てさせる。` : w === "self" ? `自分の手札をランダムに${n}枚捨てる。` : `おたがいの手札をランダムに${n}枚捨てる。`;
+  }
+  return "（効果未設定）";
+}
+/* 古い種類の効果を、汎用の形に置き換える（読み込むとき） */
+const LEGACY_MAP = {
+  draw: ["player", "draw", "self"], discard: ["player", "discard", "opp"], dmgFace: ["player", "dmg", "opp"], heal: ["player", "heal", "self"],
+  dmgTarget: ["unit", "dmg", "enemy1"], dmgRandom: ["unit", "dmg", "enemyRand"], dmgAll: ["unit", "dmg", "enemyAll"], dmgAllBoth: ["unit", "dmg", "all"],
+  destroyTarget: ["unit", "destroy", "enemy1"], destroyAll: ["unit", "destroy", "all"], freezeTarget: ["unit", "freeze", "enemy1"], freezeAll: ["unit", "freeze", "enemyAll"],
+  debuffTarget: ["unit", "atk", "enemy1", -1], debuffAll: ["unit", "atk", "enemyAll", -1], buffAtk: ["unit", "atk", "own1"], buffHp: ["unit", "hp", "own1"], buffBoth: ["unit", "both", "own1"],
+  buffAllAtk: ["unit", "atk", "ownAll"], buffAllBoth: ["unit", "both", "ownAll"], healUnits: ["unit", "heal", "ownAll"], buffSelfAtk: ["unit", "atk", "self"], buffSelfBoth: ["unit", "both", "self"],
+  grantSelf: ["unit", "grant", "self"], grantOwn: ["unit", "grant", "own1"], grantAll: ["unit", "grant", "ownAll"], bounceEnemy: ["unit", "bounce", "enemy1"], bounceOwn: ["unit", "bounce", "own1"],
+  shuffleEnemy: ["unit", "shuffle", "enemy1"], transform: ["unit", "transform", "enemy1"], steal: ["unit", "steal", "enemy1"], silence: ["unit", "silence", "enemy1"], silenceAll: ["unit", "silence", "enemyAll"],
+  silenceOwn: ["unit", "silence", "own1"], swapEnemy: ["unit", "swap", "enemy1"], swapOwn: ["unit", "swap", "own1"]
+};
+function migrateEffect(e) {
+  const m = LEGACY_MAP[e.kind]; if (!m) return e;
+  const o = { ...e, kind: m[0], act: m[1] };
+  if (m[0] === "unit") o.to = m[2]; else o.who = m[2];
+  if (m[3] === -1) o.n = -Math.abs(+e.n || 1);
+  return o;
+}
 
 /* キャラの効果が発動するタイミング（effect.when）。魔法はいつも「使ったとき」（play）。
    play 以外で対象を選ぶ効果は、対象をランダムに選ぶ */
@@ -105,6 +214,7 @@ const WHENS = {
   allyEnter: { label: "ほかの味方が出たとき",         head: "ほかの自分のキャラが出たとき" },
   allyDeath: { label: "ほかの味方が倒されたとき",     head: "ほかの自分のキャラが倒されたとき" },
   spell:     { label: "自分が魔法を使ったとき",       head: "自分が魔法を使ったとき" },
+  cardPlay:  { label: "自分がカードを使ったとき（世界・種類で絞れる）", head: "自分がカードを使ったとき" },
   face:      { label: "相手プレイヤーにダメージを与えたとき", head: "このキャラが相手プレイヤーにダメージを与えたとき" },
   drawn:     { label: "自分がカードを引いたとき",     head: "自分がカードを引いたとき" },
   healed:    { label: "自分の体力が回復したとき",     head: "自分の体力が回復したとき" },
@@ -203,8 +313,9 @@ async function serialHash(code) {
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 /* カードの対象（効果のうち、最初に見つかった対象付きのもの） */
+function effRole(e) { return e && e.kind === "unit" && UTOS[e.to] ? UTOS[e.to].role || null : null; }
 function cardTarget(card) {
-  for (const e of playEffects(card)) { const t = EFFECTS[e.kind] && EFFECTS[e.kind].target; if (t) return t; }
+  for (const e of playEffects(card)) { const r = effRole(e); if (r) return r === "enemy" || r === "enemyF" ? "enemyUnit" : r === "own" ? "ownUnit" : "anyUnit"; }
   return null;
 }
 /* カードを使うときに選ぶ対象の並び：代償で破壊する自分のキャラ → 相手キャラ → 自分のキャラ */
@@ -212,9 +323,11 @@ function cardTargetRoles(card) {
   const roles = [];
   const sac = card.pay && card.pay.kind === "sacrifice";
   if (sac) roles.push("sacrifice");
-  const kinds = playEffects(card).map(e => EFFECTS[e.kind] && EFFECTS[e.kind].target).filter(Boolean);
-  if (kinds.includes("enemyUnit")) roles.push("enemy");
-  if (kinds.includes("ownUnit") && !sac) roles.push("own");
+  const rs = playEffects(card).map(effRole).filter(Boolean);
+  if (rs.includes("enemyF")) roles.push("enemyF");
+  else if (rs.includes("enemy")) roles.push("enemy");
+  if (rs.includes("own") && !sac) roles.push("own");
+  if (rs.includes("any")) roles.push("any");
   return roles;
 }
 
@@ -229,26 +342,29 @@ function effectsText(card, list, auto) {
   // 同じ効果が続くときは「〜を4回」にまとめる（天罰の光など）
   list = (list || card.effects || []).filter(e => EFFECTS[e.kind]);
   const out = [];
-  const seen = {};   // 同じカードで2つ目以降の「選んだ相手（自分）のキャラ」は、最初に選んだのと同じキャラ → 「そのキャラ」と書く
+  const seen = {};   // 同じカードで2つ目以降の「選んだ対象」は、最初に選んだのと同じ → 「そのキャラ」と書く
+  const isChar = card.type === "char";
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     let k = 1;
-    while (i + k < list.length && list[i + k].kind === e.kind && list[i + k].n === e.n && JSON.stringify(list[i + k]) === JSON.stringify(e)) k++;
-    let t = EFFECTS[e.kind].text(e.n, e);
-    // キャラの効果で「自分のキャラ1体」を選ぶものは、そのキャラ自身は選べない
-    if (card.type === "char" && EFFECTS[e.kind].target === "ownUnit") t = t.replace("自分のキャラ1体", "このキャラ以外の自分のキャラ1体");
-    // 登場時以外は対象を選べないので、ランダム
-    const tg = EFFECTS[e.kind].target;
-    if (!auto && tg && seen[tg]) t = t.replace(/相手キャラ1体|このキャラ以外の自分のキャラ1体|自分のキャラ1体/, "そのキャラ");
-    if (tg) seen[tg] = true;
-    if (auto && EFFECTS[e.kind].target) t = t.replace("相手キャラ1体", "ランダムな相手キャラ1体").replace("このキャラ以外の自分のキャラ1体", "このキャラ以外のランダムな自分のキャラ1体");
+    while (i + k < list.length && JSON.stringify(list[i + k]) === JSON.stringify(e)) k++;
+    let t;
+    if (e.kind === "unit") {
+      const role = UTOS[e.to] && UTOS[e.to].role;
+      let T = toPhrase(e, isChar, auto);
+      if (!auto && role && seen[role]) T = role === "enemyF" ? "その相手" : "そのキャラ";
+      if (role) seen[role] = true;
+      t = unitText(e, T);
+    } else t = EFFECTS[e.kind].text(e.n, e);
     if (e.cond && CONDS[e.cond]) t = `${condText(e)}、${t}`;
-    if (k > 1) t = e.kind === "dmgRandom" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
+    if (k > 1) t = e.kind === "unit" && e.act === "dmg" && e.to === "enemyRand" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
     out.push(t);
     i += k - 1;
   }
   return out.join("");
 }
+/* 「自分がカードを使ったとき」の見出し（世界・種類で絞っていればそれも書く） */
+function cardPlayHead(e) { return `自分が${worldNo(e && { world: e.pw })}${e && e.pt === "char" ? "キャラ" : e && e.pt === "spell" ? "魔法" : "カード"}を使ったとき`; }
 function cardTextLines(card) {
   const lines = [];
   if (card.type === "char") {
@@ -259,7 +375,13 @@ function cardTextLines(card) {
   if (card.type === "char") {
     // タイミングごとに1行（登場時 → ほかのタイミングの順）
     Object.keys(WHENS).forEach(w => {
-      const t = effectsText(card, (card.effects || []).filter(e => whenOf(e) === w), w !== "play");
+      const all = (card.effects || []).filter(e => whenOf(e) === w);
+      if (w === "cardPlay") {
+        const keys = [...new Set(all.map(e => `${e.pw || ""}|${e.pt || ""}`))];
+        keys.forEach(key => { const g = all.filter(e => `${e.pw || ""}|${e.pt || ""}` === key); const t = effectsText(card, g, true); if (t) lines.push(`${cardPlayHead(g[0])}：${t}`); });
+        return;
+      }
+      const t = effectsText(card, all, w !== "play");
       if (t) lines.push(`${WHENS[w].head}：${t}`);
     });
   } else {
@@ -317,16 +439,40 @@ function cardHTML(card, o = {}) {
     ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
-    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}
+    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}
     <span class="foot"><span class="nm ${card.name.length >= 9 ? "xlong" : card.name.length >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
 const DEFAULT_LOGIN = [{ gold: 50 }, { gold: 50 }, { stones: 20 }, { gold: 100 }, { gold: 50 }, { stones: 30 }, { tickets: 1 }];
 /* 効果1つの欠けを補う（追加の設定：card＝トークン、kw＝与える能力、world＝世界の絞り込み、ctype＝カードの種類） */
 function normEffect(e, type) {
+  e = migrateEffect(e);
   const def = EFFECTS[e.kind], o = def.opts || [];
-  const out = { kind: e.kind, n: Math.max(def.min ?? 1, +e.n || 0) };
+  const out = { kind: e.kind, n: Math.max(def.min ?? 1, Math.min(99, Math.round(+e.n || 0))) };
   if (type !== "spell" && WHENS[e.when] && e.when !== "play") out.when = e.when;
+  if (out.when === "cardPlay") { if (WORLDS[e.pw]) out.pw = e.pw; if (TYPES[e.pt]) out.pt = e.pt; }
+  if (e.kind === "unit") {
+    out.act = UACTS[e.act] ? e.act : "dmg";
+    let to = UTOS[e.to] ? e.to : "enemy1";
+    if (UTOS[to].charOnly && type === "spell") to = "own1";
+    if (UTOS[to].faceOnly && !UACTS[out.act].faceOK) to = "enemy1";
+    if (UACTS[out.act].enemyOnly && sideOfTo(to) !== "enemy") to = "enemy1";
+    out.to = to;
+    const ua = UACTS[out.act];
+    if (!ua.n) out.n = 1;
+    else if (!ua.signed) out.n = Math.max(1, out.n);
+    else if (!out.n) out.n = 1;
+    if (ua.kw && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
+    if (ua.kw && e.turn) out.turn = true;
+    if (ua.token && e.card) out.card = String(e.card);
+    if (UTOS[to].world && WORLDS[e.world]) out.world = e.world;
+  } else if (e.kind === "player") {
+    out.act = PACTS[e.act] ? e.act : "dmg";
+    out.who = PWHO[e.who] ? e.who : "opp";
+    out.n = Math.max(1, out.n);
+  }
+  if (e.kind === "merge" && e.into) out.into = String(e.into);
+  if (e.kind === "costDown") out.dur = e.dur === "game" ? "game" : "turn";
   if (o.includes("token") && e.card) out.card = String(e.card);
   if (o.includes("kw") && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
   if (o.includes("world") && WORLDS[e.world]) out.world = e.world;

@@ -264,7 +264,7 @@ function renderEditor() {
                 ${Object.entries(WHENS).map(([k, v]) => `<option value="${k}" ${whenOf(e) === k ? "selected" : ""}>${v.label}</option>`).join("")}
               </select>` : ""}
               <select data-eff-kind="${i}" aria-label="効果${i + 1}の種類" id="ef-k-${i}">
-                ${[...new Set(Object.values(EFFECTS).filter(v => isChar || !v.self).map(v => v.group))].map(g => `<optgroup label="${g}">${Object.entries(EFFECTS).filter(([, v]) => v.group === g && (isChar || !v.self)).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${v.label}${v.target ? "（対象を選ぶ）" : ""}</option>`).join("")}</optgroup>`).join("")}
+                ${[...new Set(Object.values(EFFECTS).filter(v => !v.legacy && (isChar || !v.self)).map(v => v.group))].map(g => `<optgroup label="${g}">${Object.entries(EFFECTS).filter(([, v]) => !v.legacy && v.group === g && (isChar || !v.self)).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${v.label}</option>`).join("")}</optgroup>`).join("")}
               </select>
               ${effNoN(def, e) ? "" : stepper("eff-" + i, e.n, `効果${i + 1}の数値`)}
               <button type="button" class="iconbtn" data-eff-del="${i}" aria-label="効果${i + 1}を削除">✕</button>
@@ -324,19 +324,44 @@ function renderRules() {
 /* 効果の追加の設定（トークン・与える能力・世界・カードの種類） */
 function effOptsHTML(e, i) {
   const def = EFFECTS[e.kind], o = def.opts || [];
-  if (!o.length) return "";
+  const isChar = curCard() && curCard().type === "char";
   const sel = (opt, label, items, val) => `<label class="eff-opt"><span>${label}</span><select data-eff-opt="${i}" data-opt="${opt}" id="ef-${opt}-${i}">${items.map(([k, v]) => `<option value="${esc(k)}" ${val === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label>`;
+  const tokSel = (opt, label, type, optional) => {
+    const toks = DATA.cards.filter(c => c.token && (!type || c.type === type));
+    return toks.length || e[opt]
+      ? sel(opt, label, [["", optional ? "（なし：1/1にする）" : "選んでください"], ...toks.map(c => [c.id, `${c.name}（${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}）`])], e[opt] || "")
+      : `<span class="hint small">トークンのカードがまだありません。新しいカードを作って「トークン」にチェックを入れてください${type === "char" ? "（キャラ）" : ""}。</span>`;
+  };
   const out = [];
-  if (o.includes("token")) {
-    const toks = DATA.cards.filter(c => c.token && (!def.tokenType || c.type === def.tokenType));
-    out.push(toks.length || e.card
-      ? sel("card", "トークン", [["", def.tokenOptional ? "（なし：1/1にする）" : "選んでください"], ...toks.map(c => [c.id, `${c.name}（${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}）`])], e.card || "")
-      : `<span class="hint small">トークンのカードがまだありません。新しいカードを作って「トークン」にチェックを入れてください${def.tokenType === "char" ? "（キャラ）" : ""}。</span>`);
+  // 「自分がカードを使ったとき」：どの世界・種類のカードで発動するか
+  if (whenOf(e) === "cardPlay") {
+    out.push(sel("pw", "使ったカードの世界", [["", "すべて"], ...Object.entries(WORLDS)], e.pw || ""));
+    out.push(sel("pt", "使ったカードの種類", [["", "すべて"], ...Object.entries(TYPES)], e.pt || ""));
   }
-  if (o.includes("kw")) out.push(sel("kw", "能力", [["", "選んでください"], ...Object.entries(KEYWORDS).map(([k, v]) => [k, v.label]), ["armor", "装甲（数値）"]], e.kw || ""));
-  if (o.includes("world")) out.push(sel("world", "世界", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
-  if (o.includes("ctype")) out.push(sel("ctype", "種類", [["", "すべて"], ...Object.entries(TYPES)], e.ctype || ""));
-  return `<div class="eff-opts">${out.join("")}</div>`;
+  if (e.kind === "unit") {
+    const ua = UACTS[e.act] || {};
+    out.push(sel("act", "何をする", Object.entries(UACTS).map(([k, v]) => [k, v.label]), e.act || "dmg"));
+    const tos = Object.entries(UTOS).filter(([k, v]) => (isChar || !v.charOnly) && (!v.faceOnly || ua.faceOK) && (!ua.enemyOnly || v.side === "enemy"));
+    out.push(sel("to", "対象", tos.map(([k, v]) => [k, v.label + (v.role ? "（使うときに選ぶ）" : "")]), e.to || "enemy1"));
+    if (ua.kw) {
+      out.push(sel("kw", "能力", [["", "選んでください"], ...Object.entries(KEYWORDS).map(([k, v]) => [k, v.label]), ["armor", "装甲（数値）"]], e.kw || ""));
+      out.push(`<label class="eff-opt chk"><input type="checkbox" data-eff-turn="${i}" ${e.turn ? "checked" : ""}><span>このターンだけ</span></label>`);
+    }
+    if (ua.token) out.push(tokSel("card", "変身先", "char", true));
+    if (UTOS[e.to] && UTOS[e.to].world) out.push(sel("world", "世界で絞る", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
+    if (ua.signed) out.push(`<span class="hint small">数値を−にすると下げます（例：−2で攻撃力-2）。</span>`);
+  } else if (e.kind === "player") {
+    out.push(sel("act", "何をする", Object.entries(PACTS), e.act || "draw"));
+    out.push(sel("who", "だれに", Object.entries(PWHO), e.who || "opp"));
+  } else {
+    if (o.includes("token")) out.push(tokSel("card", e.kind === "merge" ? "部品（トークン）" : "トークン", def.tokenType, def.tokenOptional));
+    if (o.includes("into")) out.push(sel("into", "合体してできるキャラ", [["", "選んでください"], ...DATA.cards.filter(c => c.type === "char").map(c => [c.id, `${c.name}（${c.atk}/${c.hp}）${c.token ? "・トークン" : ""}`])], e.into || ""));
+    if (o.includes("kw")) out.push(sel("kw", "能力", [["", "選んでください"], ...Object.entries(KEYWORDS).map(([k, v]) => [k, v.label]), ["armor", "装甲（数値）"]], e.kw || ""));
+    if (o.includes("world")) out.push(sel("world", "世界", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
+    if (o.includes("ctype")) out.push(sel("ctype", "種類", [["", "すべて"], ...Object.entries(TYPES)], e.ctype || ""));
+    if (o.includes("dur")) out.push(sel("dur", "期間", [["turn", "このターンだけ"], ["game", "この対戦中ずっと"]], e.dur || "turn"));
+  }
+  return out.length ? `<div class="eff-opts">${out.join("")}</div>` : "";
 }
 /* 効果の条件（なし／体力N以下 など） */
 function effCondHTML(e, i) {
@@ -350,14 +375,16 @@ function effCondHTML(e, i) {
   </div>`;
 }
 function targetWarn(c) {
-  const sides = playEffects(c).map(e => EFFECTS[e.kind].target).filter(Boolean);
+  const sides = playEffects(c).map(effRole).filter(Boolean).map(r => r === "enemy" || r === "enemyF" ? "enemyUnit" : r === "own" ? "ownUnit" : "anyUnit");
   const msgs = [];
   if (sides.filter(x => x === "enemyUnit").length > 1) msgs.push("相手キャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
   if (sides.filter(x => x === "ownUnit").length > 1) msgs.push("自分のキャラを選ぶ効果が複数あります。対象は1回だけ選ぶので、同じキャラにすべてかかります。");
   c.effects.forEach((e, i) => {
     const o = EFFECTS[e.kind].opts || [];
     if (o.includes("token") && !e.card && !EFFECTS[e.kind].tokenOptional) msgs.push(`効果${i + 1}：出すトークンを選んでください。`);
-    if (o.includes("kw") && !e.kw) msgs.push(`効果${i + 1}：与える能力を選んでください。`);
+    if ((o.includes("kw") || (e.kind === "unit" && e.act === "grant")) && !e.kw) msgs.push(`効果${i + 1}：与える能力を選んでください。`);
+    if (e.kind === "merge" && (!e.card || !e.into)) msgs.push(`効果${i + 1}：合体の部品と、合体してできるキャラを選んでください。`);
+    if (e.kind === "unit" && e.act === "copy" && whenOf(e) !== "play" && e.to === "self") msgs.push(`効果${i + 1}：「このキャラ」を複製すると、同じキャラが増え続けることがあります。`);
   });
   if (c.pay && c.pay.kind === "sacrifice" && sides.includes("ownUnit")) msgs.push("代償でキャラを破壊するカードでは、「自分のキャラを選ぶ効果」は発動しません。");
   return msgs.map(m => `<p class="warn">${m}</p>`).join("");
@@ -383,7 +410,10 @@ function setNum(name, value) {
     v = c.effects[+name.slice(4)].cn = clamp(value, 0, 30);
   } else if (name.startsWith("eff-")) {
     const i = +name.slice(4);
-    v = c.effects[i].n = clamp(value, EFFECTS[c.effects[i].kind].min ?? 1, 20);
+    const ef = c.effects[i], signed = ef.kind === "unit" && UACTS[ef.act] && UACTS[ef.act].signed;
+    v = clamp(value, signed ? -20 : Math.max(1, EFFECTS[ef.kind].min ?? 1), 20);
+    if (signed && v === 0) v = (ef.n || 1) > 0 ? -1 : 1;   // 0は意味がないので飛ばす
+    ef.n = v;
   } else if (name === "cost") v = c.cost = clamp(value, 0, 15);
   else if (name === "atk") v = c.atk = clamp(value, 0, 30);
   else if (name === "armor") v = c.armor = clamp(value, 0, 9);
@@ -499,11 +529,29 @@ document.addEventListener("change", e => {
     c.keywords = t.checked ? [...new Set([...c.keywords, k])] : c.keywords.filter(x => x !== k);
     changed(); return;
   }
-  if (t.dataset.effOpt != null) { const e = curCard().effects[+t.dataset.effOpt]; if (t.value) e[t.dataset.opt] = t.value; else delete e[t.dataset.opt]; changed(); renderEditor(); return; }
+  if (t.dataset.effOpt != null) {
+    const c = curCard(), e = c.effects[+t.dataset.effOpt];
+    if (t.value) e[t.dataset.opt] = t.value; else delete e[t.dataset.opt];
+    if (e.kind === "unit") {
+      // 何をするか・対象を変えたら、組み合わせを整える（normEffect と同じきまり）
+      const n = normEffect(e, c.type);
+      ["act", "to", "n", "kw", "turn", "card", "world"].forEach(k => { if (n[k] === undefined) delete e[k]; else e[k] = n[k]; });
+    }
+    changed(); renderEditor(); return;
+  }
+  if (t.dataset.effTurn != null) { const e = curCard().effects[+t.dataset.effTurn]; if (t.checked) e.turn = true; else delete e.turn; changed(); renderEditor(); return; }
   if (t.dataset.effCond != null) { const e = curCard().effects[+t.dataset.effCond]; if (t.value) { e.cond = t.value; if (e.cn == null) e.cn = 1; } else { delete e.cond; delete e.cn; delete e.cworld; } changed(); renderEditor(); return; }
   if (t.dataset.effWhen != null) { const e = curCard().effects[+t.dataset.effWhen]; if (t.value === "play") delete e.when; else e.when = t.value; changed(); renderEditor(); return; }
-  if (t.dataset.effKind != null) { const e = curCard().effects[+t.dataset.effKind]; e.kind = t.value; e.n = Math.max(EFFECTS[e.kind].min ?? 1, e.n);
-    const o = EFFECTS[e.kind].opts || []; if (!o.includes("token")) delete e.card; if (!o.includes("kw")) delete e.kw; if (!o.includes("world")) delete e.world; if (!o.includes("ctype")) delete e.ctype; changed(); renderEditor(); return; }
+  if (t.dataset.effKind != null) {
+    const c = curCard(), i = +t.dataset.effKind, old = c.effects[i];
+    const base = { kind: t.value, n: Math.max(1, Math.abs(old.n || 1)), ...(old.when ? { when: old.when } : {}), ...(old.pw ? { pw: old.pw } : {}), ...(old.pt ? { pt: old.pt } : {}), ...(old.cond ? { cond: old.cond, cn: old.cn, cworld: old.cworld } : {}) };
+    if (t.value === "unit") Object.assign(base, { act: "dmg", to: "enemy1" });
+    if (t.value === "player") Object.assign(base, { act: "draw", who: "self" });
+    if (t.value === "merge") base.n = Math.max(2, base.n);
+    if (t.value === "costDown") base.dur = "turn";
+    c.effects[i] = base;
+    changed(); renderEditor(); return;
+  }
   if (t.dataset.text === "name" || t.dataset.text === "glyph") {
     const c = curCard();
     if (!c[t.dataset.text].trim()) { c[t.dataset.text] = t.dataset.text === "name" ? "名前なし" : "？"; t.value = c[t.dataset.text]; changed(); }
@@ -564,7 +612,7 @@ function act(name, el) {
       changed(); renderEditor();
       break;
     }
-    case "addEff": c.effects.push({ kind: "draw", n: 1 }); changed(); renderEditor(); break;
+    case "addEff": c.effects.push({ kind: "player", act: "draw", who: "self", n: 1 }); changed(); renderEditor(); break;
     case "pickArt": $("#artFile").click(); break;
     case "clearArt": c.art = ""; changed(); renderEditor(); break;
     case "cfgReset": DATA.config = { ...DEFAULT_CONFIG }; saveDraft(); renderRules(); renderSummary(); break;

@@ -208,7 +208,15 @@ function startTurn(pi, skipDraw) {
   p.e = p.maxE;
   returnFromVoid(pi);   // 亜空間のキャラは、元から場にいた扱いで戻る
   // 行動不能のキャラは、このターンだけ攻撃できない
-  p.field.forEach(u => { u.swings = 0; if (u.frozen) { u.ready = false; u.frozen = false; } else u.ready = !kw(u, "noattack"); });
+  p.field.forEach(u => { u.swings = 0; u.thawed = false; if (u.frozen) { u.ready = false; u.frozen = false; u.thawed = true; } else u.ready = !kw(u, "noattack"); });
+  // 特殊勝利：場にいるまま、自分のターンの始めを決めた回数むかえると勝ち
+  for (const u of p.field) {
+    if (u.winIn == null || u.silenced) continue;
+    u.winIn--;
+    if (u.winIn <= 0) { log(`${cname(u.id)}の力で、${pname(pi)}の勝利！`); S.specialWin = pi; break; }
+    log(`${cname(u.id)}：勝利まであと${u.winIn}回。`); fx(unitSel(u.uid), `勝利まで${u.winIn}`, "trig");
+  }
+  if (S.specialWin != null && checkWin()) return;
   S.log.push({ sep: true, msg: `ターン${S.turnNo}：${pname(pi)}（エナジー${p.e}）` });
   if (!skipDraw) draw(pi);
   trigUnits(pi, "turnStart");
@@ -228,6 +236,14 @@ function endTurn(pi) {
   trigUnits(pi, "turnEnd");
   cleanup();
   if (checkWin()) return;
+  // 「このターンだけ」の能力・装甲・コスト低下を消す
+  S.players.forEach(p => {
+    p.costMods = (p.costMods || []).filter(m => !m.turn);
+    p.field.forEach(u => {
+      if (u.tmpKws) { u.kws = (u.kws || []).filter(k => !u.tmpKws.includes(k)); delete u.tmpKws; }
+      if (u.tmpArmor) { u.armorPlus = Math.max(0, (u.armorPlus || 0) - u.tmpArmor); delete u.tmpArmor; }
+    });
+  });
   startTurn(opp(pi), false);
 }
 
@@ -277,16 +293,33 @@ const canTarget = u => !hidden(u) && !kw(u, "elusive");
 const canRandom = u => !hidden(u);
 /* 対象を選ぶ役割で、選べるキャラ */
 function targetables(pi, role) {
+  if (role === "any") return [...S.players[pi].field, ...S.players[opp(pi)].field.filter(canTarget)];
   const f = S.players[roleSide(pi, role)].field;
-  return role === "enemy" ? f.filter(canTarget) : f;
+  return role === "enemy" || role === "enemyF" ? f.filter(canTarget) : f;
 }
-function effCost(pi, d) { return Math.max(0, d.cost - (S.players[pi].discount || 0)); }
+/* その役割で選べるもの（uid の並び。「相手（キャラかプレイヤー）」は "face" も選べる） */
+function targetOpts(pi, role) {
+  const u = targetables(pi, role).map(x => x.uid);
+  return role === "enemyF" ? [...u, "face"] : u;
+}
+/* 役割ごとに、そのキャラ（またはプレイヤー）を選べるか */
+function roleAllows(pi, role, owner, u) {
+  if (role === "any") return owner === pi || canTarget(u);
+  if (owner !== roleSide(pi, role)) return false;
+  return role === "enemy" || role === "enemyF" ? canTarget(u) : true;
+}
+/* コスト：次の1枚だけ下げる（discount）＋「コストを下げる」効果（このターン／この対戦中） */
+function effCost(pi, d) {
+  const p = S.players[pi];
+  const mods = (p.costMods || []).filter(m => (!m.world || d.world === m.world) && (!m.ctype || d.type === m.ctype)).reduce((a, m) => a + m.n, 0);
+  return Math.max(0, d.cost - (p.discount || 0) - mods);
+}
 
-/* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか */
-function roleSide(pi, role) { return role === "enemy" ? opp(pi) : pi; }
+/* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか（any は両方） */
+function roleSide(pi, role) { return role === "enemy" || role === "enemyF" ? opp(pi) : pi; }
 /* 実際に選ぶ必要がある対象（キャラで、その側にキャラがいない効果は選ばずに空振り） */
 function neededRoles(pi, d) {
-  return cardTargetRoles(d).filter(r => targetables(pi, r).length > 0);
+  return cardTargetRoles(d).filter(r => targetOpts(pi, r).length > 0);
 }
 
 function canPlay(pi, idx) {
@@ -299,14 +332,15 @@ function canPlay(pi, idx) {
   if (d.pay && d.pay.kind === "life" && p.hp <= d.pay.n) return { ok: false, reason: "代償の体力が足りません" };
   if (d.type === "char" && fieldFull(p) && !sac) return { ok: false, reason: voidOf(p).length ? "空いている場所がありません（亜空間のキャラが戻る場所です）" : "場がいっぱいです" };
   if (d.type === "spell" && d.effects.some(e => e.kind === "banishOwn") && d.effects.every(e => e.kind === "banishOwn") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
+  if (d.type === "spell" && d.effects.length && d.effects.every(e => e.kind === "merge") && !d.effects.some(e => p.field.filter(u => u.id === e.card).length >= e.n)) return { ok: false, reason: "合体に必要なキャラがそろっていません" };
   // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
-  const ENEMY_ONLY = ["dmgRandom", "dmgAll", "freezeAll", "debuffAll", "dmgTarget", "destroyTarget", "freezeTarget", "debuffTarget"];
-  if (d.type === "spell" && d.effects.length && d.effects.every(e => ENEMY_ONLY.includes(e.kind)) && !S.players[opp(pi)].field.length)
+  const enemyOnly = e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0);
+  if (d.type === "spell" && d.effects.length && d.effects.every(enemyOnly) && !S.players[opp(pi)].field.length)
     return { ok: false, reason: "相手の場にキャラがいません" };
   // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
   if (d.type === "spell") {
     for (const r of cardTargetRoles(d)) {
-      if (!targetables(pi, r).length) return { ok: false, reason: r === "enemy" ? (S.players[opp(pi)].field.length ? "対象に選べる相手キャラがいません（隠密・呪文耐性）" : "対象の相手キャラがいません") : "対象の自分のキャラがいません" };
+      if (!targetOpts(pi, r).length) return { ok: false, reason: r === "enemy" ? (S.players[opp(pi)].field.length ? "対象に選べる相手キャラがいません（隠密・呪文耐性）" : "対象の相手キャラがいません") : "対象の自分のキャラがいません" };
     }
   }
   return { ok: true };
@@ -325,14 +359,14 @@ function playCard(pi, idx, targetsIn) {
   const targets = normTargets(pi, d, targetsIn);
   const roles = neededRoles(pi, d);
   for (const r of roles) {
-    if (!targetables(pi, r).some(u => u.uid === targets[r])) return false;
+    if (!targetOpts(pi, r).includes(targets[r])) return false;
   }
   const cost = effCost(pi, d);
   p.hand.splice(idx, 1);
   p.e -= cost;
   p.played = (p.played || 0) + 1;   // このターンに使ったカードの数（コンボの条件）
   p.discount = 0;
-  const tnames = roles.filter(r => r !== "sacrifice").map(r => { const u = S.players[roleSide(pi, r)].field.find(x => x.uid === targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
+  const tnames = roles.filter(r => r !== "sacrifice").map(r => { if (targets[r] === "face") return pname(opp(pi)); const u = findUnit(targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
   log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
   sfx("play");
   if (["ur", "legend"].includes(d.rarity) && !d.token) fx("cutin", id, "cutin" + pi);   // UR・レジェンドはカットイン
@@ -351,6 +385,7 @@ function playCard(pi, idx, targetsIn) {
   }
   runEffects(pi, d, targets, self);
   if (d.type === "spell") trigUnits(pi, "spell");
+  trigUnits(pi, "cardPlay", self, { card: id });
   cleanup();
   if (!checkWin()) render();
   return true;
@@ -381,8 +416,108 @@ function condOK(pi, e, self) {
   }
   return true;
 }
+/* uid から場のキャラを探す（どちらの場でも） */
+function findUnit(uid) { for (const p of S.players) { const u = p.field.find(x => x.uid === uid); if (u) return u; } return null; }
+function sideOf(u) { return S.players.findIndex(p => p.field.includes(u)); }
+/* 汎用「キャラに効果」の対象を集める */
+function unitTargets(pi, e, targets, self) {
+  const me = S.players[pi], en = S.players[opp(pi)];
+  const wf = u => !e.world || (DEF[u.id] && DEF[u.id].world === e.world);
+  const rnd = a => a.length ? [a[Math.floor(Math.random() * a.length)]] : [];
+  switch (e.to) {
+    case "enemy1": { const u = en.field.find(x => x.uid === targets.enemy); return u ? [u] : []; }
+    case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self); return u ? [u] : []; }
+    case "any1": { const u = findUnit(targets.any); return u && u !== self ? [u] : []; }
+    case "enemyF": { if (targets.enemyF === "face") return ["face"]; const u = en.field.find(x => x.uid === targets.enemyF); return u ? [u] : []; }
+    case "enemyRand": return rnd(en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)));
+    case "ownRand": return rnd(me.field.filter(x => x.hp > 0 && x !== self && wf(x)));
+    case "enemyAll": return en.field.filter(wf);
+    case "ownAll": return me.field.filter(wf);
+    case "all": return [...en.field, ...me.field].filter(wf);
+    case "self": return self && self.hp > 0 && me.field.includes(self) ? [self] : [];
+  }
+  return [];
+}
+function unitEffect(pi, e, targets, self) {
+  const me = S.players[pi], n = e.n;
+  const list = unitTargets(pi, e, targets, self);
+  if (!list.length) return;
+  if (["enemyAll", "ownAll", "all"].includes(e.to)) log(`${e.to === "enemyAll" ? "相手キャラ全体" : e.to === "ownAll" ? "自分のキャラ全体" : "すべてのキャラ"}に効果。`);
+  list.forEach(u => {
+    if (u === "face") {
+      if (e.act === "dmg") { log(`${pname(opp(pi))}に${n}ダメージ。`); hitPlayer(opp(pi), n); }
+      return;
+    }
+    const side = sideOf(u); if (side < 0) return;
+    switch (e.act) {
+      case "dmg": if (e.to === "enemyRand") log(`${cname(u.id)}に${n}ダメージ。`); hitUnit(u, n); break;
+      case "destroy": destroyUnit(u); break;
+      case "freeze": freezeUnit(u); break;
+      case "unfreeze": {
+        u.frozen = false;
+        if (u.thawed && S.turn === side && !u.swings && !kw(u, "noattack")) { u.ready = true; u.thawed = false; }
+        log(`${cname(u.id)}の行動不能が解けた。`); fx(unitSel(u.uid), "解除", "heal"); break;
+      }
+      case "atk": if (n >= 0) buff(u, n, 0); else debuff(u, -n); break;
+      case "hp": if (n >= 0) buff(u, 0, n); else shrinkHp(u, -n); break;
+      case "both": if (n >= 0) buff(u, n, n); else { debuff(u, -n); shrinkHp(u, -n); } break;
+      case "heal": { const h = Math.min(n, u.maxHp - u.hp); if (h > 0) { u.hp += h; fx(unitSel(u.uid), "+" + h, "heal"); } break; }
+      case "grant": grant(u, e); break;
+      case "silence": silenceUnit(u); break;
+      case "bounce": bounce(side, u, "hand"); break;
+      case "shuffle": bounce(side, u, "deck"); break;
+      case "swap": swapStats(u); break;
+      case "transform": {
+        const t = DEF[e.card], before = cname(u.id);
+        if (t && t.type === "char") { u.id = t.id; u.atk = t.atk; u.hp = t.hp; u.maxHp = t.hp; u.silenced = false; }
+        else { u.atk = 1; u.hp = 1; u.maxHp = 1; u.silenced = true; }
+        u.kws = []; u.armorPlus = 0; u.frozen = false; u.winIn = null;
+        log(`${before}は${t ? cname(t.id) : "1/1"}に変身した。`); fx(unitSel(u.uid), "変身", "dmg");
+        break;
+      }
+      case "copy": {
+        if (fieldFull(me)) { log("場に空いている場所がなく、複製できなかった。"); break; }
+        const c = addUnit(pi, u.id);
+        if (DEF[u.id] && DEF[u.id].effects.some(x => x.kind === "winTimer")) c.winIn = null;
+        log(`${cname(u.id)}の複製が現れた。`); fx(unitSel(c.uid), "複製", "heal");
+        break;
+      }
+      case "steal": {
+        if (side === pi) break;
+        if (fieldFull(me)) { log("自分の場に空きがなく、奪えなかった。"); break; }
+        S.players[side].field = S.players[side].field.filter(x => x !== u);
+        u.ready = false; u.frozen = false;
+        if (u.owner == null) u.owner = side;   // 元の持ち主（手札・山札に戻すときは持ち主へ）
+        me.field.push(u);
+        log(`${pname(pi)}は${cname(u.id)}を奪った！`); fx(unitSel(u.uid), "奪った", "heal");
+        break;
+      }
+    }
+  });
+}
+/* 体力を下げる（最大値も下がる。0以下になったら倒れる） */
+function shrinkHp(u, n) { u.maxHp = Math.max(0, u.maxHp - n); u.hp = Math.min(u.hp, u.maxHp); fx(unitSel(u.uid), `体力-${n}`, "dmg"); if (u.hp <= 0) u.destroyed = true; }
+function playerEffect(pi, e) {
+  const who = e.who === "self" ? [pi] : e.who === "both" ? [pi, opp(pi)] : [opp(pi)], n = e.n;
+  who.forEach(q => {
+    const p = S.players[q];
+    switch (e.act) {
+      case "dmg": log(`${pname(q)}に${n}ダメージ。`); hitPlayer(q, n); break;
+      case "heal": p.hp += n; log(`${pname(q)}の体力が${n}回復。`); fx(playerSel(q), "+" + n, "heal"); trigUnits(q, "healed"); break;
+      case "draw": for (let i = 0; i < n; i++) draw(q); break;
+      case "discard":
+        for (let i = 0; i < n && p.hand.length; i++) {
+          const [id] = p.hand.splice(Math.floor(Math.random() * p.hand.length), 1);
+          log(`${pname(q)}は${cname(id)}を捨て${q === pi ? "た" : "させられた"}。`);
+        }
+        break;
+    }
+  });
+}
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
+  if (e.kind === "unit") return unitEffect(pi, e, targets, self);
+  if (e.kind === "player") return playerEffect(pi, e);
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;
   const enemyT = () => en.field.find(x => x.uid === targets.enemy);
   const ownT = () => me.field.find(x => x.uid === targets.own && x !== self);
@@ -441,6 +576,23 @@ function effect(pi, e, targets, self) {
     }
     case "energyNow": me.e += n; log(`${pname(pi)}はエナジーを${n}得た。`); fx(playerSel(pi), `エナジー+${n}`, "heal"); break;
     case "banishOwn": banishOwn(pi); break;
+    case "merge": {
+      const parts = me.field.filter(u => u.id === e.card && u.hp > 0);
+      if (parts.length < n || !DEF[e.into]) { log("合体に必要なキャラがそろっていなかった。"); break; }
+      parts.slice(0, n).forEach(u => { u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "合体", "heal"); });
+      me.field = me.field.filter(u => !parts.slice(0, n).includes(u));
+      parts.slice(0, n).forEach(u => onDeath(pi, u));
+      const c = addUnit(pi, e.into);
+      log(`${cname(e.card)}が${n}体合体して、${cname(e.into)}になった！`); fx(unitSel(c.uid), "合体！", "heal");
+      break;
+    }
+    case "costDown": {
+      (me.costMods || (me.costMods = [])).push({ n, ...(e.world ? { world: e.world } : {}), ...(e.ctype ? { ctype: e.ctype } : {}), ...(e.dur === "game" ? {} : { turn: true }) });
+      log(`${pname(pi)}の${e.world ? WORLDS[e.world] + "の" : ""}${e.ctype === "char" ? "キャラ" : e.ctype === "spell" ? "魔法" : "カード"}のコストが${n}下がった${e.dur === "game" ? "（この対戦中ずっと）" : "（このターン）"}。`);
+      fx(playerSel(pi), `コスト-${n}`, "heal");
+      break;
+    }
+    case "winTimer": if (self && self.hp > 0) { self.winIn = n; log(`${cname(self.id)}：あと${n}回、自分のターンの始めをむかえると勝利。`); fx(unitSel(self.uid), `勝利まで${n}`, "trig"); } break;
     case "grantSelf": if (self && self.hp > 0) grant(self, e); break;
     case "grantOwn": { const u = ownT(); if (u) grant(u, e); break; }
     case "grantAll": me.field.filter(u => !e.world || (DEF[u.id] && DEF[u.id].world === e.world)).forEach(u => grant(u, e)); break;
@@ -530,8 +682,9 @@ function effect(pi, e, targets, self) {
 
 /* 能力を与える（装甲は数値を足す） */
 function grant(u, e) {
-  if (e.kw === "armor") { u.armorPlus = (u.armorPlus || 0) + e.n; log(`${cname(u.id)}は装甲${e.n}を得た。`); fx(unitSel(u.uid), `装甲+${e.n}`, "heal"); return; }
+  if (e.kw === "armor") { u.armorPlus = (u.armorPlus || 0) + e.n; if (e.turn) u.tmpArmor = (u.tmpArmor || 0) + e.n; log(`${cname(u.id)}は装甲${e.n}を得た${e.turn ? "（このターンだけ）" : ""}。`); fx(unitSel(u.uid), `装甲+${e.n}`, "heal"); return; }
   if (!KEYWORDS[e.kw]) return;
+  if (e.turn && !(u.kws || []).includes(e.kw)) u.tmpKws = [...new Set([...(u.tmpKws || []), e.kw])];   // このターンだけ：ターンの終わりに消す
   log(`${cname(u.id)}は${KEYWORDS[e.kw].label}を得た。`);
   u.kws = [...new Set([...(u.kws || []), e.kw])];
   if (e.kw === "haste" && !u.frozen && !kw(u, "noattack") && !u.swings) u.ready = true;
@@ -554,6 +707,7 @@ function bounce(pi, u, to) {
 }
 /* 沈黙：効果と能力をすべて失う（上がった攻撃力・体力はそのまま） */
 function silenceUnit(u) {
+  u.winIn = null;
   u.silenced = true; u.kws = []; u.armorPlus = 0;
   log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "dmg");
 }
@@ -583,28 +737,31 @@ function buff(u, a, h) {
    発動を S.q に積んでおき、cleanup で順番に処理する。倒れたキャラを場から外すと「倒されたとき」が積まれるので、
    積まれたものがなくなるまで繰り返す（無限に続く組み合わせは 60 回で打ち切る） */
 const hasTrig = (u, when) => !!(u && !u.silenced && DEF[u.id] && DEF[u.id].effects.some(e => whenOf(e) === when));
-function queueTrig(pi, when, u) {
+function queueTrig(pi, when, u, extra) {
   if (!hasTrig(u, when)) return;
-  (S.q || (S.q = [])).push({ pi, when, uid: u.uid, snap: when === "death" ? JSON.parse(JSON.stringify(u)) : null });
+  (S.q || (S.q = [])).push({ pi, when, uid: u.uid, snap: when === "death" ? JSON.parse(JSON.stringify(u)) : null, ...(extra || {}) });
 }
 /* pi の場のキャラ全員（except 以外）に、そのタイミングの発動を積む */
-function trigUnits(pi, when, except) {
+function trigUnits(pi, when, except, extra) {
   if (!S || S.phase !== "play") return;
-  S.players[pi].field.forEach(u => { if (u !== except) queueTrig(pi, when, u); });
+  S.players[pi].field.forEach(u => { if (u !== except) queueTrig(pi, when, u, extra); });
 }
 /* 登場時以外の効果の対象：ランダムに選ぶ（倒れかけのキャラは選ばない） */
 function autoTargets(pi, self) {
-  const pick = a => a.length ? a[Math.floor(Math.random() * a.length)].uid : undefined;
-  return { enemy: pick(S.players[opp(pi)].field.filter(x => x.hp > 0 && canRandom(x))), own: pick(S.players[pi].field.filter(x => x.hp > 0 && x !== self)) };
+  const pick = a => a.length ? a[Math.floor(Math.random() * a.length)] : undefined;
+  const ens = S.players[opp(pi)].field.filter(x => x.hp > 0 && canRandom(x)).map(x => x.uid);
+  const owns = S.players[pi].field.filter(x => x.hp > 0 && x !== self).map(x => x.uid);
+  return { enemy: pick(ens), own: pick(owns), any: pick([...ens, ...owns]), enemyF: pick([...ens, "face"]) };
 }
 function fireTrig(t) {
   const p = S.players[t.pi];
   const u = t.snap || p.field.find(x => x.uid === t.uid);
   if (!u || u.silenced || !DEF[u.id]) return;
   if (t.when === "survive" && u.hp <= 0) return;
-  const list = DEF[u.id].effects.filter(e => whenOf(e) === t.when);
+  const cd = t.card && DEF[t.card];
+  const list = DEF[u.id].effects.filter(e => whenOf(e) === t.when && (t.when !== "cardPlay" || (cd && (!e.pw || cd.world === e.pw) && (!e.pt || cd.type === e.pt))));
   if (!list.length) return;
-  log(`${cname(u.id)}の効果（${WHENS[t.when].label}）。`);
+  log(`${cname(u.id)}の効果（${t.when === "cardPlay" ? cardPlayHead(list[0]) : WHENS[t.when].label}）。`);
   fx(unitSel(u.uid), WHENS[t.when].label, "trig");
   const auto = autoTargets(t.pi, u);
   list.forEach(e => effect(t.pi, e, auto, u));
@@ -719,9 +876,9 @@ function forfeit(pi, reason) {
 
 function checkWin() {
   const [a, b] = S.players;
-  if (a.hp > 0 && b.hp > 0) return false;
+  if (a.hp > 0 && b.hp > 0 && S.specialWin == null) return false;
   S.over = true;
-  S.winner = a.hp <= 0 && b.hp <= 0 ? "draw" : a.hp <= 0 ? 1 : 0;
+  S.winner = S.specialWin != null ? S.specialWin : a.hp <= 0 && b.hp <= 0 ? "draw" : a.hp <= 0 ? 1 : 0;
   if (SIM) return true;
   S.log.push({ sep: true, msg: `決着：${S.winner === "draw" ? "引き分け" : pname(S.winner) + "の勝利"}` });
   finishGame();
@@ -771,7 +928,21 @@ function simulate(fn) {
 /* 盤面の評価（pi から見て大きいほど有利） */
 /* 効果1つのおおまかな価値（CPU の盤面評価用。体力1点≒1） */
 function effValue(e) {
-  const n = e.n || 1, k = e.kind;
+  const n = Math.abs(e.n || 1), k = e.kind;
+  if (k === "unit") {
+    const many = ["enemyAll", "ownAll", "all"].includes(e.to), mine = sideOfTo(e.to) === "own", good = { dmg: !mine, destroy: !mine, freeze: !mine, silence: !mine, bounce: !mine, shuffle: !mine, transform: !mine, steal: true, copy: true, heal: true, grant: true, unfreeze: true, swap: true, atk: (e.n > 0) === mine, hp: (e.n > 0) === mine, both: (e.n > 0) === mine }[e.act];
+    const base = { dmg: n * 0.9, destroy: 3, freeze: 1.2, unfreeze: 0.8, atk: n * 0.9, hp: n * 0.9, both: n * 1.6, heal: n * 0.5, grant: 1.2, silence: 1.5, bounce: 2.5, shuffle: 3, transform: 3, swap: 1, copy: 3, steal: 3.5 }[e.act] || 0.8;
+    const v = base * (many ? 1.8 : 1) * (e.to === "all" ? 0.4 : 1);
+    return good ? v : -v * 0.6;
+  }
+  if (k === "player") {
+    const v = { dmg: n * 0.8, heal: n * 0.45, draw: n * 1.2, discard: n * 0.9 }[e.act] || 0.8;
+    const good = e.who === "self" ? e.act !== "dmg" && e.act !== "discard" : e.who === "opp" ? e.act === "dmg" || e.act === "discard" : e.act === "draw";
+    return good ? v : -v * 0.6;
+  }
+  if (k === "merge") return 4;
+  if (k === "costDown") return n * (e.dur === "game" ? 2 : 0.8);
+  if (k === "winTimer") return 6;
   if (/^dmg(Target|Random)$/.test(k)) return n * 0.9;
   if (k === "dmgAll") return n * 1.6;
   if (k === "dmgFace") return n * 0.8;
@@ -848,7 +1019,7 @@ function legalActions(pi) {
     const roles = neededRoles(pi, DEF[id]);
     let combos = [{}];
     roles.forEach(r => {
-      const opts = targetables(pi, r).map(u => u.uid);
+      const opts = targetOpts(pi, r);
       combos = combos.flatMap(c => opts.map(o => ({ ...c, [r]: o })));
     });
     combos.slice(0, 24).forEach(t => acts.push({ t: "play", idx, id, targets: t }));
@@ -875,7 +1046,7 @@ function cpuChoose(pi) {
   // 上級は「この手のあとに続けて打てる一番よい手」まで読む（2手先）
   // エナジーを増やすだけのカード（境界の欠片・双子の妖精の効果など）は、それだけでは盤面が変わらないので、
   // 「そのあとに打てる一番よい手」まで読んで価値を決める（中級でも）
-  const isResource = a => a.t === "play" && DEF[a.id] && DEF[a.id].type === "spell" && DEF[a.id].effects.length > 0 && DEF[a.id].effects.every(e => ["energyNow", "discount"].includes(e.kind));
+  const isResource = a => a.t === "play" && DEF[a.id] && DEF[a.id].type === "spell" && DEF[a.id].effects.length > 0 && DEF[a.id].effects.every(e => ["energyNow", "discount", "costDown"].includes(e.kind));
   const look = (st, force) => {
     let best = evaluate(st, pi);
     if ((!hard && !force) || st.over) return best;
@@ -965,7 +1136,7 @@ function playerIcon(pi) {
 const MENU_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>';
 function pbarHTML(pi) {
   const p = S.players[pi];
-  const tgt = ui.mode === "attack" && pi === OP && canAttackPlayer(ME, selectedUnit());
+  const tgt = (ui.mode === "attack" && pi === OP && canAttackPlayer(ME, selectedUnit())) || (ui.mode === "target" && pi === OP && curRole() === "enemyF");
   let pips = "";
   for (let i = 0; i < CONFIG.ENERGY_MAX; i++) {
     pips += `<span class="pip ${i < p.e ? "on" : i < p.maxE ? "used" : ""}"></span>`;
@@ -994,7 +1165,7 @@ function curRole() { return ui.mode === "target" ? ui.roles[Object.keys(ui.picke
 function isTargetable(pi, u) {
   if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u, selectedUnit());
   const r = curRole();
-  return !!r && roleSide(ME, r) === pi && (r !== "enemy" || canTarget(u));
+  return !!r && roleAllows(ME, r, pi, u);
 }
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
 function beginPlay(idx) {
@@ -1216,6 +1387,8 @@ function renderSheet() {
       if (!d) { ui = { sel: null, mode: null }; el.hidden = true; return; }
       const r = curRole();
       msg = r === "sacrifice" ? `${esc(d.name)}：代償として破壊する自分のキャラをタップしてください`
+        : r === "enemyF" ? `${esc(d.name)}の対象にする相手キャラか、上の相手の顔をタップしてください`
+        : r === "any" ? `${esc(d.name)}の対象にするキャラ（自分か相手）をタップしてください`
         : `${esc(d.name)}の対象にする${r === "enemy" ? "相手" : "自分"}のキャラをタップしてください`;
     } else {
       const u = selectedUnit();
@@ -1383,7 +1556,7 @@ function blockClick() { suppressClickUntil = Date.now() + 450; }
 function handDropSide(d) {
   const roles = neededRoles(ME, d);
   // 対象が1つだけの魔法は、対象のキャラに直接落とす。それ以外は自分の場に落として、必要なら対象を選ぶ
-  if (d.type === "spell" && roles.length === 1) return { units: roleSide(ME, roles[0]), role: roles[0] };
+  if (d.type === "spell" && roles.length === 1 && ["enemy", "own"].includes(roles[0])) return { units: roleSide(ME, roles[0]), role: roles[0] };
   return { field: true };
 }
 
@@ -2220,9 +2393,9 @@ document.addEventListener("click", e => {
     }
     if (myTurn && ui.mode === "target") {
       const r = curRole();
-      if (r && owner === roleSide(ME, r)) {
-        const tu = S.players[owner].field.find(x => x.uid === uid);
-        if (r === "enemy" && tu && !canTarget(tu)) { toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません"); return; }
+      const tu = S.players[owner].field.find(x => x.uid === uid);
+      if (r && tu && (r === "any" || owner === roleSide(ME, r))) {
+        if (!roleAllows(ME, r, owner, tu)) { toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません"); return; }
         pickTarget(uid); return;
       }
       return;
@@ -2233,6 +2406,7 @@ document.addEventListener("click", e => {
   }
 
   const pl = e.target.closest("[data-player]");
+  if (pl && myTurn && ui.mode === "target" && curRole() === "enemyF" && +pl.dataset.player === OP) { pickTarget("face"); return; }
   if (pl && myTurn && ui.mode === "attack" && +pl.dataset.player === OP && canAttackPlayer(ME, selectedUnit())) {
     const a = ui.sel.uid; ui = { sel: null, mode: null }; doAttack(a, "player");
   }

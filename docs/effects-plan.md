@@ -91,3 +91,5 @@
 - CPU は最低限（新しい効果のカードも普通に出せる・対象を選べる・止まらない）を各段階で同時に入れる。賢く使う調整は最後（オーナーも「全部終わってから調整」で同意）
 - 各段階で tools/sim（CPU同士の大量対戦）を回して、エラーが出ないことを確かめる
 - 1つ足すたびに触る場所：js/shared.js（EFFECTS・KEYWORDS・説明文 cardTextLines）、js/game.js（effect()・戦闘・ターン処理・CPU）、カード工房の入力欄（js/editor.js）、シミュレーター
+
+- 段階6「対象を選べる形と第2弾の仕組み」（2026-11-05）：効果を汎用の `unit`（act＝何をするか・to＝対象）と `player`（act・who）にまとめた。古い種類（dmgTarget など）は `normEffect` → `migrateEffect` で読み込み時に置き換える（全135枚の説明文が前と同じことを確認済み）。対象の役割に `any`（自分か相手のキャラ）と `enemyF`（相手キャラか相手プレイヤー。targets.enemyF に uid か "face"）を追加。新しい効果：`merge`（合体）・`costDown`（このターン／この対戦中、0まで）・`winTimer`（特殊勝利。u.winIn）・act の `unfreeze`／`copy`、grant の「このターンだけ」（u.tmpKws・u.tmpArmor をターン終わりに消す）、タイミング `cardPlay`（自分がカードを使ったとき。pw・pt で世界・種類を絞る）
