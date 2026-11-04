@@ -400,6 +400,12 @@ function cleanDeckCards(cards) {
 const MISSING_PREFIX = "持っていないカードが";
 /* デッキに入っている、まだ持っていないカードの枚数 */
 function deckMissing(deck, owned) { return owned ? Object.entries(deck.cards || {}).reduce((a, [id, n]) => a + Math.max(0, n - owned(id)), 0) : 0; }
+/* デッキの30枚がすべて同じ世界なら、その世界（myth / fan / mech）。混ざっていれば null（世界限定のルール用） */
+function deckWorld(deck, cardsById) {
+  const defs = cardsById || (typeof DEF !== "undefined" ? DEF : {});
+  const ws = new Set(Object.entries(deck.cards || {}).filter(([, n]) => n > 0).map(([id]) => defs[id] ? defs[id].world : "?"));
+  return ws.size === 1 && !ws.has("?") ? [...ws][0] : null;
+}
 function deckCount(deck) { return Object.values(deck.cards || {}).reduce((s, n) => s + n, 0); }
 function deckProblems(deck, cardsById, config, owned) {
   const probs = [];

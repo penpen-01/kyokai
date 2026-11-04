@@ -5,6 +5,7 @@
    ========================================================= */
 
 const NAME_KEY = "kyokai-name";
+const WORLD_RULE_KEY = "kyokai-world-rule";
 const ROOM_KEY = "kyokai-room";
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 見間違えやすい O/0, I/1 は使わない
 const SEND_TIMEOUT = 10000;
@@ -47,6 +48,7 @@ const Online = {
       </div>
       <div class="obox">
         <h3>部屋を作る</h3>
+        <label class="ownchk"><input type="checkbox" id="onl-world" ${store.get(WORLD_RULE_KEY) === "1" ? "checked" : ""}> 世界限定ルール（2人とも、30枚すべて同じ世界のカードのデッキで戦う）</label>
         <button type="button" class="btn primary" data-act="onlCreate">部屋を作って合言葉を出す</button>
       </div>
       <div class="obox">
@@ -77,6 +79,7 @@ const Online = {
       <h2 class="title sm">相手を待っています</h2>
       <p class="lead">この合言葉を相手に伝えてください。相手が入力すると対戦が始まります。</p>
       <div class="roomcode" aria-label="合言葉">${esc(this.code)}</div>
+      ${store.get(WORLD_RULE_KEY) === "1" ? `<p class="callout"><b>世界限定ルール</b>相手も、30枚すべて同じ世界のカードのデッキで参加します。</p>` : ""}
       <button type="button" class="btn" data-act="onlCopy">合言葉をコピー</button>
       <p class="onl-msg" id="onl-msg" role="status"></p>
       <button type="button" class="btn" data-act="onlCancel">部屋を閉じる</button>
@@ -148,6 +151,9 @@ const Online = {
     const name = this.readName();
     const deck = Decks.readyDeck(m => this.lobbyMsg(m));
     if (!deck) return;
+    const worldRule = !!($("#onl-world") && $("#onl-world").checked);
+    store.set(WORLD_RULE_KEY, worldRule ? "1" : "0");
+    if (worldRule && !deckWorld(deck)) return this.lobbyMsg(`世界限定ルールでは、30枚すべて同じ世界のカードで組んだデッキが必要です。今のデッキ「${deck.name}」は世界が混ざっています。`);
     this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
     this.reset();
@@ -158,7 +164,7 @@ const Online = {
     }
     if (!code) return this.lobbyMsg("部屋を作れませんでした。もう一度お試しください。");
     try {
-      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now() });
+      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now(), ...(worldRule ? { rule: "world" } : {}) });
     } catch (e) {
       console.error(e);
       return this.lobbyMsg("部屋を作れませんでした（サーバーの設定を確認してください）。");
@@ -184,6 +190,7 @@ const Online = {
     if (room.host === this.uid) return this.lobbyMsg("自分で作った部屋には参加できません。別の端末から参加してください。");
     if (room.guest && room.guest !== this.uid) return this.lobbyMsg("その部屋はすでに満員です。");
     if (room.dataKey !== dataKey()) return this.lobbyMsg("相手とカードデータが違います。2人ともページを開き直してから、もう一度試してください。");
+    if (room.rule === "world" && !deckWorld(deck)) return this.lobbyMsg(`この部屋は世界限定ルールです。30枚すべて同じ世界のカードで組んだデッキを使ってください（今のデッキ「${deck.name}」は世界が混ざっています）。`);
     try {
       if (room.guest !== this.uid) await Net.update(`rooms/${code}`, { guest: this.uid, guestName: name });
     } catch (e) {
