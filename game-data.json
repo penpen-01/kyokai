@@ -1,5 +1,5 @@
 {
- "version": 50,
+ "version": 51,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -456,22 +456,23 @@
    "cards": {
     "bolt": 2,
     "n-shinobi": 2,
-    "n-thornwarden": 2,
+    "n-thornwarden": 1,
     "x-tochka": 2,
     "n-interceptor": 2,
     "f-abyss": 2,
     "m-phoenix": 2,
     "n-skypaladin": 2,
     "n-timewitch": 2,
-    "garm": 1,
     "m-demonlord": 2,
     "n-kitsune": 2,
     "judgment": 1,
     "x-executor": 2,
     "m-titan": 1,
     "n-heroking": 1,
-    "omega": 1,
-    "endragon": 1
+    "b-janus": 1,
+    "b-nem": 1,
+    "b-abyss": 1,
+    "omega": 1
    }
   }
  ],
