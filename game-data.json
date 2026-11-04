@@ -1,6 +1,6 @@
 {
- "version": 45,
- "updated": "2026-11-03",
+ "version": 46,
+ "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -160,7 +160,12 @@
     "n-hijack",
     "n-fairyqueen",
     "n-seraph",
-    "cmvy5b8qb40p"
+    "cmvy5b8qb40p",
+    "x-tochka",
+    "x-junk",
+    "x-commander",
+    "x-cannon",
+    "x-lockcode"
    ],
    "odds": {
     "normal": {
@@ -2912,6 +2917,122 @@
     }
    ],
    "art": "art/n-seraph-beb1a7d2a5.webp"
+  },
+  {
+   "id": "x-tochka",
+   "name": "迎撃砲塔トーチカ",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 5,
+   "glyph": "塔",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "dmgFace",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ]
+  },
+  {
+   "id": "x-junk",
+   "name": "回収機ジャンク",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "回",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-part"
+    },
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "when": "death",
+     "card": "tk-part"
+    }
+   ]
+  },
+  {
+   "id": "x-commander",
+   "name": "指揮機コマンダー",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "指",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-drone"
+    },
+    {
+     "kind": "buffSelfAtk",
+     "n": 1,
+     "when": "allyEnter"
+    }
+   ]
+  },
+  {
+   "id": "x-cannon",
+   "name": "据置砲台カノン",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 0,
+   "hp": 7,
+   "glyph": "砲",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "dmgFace",
+     "n": 2,
+     "when": "turnStart"
+    }
+   ]
+  },
+  {
+   "id": "x-lockcode",
+   "name": "封鎖のコード",
+   "world": "mech",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "封",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "silence",
+     "n": 1
+    },
+    {
+     "kind": "debuffTarget",
+     "n": 2
+    }
+   ]
   }
  ]
 }
