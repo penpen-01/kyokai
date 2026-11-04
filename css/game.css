@@ -1488,3 +1488,15 @@ html.nofx .card .shine{display:none}
 .ds-n small{display:block;font-size:9.5px;font-weight:700;color:#b9a6ff;line-height:1.1}
 .dtile.short .dbadge{background:#6a55c0;color:#fff}
 .dtile .dmeta{flex-wrap:wrap;justify-content:center;row-gap:2px;min-width:0}
+
+/* ---- 一人で対戦：モードの一覧 ---- */
+.lvl-mode{--lc:#c9a24a;min-height:84px}
+.lvl-mode.m-world{--lc:#7fb3ff}
+.lvl-mode.m-prac{--lc:#8fb0ff;min-height:72px}
+.lvl-mode.m-off{--lc:#555b7a;opacity:.55;cursor:default}
+.lvl-mode .ptag{margin-left:8px}
+.wtag{font-weight:800}
+.wtag.w-myth{color:var(--w-myth)} .wtag.w-fan{color:var(--w-fan)} .wtag.w-mech{color:var(--w-mech)}
+.wpick.w-myth{--lc:var(--w-myth)} .wpick.w-fan{--lc:var(--w-fan)} .wpick.w-mech{--lc:var(--w-mech)}
+.wpick .lvl-head b{color:var(--lc)}
+.dbt-foot .wtag{font-size:10.5px;text-shadow:0 1px 3px #000}

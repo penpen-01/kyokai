@@ -1640,8 +1640,8 @@ function showStart() {
       ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
     </div>
     <div class="battles">
-      <button type="button" class="battlebtn cpu" data-act="start">
-        <span class="bicon">${HOME_ICON.cpu}</span><b>CPUと対戦</b><small>勝つとGがもらえる</small>
+      <button type="button" class="battlebtn cpu" data-act="solo">
+        <span class="bicon">${HOME_ICON.cpu}</span><b>一人で対戦</b><small>CPU戦・世界限定戦など</small>
       </button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="battlebtn online" data-act="online">
         <span class="bicon">${HOME_ICON.online}</span><b>友達と対戦</b><small>合言葉で部屋に入る</small>
@@ -1781,11 +1781,14 @@ function giveReward(res) {
   // サンプルデッキで戦った試合は、Gも連勝もなし（全カードを試すための機能なので）
   r.sample = MODE === "online" ? !!(typeof Online !== "undefined" && Online.mySample) : !!S.mySample;
   const counts = Account.status !== "free" && Account.status !== "none" && !r.sample;
-  if (MODE === "cpu" && counts) {
+  const B = MODE === "cpu" && S.battle ? S.battle : null;   // 一人で対戦の設定（startBattle）
+  const streak = MODE === "cpu" && (!B || B.streak);
+  if (streak && counts) {
     Object.assign(r, Account.streakEnd(CPU_LEVEL, res === "win"), { cpu: true });
   }
   if (res === "win" && counts) {
     const base = MODE === "online" ? CONFIG.REWARD_ONLINE
+      : B && B.reward != null ? B.reward
       : { easy: CONFIG.REWARD_EASY, normal: CONFIG.REWARD_NORMAL, hard: CONFIG.REWARD_HARD }[CPU_LEVEL] || 0;
     r.bonus = r.cpu ? Account.streakBonus(r.wins) : 0;
     r.g = Math.round(base * (100 + r.bonus) / 100);
@@ -1817,13 +1820,14 @@ function showResult(res) {
   openOverlay(`<div class="panel">
     <p class="result ${res}">${label}</p>
     ${g ? `<p class="reward">+${g}G <small>（所持 ${Account.gold}G）</small></p>` : ""}
+    ${S && S.battle && S.battle.kind === "world" && !r.sample ? `<p class="streak lost">世界限定戦（連勝ボーナスはありません）</p>` : ""}
     ${S && S.practice ? `<p class="streak lost">練習対戦なので、Gと連勝はつきません</p>` : r.sample && res === "win" ? `<p class="streak lost">サンプルデッキの対戦なので、Gはもらえません</p>` : ""}
     ${streakHTML(r, res)}
     <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
     ${online
       ? (Online.role === "host" ? `<button type="button" class="btn primary" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
       : `<button type="button" class="btn primary" data-act="cpuAgain">同じ強さでもう一度</button>
-         <button type="button" class="btn" data-act="start">強さを選び直す</button>`}
+         <button type="button" class="btn" data-act="cpuReselect">${S.battle && S.battle.kind === "world" ? "デッキや強さを選び直す" : "強さを選び直す"}</button>`}
     <button type="button" class="btn" data-act="log">プレイログを見る</button>
     <button type="button" class="btn" data-act="closeOverlay">盤面を見る</button>
     <button type="button" class="btn" data-act="toTitle">${online ? "部屋を出てタイトルに戻る" : "タイトルに戻る"}</button>
@@ -1863,7 +1867,7 @@ function showCpuSelect() {
   const face = lv => { const c = DEF[FACE[lv]]; return c && c.art ? c.art : ""; };
   const stars = { easy: 1, normal: 2, hard: 3 };
   openOverlay(`<div class="panel">
-    ${Decks.topbar ? Decks.topbar("CPU戦", "back") : `<h2 class="title sm">CPU戦</h2>`}
+    ${Decks.topbar("CPU戦", "solo")}
     <div class="cs-deck">
       <span class="cs-deck-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
       <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck.name)}</b></span>
@@ -1880,9 +1884,6 @@ function showCpuSelect() {
         </span>
         <span class="lvl-go" aria-hidden="true">›</span>
       </button>`).join("")}</div>
-    <button type="button" class="lvl lvl-practice" data-act="practice">
-      <span class="lvl-body"><span class="lvl-head"><b>練習対戦</b></span><span class="lvl-desc">自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）</span></span><span class="lvl-go" aria-hidden="true">›</span>
-    </button>
     <div class="callout"><b>報酬のきまり</b>負けたときは0Gです。${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると、2連勝目から報酬が${CONFIG.STREAK_STEP}%ずつ増えます（最大${CONFIG.STREAK_MAX}%）。負けるか、途中でやめると0に戻ります。` : ""}${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</div>
   </div>`, "start", true);
 }
@@ -1900,7 +1901,7 @@ function showPractice() {
       <span class="cs-deck-txt"><small>${tag}</small><b>${esc(d.name)}</b></span>${PRACTICE.deck === d.id ? `<span class="usingtag">CPU が使う</span>` : ""}</button>`; };
   const lv = Object.entries(CPU_LEVELS).map(([k, v]) => `<button type="button" data-act="prLevel" data-v="${k}" aria-pressed="${PRACTICE.level === k}">${v.label}</button>`).join("");
   openOverlay(`<div class="panel">
-    ${Decks.topbar("練習対戦", "cpu")}
+    ${Decks.topbar("練習対戦", "solo")}
     <p class="lead small">CPU に使わせるデッキと、CPU の強さを選んでください。あなたは「${esc(Decks.selected().name)}」で戦います。練習なので、Gと連勝はつきません。</p>
     <h3 class="sec">CPU の強さ</h3>
     <div class="seg wide">${lv}</div>
@@ -1915,25 +1916,123 @@ function startPractice() {
   if (!mine) return;
   const d = Decks.mine().find(x => x.id === PRACTICE.deck) || PRESETS.find(x => x.id === PRACTICE.deck);
   if (!d) return showPractice();
-  CPU_LEVEL = CPU_LEVELS[PRACTICE.level] ? PRACTICE.level : "normal";
-  MODE = "cpu"; setPerspective(0);
-  $("#overlay").hidden = true;
-  newGame(["あなた", `練習CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [mine, { name: d.name, cards: { ...d.cards } }]);
-  S.practice = true; S.mySample = true;   // 報酬・連勝の対象外（サンプルデッキと同じ扱い）
+  // 練習：報酬・連勝の対象外（サンプルデッキと同じ扱い）
+  startBattle({ kind: "practice", level: PRACTICE.level, mine, opp: d, oppName: `練習CPU（${(CPU_LEVELS[PRACTICE.level] || CPU_LEVELS.normal).label}）`, practice: true, streak: false });
 }
 
 function startCpuGame(level) {
   const mine = Decks.readyDeck(msg => Decks.showList(msg));
   if (!mine) return;
-  CPU_LEVEL = CPU_LEVELS[level] ? level : "normal";
-  const cpu = Decks.randomPreset(CPU_LEVEL);
+  const lv = CPU_LEVELS[level] ? level : "normal";
+  const cpu = Decks.randomPreset(lv);
   if (!cpu) return Decks.showList("CPU用のサンプルデッキがありません");
+  startBattle({ kind: "cpu", level: lv, mine, opp: cpu, streak: true });
+}
+
+/* ---------- 一人で対戦の共通の土台 ----------
+   対戦の設定を1つにまとめて始める。spec：
+     kind    … "cpu" | "world" | "practice"（あとで "unlock"（パック開放戦）・"boss"・"tutorial" を足す）
+     level   … CPU の強さ（easy / normal / hard）
+     mine    … 自分のデッキ（Decks.readyDeck の形）、opp … 相手のデッキ { name, cards }
+     oppName … 相手の名前（省略すると「CPU（強さ）」）
+     reward  … 勝ったときの G（省略すると強さごとの報酬）、streak … 連勝に数えるか
+     practice… 報酬・連勝なしの練習
+     setup(S)… 対戦を作った直後に呼ぶ（体力を変える・最初から場に出すなど、ボスやチュートリアル用） */
+function startBattle(spec) {
+  CPU_LEVEL = CPU_LEVELS[spec.level] ? spec.level : "normal";
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
-  newGame(["あなた", `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [mine, { name: cpu.name, cards: cpu.cards }]);
-  S.mySample = !!mine.sample;
+  newGame(["あなた", spec.oppName || `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [spec.mine, { name: spec.opp.name, cards: { ...spec.opp.cards } }]);
+  S.battle = { kind: spec.kind, level: CPU_LEVEL, ...(spec.reward != null ? { reward: spec.reward } : {}), streak: !!spec.streak, ...(spec.extra || {}) };
+  if (spec.practice) { S.practice = true; S.mySample = true; }
+  else S.mySample = !!spec.mine.sample;
   // サンプルデッキの試合は連勝に数えない（伸びも途切れもしない）
-  if (!S.mySample) Account.streakStart(CPU_LEVEL);
+  if (spec.streak && !S.mySample) Account.streakStart(CPU_LEVEL);
+  if (spec.setup) spec.setup(S);
+}
+/* 結果画面の「もう一度」「選び直す」 */
+function battleAgain() {
+  const k = S && S.battle ? S.battle.kind : (S && S.practice ? "practice" : "cpu");
+  if (k === "practice") startPractice();
+  else if (k === "world") startWorldGame(CPU_LEVEL);
+  else startCpuGame(CPU_LEVEL);
+}
+function battleReselect() {
+  const k = S && S.battle ? S.battle.kind : "cpu";
+  overlayFrom = "start";
+  if (k === "practice") showPractice(); else if (k === "world") showWorldSelect(); else showCpuSelect();
+}
+
+/* ---------- 一人で対戦：モードを選ぶ画面 ---------- */
+function showSolo() {
+  const tile = (act, title, desc, opts = {}) => `<button type="button" class="lvl lvl-mode ${opts.cls || ""}" data-act="${act}" ${opts.off ? "disabled" : ""}>
+      ${opts.art ? `<span class="lvl-art" style="background-image:url('${esc(opts.art)}')"></span>` : ""}
+      <span class="lvl-body"><span class="lvl-head"><b>${title}</b>${opts.tag ? `<small class="ptag">${opts.tag}</small>` : ""}</span><span class="lvl-desc">${desc}</span></span>
+      <span class="lvl-go" aria-hidden="true">${opts.off ? "" : "›"}</span></button>`;
+  const art = id => (DEF[id] && DEF[id].art) || "";
+  openOverlay(`<div class="panel">
+    ${Decks.topbar("一人で対戦", "back")}
+    <div class="lvls">
+      ${tile("start", "CPU戦", "初級・中級・上級の CPU と戦う。勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
+      ${tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" })}
+      ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
+      ${tile("noop", "チュートリアル", "遊び方を、実際に対戦しながら覚える", { off: true, tag: "準備中", cls: "m-off" })}
+      ${tile("noop", "パック開放戦", "勝つと、その世界の新しいパックが開く", { off: true, tag: "第2弾から", cls: "m-off" })}
+    </div>
+  </div>`, "start", true);
+}
+
+/* ---------- 世界限定戦：30枚すべて同じ世界のデッキ同士で戦う ----------
+   CPU 用の世界限定デッキをオーナーが作るまでは、入口を閉じておく（中身はできている） */
+const WORLD_MODE_OPEN = false;
+const WORLDB = { deck: null };
+function worldDecks() {
+  return Decks.mine().filter(d => Decks.isWorld(d) && !Decks.problems(d).length);
+}
+function showWorldSelect() {
+  const list = worldDecks();
+  if (!list.some(d => d.id === WORLDB.deck)) {
+    const sel = Decks.selected();
+    WORLDB.deck = (sel && list.some(d => d.id === sel.id) ? sel : list[0] || {}).id || null;
+  }
+  const row = d => { const k = Decks.keyCard(d), w = deckWorld(d);
+    return `<button type="button" class="pr-deck ${WORLDB.deck === d.id ? "on" : ""}" data-act="wbDeck" data-id="${esc(d.id)}">
+      <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
+      <span class="cs-deck-txt"><small class="wtag w-${w}">${WORLDS[w]}${d.free ? "・サンプル" : ""}</small><b>${esc(d.name)}</b></span>${WORLDB.deck === d.id ? `<span class="usingtag">使う</span>` : ""}</button>`; };
+  const stars = { easy: 1, normal: 2, hard: 3 };
+  openOverlay(`<div class="panel">
+    ${Decks.topbar("世界限定戦", "solo")}
+    <p class="lead small">30枚すべて同じ世界のカードで組んだデッキだけで戦います。相手の CPU も、1つの世界だけのデッキを使います。勝ったときのGは CPU戦と同じで、連勝ボーナスはありません。</p>
+    <h3 class="sec">使うデッキ</h3>
+    ${list.length ? `<div class="pr-list">${list.map(row).join("")}</div>`
+      : `<p class="callout">使える限定構築のデッキがありません。デッキ編成の「限定構築」で作ってください。</p>
+         <button type="button" class="btn" data-act="decks">デッキ編成へ</button>`}
+    ${list.length ? `<h3 class="sec">相手の強さ</h3>
+    <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
+      <button type="button" class="lvl lvl-${k}" data-act="wbLevel" data-v="${k}">
+        <span class="lvl-body">
+          <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
+          <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}</b>G</em></span>
+        </span><span class="lvl-go" aria-hidden="true">›</span>
+      </button>`).join("")}</div>` : ""}
+  </div>`, "start", true);
+}
+/* 相手：その強さの CPU 用デッキのうち、1つの世界だけのもの（なければ、ほかの強さから） */
+function worldOpponent(level) {
+  const ok = PRESETS.filter(p => p.level !== "test" && deckWorld(p) && !deckProblems(p, DEF, CONFIG).length);
+  const at = ok.filter(p => p.level === level);
+  const pool = at.length ? at : ok;
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+function startWorldGame(level) {
+  const d = worldDecks().find(x => x.id === WORLDB.deck);
+  if (!d) return showWorldSelect();
+  const icon = Account.icon();
+  const mine = { name: d.name, cards: { ...d.cards }, ...(d.free && Decks.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}) };
+  const lv = CPU_LEVELS[level] ? level : "normal";
+  const opp = worldOpponent(lv);
+  if (!opp) return showWorldSelect();
+  startBattle({ kind: "world", level: lv, mine, opp, oppName: `CPU（${CPU_LEVELS[lv].label}・${WORLDS[deckWorld(opp)]}）`, streak: false });
 }
 
 /* ---------- 入力（タップ操作） ---------- */
@@ -1951,7 +2050,12 @@ function handleAct(act, el) {
     case "clClose": CL.detail = null; if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
     case "start": showCpuSelect(); break;
     case "cpuLevel": startCpuGame(el && el.dataset.v); break;
-    case "cpuAgain": if (S && S.practice) startPractice(); else startCpuGame(CPU_LEVEL); break;
+    case "cpuAgain": battleAgain(); break;
+    case "cpuReselect": battleReselect(); break;
+    case "solo": showSolo(); return;
+    case "worldMode": showWorldSelect(); return;
+    case "wbDeck": WORLDB.deck = el.dataset.id; showWorldSelect(); return;
+    case "wbLevel": startWorldGame(el.dataset.v); return;
     case "online": Online.showLobby(); break;
     case "rules": if (!S) { if (overlayFrom !== "lobby" && overlayFrom !== "options") overlayFrom = "start"; } else if (overlayFrom !== "menu" && overlayFrom !== "result") overlayFrom = "game"; showRules(); break;
     case "cards": if (!S) overlayFrom = "start"; showCardList(); break;

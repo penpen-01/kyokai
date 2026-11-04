@@ -64,7 +64,7 @@ const Account = {
       gold: Math.max(0, Math.floor(+d.gold || 0)),
       rev: Math.max(0, Math.floor(+d.rev || 0)),   // 保存するたびに1増える（古いデータでの上書きを防ぐ）
       cards: cleanDeckCards(d.cards),
-      decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.key ? { key: String(x.key) } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
+      decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.fmt === "world" && WORLDS[x.world] ? { fmt: "world", world: String(x.world) } : {}), ...(x.key ? { key: String(x.key) } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
       created: d.created || Date.now(),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
       // 受け取ったメール（メールのID → 受け取った日時）
