@@ -1,5 +1,5 @@
 {
- "version": 53,
+ "version": 54,
  "updated": "2026-11-05",
  "config": {
   "PLAYER_HP": 20,
@@ -20,6 +20,9 @@
   "REWARD_ONLINE": 150,
   "STREAK_STEP": 10,
   "STREAK_MAX": 50,
+  "BOSS_RATE": 5,
+  "BOSS_PITY": 20,
+  "BOSS_HP": 25,
   "STONE_GET_COMMON": 5,
   "STONE_GET_RARE": 20,
   "STONE_GET_SR": 50,
@@ -33,10 +36,7 @@
   "STONE_TICKET": 150,
   "SEASON": "beta",
   "STARTER_DECK": "starter",
-  "SAMPLE_DECKS": true,
-  "BOSS_RATE": 5,
-  "BOSS_PITY": 20,
-  "BOSS_HP": 25
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {
@@ -452,7 +452,6 @@
   {
    "id": "boss-nezal",
    "name": "裂け目の軍勢",
-   "level": "boss",
    "cards": {
     "bolt": 2,
     "n-shinobi": 2,
@@ -473,7 +472,8 @@
     "priestess": 1,
     "crystal": 1,
     "f-thief": 1
-   }
+   },
+   "level": "boss"
   }
  ],
  "serials": [
@@ -502,6 +502,53 @@
    "created": "2026-11-05",
    "boss": true,
    "repeat": true
+  },
+  {
+   "h": "94e927aeb73e525cc379ba83ed0f4b785a305136db073de665f59032fedda2bb",
+   "label": "ベータ参加のお礼",
+   "gold": 10000,
+   "cards": {},
+   "until": "2026-11-06",
+   "created": "2026-11-05"
+  }
+ ],
+ "news": [],
+ "mail": [],
+ "login": [
+  {
+   "gold": 50,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "gold": 50,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "gold": 0,
+   "stones": 20,
+   "tickets": 0
+  },
+  {
+   "gold": 100,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "gold": 50,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "gold": 0,
+   "stones": 30,
+   "tickets": 0
+  },
+  {
+   "gold": 0,
+   "stones": 0,
+   "tickets": 1
   }
  ],
  "cards": [
@@ -534,8 +581,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/eye-1893728d11.webp"
@@ -569,8 +618,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgRandom",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "art": "art/archer-ec7ff2d10e.webp"
@@ -589,8 +640,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgFace",
-     "n": 3
+     "kind": "player",
+     "n": 3,
+     "act": "dmg",
+     "who": "opp"
     }
    ],
    "art": "art/turret-f58118e715.webp"
@@ -626,8 +679,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
-     "n": 2
+     "kind": "player",
+     "n": 2,
+     "act": "heal",
+     "who": "self"
     }
    ],
    "art": "art/sentinel-1d5f179df4.webp"
@@ -663,8 +718,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/sage-52a5930a38.webp"
@@ -705,8 +762,10 @@
    ],
    "effects": [
     {
-     "kind": "buffAtk",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "own1"
     }
    ],
    "art": "art/berserker-31b138641f.webp"
@@ -725,8 +784,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgAll",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "art": "art/dragon-9e58b54d90.webp"
@@ -762,8 +823,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffAllAtk",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "ownAll"
     }
    ],
    "art": "art/wargod-116baa3223.webp"
@@ -782,8 +845,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgAll",
-     "n": 5
+     "kind": "unit",
+     "n": 5,
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "art": "art/endragon-1daae57f7b.webp"
@@ -818,8 +883,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffAtk",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "atk",
+     "to": "own1"
     }
    ],
    "art": "art/rally-774ac00c09.webp"
@@ -836,8 +903,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/stargaze-7803ce5b14.webp"
@@ -854,8 +923,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgTarget",
-     "n": 4
+     "kind": "unit",
+     "n": 4,
+     "act": "dmg",
+     "to": "enemy1"
     }
    ],
    "art": "art/bolt-af9788d659.webp"
@@ -872,8 +943,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
-     "n": 5
+     "kind": "player",
+     "n": 5,
+     "act": "heal",
+     "who": "self"
     }
    ],
    "art": "art/spring-13a9b88052.webp"
@@ -894,8 +967,10 @@
      "n": 1
     },
     {
-     "kind": "draw",
+     "kind": "player",
      "n": 1,
+     "act": "draw",
+     "who": "self",
      "cond": "maxEGE",
      "cn": 10
     }
@@ -914,8 +989,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "draw",
-     "n": 2
+     "kind": "player",
+     "n": 2,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/quantum-e5740e3740.webp"
@@ -932,24 +1009,34 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgRandom",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand"
     },
     {
-     "kind": "dmgRandom",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand"
     },
     {
-     "kind": "dmgRandom",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand"
     },
     {
-     "kind": "dmgRandom",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand"
     },
     {
-     "kind": "dmgRandom",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "art": "art/judgment-b41b280787.webp"
@@ -968,8 +1055,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgAll",
-     "n": 3
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "art": "art/cmvr35s2x5dv-20bdd2b07b.webp"
@@ -988,16 +1077,22 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
-     "n": 5
+     "kind": "player",
+     "n": 5,
+     "act": "heal",
+     "who": "self"
     },
     {
-     "kind": "buffHp",
-     "n": 3
+     "kind": "unit",
+     "n": 3,
+     "act": "hp",
+     "to": "own1"
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/cmvr3jwcugk8-ac54e6ba2b.webp"
@@ -1014,12 +1109,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgFace",
-     "n": 5
+     "kind": "player",
+     "n": 5,
+     "act": "dmg",
+     "who": "opp"
     },
     {
-     "kind": "buffAtk",
-     "n": 5
+     "kind": "unit",
+     "n": 5,
+     "act": "atk",
+     "to": "own1"
     }
    ],
    "pay": {
@@ -1163,8 +1262,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgTarget",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemy1"
     }
    ],
    "art": "art/st-spark-21a9de403e.webp"
@@ -1181,8 +1282,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
-     "n": 3
+     "kind": "player",
+     "n": 3,
+     "act": "heal",
+     "who": "self"
     }
    ],
    "art": "art/st-water-c246722460.webp"
@@ -1201,8 +1304,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffHp",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "hp",
+     "to": "own1"
     }
    ],
    "art": "art/m-prayer-ddbdcbb3b5.webp"
@@ -1274,8 +1379,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffAllAtk",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "ownAll"
     }
    ],
    "art": "art/m-oracle-dc2a83a90d.webp"
@@ -1314,8 +1421,10 @@
    ],
    "effects": [
     {
-     "kind": "debuffAll",
-     "n": 2
+     "kind": "unit",
+     "n": -2,
+     "act": "atk",
+     "to": "enemyAll"
     }
    ],
    "art": "art/m-sungod-d6f71e091c.webp"
@@ -1336,9 +1445,11 @@
    ],
    "effects": [
     {
-     "kind": "discard",
+     "kind": "player",
      "n": 2,
-     "when": "death"
+     "when": "death",
+     "act": "discard",
+     "who": "opp"
     }
    ],
    "pay": {
@@ -1359,12 +1470,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffAllAtk",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "ownAll"
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/m-order-5c5c25e1b7.webp"
@@ -1381,8 +1496,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffAllBoth",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "both",
+     "to": "ownAll"
     }
    ],
    "art": "art/m-anthem-5dd0e52818.webp"
@@ -1399,8 +1516,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "destroyTarget",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "enemy1"
     }
    ],
    "art": "art/m-hammer-24265a17a1.webp"
@@ -1417,8 +1536,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "draw",
-     "n": 3
+     "kind": "player",
+     "n": 3,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "pay": {
@@ -1439,8 +1560,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgTarget",
-     "n": 6
+     "kind": "unit",
+     "n": 6,
+     "act": "dmg",
+     "to": "enemy1"
     }
    ],
    "pay": {
@@ -1461,8 +1584,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "destroyAll",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "all"
     }
    ],
    "art": "art/m-ragnarok-303b99d620.webp"
@@ -1479,8 +1604,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgAll",
-     "n": 4
+     "kind": "unit",
+     "n": 4,
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "art": "art/m-inferno-60a0e6074c.webp"
@@ -1499,12 +1626,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "healUnits",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "heal",
+     "to": "ownAll"
     },
     {
-     "kind": "heal",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "heal",
+     "who": "self"
     }
    ],
    "art": "art/f-healer-0396e285b4.webp"
@@ -1543,12 +1674,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "discard",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "discard",
+     "who": "opp"
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/f-thief-ea7874dbd9.webp"
@@ -1567,8 +1702,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "freezeTarget",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "freeze",
+     "to": "enemy1"
     }
    ],
    "art": "art/f-icewitch-2a1121a64d.webp"
@@ -1626,12 +1763,16 @@
    ],
    "effects": [
     {
-     "kind": "heal",
-     "n": 5
+     "kind": "player",
+     "n": 5,
+     "act": "heal",
+     "who": "self"
     },
     {
-     "kind": "buffAllBoth",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "both",
+     "to": "ownAll"
     }
    ],
    "art": "art/f-spirit-f05f01d8aa.webp"
@@ -1652,8 +1793,10 @@
    ],
    "effects": [
     {
-     "kind": "buffBoth",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "both",
+     "to": "own1"
     }
    ],
    "art": "art/f-unicorn-d00ae4de76.webp"
@@ -1674,8 +1817,10 @@
      "n": 1
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/f-whisper-41a9b2e402.webp"
@@ -1692,8 +1837,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "debuffTarget",
-     "n": 3
+     "kind": "unit",
+     "n": -3,
+     "act": "atk",
+     "to": "enemy1"
     }
    ],
    "art": "art/f-curse-2c4c5a14ea.webp"
@@ -1710,12 +1857,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
-     "n": 4
+     "kind": "player",
+     "n": 4,
+     "act": "heal",
+     "who": "self"
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/f-spring-feb44830b6.webp"
@@ -1732,12 +1883,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "freezeAll",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "freeze",
+     "to": "enemyAll"
     },
     {
-     "kind": "dmgAll",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "art": "art/f-blizzard-5fbc06f772.webp"
@@ -1842,12 +1997,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "discard",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "discard",
+     "who": "opp"
     },
     {
-     "kind": "debuffTarget",
-     "n": 1
+     "kind": "unit",
+     "n": -1,
+     "act": "atk",
+     "to": "enemy1"
     }
    ],
    "art": "art/x-jammer-6ed4a0e7a2.webp"
@@ -1882,8 +2041,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "destroyTarget",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "enemy1"
     }
    ],
    "art": "art/x-executor-70b2cc3aef.webp"
@@ -1948,8 +2109,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffBoth",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "both",
+     "to": "own1"
     }
    ],
    "art": "art/x-repair-e91f8558a2.webp"
@@ -2006,12 +2169,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "debuffAll",
-     "n": 2
+     "kind": "unit",
+     "n": -2,
+     "act": "atk",
+     "to": "enemyAll"
     },
     {
-     "kind": "freezeAll",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "freeze",
+     "to": "enemyAll"
     }
    ],
    "art": "art/x-emp-85dd0dd2a4.webp"
@@ -2028,12 +2195,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "discard",
-     "n": 2
+     "kind": "player",
+     "n": 2,
+     "act": "discard",
+     "who": "opp"
     },
     {
-     "kind": "draw",
-     "n": 2
+     "kind": "player",
+     "n": 2,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/x-warp-1ab22df710.webp"
@@ -2070,9 +2241,11 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
+     "kind": "player",
      "n": 2,
-     "when": "death"
+     "when": "death",
+     "act": "heal",
+     "who": "self"
     }
    ],
    "token": true,
@@ -2124,8 +2297,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffBoth",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "both",
+     "to": "own1"
     }
    ],
    "token": true,
@@ -2145,8 +2320,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
-     "n": 2
+     "kind": "player",
+     "n": 2,
+     "act": "heal",
+     "who": "self"
     }
    ],
    "art": "art/n-flowergirl-d47610d1c5.webp"
@@ -2165,9 +2342,11 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "draw",
+     "kind": "player",
      "n": 1,
-     "when": "death"
+     "when": "death",
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/n-dwarf-770bb2972c.webp"
@@ -2184,12 +2363,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "freezeTarget",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "freeze",
+     "to": "enemy1"
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/n-mist-20fc3cab1b.webp"
@@ -2210,9 +2393,11 @@
    ],
    "effects": [
     {
-     "kind": "draw",
+     "kind": "player",
      "n": 1,
-     "when": "death"
+     "when": "death",
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/n-barkguard-fd33e59bef.webp"
@@ -2246,12 +2431,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "swapEnemy",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "swap",
+     "to": "enemy1"
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/n-trick-93344dba4e.webp"
@@ -2270,8 +2459,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgRandom",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "art": "art/n-slinger-34548c46af.webp"
@@ -2305,12 +2496,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgTarget",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemy1"
     },
     {
-     "kind": "draw",
-     "n": 1
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/n-lightarrow-1ae6b8ad44.webp"
@@ -2331,9 +2526,11 @@
    ],
    "effects": [
     {
-     "kind": "heal",
+     "kind": "player",
      "n": 3,
-     "when": "death"
+     "when": "death",
+     "act": "heal",
+     "who": "self"
     }
    ],
    "art": "art/n-oldknight-0989b8982c.webp"
@@ -2350,12 +2547,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "buffHp",
-     "n": 2
+     "kind": "unit",
+     "n": 2,
+     "act": "hp",
+     "to": "own1"
     },
     {
-     "kind": "grantOwn",
+     "kind": "unit",
      "n": 1,
+     "act": "grant",
+     "to": "own1",
      "kw": "shield"
     }
    ],
@@ -2399,9 +2600,11 @@
    ],
    "effects": [
     {
-     "kind": "dmgRandom",
+     "kind": "unit",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "art": "art/n-autoturret-2d3fb5f2db.webp"
@@ -2441,9 +2644,11 @@
    ],
    "effects": [
     {
-     "kind": "draw",
+     "kind": "player",
      "n": 1,
-     "when": "face"
+     "when": "face",
+     "act": "draw",
+     "who": "self"
     }
    ],
    "art": "art/n-scoutbike-f23925232e.webp"
@@ -2462,9 +2667,11 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "healUnits",
+     "kind": "unit",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "heal",
+     "to": "ownAll"
     }
    ],
    "art": "art/n-mechanic-a9cdca75f7.webp"
@@ -2518,8 +2725,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "bounceEnemy",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "bounce",
+     "to": "enemy1"
     }
    ],
    "art": "art/n-moonwitch-224b6d9487.webp"
@@ -2576,9 +2785,11 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "heal",
+     "kind": "player",
      "n": 2,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "heal",
+     "who": "self"
     }
    ],
    "art": "art/n-highpriest-0c5cf7eb8c.webp"
@@ -2595,8 +2806,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "silence",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "silence",
+     "to": "enemy1"
     }
    ],
    "art": "art/n-seal-5b48decd7e.webp"
@@ -2668,9 +2881,11 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "dmgRandom",
+     "kind": "unit",
      "n": 3,
-     "when": "death"
+     "when": "death",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "art": "art/n-bomber-11c11e9008.webp"
@@ -2689,8 +2904,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "transform",
+     "kind": "unit",
      "n": 1,
+     "act": "transform",
+     "to": "enemy1",
      "card": "tk-spirit"
     }
    ],
@@ -2773,8 +2990,10 @@
      "card": "tk-drone"
     },
     {
-     "kind": "grantAll",
+     "kind": "unit",
      "n": 1,
+     "act": "grant",
+     "to": "ownAll",
      "kw": "armor"
     }
    ],
@@ -2796,9 +3015,11 @@
    ],
    "effects": [
     {
-     "kind": "dmgRandom",
+     "kind": "unit",
      "n": 2,
-     "when": "survive"
+     "when": "survive",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "art": "art/n-interceptor-d98d1e221a.webp"
@@ -2837,9 +3058,11 @@
    ],
    "effects": [
     {
-     "kind": "dmgRandom",
+     "kind": "unit",
      "n": 3,
-     "when": "attack"
+     "when": "attack",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "art": "art/n-kitsune-b5de99c63a.webp"
@@ -2858,8 +3081,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "silenceAll",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "silence",
+     "to": "enemyAll"
     }
    ],
    "art": "art/n-timewitch-86244bb946.webp"
@@ -2900,8 +3125,10 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "steal",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "steal",
+     "to": "enemy1"
     }
    ],
    "art": "art/n-hijack-bfcd995de5.webp"
@@ -2926,9 +3153,11 @@
      "card": "tk-spirit"
     },
     {
-     "kind": "buffAllBoth",
+     "kind": "unit",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "both",
+     "to": "ownAll"
     }
    ],
    "art": "art/n-fairyqueen-9d274ca084.webp"
@@ -2950,9 +3179,11 @@
    ],
    "effects": [
     {
-     "kind": "dmgAll",
+     "kind": "unit",
      "n": 1,
-     "when": "attack"
+     "when": "attack",
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "art": "art/n-seraph-beb1a7d2a5.webp"
@@ -2973,9 +3204,11 @@
    ],
    "effects": [
     {
-     "kind": "dmgFace",
+     "kind": "player",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
    "art": "art/x-tochka-5967256dbb.webp"
@@ -3026,9 +3259,11 @@
      "card": "tk-drone"
     },
     {
-     "kind": "buffSelfAtk",
+     "kind": "unit",
      "n": 1,
-     "when": "allyEnter"
+     "when": "allyEnter",
+     "act": "atk",
+     "to": "self"
     }
    ],
    "art": "art/x-commander-34a6cf9829.webp"
@@ -3049,9 +3284,11 @@
    ],
    "effects": [
     {
-     "kind": "dmgFace",
+     "kind": "player",
      "n": 2,
-     "when": "turnStart"
+     "when": "turnStart",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
    "art": "art/x-cannon-313a283737.webp"
@@ -3068,12 +3305,16 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "silence",
-     "n": 1
+     "kind": "unit",
+     "n": 1,
+     "act": "silence",
+     "to": "enemy1"
     },
     {
-     "kind": "debuffTarget",
-     "n": 2
+     "kind": "unit",
+     "n": -2,
+     "act": "atk",
+     "to": "enemy1"
     }
    ],
    "art": "art/x-lockcode-294b806034.webp"
@@ -3089,7 +3330,6 @@
    "glyph": "門",
    "limit": 3,
    "rarity": "legend",
-   "boss": true,
    "keywords": [
     "guard"
    ],
@@ -3101,6 +3341,7 @@
      "card": "tk-gate"
     }
    ],
+   "boss": true,
    "art": "art/b-janus-ad685efc3b.webp"
   },
   {
@@ -3113,10 +3354,10 @@
    "hp": 3,
    "glyph": "番",
    "limit": 0,
-   "token": true,
    "rarity": "common",
    "keywords": [],
    "effects": [],
+   "token": true,
    "art": "art/tk-gate-02ad557331.webp"
   },
   {
@@ -3130,7 +3371,6 @@
    "glyph": "夢",
    "limit": 3,
    "rarity": "legend",
-   "boss": true,
    "keywords": [],
    "effects": [
     {
@@ -3138,11 +3378,14 @@
      "n": 3
     },
     {
-     "kind": "draw",
+     "kind": "player",
      "n": 1,
-     "when": "spell"
+     "when": "spell",
+     "act": "draw",
+     "who": "self"
     }
    ],
+   "boss": true,
    "art": "art/b-nem-cca73a7ee2.webp"
   },
   {
@@ -3156,21 +3399,25 @@
    "glyph": "掘",
    "limit": 3,
    "rarity": "legend",
-   "boss": true,
    "keywords": [
     "trample"
    ],
    "effects": [
     {
-     "kind": "dmgAll",
-     "n": 3
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemyAll"
     },
     {
-     "kind": "dmgFace",
+     "kind": "player",
      "n": 2,
-     "when": "attack"
+     "when": "attack",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
+   "boss": true,
    "art": "art/b-abyss-f56c8d60a1.webp"
   },
   {
@@ -3183,23 +3430,27 @@
    "hp": 8,
    "glyph": "裂",
    "limit": 0,
-   "token": true,
    "rarity": "legend",
    "keywords": [
     "noattack"
    ],
    "effects": [
     {
-     "kind": "dmgRandom",
+     "kind": "unit",
      "n": 2,
-     "when": "turnStart"
+     "when": "turnStart",
+     "act": "dmg",
+     "to": "enemyRand"
     },
     {
-     "kind": "dmgFace",
+     "kind": "player",
      "n": 1,
-     "when": "turnStart"
+     "when": "turnStart",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
+   "token": true,
    "art": "art/b-rift-e0d070e4cc.webp"
   },
   {
@@ -3212,10 +3463,10 @@
    "hp": 1,
    "glyph": "王",
    "limit": 0,
-   "token": true,
    "rarity": "legend",
    "keywords": [],
    "effects": [],
+   "token": true,
    "note": "ボスの顔（対戦画面のアイコン用。場には出ない）",
    "art": "art/b-nezal-c4b4f142ea.webp"
   }
