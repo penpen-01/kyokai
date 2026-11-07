@@ -121,3 +121,7 @@
 - 11-08 深夜：機械案3回目。unfreeze に数値（解除できたキャラだけ攻撃力+N、0なら上げない）を実装（main v99）。歯車の決定：上限なし・自動で重なる・捨てさせられたら1枚だけ失う（いったん）・「歯車をN枚使ってもよい」は出すときに選ぶ（足りないときは聞かない、CPUは使う）。トークン強襲艇 tk-raider 2/2突進。
 - 11-08 kakunin（v101、main未反映）：歯車の仕組み（GEAR_ID="tk-gear"、手札1枠＋p.gears、card.gear=N|"all"、cond gearPaid/gearNone、effect.per="gear"、捨てさせは1枚、出すときに「歯車を使って出す／使わずに出す」）。効果で与えた死の宣告は即 armed。弾 card.set / pack.set、Account.data.sets、setOpen/cardShown（一覧・デッキ作り・交換・パック一覧から隠す。?draft は全部見える）。カード工房に弾の絞り込み・設定、パックに弾。
 - 第2弾カードはまだ game-data.json に入れていない（scratchpad/mech2/cards.json）。開放戦（Account.data.sets に 2 を足す）も未実装。
+- 11-08 02時台：弾は文字（"1"・"2-1"・"2-2"・"2-3"・"3"）。開放は弾ごと（Account.data.opened）。開放戦のルールはパックごと（gateRule：world/free、gateWorld、gateDeck、gateLevel。GATE_RULES）。画面は「パックを選ぶ → ルール（共通文＋今回のルール）とデッキ → 挑む」。main v104。
+- 第2弾-1（機械）45枚＋トークン（tk-gear・tk-raider）を game-data v55 に追加。パック pack2-1「第2弾-1 機械（仮）」は販売停止中（open:false）。カード工房の書き出しで set・gear が消えていたのを直した。
+- イラスト依頼文：https://claude.ai/artifact/4VBoBmgYmZF3Wa8t3PnwUy （scratchpad/mech2art）
+- 今後：機械だけの CPU デッキ・開放戦用の強いデッキ（オーナーと）。開放戦の特殊ルール（レア度制限・相手の特殊ルール）は GATE_RULES に足す。
