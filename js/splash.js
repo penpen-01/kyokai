@@ -15,7 +15,7 @@ const Splash = {
 
   pick(world) {
     const rank = { legend: 5, ur: 4, sr: 3, rare: 2, common: 1 };
-    const list = CARDS.filter(c => c.world === world && c.limit > 0);
+    const list = CARDS.filter(c => c.world === world && c.limit > 0 && cardShown(c));
     list.sort((a, b) => (b.art ? 1 : 0) - (a.art ? 1 : 0) || (rank[b.rarity] || 0) - (rank[a.rarity] || 0) || b.cost - a.cost);
     return list[0];
   },
@@ -32,7 +32,7 @@ const Splash = {
   },
 
   /* 降らせるカード：絵のあるすべてのカード */
-  pool() { return CARDS.filter(c => c.art && c.limit > 0); },
+  pool() { return CARDS.filter(c => c.art && c.limit > 0 && cardShown(c)); },
   /* avoid（今出ているカードのID）以外から1枚 */
   randomCard(avoid) {
     const p = this.cardPool && this.cardPool.length ? this.cardPool : this.pool();

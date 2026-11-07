@@ -363,3 +363,5 @@ img{max-width:100%}
   color:#fff;background:linear-gradient(180deg,#ffcc4d,#d9480f);box-shadow:0 0 3cqw rgba(255,180,60,.9);animation:winpulse 1.2s ease-in-out infinite}
 @keyframes winpulse{50%{box-shadow:0 0 6cqw rgba(255,180,60,1)}}
 @media (prefers-reduced-motion:reduce){.card .wintag{animation:none}}
+/* 歯車（手札で重なる）：右下に枚数 */
+.card .gearcnt{position:absolute;z-index:6;right:4cqw;bottom:22cqw;min-width:22cqw;padding:1cqw 3cqw;border-radius:99px;background:linear-gradient(180deg,#f4d58a,#b8862e);color:#2a1a04;font-weight:900;font-size:11cqw;line-height:1.2;text-align:center;box-shadow:0 0 0 .8cqw rgba(0,0,0,.45),0 1cqw 3cqw rgba(0,0,0,.5)}

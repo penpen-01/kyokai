@@ -346,6 +346,7 @@ function neededRoles(pi, d) {
 function canPlay(pi, idx) {
   const p = S.players[pi], d = DEF[p.hand[idx]];
   if (!d) return { ok: false, reason: "そのカードはありません" };
+  if (d.id === GEAR_ID) return { ok: false, reason: "歯車はこれだけでは使えません" };
   if (S.over || S.phase !== "play" || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
   if (effCost(pi, d, idx) > p.e) return { ok: false, reason: "エナジーが足りません" };
   const sac = d.pay && d.pay.kind === "sacrifice";
@@ -374,7 +375,12 @@ function normTargets(pi, d, t) {
   return t == null || !roles.length ? {} : { [roles[0]]: t };
 }
 
-function playCard(pi, idx, targetsIn) {
+/* 歯車を「使ってもよい」カードで、いま選べるか（手札の歯車が足りるときだけ聞く） */
+function gearChoice(pi, idx) {
+  const p = S.players[pi], d = DEF[p.hand[idx]];
+  return !!(d && typeof d.gear === "number" && gearsOf(p) >= d.gear);
+}
+function playCard(pi, idx, targetsIn, useGear) {
   const p = S.players[pi], id = p.hand[idx], d = DEF[id];
   if (!d || !canPlay(pi, idx).ok) return false;
   const targets = normTargets(pi, d, targetsIn);
@@ -383,6 +389,7 @@ function playCard(pi, idx, targetsIn) {
     if (!targetOpts(pi, r).includes(targets[r])) return false;
   }
   const cost = effCost(pi, d, idx);
+  const spend = d.gear === "all" ? gearsOf(p) : useGear && gearChoice(pi, idx) ? d.gear : 0;
   handTake(p, idx);
   p.e -= cost;
   p.played = (p.played || 0) + 1;   // このターンに使ったカードの数（コンボの条件）
@@ -398,13 +405,16 @@ function playCard(pi, idx, targetsIn) {
     const u = p.field.find(x => x.uid === targets.sacrifice);
     if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); onDeath(pi, u); }
   }
+  if (spend) { spendGears(p, spend); log(`歯車を${spend}枚使った。`); }
+  else if (d.gear === "all") log("使える歯車がなかった。");
   let self = null;
   if (d.type === "char") {
     self = addUnit(pi, id);
     // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
   }
-  runEffects(pi, d, targets, self);
+  S.gearSpent = spend;
+  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; }
   if (d.type === "spell") trigUnits(pi, "spell");
   trigUnits(pi, "cardPlay", self, { card: id });
   cleanup();
@@ -434,6 +444,8 @@ function condOK(pi, e, self) {
     case "handZero": return p.hand.length === 0;
     case "handGE": return p.hand.length >= e.cn;
     case "maxEGE": return p.maxE >= e.cn;
+    case "gearPaid": return (S.gearSpent || 0) > 0;
+    case "gearNone": return !(S.gearSpent > 0);
   }
   return true;
 }
@@ -455,7 +467,7 @@ function unitTargets(pi, e, targets, self) {
     case "enemyAll": return en.field.filter(wf);
     case "ownAll": return me.field.filter(wf);
     case "all": return [...en.field, ...me.field].filter(wf);
-    case "self": return self && self.hp > 0 && me.field.includes(self) ? [self] : [];
+    case "self": return self && (self.hp > 0 || (DEF[self.id] && DEF[self.id].hp === 0 && !self.destroyed)) && me.field.includes(self) ? [self] : [];   // 0/0 から歯車で強くなるキャラも対象にする
   }
   return [];
 }
@@ -535,16 +547,38 @@ function playerEffect(pi, e) {
       case "heal": p.hp += n; log(`${pname(q)}の体力が${n}回復。`); fx(playerSel(q), "+" + n, "heal"); trigUnits(q, "healed"); break;
       case "draw": for (let i = 0; i < n; i++) draw(q); break;
       case "discard":
-        for (let i = 0; i < n && p.hand.length; i++) {
-          const id = handTake(p, Math.floor(Math.random() * p.hand.length));
-          log(`${pname(q)}は${cname(id)}を捨て${q === pi ? "た" : "させられた"}。`);
-        }
+        for (let i = 0; i < n && p.hand.length; i++) discardRandom(q, pi);
         break;
     }
   });
 }
+/* 歯車：手札に1枠だけ置き、枚数は p.gears で数える */
+const gearsOf = p => (p.hand.includes(GEAR_ID) ? (p.gears || 0) : 0);
+function addGears(pi, n) {
+  const p = S.players[pi];
+  if (!p.hand.includes(GEAR_ID)) {
+    if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、歯車を加えられなかった。`); return; }
+    p.hand.push(GEAR_ID); p.gears = 0;
+  }
+  p.gears = (p.gears || 0) + n;
+  log(`${pname(pi)}は歯車を${n}枚手札に加えた（${p.gears}枚）。`);
+}
+function spendGears(p, n) {
+  p.gears = Math.max(0, (p.gears || 0) - n);
+  if (!p.gears) { const i = p.hand.indexOf(GEAR_ID); if (i >= 0) handTake(p, i); }
+}
+/* 手札をランダムに1枚捨てる。重なった歯車に当たったら、歯車を1枚だけ失う */
+function discardRandom(q, pi) {
+  const p = S.players[q];
+  if (!p.hand.length) return;
+  const i = Math.floor(Math.random() * p.hand.length);
+  if (p.hand[i] === GEAR_ID) { spendGears(p, 1); log(`${pname(q)}は歯車を1枚捨て${q === pi ? "た" : "させられた"}（残り${p.gears || 0}枚）。`); return; }
+  const id = handTake(p, i);
+  log(`${pname(q)}は${cname(id)}を捨て${q === pi ? "た" : "させられた"}。`);
+}
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
+  if (e.per === "gear") { const k = S.gearSpent || 0; if (!k) return; e = { ...e, n: e.n * k }; }
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
   if (e.kind === "player") return playerEffect(pi, e);
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;
@@ -553,18 +587,15 @@ function effect(pi, e, targets, self) {
   switch (e.kind) {
     case "draw": for (let i = 0; i < n; i++) draw(pi); break;
     case "refresh": {
-      const coins = me.hand.filter(id => id === "coin");
+      const coins = me.hand.filter(id => id === "coin" || id === GEAR_ID);   // コインと歯車は手札に残す
       const k = me.hand.length - coins.length;
-      me.deck.push(...me.hand.filter(id => id !== "coin")); me.hand = coins; handReset(me); shuffle(me.deck);
+      me.deck.push(...me.hand.filter(id => id !== "coin" && id !== GEAR_ID)); me.hand = coins; handReset(me); shuffle(me.deck);
       for (let i = 0; i < k + n; i++) draw(pi, true);
       log(`${pname(pi)}は手札を入れ替えた（${me.hand.length}枚）。`);
       break;
     }
     case "discard": {
-      for (let i = 0; i < n && en.hand.length; i++) {
-        const [id] = en.hand.splice(Math.floor(Math.random() * en.hand.length), 1);
-        log(`${pname(opp(pi))}は${cname(id)}を捨てさせられた。`);
-      }
+      for (let i = 0; i < n && en.hand.length; i++) discardRandom(opp(pi), pi);
       break;
     }
     case "dmgTarget": { const u = enemyT(); if (u) hitUnit(u, n); break; }
@@ -640,6 +671,7 @@ function effect(pi, e, targets, self) {
     }
     case "tokenHand": {
       if (!DEF[e.card]) break;
+      if (e.card === GEAR_ID) { addGears(pi, n); break; }
       let k = 0;
       for (let i = 0; i < n && me.hand.length < CONFIG.HAND_MAX; i++) { me.hand.push(e.card); k++; }
       if (k) log(`${pname(pi)}は${cname(e.card)}を${k}枚手札に加えた。`);
@@ -724,6 +756,8 @@ function grant(u, e) {
   if ((e.kw === "haste" || e.kw === "rush") && !u.frozen && !kw(u, "noattack") && !u.swings) u.ready = true;
   if (e.kw === "shield") u.shieldUsed = false;
   if (e.kw === "stealth") u.revealed = false;
+  // 効果で与えた死の宣告：相手のキャラなら、その持ち主の次のターンの終わりに破壊（自分のキャラなら次の自分のターンの終わり）
+  if (e.kw === "doom") u.doomArmed = sideOf(u) !== S.turn;
   if (e.kw === "noattack") u.ready = false;
   fx(unitSel(u.uid), KEYWORDS[e.kw].label, "heal");
 }
@@ -1033,6 +1067,7 @@ function evaluate(st, pi) {
   // 亜空間のキャラは、相手に倒されずに戻ってくる（少しだけ割り引いて数える）
   s += voidOf(me).reduce((a, v) => a + unitValue(v.u) * 0.9, 0) - voidOf(en).reduce((a, v) => a + unitValue(v.u), 0) * 1.0;
   s += Math.min(me.hand.length, 7) * 0.7 - en.hand.length * 0.35;
+  s += gearsOf(me) * 0.3 - gearsOf(en) * 0.15;   // 手札の歯車（重なっている分）
   s += me.maxE * 0.9;
   // 相手の次の攻撃で負けそうなら大きく減点
   // 相手の次のターンに本体へ届きそうなダメージ（守護がいれば防げる）
@@ -1059,7 +1094,8 @@ function legalActions(pi) {
       const opts = targetOpts(pi, r);
       combos = combos.flatMap(c => opts.map(o => ({ ...c, [r]: o })));
     });
-    combos.slice(0, 24).forEach(t => acts.push({ t: "play", idx, id, targets: t }));
+    const gearOpts = gearChoice(pi, idx) ? [true, false] : [false];
+    combos.slice(0, 24).forEach(t => gearOpts.forEach(g => acts.push({ t: "play", idx, id, targets: t, ...(g ? { gear: true } : {}) })));
   });
   me.field.forEach(u => {
     if (!u.ready) return;
@@ -1069,7 +1105,7 @@ function legalActions(pi) {
   return acts;
 }
 function applyAction(pi, a) {
-  return a.t === "play" ? playCard(pi, a.idx, a.targets) : attack(pi, a.uid, a.target);
+  return a.t === "play" ? playCard(pi, a.idx, a.targets, !!a.gear) : attack(pi, a.uid, a.target);
 }
 
 function cpuChoose(pi) {
@@ -1143,10 +1179,10 @@ async function cpuTurn() {
 function canAct() {
   return S && !S.over && S.phase === "play" && S.turn === ME && !busy && !(typeof Online !== "undefined" && Online.blocked());
 }
-function doPlay(idx, targets) {
+function doPlay(idx, targets, gear) {
   if (!canAct()) return;
-  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "play", idx, targets: targets || {}, hand: S.players[ME].hand[idx] });
-  playCard(ME, idx, targets || {});
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "play", idx, targets: targets || {}, hand: S.players[ME].hand[idx], ...(gear ? { gear: true } : {}) });
+  playCard(ME, idx, targets || {}, !!gear);
 }
 function doAttack(uid, target) {
   if (!canAct()) return;
@@ -1205,20 +1241,22 @@ function isTargetable(pi, u) {
   return !!r && roleAllows(ME, r, pi, u);
 }
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
-function beginPlay(idx) {
+function beginPlay(idx, gear) {
   const d = DEF[S.players[ME].hand[idx]];
+  // 歯車を使うか選べるカードは、先に選んでもらう（詳細の「歯車を使って出す／使わずに出す」）
+  if (gear == null && gearChoice(ME, idx)) { ui = { sel: { kind: "hand", idx }, mode: null }; render(); toast("歯車を使うかどうか選んでください"); return; }
   const roles = neededRoles(ME, d);
-  if (roles.length) { ui = { sel: { kind: "hand", idx }, mode: "target", roles, picked: {} }; render(); return; }
+  if (roles.length) { ui = { sel: { kind: "hand", idx }, mode: "target", roles, picked: {}, gear: !!gear }; render(); return; }
   ui = { sel: null, mode: null };
-  doPlay(idx, {});
+  doPlay(idx, {}, !!gear);
 }
 function pickTarget(uid) {
   const r = curRole(); if (!r) return;
   ui.picked[r] = uid;
   if (Object.keys(ui.picked).length >= ui.roles.length) {
-    const idx = ui.sel.idx, t = ui.picked;
+    const idx = ui.sel.idx, t = ui.picked, g = ui.gear;
     ui = { sel: null, mode: null };
-    doPlay(idx, t);
+    doPlay(idx, t, g);
   } else render();
 }
 
@@ -1291,9 +1329,9 @@ function render() {
     <div class="hand">${handOrder(me).map(i => {
       const id = me.hand[i];
       // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
-      const dim = !DEF[id] || (S.turn === ME && !S.over && !canPlay(ME, i).ok);
+      const dim = !DEF[id] || (id !== GEAR_ID && S.turn === ME && !S.over && !canPlay(ME, i).ok);
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
-      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""}`, attrs: `data-hand="${i}"` });
+      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}) });
     }).join("")}</div>
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
@@ -1373,7 +1411,7 @@ function doMull(redraw) {
 /* 手札が多いときはカードを重ねて、全部が手札の幅に収まるようにする */
 /* 手札はコストの安い順に表示する（実際の手札の順番は変えない。data-hand は元の位置） */
 function handOrder(p) {
-  const key = i => DEF[p.hand[i]] ? effCost(ME, DEF[p.hand[i]], i) : 99;
+  const key = i => p.hand[i] === GEAR_ID ? 100 : DEF[p.hand[i]] ? effCost(ME, DEF[p.hand[i]], i) : 99;   // 歯車はいちばん右
   return p.hand.map((id, i) => i).sort((a, b) => {
     const A = p.hand[a], B = p.hand[b];
     return key(a) - key(b) || (DEF[A] && DEF[B] ? (DEF[A].type === DEF[B].type ? 0 : DEF[A].type === "char" ? -1 : 1) || DEF[A].name.localeCompare(DEF[B].name, "ja") : 0) || a - b;
@@ -1452,7 +1490,8 @@ function renderSheet() {
   el.className = "sheet";
   el.innerHTML = detailHTML(id, unit, ui.sel.owner) + `
       <div class="sh-actions">
-        ${playable ? `<button type="button" class="btn primary" data-act="play" ${playable.ok ? "" : "disabled"}>${playable.ok ? "出す" : playable.reason}</button>` : ""}
+        ${playable && playable.ok && gearChoice(ME, ui.sel.idx) ? `<button type="button" class="btn primary" data-act="playGear">歯車を${DEF[id].gear}枚使って出す</button><button type="button" class="btn" data-act="play">使わずに出す</button>`
+          : playable ? `<button type="button" class="btn primary" data-act="play" ${playable.ok ? "" : "disabled"}>${playable.ok ? "出す" : playable.reason}</button>` : ""}
         <button type="button" class="btn" data-act="cancel">閉じる</button>
       </div>
     </div>`;
@@ -1669,7 +1708,7 @@ function dropAction(x, y) {
       if (!chk.ok) return () => toast(chk.reason);
       const uid = +unitEl.dataset.uid, tu = S.players[z.units].field.find(x => x.uid === uid);
       if (z.role === "enemy" && tu && !canTarget(tu)) return () => toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません");
-      return () => doPlay(idx, { [z.role]: uid });
+      return () => gearChoice(ME, idx) ? beginPlay(idx) : doPlay(idx, { [z.role]: uid });
     }
     if (!fieldEl || +fieldEl.dataset.zone !== ME) return null;
     if (!chk.ok) return () => toast(chk.reason);
@@ -1921,7 +1960,7 @@ function detailNavHTML(ids, cur, act) {
 }
 function stepId(ids, cur, d) { const i = ids.indexOf(cur); return i < 0 ? cur : ids[(i + d + ids.length) % ids.length]; }
 function showCardList() {
-  const usable = CARDS.filter(c => c.limit > 0);
+  const usable = CARDS.filter(c => c.limit > 0 && cardShown(c));
   const collect = ["ready", "offline"].includes(Account.status);
   const hide = c => collect && Account.owned(c.id) <= 0;
   const ownedN = usable.filter(c => Account.owned(c.id) > 0).length;
@@ -2372,11 +2411,11 @@ function handleAct(act, el) {
     case "rps": if (S && el) doRps(el.dataset.v); break;
     case "choose": if (S && el) doChoose(el.dataset.v === "1"); break;
     case "mull": if (S && el) doMull(el.dataset.v === "1"); break;
-    case "play": {
+    case "play": case "playGear": {
       if (!ui.sel || ui.sel.kind !== "hand" || !canAct()) return;
       const idx = ui.sel.idx;
       if (!canPlay(ME, idx).ok) return;
-      beginPlay(idx);
+      beginPlay(idx, act === "playGear");
       break;
     }
     case "account": Account.showScreen(); break;

@@ -25,7 +25,8 @@ const Admin = {
     const sumN = p ? RARITY_KEYS.reduce((a, r) => a + (+p.odds.normal[r] || 0), 0) : 0;
     const sumL = p ? RARITY_KEYS.reduce((a, r) => a + (+p.odds.last[r] || 0), 0) : 0;
     const inPack = p ? new Set(p.cards) : new Set();
-    const byR = r => DATA.cards.filter(c => c.rarity === r && c.limit > 0);
+    const pset = p ? p.set || 1 : 1;
+    const byR = r => DATA.cards.filter(c => c.rarity === r && c.limit > 0 && (c.set || 1) === pset);   // このパックの弾のカードだけ並べる
     el.innerHTML = `
       <h2>パック</h2>
       <p class="hint">パックの中身・値段・排出率を決めます。「販売中」を外すと、ゲームのパック一覧に出なくなります（持っているカードは消えません）。</p>
@@ -42,6 +43,8 @@ const Admin = {
           <div class="field"><span class="lab">1パックの枚数</span>${stepper("pk-size", p.size, "枚数")}</div>
         </div>
         <label class="check" style="max-width:320px"><input type="checkbox" data-admin="pk-open" ${p.open ? "checked" : ""}><span><b>販売中</b><span>ゲームのパック一覧に表示する</span></span></label>
+        <div class="field"><span class="lab">弾</span><div class="seg" role="group" aria-label="パックの弾">${Object.entries(SETS).slice(0, 3).map(([k, v]) => `<button type="button" data-act="pkSet" data-v="${k}" aria-pressed="${pset === +k}">${v}</button>`).join("")}</div>
+          <span class="hint small">下のカード一覧は、この弾のカードだけ出ます。第2弾以降のパックは、その弾を開放したプレイヤーにだけ表示されます。</span></div>
       </div>
       <div class="fgroup">
         <span class="gl">排出率（%）</span>
@@ -286,7 +289,8 @@ const Admin = {
       }
       case "packDel": this.confirm = { kind: "pack" }; this.renderPacks(); return true;
       case "packDelYes": DATA.packs = DATA.packs.filter(p => p.id !== this.packId); this.packId = null; this.confirm = null; this.touch(this.renderPacks); return true;
-      case "pkAll": this.pack().cards = DATA.cards.filter(c => c.limit > 0).map(c => c.id); this.touch(this.renderPacks); return true;
+      case "pkAll": { const ps = this.pack().set || 1; this.pack().cards = DATA.cards.filter(c => c.limit > 0 && (c.set || 1) === ps).map(c => c.id); this.touch(this.renderPacks); return true; }
+      case "pkSet": { const p = this.pack(), n = +el.dataset.v; if (n > 1) p.set = n; else delete p.set; this.touch(this.renderPacks); return true; }
       case "pkNoStarter": this.pack().cards = DATA.cards.filter(c => c.limit > 0 && !c.id.startsWith("st-")).map(c => c.id); this.touch(this.renderPacks); return true;
       case "pkNone": this.pack().cards = []; this.touch(this.renderPacks); return true;
       case "cancelConfirm": this.confirm = null; this.renderPacks(); this.renderEco(); return true;

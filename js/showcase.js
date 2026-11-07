@@ -36,7 +36,7 @@ const Showcase = {
   html() {
     this.cards = this.pick();
     if (!this.cards.length) return "";
-    const list = CARDS.filter(c => c.limit > 0);
+    const list = CARDS.filter(c => c.limit > 0 && cardShown(c));
     const have = list.filter(c => Account.owned(c.id) > 0).length;
     return `<div class="showcase" id="showcase" aria-label="持っているカード。左右になぞると回ります">
       <div class="sc-stage" aria-hidden="true"></div>

@@ -4,6 +4,15 @@
 
 const WORLDS = { myth: "神話", fan: "幻想", mech: "機械" };
 const TYPES = { char: "キャラクター", spell: "魔法" };
+/* 弾（カードとパックの区分）。第2弾以降は、パック開放戦に勝つまでプレイヤーには見せない */
+const SETS = { 1: "第1弾", 2: "第2弾", 3: "第3弾", 4: "第4弾" };
+function setOpen(n) {
+  if (!n || n <= 1) return true;
+  if (typeof DATA_INFO !== "undefined" && DATA_INFO.draft) return true;   // 試遊中（?draft）はすべて見える
+  return typeof Account !== "undefined" && !!(Account.data && (Account.data.sets || []).includes(n));
+}
+/* プレイヤーに見せてよいカード（開放していない弾のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
+const cardShown = c => !!c && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
 
 /* キャラクターの能力（キーワード） */
 const KEYWORDS = {
@@ -230,8 +239,12 @@ const CONDS = {
   combo:   { label: "このターン、すでにほかのカードを使った（コンボ）", text: () => "このターン、すでにほかのカードを使っていれば", noN: true },
   handZero:{ label: "手札が0枚",                  text: () => "自分の手札が0枚なら", noN: true },
   handGE:  { label: "手札がN枚以上",              text: e => `自分の手札が${e.cn}枚以上なら` },
-  maxEGE:  { label: "最大エナジーがN以上",        text: e => `自分のエナジーの最大値が${e.cn}以上なら` }
+  maxEGE:  { label: "最大エナジーがN以上",        text: e => `自分のエナジーの最大値が${e.cn}以上なら` },
+  gearPaid:{ label: "出すときに歯車を使った",     text: () => "歯車を使ったなら", noN: true },
+  gearNone:{ label: "出すときに歯車を使わなかった", text: () => "歯車を使わなかったなら", noN: true }
 };
+/* 歯車：手札で重なるカード（何枚あっても手札1枠。枚数は p.gears）。これだけでは使えず、「歯車を使う」カードの材料になる */
+const GEAR_ID = "tk-gear";
 const condText = e => (e && CONDS[e.cond] ? CONDS[e.cond].text(e) : "");
 const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
 /* 使ったとき（登場時）の効果だけ */
@@ -361,6 +374,7 @@ function effectsText(card, list, auto) {
       if (role) seen[role] = true;
       t = unitText(e, T);
     } else t = EFFECTS[e.kind].text(e.n, e);
+    if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
     if (e.cond && CONDS[e.cond]) t = `${condText(e)}、${t}`;
     if (k > 1) t = e.kind === "unit" && e.act === "dmg" && e.to === "enemyRand" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
     out.push(t);
@@ -377,6 +391,7 @@ function cardTextLines(card) {
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
+  if (card.gear) lines.push(card.gear === "all" ? "歯車すべて：出すときに、手札の歯車をすべて使う。" : `歯車${card.gear}：出すときに、手札の歯車を${card.gear}枚使ってもよい。`);
   if (card.type === "char") {
     // タイミングごとに1行（登場時 → ほかのタイミングの順）
     Object.keys(WHENS).forEach(w => {
@@ -444,6 +459,7 @@ function cardHTML(card, o = {}) {
     ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
+    ${o.count ? `<span class="gearcnt" aria-label="${o.count}枚">×${o.count}</span>` : ""}
     ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}
     <span class="foot"><span class="nm ${card.name.length >= 9 ? "xlong" : card.name.length >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
@@ -483,6 +499,7 @@ function normEffect(e, type) {
   if (o.includes("kw") && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
   if (o.includes("world") && WORLDS[e.world]) out.world = e.world;
   if (o.includes("ctype") && TYPES[e.ctype]) out.ctype = e.ctype;
+  if (e.per === "gear") out.per = "gear";   // 使った歯車1枚ごとに n 倍
   if (CONDS[e.cond]) {
     out.cond = e.cond;
     if (!CONDS[e.cond].noN) out.cn = Math.max(0, Math.min(30, Math.round(+e.cn || 0)));
@@ -501,7 +518,7 @@ function normalizeData(data) {
     type: c.type === "spell" ? "spell" : "char",
     cost: +c.cost || 0,
     atk: c.type === "spell" ? undefined : (+c.atk || 0),
-    hp: c.type === "spell" ? undefined : Math.max(1, +c.hp || 1),
+    hp: c.type === "spell" ? undefined : Math.max(c.gear ? 0 : 1, c.gear ? (+c.hp || 0) : (+c.hp || 1)),   // 歯車で強くなるカードは0/0もあり
     glyph: String(c.glyph || "？"),
     // 1デッキに入れられる上限（0なら使えない）。古い形式の copies（共通山札の枚数）からも読める
     boss: !!c.boss && !c.token,   // ボス限定：パックや交換では手に入らず、隠しボスを倒すと手に入る
@@ -511,6 +528,9 @@ function normalizeData(data) {
     keywords: Array.isArray(c.keywords) ? c.keywords.filter(k => KEYWORDS[k]) : [],
     armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
+    ...(+c.set > 1 ? { set: Math.min(9, Math.round(+c.set)) } : {}),   // 弾（なし＝第1弾）
+    // 歯車を使う：数（使ってもよい枚数）か "all"（すべて使う）
+    ...(c.gear === "all" ? { gear: "all" } : +c.gear > 0 ? { gear: Math.min(20, Math.round(+c.gear)) } : {}),
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],
     note: c.note ? String(c.note) : "",
     artNote: c.artNote ? String(c.artNote) : "",   // イラストの指定（Gemini への依頼文に使う）
@@ -527,7 +547,8 @@ function normalizeData(data) {
       normal: Object.assign({}, DEFAULT_ODDS.normal, (x.odds && x.odds.normal) || {}),
       last: Object.assign({}, DEFAULT_ODDS.last, (x.odds && x.odds.last) || {})
     },
-    open: x.open !== false
+    open: x.open !== false,
+    ...(+x.set > 1 ? { set: Math.min(9, Math.round(+x.set)) } : {})
   }));
   config.SAMPLE_DECKS = config.SAMPLE_DECKS !== false;
   config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";
