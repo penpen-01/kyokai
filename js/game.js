@@ -475,9 +475,13 @@ function unitEffect(pi, e, targets, self) {
       case "destroy": destroyUnit(u); break;
       case "freeze": freezeUnit(u); break;
       case "unfreeze": {
+        if (!u.frozen && !u.thawed) break;   // 行動不能でないキャラには何もしない
         u.frozen = false;
         if (u.thawed && S.turn === side && !u.swings && !kw(u, "noattack")) { u.ready = true; u.thawed = false; }
-        log(`${cname(u.id)}の行動不能が解けた。`); fx(unitSel(u.uid), "解除", "heal"); break;
+        u.thawed = false;
+        log(`${cname(u.id)}の行動不能が解けた。`); fx(unitSel(u.uid), "解除", "heal");
+        if (n > 0) buff(u, n, 0);   // 解除できたキャラだけ攻撃力を上げる
+        break;
       }
       case "atk": if (n >= 0) buff(u, n, 0); else debuff(u, -n); break;
       case "hp": if (n >= 0) buff(u, 0, n); else shrinkHp(u, -n); break;

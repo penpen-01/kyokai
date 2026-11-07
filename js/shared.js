@@ -104,7 +104,7 @@ const UACTS = {
   dmg:       { label: "ダメージを与える", n: true, faceOK: true },
   destroy:   { label: "破壊する" },
   freeze:    { label: "行動不能にする（次のターン攻撃できない）" },
-  unfreeze:  { label: "行動不能を解除する" },
+  unfreeze:  { label: "行動不能を解除する（N＝解除したキャラの攻撃力を上げる量。0なら上げない）", n: true, zero: true },
   atk:       { label: "攻撃力を変える（−で下げる）", n: true, signed: true },
   hp:        { label: "体力を変える（−で下げる）", n: true, signed: true },
   both:      { label: "攻撃力と体力を変える（+N/+N、−も）", n: true, signed: true },
@@ -158,7 +158,7 @@ function unitText(e, T) {
     case "dmg": return `${T}に${n}ダメージ。`;
     case "destroy": return `${T}を破壊する。`;
     case "freeze": return side === "enemy" ? `${T}は、次の相手のターンに攻撃できない。` : side === "own" ? `${T}は、次の自分のターンに攻撃できない。` : `${T}は、持ち主の次のターンに攻撃できない。`;
-    case "unfreeze": return `${T}の行動不能を解除する（このターンに攻撃できなかったキャラは、攻撃できるようになる）。`;
+    case "unfreeze": return e.n > 0 ? `${T}の行動不能を解除し、解除したキャラの攻撃力を+${e.n}する（このターンに攻撃できなかったキャラは、攻撃できるようになる）。` : `${T}の行動不能を解除する（このターンに攻撃できなかったキャラは、攻撃できるようになる）。`;
     case "atk": return `${T}の攻撃力を${sg(n)}する。`;
     case "hp": return `${T}の体力を${sg(n)}する。`;
     case "both": return `${T}を${sg(n)}/${sg(n)}する。`;
@@ -465,7 +465,7 @@ function normEffect(e, type) {
     out.to = to;
     const ua = UACTS[out.act];
     if (!ua.n) out.n = 1;
-    else if (!ua.signed) out.n = Math.max(1, out.n);
+    else if (!ua.signed) out.n = Math.max(ua.zero ? 0 : 1, out.n);
     else if (!out.n) out.n = 1;
     if (ua.kw && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
     if (out.kw === "armor") out.n = Math.max(1, Math.min(9, Math.round(+e.n || 1)));   // 装甲は数値つき（装甲2など）

@@ -411,7 +411,8 @@ function setNum(name, value) {
   } else if (name.startsWith("eff-")) {
     const i = +name.slice(4);
     const ef = c.effects[i], signed = ef.kind === "unit" && UACTS[ef.act] && UACTS[ef.act].signed;
-    v = clamp(value, signed ? -20 : Math.max(1, EFFECTS[ef.kind].min ?? 1), 20);
+    const zero = ef.kind === "unit" && UACTS[ef.act] && UACTS[ef.act].zero;
+    v = clamp(value, signed ? -20 : zero ? 0 : Math.max(1, EFFECTS[ef.kind].min ?? 1), 20);
     if (signed && v === 0) v = (ef.n || 1) > 0 ? -1 : 1;   // 0は意味がないので飛ばす
     ef.n = v;
   } else if (name === "cost") v = c.cost = clamp(value, 0, 15);
