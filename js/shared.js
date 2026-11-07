@@ -45,7 +45,7 @@ const effNoN = (def, e) => (typeof def.noN === "function" ? def.noN(e) : !!def.n
 
 const EFFECTS = {
   /* 汎用：「何をするか（act）」と「だれに（to / who）」を選ぶ。2026-11-05 から効果はこの形が基本（古い種類は読み込むときにこの形へ置き換える） */
-  unit:        { group: "キャラ", label: "キャラに効果（何をするか・対象を選ぶ）", text: (n, e) => unitText(e), opts: ["act", "to"], min: -20, noN: e => !UACTS[e && e.act] || !UACTS[e.act].n },
+  unit:        { group: "キャラ", label: "キャラに効果（何をするか・対象を選ぶ）", text: (n, e) => unitText(e), opts: ["act", "to"], min: -20, noN: e => !UACTS[e && e.act] || (!UACTS[e.act].n && !(e.act === "grant" && e.kw === "armor")) },
   player:      { group: "プレイヤー", label: "プレイヤーに効果（ダメージ・回復・ドロー・捨てる）", text: (n, e) => playerText(e), opts: ["pact", "who"] },
   merge:       { group: "トークン", label: "合体（場の部品を破壊して、キャラを出す）", text: (n, e) => `自分の場に「${tokName(e)}」が${n}体以上いれば、それを${n}体破壊して、${intoDesc(e)}を出す（登場時の効果も発動する）。`, opts: ["token", "into"], tokenType: "char" },
   costDown:    { group: "エナジー", label: "手札のカードのコストを下げる（このターン・ずっと）", text: (n, e) => `${e && e.dur === "game" ? "" : "このターン、"}今の自分の手札の${worldNo(e)}${ctypeName(e)}すべてのコストを${n}下げる（0より下がらない${e && e.dur === "game" ? "。手札にある間ずっと" : ""}）。`, opts: ["world", "ctype", "dur"] },
@@ -467,6 +467,7 @@ function normEffect(e, type) {
     else if (!ua.signed) out.n = Math.max(1, out.n);
     else if (!out.n) out.n = 1;
     if (ua.kw && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
+    if (out.kw === "armor") out.n = Math.max(1, Math.min(9, Math.round(+e.n || 1)));   // 装甲は数値つき（装甲2など）
     if (ua.kw && e.turn) out.turn = true;
     if (ua.token && e.card) out.card = String(e.card);
     if (UTOS[to].world && WORLDS[e.world]) out.world = e.world;
