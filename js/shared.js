@@ -470,7 +470,7 @@ function cardHTML(card, o = {}) {
     ${marks ? `<span class="marks">${marks}</span>` : ""}
     ${o.count ? `<span class="gearcnt" aria-label="${o.count}枚">×${o.count}</span>` : ""}
     ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}
-    <span class="foot"><span class="nm ${card.name.length >= 9 ? "xlong" : card.name.length >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
+    <span class="foot"><span class="nm ${card.name.length >= 11 ? "xlong x3" : card.name.length >= 10 ? "xlong x2" : card.name.length >= 9 ? "xlong" : card.name.length >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
 const DEFAULT_LOGIN = [{ gold: 50 }, { gold: 50 }, { stones: 20 }, { gold: 100 }, { gold: 50 }, { stones: 30 }, { tickets: 1 }];

@@ -247,6 +247,8 @@ img{max-width:100%}
 .card.spell .nm{box-shadow:0 0 0 .6cqw #6b5432,inset 2.2cqw 0 0 color-mix(in srgb,var(--wc) 75%,#000),inset -2.2cqw 0 0 color-mix(in srgb,var(--wc) 75%,#000)}
 .card .nm.long{font-size:9.5cqw}
 .card .nm.xlong{font-size:8.3cqw;padding-left:1.5cqw;padding-right:1.5cqw}
+.card .nm.xlong.x2{font-size:7.5cqw;letter-spacing:0;padding-left:1cqw;padding-right:1cqw}   /* 10文字（工房長ギアマイスターなど） */
+.card .nm.xlong.x3{font-size:6.8cqw;letter-spacing:0;padding-left:.8cqw;padding-right:.8cqw}  /* 11文字以上 */
 @media (prefers-reduced-motion:reduce){.card.rar-ur .frame::before{animation:none}}
 
 /* ---- 数字と名前と印（2026-11-03 作り直し） ----
