@@ -19,6 +19,18 @@ const Decks = {
 
   free() { return Account.status === "free"; },
   sampleOK() { return !!CONFIG.SAMPLE_DECKS; },
+  /* サンプルデッキが使えるのは、練習対戦と友達との対戦（1日 SAMPLE_ONLINE_DAY 回まで）だけ */
+  today() { return new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" }); },
+  sampleLeft() {
+    const lim = CONFIG.SAMPLE_ONLINE_DAY ?? 3, sd = Account.data && Account.data.sampleDay;
+    return Math.max(0, lim - (sd && sd.d === this.today() ? sd.n : 0));
+  },
+  useSample() {
+    if (!Account.data) return;
+    const t = this.today(), sd = Account.data.sampleDay;
+    Account.data.sampleDay = { d: t, n: (sd && sd.d === t ? sd.n : 0) + 1 };
+    Account.saveNow();
+  },
   /* このデッキは所持数を気にせず組めるか */
   unbound(deck) { return this.free() || !!(deck && deck.free && this.sampleOK()); },
   mine() {
@@ -199,6 +211,7 @@ const Decks = {
         ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
+      ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）だけです。CPU戦・世界限定戦では使えません。</p>` : ""}
       <p class="hint dl-hint">${tab === "world" ? "世界限定戦で使うデッキです。1つの世界を決めて、その世界のカードだけで30枚を組みます。"
         : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです（ベータ限定）。勝ってもGはもらえません。"
         : tab === "cpu" ? "CPU が使っているデッキです。"

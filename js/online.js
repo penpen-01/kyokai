@@ -153,6 +153,7 @@ const Online = {
     if (!deck) return;
     const worldRule = !!($("#onl-world") && $("#onl-world").checked);
     store.set(WORLD_RULE_KEY, worldRule ? "1" : "0");
+    if (deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
     if (worldRule && !deckWorld(deck)) return this.lobbyMsg(`世界限定ルールでは、30枚すべて同じ世界のカードで組んだデッキが必要です。今のデッキ「${deck.name}」は世界が混ざっています。`);
     this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
@@ -170,6 +171,7 @@ const Online = {
       return this.lobbyMsg("部屋を作れませんでした（サーバーの設定を確認してください）。");
     }
     this.role = "host"; this.code = code; this.myDeck = deck; this.guestDeck = null; this.mySample = !!deck.sample;
+    if (this.mySample) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "host", sample: this.mySample });
     this.watchRoom();
     this.showWaiting();
@@ -182,6 +184,7 @@ const Online = {
     if (code.length !== 4) return this.lobbyMsg("合言葉は4文字です。");
     const deck = Decks.readyDeck(m => this.lobbyMsg(m));
     if (!deck) return;
+    if (deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
     this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
     this.reset();
@@ -198,6 +201,7 @@ const Online = {
       return this.lobbyMsg("参加できませんでした。");
     }
     this.role = "guest"; this.code = code; this.mySample = !!deck.sample;
+    if (this.mySample) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
     Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), by: this.uid, at: Date.now() });

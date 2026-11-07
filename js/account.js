@@ -81,6 +81,8 @@ const Account = {
       tickets: Math.max(0, Math.floor(+d.tickets || 0)),
       // SR以上確定パック券（隠しボスの報酬）
       srTickets: Math.max(0, Math.floor(+d.srTickets || 0)),
+      // サンプルデッキで友達と対戦した回数（その日の分。日本時間で日付が変わると0に戻る）
+      ...(d.sampleDay && /^\d{4}-\d{2}-\d{2}$/.test(d.sampleDay.d) ? { sampleDay: { d: d.sampleDay.d, n: Math.max(0, Math.floor(+d.sampleDay.n || 0)) } } : {}),
       // 隠しボス：最後に会ってから上級で勝った回数（天井用）と、次の上級戦でボスが出るか
       bossPity: Math.max(0, Math.floor(+d.bossPity || 0)),
       ...(d.bossNext ? { bossNext: true } : {}),

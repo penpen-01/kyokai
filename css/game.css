@@ -1582,3 +1582,5 @@ html.nofx .card .shine{display:none}
 .boss-only{font-size:12px;font-weight:700;color:#ff9fb4}
 .pk-btn.sr{border-color:#ff9fb4;background:linear-gradient(180deg,#5a1530,#2a0a18)}
 .pk-btn.sr b{color:#ffd36e}
+
+.lvls-off .lvl{opacity:.45;filter:grayscale(.6);cursor:not-allowed}

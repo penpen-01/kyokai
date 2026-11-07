@@ -2077,9 +2077,9 @@ function showCpuSelect() {
       <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck.name)}</b></span>
       <button type="button" class="btn sm" data-act="decks">変更</button>
     </div>
-    ${deck.free && Decks.sampleOK() ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝にも数えません。Gを集めるときは、自分のカードで組んだデッキを使ってください。</p>` : ""}
-    <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
-      <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}">
+    ${deck.free && Decks.sampleOK() ? `<p class="callout warn"><b>サンプルデッキは CPU戦で使えません</b>サンプルデッキが使えるのは、練習対戦と友達との対戦だけです。「変更」から、自分のカードで組んだデッキを選んでください。</p>` : ""}
+    <div class="lvls ${deck.free && Decks.sampleOK() ? "lvls-off" : ""}">${Object.entries(CPU_LEVELS).map(([k, v]) => `
+      <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}" ${deck.free && Decks.sampleOK() ? "disabled" : ""}>
         <span class="lvl-art" ${face(k) ? `style="background-image:url('${esc(face(k))}')"` : ""}></span>
         <span class="lvl-body">
           <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
@@ -2127,6 +2127,7 @@ function startPractice() {
 function startCpuGame(level) {
   const mine = Decks.readyDeck(msg => Decks.showList(msg));
   if (!mine) return;
+  if (mine.sample) { toast("サンプルデッキは CPU戦では使えません（練習対戦と友達との対戦だけ）"); return showCpuSelect(); }
   const lv = CPU_LEVELS[level] ? level : "normal";
   if (lv === "hard" && Account.data && Account.data.bossNext && !mine.sample && ["ready", "offline"].includes(Account.status)) return startBossGame(mine);
   const cpu = Decks.randomPreset(lv);
