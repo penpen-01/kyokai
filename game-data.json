@@ -1,6 +1,6 @@
 {
- "version": 54,
- "updated": "2026-11-05",
+ "version": 55,
+ "updated": "2026-11-08",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -187,6 +187,80 @@
     }
    },
    "open": true
+  },
+  {
+   "id": "pack2-1",
+   "name": "第2弾-1 機械（仮）",
+   "price": 200,
+   "size": 4,
+   "cards": [
+    "m2-gearsmith",
+    "m2-box",
+    "m2-welder",
+    "m2-laser",
+    "m2-net",
+    "m2-alarm",
+    "m2-shorten",
+    "m2-furnace",
+    "m2-capsule",
+    "m2-zenmai",
+    "m2-shutter",
+    "m2-heli",
+    "m2-locomotive",
+    "m2-scrap",
+    "m2-crane",
+    "m2-mortar",
+    "m2-drill",
+    "m2-dozer",
+    "m2-transfer",
+    "m2-jumper2",
+    "m2-automaton",
+    "m2-hacker",
+    "m2-armorswap",
+    "m2-patch",
+    "m2-press",
+    "m2-gearknight",
+    "m2-selfdestruct",
+    "m2-missile",
+    "m2-catapult",
+    "m2-jamtower",
+    "m2-walker",
+    "m2-reboot",
+    "m2-copycode",
+    "m2-meister",
+    "m2-exo",
+    "m2-tower",
+    "m2-jumper",
+    "m2-ew",
+    "m2-massplan",
+    "m2-clock",
+    "m2-mirage",
+    "m2-particle",
+    "m2-hive",
+    "m2-disaster",
+    "m2-godgear"
+   ],
+   "odds": {
+    "normal": {
+     "common": 70,
+     "rare": 22,
+     "sr": 6.4,
+     "ur": 1.5,
+     "legend": 0.1
+    },
+    "last": {
+     "common": 0,
+     "rare": 70,
+     "sr": 23,
+     "ur": 6,
+     "legend": 1
+    }
+   },
+   "open": false,
+   "set": "2-1",
+   "gateRule": "world",
+   "gateWorld": "mech",
+   "gateLevel": "hard"
   }
  ],
  "decks": [
@@ -3469,6 +3543,1143 @@
    "token": true,
    "note": "ボスの顔（対戦画面のアイコン用。場には出ない）",
    "art": "art/b-nezal-c4b4f142ea.webp"
+  },
+  {
+   "id": "tk-gear",
+   "name": "歯車",
+   "world": "mech",
+   "type": "spell",
+   "cost": 0,
+   "glyph": "機",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "token": true,
+   "note": "手札で重なる（何枚あっても手札1枠）。これだけでは使えず、「歯車を使う」カードの材料になる。",
+   "artNote": "真鍮色の大小の歯車がいくつも噛み合って重なった塊。中心で青い光がかすかに脈打つ。黒い背景に浮かぶ"
+  },
+  {
+   "id": "tk-raider",
+   "name": "強襲艇",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "token": true,
+   "artNote": "鋭いくさび形の小型強襲艇。機首に二連の機関砲、赤い推進炎を引いて急降下する"
+  },
+  {
+   "id": "m2-gearsmith",
+   "name": "歯車職人",
+   "world": "mech",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-gear"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "革のエプロンにゴーグルの少年職人。作業台で歯車をやすりで削る。工房の窓から朝の光"
+  },
+  {
+   "id": "m2-box",
+   "name": "ネジと歯車の箱",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 2,
+     "card": "tk-gear"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "ふたが開いた古い木箱から、ネジ・歯車・バネがあふれ出ている。真上からの構図"
+  },
+  {
+   "id": "m2-welder",
+   "name": "火花溶接兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyF",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "溶接マスクをかぶった兵士が、溶接トーチから長い火花の筋を相手に向けて吹きつける"
+  },
+  {
+   "id": "m2-laser",
+   "name": "狙撃レーザー",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyF",
+     "n": 3
+    }
+   ],
+   "set": "2-1",
+   "artNote": "ビルの屋上に据えた長い銃身のレーザー砲。一本の赤い光線が夜の街を横切る"
+  },
+  {
+   "id": "m2-net",
+   "name": "捕獲ネット弾",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemy1",
+     "n": 1
+    },
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemy1",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "砲弾が空中で開き、青白い電気の走る網になって獣にかぶさる瞬間"
+  },
+  {
+   "id": "m2-alarm",
+   "name": "警報装置",
+   "world": "mech",
+   "type": "char",
+   "cost": 1,
+   "atk": 0,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1,
+     "when": "death"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "赤い回転灯とサイレンのついた鉄の柱。赤い光が通路の壁を照らす"
+  },
+  {
+   "id": "m2-shorten",
+   "name": "工程短縮",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "costDown",
+     "n": 1,
+     "world": "mech",
+     "ctype": "char"
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "工場のベルトコンベアが猛スピードで流れ、壁の時計の針がぐるぐる回る"
+  },
+  {
+   "id": "m2-furnace",
+   "name": "溶鉱炉",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "destroy",
+     "to": "own1",
+     "n": 0
+    },
+    {
+     "kind": "tokenHand",
+     "n": 2,
+     "card": "tk-gear"
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "赤く燃える溶鉱炉に古い機械が落ちていき、出口から光る歯車が転がり出る"
+  },
+  {
+   "id": "m2-capsule",
+   "name": "転送カプセル",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 2,
+     "when": "voidBack"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "人ひとり入れる卵形のカプセル。青い光の輪に包まれ、半分だけ空間から消えかけている"
+  },
+  {
+   "id": "m2-zenmai",
+   "name": "ぜんまい兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "both",
+     "to": "self",
+     "n": 2,
+     "cond": "gearPaid"
+    }
+   ],
+   "set": "2-1",
+   "gear": 2,
+   "artNote": "背中に大きなぜんまいのねじ巻きが刺さった、ブリキの兵隊。ねじがぎりぎりと回り、銃剣を構えて行進する"
+  },
+  {
+   "id": "m2-shutter",
+   "name": "隔壁シャッター",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 1,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "set": "2-1",
+   "artNote": "基地の通路をふさぐ分厚い鉄のシャッター。黄色と黒の警告ライン、のぞき窓に赤い光"
+  },
+  {
+   "id": "m2-heli",
+   "name": "輸送ヘリ",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 3,
+     "world": "mech",
+     "ctype": "char"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "双発ローターの大型輸送ヘリが、ワイヤーで小型の戦車を吊って飛ぶ"
+  },
+  {
+   "id": "m2-locomotive",
+   "name": "突撃機関車",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "set": "2-1",
+   "artNote": "煙突から黒煙を噴き上げる蒸気機関車が、線路を外れて正面から突っ込んでくる。前面に鉄の衝角"
+  },
+  {
+   "id": "m2-scrap",
+   "name": "スクラップ回収車",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 2,
+     "card": "tk-gear",
+     "when": "death"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "荷台にがらくたを山積みにした六輪の回収車。マジックハンドで鉄くずをつかむ"
+  },
+  {
+   "id": "m2-crane",
+   "name": "鉄球クレーン車",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemy1",
+     "n": 3,
+     "cond": "gearNone"
+    },
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemy1",
+     "n": 5,
+     "cond": "gearPaid"
+    }
+   ],
+   "set": "2-1",
+   "gear": 2,
+   "artNote": "巨大な鉄球を振り回すクレーン車。鉄球が敵の見張り塔を打ち砕く瞬間"
+  },
+  {
+   "id": "m2-mortar",
+   "name": "自走迫撃砲",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyF",
+     "n": 3
+    }
+   ],
+   "set": "2-1",
+   "artNote": "キャタピラの車体に太い迫撃砲を載せた自走砲。砲口から煙と炎"
+  },
+  {
+   "id": "m2-drill",
+   "name": "掘削ドリル車",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "set": "2-1",
+   "artNote": "前面に巨大なドリルをつけた掘削車が、岩壁を突き破って飛び出してくる"
+  },
+  {
+   "id": "m2-dozer",
+   "name": "重機ブルドーザー",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 5,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "rush",
+    "trample"
+   ],
+   "effects": [],
+   "set": "2-1",
+   "artNote": "家ほどもある黄色いブルドーザーが、瓦礫の山を押しつぶして進む"
+  },
+  {
+   "id": "m2-transfer",
+   "name": "個人転送",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "banish",
+     "to": "own1",
+     "n": 0
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "兵士の足元に青い転送円が開き、体が光の粒になって消えていく"
+  },
+  {
+   "id": "m2-jumper2",
+   "name": "空間跳躍兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRand",
+     "n": 3,
+     "when": "voidBack"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "空間の裂け目から飛び出しながら、腕のブレードを振りかぶるジェットパックの兵士"
+  },
+  {
+   "id": "m2-automaton",
+   "name": "オートマタ技師",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-gear",
+     "when": "cardPlay",
+     "pw": "mech",
+     "pt": "spell"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "ぜんまい仕掛けの人形（オートマタ）の背中を開けて、細い工具で調整する女性技師"
+  },
+  {
+   "id": "m2-hacker",
+   "name": "ハッキング端末",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemy1",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "ケーブルを何本も垂らした携帯端末。画面に緑のコードが流れ、遠くの敵の砲台が止まる"
+  },
+  {
+   "id": "m2-armorswap",
+   "name": "装甲換装",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 2,
+     "kw": "armor"
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "整備ハンガーで、戦車に分厚い追加装甲が両側からはめこまれる"
+  },
+  {
+   "id": "m2-patch",
+   "name": "復旧パッチ",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "unfreeze",
+     "to": "own1",
+     "n": 0
+    },
+    {
+     "kind": "unit",
+     "act": "heal",
+     "to": "own1",
+     "n": 3
+    }
+   ],
+   "set": "2-1",
+   "artNote": "凍りついた機械の胸に緑の光のパッチが貼られ、氷がはじけ飛ぶ"
+  },
+  {
+   "id": "m2-press",
+   "name": "歯車プレス機",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 0,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-gear",
+     "when": "turnEnd"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "巨大なプレス機がガシャンと下りるたびに、光る歯車が1枚ずつ吐き出される"
+  },
+  {
+   "id": "m2-gearknight",
+   "name": "合体騎士ギアナイト",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "both",
+     "to": "self",
+     "n": 3,
+     "cond": "gearPaid"
+    },
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "self",
+     "n": 0,
+     "kw": "guard",
+     "cond": "gearPaid"
+    }
+   ],
+   "set": "2-1",
+   "gear": 3,
+   "artNote": "無数の歯車が組み合わさってできた騎士。胸に大きな歯車の盾、関節から蒸気。片膝から立ち上がる"
+  },
+  {
+   "id": "m2-selfdestruct",
+   "name": "自壊のコード",
+   "world": "mech",
+   "type": "spell",
+   "cost": 6,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "enemyAll",
+     "n": 0,
+     "kw": "doom"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "敵の機械の群れの表面に、いっせいに赤いカウントダウンの数字が浮かぶ。内部から光がもれ出している"
+  },
+  {
+   "id": "m2-missile",
+   "name": "ミサイル装甲車",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "dmg",
+     "who": "opp",
+     "n": 2,
+     "when": "attack"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "荷台にミサイルを4本積んだ装甲車。1本が白煙を引いて発射される"
+  },
+  {
+   "id": "m2-catapult",
+   "name": "歯車式カタパルト",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyF",
+     "n": 2,
+     "cond": "gearNone"
+    },
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyF",
+     "n": 5,
+     "cond": "gearPaid"
+    }
+   ],
+   "set": "2-1",
+   "gear": 3,
+   "artNote": "木と鉄でできた巨大な投石機。歯車がきしみ、腕の先に赤熱した鉄の塊を載せて振りかぶる"
+  },
+  {
+   "id": "m2-jamtower",
+   "name": "電波妨害塔",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "silence",
+     "to": "enemy1",
+     "n": 0
+    }
+   ],
+   "set": "2-1",
+   "artNote": "アンテナが何本も立つ鉄塔。周りの空気が電波でゆがんで見える"
+  },
+  {
+   "id": "m2-walker",
+   "name": "多脚戦車",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "armor": 1,
+   "set": "2-1",
+   "artNote": "六本の脚で岩場を登る重戦車。脚の装甲板に傷が刻まれている"
+  },
+  {
+   "id": "m2-reboot",
+   "name": "非常電源",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "unfreeze",
+     "to": "ownAll",
+     "n": 2
+    }
+   ],
+   "set": "2-1",
+   "artNote": "真っ暗な格納庫に非常灯の赤い光が点き、並んだ機械の目が一斉に光る"
+  },
+  {
+   "id": "m2-copycode",
+   "name": "複製のコード",
+   "world": "mech",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "copy",
+     "to": "own1",
+     "n": 0
+    }
+   ],
+   "set": "2-1",
+   "artNote": "青いホログラムの設計図から、機械がもう1体まるごと印刷されるように現れる"
+  },
+  {
+   "id": "m2-meister",
+   "name": "工房長ギアマイスター",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 3,
+     "card": "tk-gear"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "片目にモノクル、白いひげの老職人。腰の工具ベルトと、背中に背負った大きな歯車のかご"
+  },
+  {
+   "id": "m2-exo",
+   "name": "強化外骨格",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "both",
+     "to": "own1",
+     "n": 3
+    },
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 1,
+     "kw": "armor"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "兵士が巨大な外骨格スーツに乗り込み、両腕の拳を打ち合わせる"
+  },
+  {
+   "id": "m2-tower",
+   "name": "装甲司令塔",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 6,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "ownAll",
+     "n": 2,
+     "kw": "armor",
+     "world": "mech"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "分厚い装甲板に覆われた司令塔。頭頂のレーダーが回り、周りの戦車に青い盾の光が広がる"
+  },
+  {
+   "id": "m2-jumper",
+   "name": "次元跳躍兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "destroy",
+     "to": "enemyRand",
+     "n": 0,
+     "when": "voidBack"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "空間の裂け目から斜めに飛び出し、大剣を振り下ろす黒い装甲の剣士"
+  },
+  {
+   "id": "m2-ew",
+   "name": "電子戦機",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRand",
+     "n": 1,
+     "when": "cardPlay",
+     "pw": "mech"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "翼に何枚ものレーダー板をつけた電子戦機。敵に向かって紫の電波の波を放つ"
+  },
+  {
+   "id": "m2-massplan",
+   "name": "量産計画",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "costDown",
+     "n": 1,
+     "world": "mech",
+     "dur": "game"
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    }
+   ],
+   "set": "2-1",
+   "artNote": "机に広げた大きな設計図の上に、同じ戦車の小さな模型がずらりと並ぶ"
+  },
+  {
+   "id": "m2-clock",
+   "name": "終刻の大時計",
+   "world": "mech",
+   "type": "char",
+   "cost": 8,
+   "atk": 0,
+   "hp": 10,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "winTimer",
+     "n": 3
+    }
+   ],
+   "set": "2-1",
+   "artNote": "廃墟の空に浮かぶ、黒い巨大な文字盤の時計。針は骨のように白く、文字盤の中心に赤い一つ目。縁から錆びた歯車と鎖が触手のように垂れ下がる。禍々しく静か"
+  },
+  {
+   "id": "m2-mirage",
+   "name": "複製機ミラージュ",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "copy",
+     "to": "enemy1",
+     "n": 0
+    }
+   ],
+   "set": "2-1",
+   "artNote": "鏡のような銀色の体の機械人形。表面に向かいの敵の姿が映り、そこから同じ敵が抜け出してくる"
+  },
+  {
+   "id": "m2-particle",
+   "name": "重粒子砲",
+   "world": "mech",
+   "type": "spell",
+   "cost": 7,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyF",
+     "n": 8
+    }
+   ],
+   "set": "2-1",
+   "artNote": "山ほどの砲身から、太い紫の光線が地平線の向こうまで一直線に伸びる"
+  },
+  {
+   "id": "m2-hive",
+   "name": "量産母艦ハイヴ",
+   "world": "mech",
+   "type": "char",
+   "cost": 7,
+   "atk": 5,
+   "hp": 7,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-raider"
+    },
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-raider",
+     "when": "turnStart"
+    }
+   ],
+   "set": "2-1",
+   "artNote": "空に浮かぶ蜂の巣のような巨大母艦。腹のハッチが開き、鋭い強襲艇が次々と急降下していく"
+  },
+  {
+   "id": "m2-disaster",
+   "name": "超巨大砲台ディザスター",
+   "world": "mech",
+   "type": "char",
+   "cost": 10,
+   "atk": 0,
+   "hp": 10,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "dmg",
+     "who": "opp",
+     "n": 4
+    },
+    {
+     "kind": "player",
+     "act": "dmg",
+     "who": "opp",
+     "n": 8,
+     "when": "turnStart"
+    }
+   ],
+   "armor": 2,
+   "set": "2-1",
+   "artNote": "山脈と同じ高さの超巨大砲台。砲口の奥で赤い光が渦を巻き、足元の街が小さく見える"
+  },
+  {
+   "id": "m2-godgear",
+   "name": "合体機神ゴッドギア",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 0,
+   "hp": 0,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "rush",
+    "trample"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "both",
+     "to": "self",
+     "n": 1,
+     "per": "gear"
+    }
+   ],
+   "set": "2-1",
+   "gear": "all",
+   "artNote": "金と黒の巨大な合体ロボ。背中に光輪のような巨大歯車が回る。雲を突き抜けて立ち、地上を見下ろす"
   }
  ]
 }

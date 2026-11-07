@@ -671,6 +671,8 @@ function exportJSON() {
     if (c.token) o.token = true;
     if (c.boss) o.boss = true;
     if (c.pay) o.pay = c.pay;
+    if (c.set) o.set = c.set;     // 弾（第1弾は書かない）
+    if (c.gear) o.gear = c.gear;  // 歯車を使うカード
     if (c.note) o.note = c.note;
     if (c.art) o.art = c.art;
     return o;

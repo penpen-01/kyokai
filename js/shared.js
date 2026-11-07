@@ -181,7 +181,7 @@ function unitText(e, T) {
     case "hp": return `${T}の体力を${sg(n)}する。`;
     case "both": return `${T}を${sg(n)}/${sg(n)}する。`;
     case "heal": return `${T}の体力を${n}回復する。`;
-    case "grant": return `${T}に「${kwName(e)}」を与える${e.turn ? "（このターンだけ）" : ""}。`;
+    case "grant": return `${T}に「${kwName(e)}」を与える${e.turn ? "（このターンだけ）" : e.kw === "doom" ? "（持ち主の次のターンの終わりに破壊される）" : ""}。`;
     case "silence": return side === "own" ? `${T}を沈黙させる（効果と能力をすべて失う。不動や死の宣告も消える）。` : `${T}を沈黙させる（効果と能力をすべて失う）。`;
     case "bounce": return side === "own" ? `${T}を手札に戻す（トークンは消える）。` : `${T}を持ち主の手札に戻す（トークンは消える）。`;
     case "shuffle": return side === "enemy" ? `${T}を相手の山札に混ぜる（トークンは消える）。` : `${T}を持ち主の山札に混ぜる（トークンは消える）。`;
