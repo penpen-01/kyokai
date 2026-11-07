@@ -2303,7 +2303,7 @@ function bossRewardHTML(b) {
 function battleReselect() {
   const k = S && S.battle ? S.battle.kind : "cpu";
   overlayFrom = "start";
-  if (k === "practice") showPractice(); else if (k === "world") showWorldSelect(); else if (k === "gate") showGate(); else showCpuSelect();
+  if (k === "practice") showPractice(); else if (k === "world") showWorldSelect(); else if (k === "gate") showGatePack(); else showCpuSelect();
 }
 
 /* ---------- 一人で対戦：モードを選ぶ画面 ---------- */
@@ -2321,76 +2321,90 @@ function showSolo() {
       ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
       ${tile("noop", "チュートリアル", "遊び方を、実際に対戦しながら覚える", { off: true, tag: "準備中", cls: "m-off" })}
       ${(() => { const g = gatePacks(), all = gatePacks(true);
-        return tile("gate", "パック開放戦", "その世界のカードだけのデッキで勝つと、その世界の新しいパックが開く",
+        return tile("gate", "パック開放戦", "パックごとに決められたルールのもとで勝つと、新しいパックが開く",
           { off: !g.length, tag: !all.length ? "第2弾から" : !g.length ? "すべて開放ずみ" : `あと${g.length}つ`, cls: g.length ? "m-gate" : "m-off", art: g.length ? gateArt(g[0]) : "" }); })()}
     </div>
   </div>`, "start", true);
 }
 
-/* ---------- パック開放戦：第2弾以降のパックは、その世界のカードだけのデッキで勝つと開く ----------
+/* ---------- パック開放戦：第1弾以外のパックは、開放戦に勝つとショップに並ぶ ----------
    第1弾を集めずに新しいパックから集める人を避けるため。サンプルデッキでは挑めない。
-   相手：カード工房のパックで決めた CPU デッキ（gateDeck・gateLevel）。決めていなければ、その世界だけの CPU デッキ */
+   開放はパックの弾ごと（第2弾は 2-1・2-2・2-3 の3つ）。ルールはパックごとに決める（GATE_RULES：今は世界限定・制限なし）。
+   相手：カード工房のパックで決めた CPU デッキ（gateDeck・gateLevel）。決めていなければ自動 */
 const GATE = { pack: null, deck: null };
+const gateOpened = p => !!(Account.data && (Account.data.opened || []).includes(p.set));
 /* 開放戦のあるパック（all=true なら開放ずみも含む） */
 function gatePacks(all) {
-  return PACKS.filter(p => p.open && (p.set || 1) > 1 && p.world && (all || !(Account.data && (Account.data.opened || []).includes(openKey(p.set, p.world)))));
+  return PACKS.filter(p => p.open && p.set && p.set !== "1" && (all || !gateOpened(p)));
 }
 function gateArt(p) {
   const c = (p.cards || []).map(id => DEF[id]).filter(c => c && c.art && ["legend", "ur"].includes(c.rarity))[0];
   return c ? c.art : "";
 }
-function gateDecks(world) {
-  return Decks.mine().filter(d => !d.free && deckWorld(d) === world && !Decks.problems(d).length);
+const gateRule = p => GATE_RULES[p.gateRule] || GATE_RULES.world;
+function gateDecks(p) {
+  return Decks.mine().filter(d => !d.free && !Decks.problems(d).length && gateRule(p).deckOK(p, d));
 }
 function gateOpponent(p) {
-  const ok = d => d && d.level !== "test" && !deckProblems(d, DEF, CONFIG).length;
+  const ok = d => d && d.level !== "test" && d.level !== "boss" && !deckProblems(d, DEF, CONFIG).length;
   const fixed = PRESETS.find(d => d.id === p.gateDeck);
   if (ok(fixed)) return fixed;
-  const pool = PRESETS.filter(d => ok(d) && deckWorld(d) === p.world && d.level !== "boss");
+  const pool = PRESETS.filter(d => ok(d) && (gateRule(p) !== GATE_RULES.world || deckWorld(d) === p.gateWorld));
   return pool.find(d => d.level === "hard") || pool[0] || PRESETS.find(d => ok(d) && d.level === "hard") || null;
 }
+/* 1つめの画面：どのパックの開放戦に挑むか */
 function showGate() {
-  const list = gatePacks(), all = gatePacks(true);
-  if (!list.some(p => p.id === GATE.pack)) GATE.pack = (list[0] || {}).id || null;
-  const p = list.find(x => x.id === GATE.pack);
-  const decks = p ? gateDecks(p.world) : [];
-  if (!decks.some(d => d.id === GATE.deck)) GATE.deck = (decks[0] || {}).id || null;
-  const lv = p && (p.gateLevel || "hard");
-  const packRow = x => `<button type="button" class="pr-deck ${x.id === GATE.pack ? "on" : ""}" data-act="gatePack" data-id="${esc(x.id)}">
-      <span class="cs-deck-art" ${gateArt(x) ? `style="background-image:url('${esc(gateArt(x))}')"` : ""}></span>
-      <span class="cs-deck-txt"><small class="wtag w-${x.world}">${SETS[x.set] || ""}・${WORLDS[x.world]}</small><b>${esc(x.name)}</b></span>${x.id === GATE.pack ? `<span class="usingtag">挑む</span>` : ""}</button>`;
-  const deckRow = d => { const k = Decks.keyCard(d);
-    return `<button type="button" class="pr-deck ${GATE.deck === d.id ? "on" : ""}" data-act="gateDeck" data-id="${esc(d.id)}">
-      <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
-      <span class="cs-deck-txt"><small class="wtag w-${p.world}">${WORLDS[p.world]}だけ</small><b>${esc(d.name)}</b></span>${GATE.deck === d.id ? `<span class="usingtag">使う</span>` : ""}</button>`; };
-  const done = all.filter(x => !list.includes(x));
+  const all = gatePacks(true);
+  const row = x => { const done = gateOpened(x), art = gateArt(x);
+    return `<button type="button" class="pr-deck gate-row ${done ? "done" : ""}" data-act="gatePack" data-id="${esc(x.id)}" ${done ? "disabled" : ""}>
+      <span class="cs-deck-art" ${art ? `style="background-image:url('${esc(art)}')"` : ""}></span>
+      <span class="cs-deck-txt"><small>${esc(setName(x.set))}・${gateRule(x).label}${x.gateRule !== "free" && x.gateWorld ? `（${WORLDS[x.gateWorld]}）` : ""}</small><b>${esc(x.name)}</b></span>
+      ${done ? `<span class="usingtag done">開放ずみ</span>` : `<span class="lvl-go" aria-hidden="true">›</span>`}</button>`; };
   openOverlay(`<div class="panel">
     ${Decks.topbar("パック開放戦", "solo")}
-    <p class="lead small">新しいパックは、その世界のカードだけ（30枚すべて）で組んだデッキで開放戦に勝つと、ショップに並びます。それまでは、そのパックのカードはカード一覧にも出ず、交換もできません。サンプルデッキでは挑めません。負けても何度でも挑めます。</p>
-    ${!list.length ? `<p class="callout">${all.length ? "すべてのパックを開放しました。" : "開放戦のあるパックは、まだありません。"}</p>` : `
-    <h3 class="sec">開放するパック</h3>
-    <div class="pr-list">${list.map(packRow).join("")}</div>
-    <h3 class="sec">使うデッキ（${WORLDS[p.world]}のカードだけ）</h3>
+    <p class="lead small">新しいパックは、そのパックの開放戦に勝つとショップに並びます。それまでは、そのパックのカードはカード一覧にも出ず、交換もできません。</p>
+    ${all.length ? `<h3 class="sec">挑むパックを選ぶ</h3><div class="pr-list">${all.map(row).join("")}</div>` : `<p class="callout">開放戦のあるパックは、まだありません。</p>`}
+  </div>`, "start", true);
+}
+/* 2つめの画面：ルールの説明・デッキを選ぶ・挑む */
+function showGatePack() {
+  const p = gatePacks().find(x => x.id === GATE.pack);
+  if (!p) return showGate();
+  const decks = gateDecks(p);
+  if (!decks.some(d => d.id === GATE.deck)) GATE.deck = (decks[0] || {}).id || null;
+  const lv = p.gateLevel || "hard", rule = gateRule(p);
+  const deckRow = d => { const k = Decks.keyCard(d), w = deckWorld(d);
+    return `<button type="button" class="pr-deck ${GATE.deck === d.id ? "on" : ""}" data-act="gateDeck" data-id="${esc(d.id)}">
+      <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
+      <span class="cs-deck-txt">${w ? `<small class="wtag w-${w}">${WORLDS[w]}だけ</small>` : `<small>いろいろな世界</small>`}<b>${esc(d.name)}</b></span>${GATE.deck === d.id ? `<span class="usingtag">使う</span>` : ""}</button>`; };
+  const art = gateArt(p);
+  openOverlay(`<div class="panel">
+    ${Decks.topbar("パック開放戦", "gateBack")}
+    <div class="gate-head" ${art ? `style="--gart:url('${esc(art)}')"` : ""}><small>${esc(setName(p.set))}</small><b>${esc(p.name)}</b></div>
+    <div class="gate-rule">
+      <p class="gr-common">パック開放戦は、パックごとに決められたルールのもとで戦います。</p>
+      <p class="gr-this"><span>今回のルール：${esc(rule.label)}</span>${esc(rule.text(p))}</p>
+      <p class="gr-misc">サンプルデッキでは挑めません。相手は CPU（${CPU_LEVELS[lv].label}）。勝つとパックが開き、Gももらえます（${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[lv]]}G）。負けても何度でも挑めます。</p>
+    </div>
+    <h3 class="sec">使うデッキ</h3>
     ${decks.length ? `<div class="pr-list">${decks.map(deckRow).join("")}</div>`
-      : `<p class="callout warn"><b>${WORLDS[p.world]}のカードだけのデッキがありません</b>デッキ編成で、30枚すべて${WORLDS[p.world]}のカードのデッキを作ってください（限定構築でも、ふつうのデッキでも構いません）。</p>
+      : `<p class="callout warn"><b>ルールに合うデッキがありません</b>${esc(rule.text(p))}デッキ編成で作ってください（限定構築でも、ふつうのデッキでも構いません）。</p>
          <button type="button" class="btn" data-act="decks">デッキ編成へ</button>`}
-    <p class="lead small">相手：CPU（${CPU_LEVELS[lv].label}）・${WORLDS[p.world]}のデッキ。勝つとパックが開き、Gももらえます（${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[lv]]}G）。</p>
-    <button type="button" class="btn primary" data-act="gateGo" ${decks.length ? "" : "disabled"}>開放戦に挑む</button>`}
-    ${done.length ? `<h3 class="sec">開放ずみ</h3><p class="lead small">${done.map(x => esc(x.name)).join("、")}</p>` : ""}
+    <button type="button" class="btn primary" data-act="gateGo" ${decks.length ? "" : "disabled"}>開放戦に挑む</button>
   </div>`, "start", true);
 }
 function startGateGame() {
   const p = gatePacks().find(x => x.id === GATE.pack);
-  const d = p && gateDecks(p.world).find(x => x.id === GATE.deck);
-  if (!p || !d) return showGate();
+  const d = p && gateDecks(p).find(x => x.id === GATE.deck);
+  if (!p || !d) return showGatePack();
   const opp = gateOpponent(p);
-  if (!opp) { toast("開放戦の相手のデッキが見つかりません"); return showGate(); }
+  if (!opp) { toast("開放戦の相手のデッキが見つかりません"); return showGatePack(); }
   const icon = Account.icon();
   const lv = p.gateLevel || "hard";
   startBattle({ kind: "gate", level: lv, mine: { name: d.name, cards: { ...d.cards }, ...(icon ? { icon } : {}) }, opp,
-    oppName: `開放戦の番人（${WORLDS[p.world]}）`, streak: false, extra: { pack: p.id, key: openKey(p.set, p.world) } });
+    oppName: "開放戦の番人", streak: false, extra: { pack: p.id, key: p.set } });
 }
-/* 開放戦に勝ったら、その弾・世界を開く（結果画面で1回だけ呼ばれる） */
+/* 開放戦に勝ったら、そのパックの弾を開く（結果画面で1回だけ呼ばれる） */
 function gateReward() {
   const B = S && S.battle; if (!B || !B.key) return null;
   const o = Account.data.opened || (Account.data.opened = []);
@@ -2472,8 +2486,9 @@ function handleAct(act, el) {
     case "solo": showSolo(); return;
     case "worldMode": showWorldSelect(); return;
     case "gate": showGate(); return;
-    case "gatePack": GATE.pack = el.dataset.id; showGate(); return;
-    case "gateDeck": GATE.deck = el.dataset.id; showGate(); return;
+    case "gatePack": GATE.pack = el.dataset.id; showGatePack(); return;
+    case "gateBack": showGate(); return;
+    case "gateDeck": GATE.deck = el.dataset.id; showGatePack(); return;
     case "gateGo": startGateGame(); return;
     case "wbDeck": WORLDB.deck = el.dataset.id; showWorldSelect(); return;
     case "wbLevel": startWorldGame(el.dataset.v); return;

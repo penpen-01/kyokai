@@ -1590,3 +1590,16 @@ html.nofx .card .shine{display:none}
   background:radial-gradient(120% 140% at 50% 0%,rgba(255,214,120,.22),rgba(255,214,120,.04) 70%);border:1px solid rgba(255,214,120,.55);box-shadow:0 0 24px rgba(255,200,90,.18)}
 .gate-open b{font-size:17px;color:#ffe2a0}
 .gate-open small{color:var(--muted,#b9b2a2);font-size:12px}
+/* パック開放戦：パックの見出しとルール */
+.gate-head{position:relative;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;min-height:92px;padding:12px 14px;border-radius:12px;overflow:hidden;
+  border:1px solid rgba(255,214,120,.45);background:linear-gradient(90deg,rgba(10,12,28,.92) 35%,rgba(10,12,28,.35)),var(--gart,linear-gradient(135deg,#2a2f55,#141833)) center/cover}
+.gate-head small{color:#ffd98a;font-weight:800;font-size:12px;letter-spacing:.06em}
+.gate-head b{font-size:19px;color:#fff}
+.gate-rule{display:flex;flex-direction:column;gap:8px;margin:12px 0 4px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+.gate-rule p{margin:0;font-size:13.5px;line-height:1.65}
+.gate-rule .gr-common{color:var(--muted,#b9b2a2);font-size:12.5px}
+.gate-rule .gr-this{padding:9px 11px;border-radius:9px;background:rgba(255,207,110,.1);border-left:3px solid #ffcf6e}
+.gate-rule .gr-this span{display:block;font-weight:900;color:#ffd98a;margin-bottom:2px}
+.gate-rule .gr-misc{color:var(--muted,#b9b2a2);font-size:12.5px}
+.gate-row.done{opacity:.55}
+.usingtag.done{background:#3a4060;color:#cfd3ea}

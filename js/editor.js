@@ -10,8 +10,8 @@ const $$ = s => [...document.querySelectorAll(s)];
 let DATA = null;          // 編集中のデータ
 let curId = null;         // 選択中のカード
 let filter = "all";
-let setFilter = "all";   // 弾で絞る（"all" か 1・2…）
-const inSet = c => setFilter === "all" || (c.set || 1) === setFilter;
+let setFilter = "all";   // 弾で絞る（"all" か "1"・"2-1"…）
+const inSet = c => setFilter === "all" || (c.set || "1") === setFilter;
 let saveState = "ok";     // ok | err
 let exportedSnap = "";    // 最後に書き出した（または公開版の）内容
 let confirmDelete = false;
@@ -119,7 +119,7 @@ function renderSummary() {
   const max = Math.max(1, ...s.curve);
   $("#summary").innerHTML = `
     <div class="sum-row">
-      <span class="big">${setFilter === "all" ? "" : SETS[setFilter] + "の"}使えるカード <b>${s.kinds}</b>種</span>
+      <span class="big">${setFilter === "all" ? "" : setName(setFilter) + "の"}使えるカード <b>${s.kinds}</b>種</span>
       <span>キャラ <b>${s.chars}</b> ・ 魔法 <b>${s.spells}</b>${s.all > s.kinds ? ` ・ 使用不可 <b>${s.all - s.kinds}</b>` : ""}${s.tokens ? ` ・ トークン <b>${s.tokens}</b>` : ""}</span>
     </div>
     <div class="sum-row">
@@ -147,7 +147,7 @@ function renderList() {
       ${cardHTML(c, { static: true })}
       <div class="row-main">
         <span class="row-name">${esc(c.name)}</span>
-        <span class="row-meta"><span class="setb s${c.set || 1}">${SETS[c.set || 1] || "第" + c.set + "弾"}</span> コスト${c.cost} ・ <span class="w">${WORLDS[c.world]}</span> ・ ${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}${c.token ? " ・ トークン" : c.limit ? "" : " ・ 使用不可"}</span>
+        <span class="row-meta"><span class="setb s${String(c.set || "1").split("-")[0]}">${setName(c.set)}</span> コスト${c.cost} ・ <span class="w">${WORLDS[c.world]}</span> ・ ${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}${c.token ? " ・ トークン" : c.limit ? "" : " ・ 使用不可"}</span>
       </div>
       <div class="stepper limit" aria-label="${esc(c.name)}の投入上限">
         <button type="button" data-limit="-1" data-id="${esc(c.id)}" aria-label="上限を1減らす">−</button>
@@ -222,9 +222,9 @@ function renderEditor() {
           <div class="field grow">
             <span class="lab">弾</span>
             <div class="seg wide" role="group" aria-label="弾">
-              ${Object.entries(SETS).slice(0, 3).map(([k, v]) => `<button type="button" data-set="${k}" aria-pressed="${(c.set || 1) === +k}">${v}</button>`).join("")}
+              ${Object.entries(SETS).map(([k, v]) => `<button type="button" data-set="${k}" aria-pressed="${(c.set || "1") === k}">${v}</button>`).join("")}
             </div>
-            <span class="hint small">第2弾以降のカードは、プレイヤーがその弾のパック開放戦に勝つまで、カード一覧・デッキ作り・交換に出ません（試遊中は見えます）。</span>
+            <span class="hint small">第1弾以外のカードは、プレイヤーがその弾（第2弾-1など）のパック開放戦に勝つまで、カード一覧・デッキ作り・交換に出ません（試遊中は見えます）。</span>
           </div>
           <div class="frow">
             <div class="field"><span class="lab">コスト</span>${stepper("cost", c.cost, "コスト")}</div>
@@ -505,9 +505,9 @@ document.addEventListener("click", e => {
   const rr = t.closest("[data-rarity]");
   if (rr) { curCard().rarity = rr.dataset.rarity; changed(); renderEditor(); return; }
   const stEl = t.closest("[data-set]");
-  if (stEl) { const c = curCard(); const n = +stEl.dataset.set; if (n > 1) c.set = n; else delete c.set; changed(); renderEditor(); return; }
+  if (stEl) { const c = curCard(); const n = normSet(stEl.dataset.set); if (n) c.set = n; else delete c.set; changed(); renderEditor(); return; }
   const sf = t.closest("[data-setf]");
-  if (sf) { setFilter = sf.dataset.setf === "all" ? "all" : +sf.dataset.setf; $$("[data-setf]").forEach(b => b.setAttribute("aria-pressed", b === sf)); renderSummary(); renderList(); return; }
+  if (sf) { setFilter = sf.dataset.setf; $$("[data-setf]").forEach(b => b.setAttribute("aria-pressed", b === sf)); renderSummary(); renderList(); return; }
   const w = t.closest("[data-world]");
   if (w) { curCard().world = w.dataset.world; changed(); renderEditor(); return; }
 
@@ -605,7 +605,7 @@ function act(name, el) {
   switch (name) {
     case "more": toggleMore($("#more").hidden); break;
     case "new": {
-      const card = normalizeData({ cards: [{ id: newId(), name: "新しいカード", world: "fan", type: "char", cost: 2, atk: 2, hp: 2, glyph: "新", limit: 3, set: setFilter === "all" ? 1 : setFilter }] }).cards[0];   // 絞っている弾のカードとして作る
+      const card = normalizeData({ cards: [{ id: newId(), name: "新しいカード", world: "fan", type: "char", cost: 2, atk: 2, hp: 2, glyph: "新", limit: 3, set: setFilter === "all" ? "1" : setFilter }] }).cards[0];   // 絞っている弾のカードとして作る
       DATA.cards.push(card);
       if (filter === "spell") { filter = "all"; $$("[data-filter]").forEach(b => b.setAttribute("aria-pressed", b.dataset.filter === "all")); }
       changed(); select(card.id);

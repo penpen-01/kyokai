@@ -5,16 +5,23 @@
 const WORLDS = { myth: "神話", fan: "幻想", mech: "機械" };
 const TYPES = { char: "キャラクター", spell: "魔法" };
 /* 弾（カードとパックの区分）。第2弾以降は、パック開放戦に勝つまでプレイヤーには見せない */
-const SETS = { 1: "第1弾", 2: "第2弾", 3: "第3弾", 4: "第4弾" };
-/* 第2弾以降は世界ごとに開く（「2-mech」＝第2弾の機械。その世界のパック開放戦に勝つと開く） */
-const openKey = (n, world) => `${n}-${world}`;
-function setOpen(n, world) {
-  if (!n || n <= 1) return true;
+/* 弾は「1」「2-1」「2-2」「2-3」「3」のような文字。第2弾は世界ごとに3つ（2-1・2-2・2-3）に分かれて出る。
+   第1弾以外は、その弾のパック開放戦に勝つまでプレイヤーに見せない（開放はパックの弾ごと） */
+const SETS = { "1": "第1弾", "2-1": "第2弾-1", "2-2": "第2弾-2", "2-3": "第2弾-3", "3": "第3弾" };
+const setName = s => SETS[s || "1"] || `第${String(s).replace("-", "弾-")}${String(s).includes("-") ? "" : "弾"}`;
+const normSet = v => { const s = String(v ?? "").trim(); return /^\d{1,2}(-\d{1,2})?$/.test(s) && s !== "1" ? s : ""; };
+function setOpen(s) {
+  if (!s || s === "1") return true;
   if (typeof DATA_INFO !== "undefined" && DATA_INFO.draft) return true;   // 試遊中（?draft）はすべて見える
-  return typeof Account !== "undefined" && !!(Account.data && (Account.data.opened || []).includes(openKey(n, world)));
+  return typeof Account !== "undefined" && !!(Account.data && (Account.data.opened || []).includes(s));
 }
-/* プレイヤーに見せてよいカード（開放していない弾・世界のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
-const cardShown = c => !!c && (setOpen(c.set, c.world) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
+/* プレイヤーに見せてよいカード（開放していない弾のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
+const cardShown = c => !!c && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
+/* パック開放戦のルール（パックごとに決める）。今は「世界限定」と「制限なし」。あとでレア度の制限・相手の特殊ルールなどを足す */
+const GATE_RULES = {
+  world: { label: "世界限定", text: p => `使えるのは、30枚すべて${WORLDS[p.gateWorld] || "決めた世界"}のカードで組んだデッキだけ。`, deckOK: (p, d) => deckWorld(d) === p.gateWorld },
+  free:  { label: "制限なし", text: () => "自分のデッキなら、どれでも使える。", deckOK: () => true }
+};
 
 /* キャラクターの能力（キーワード） */
 const KEYWORDS = {
@@ -530,7 +537,7 @@ function normalizeData(data) {
     keywords: Array.isArray(c.keywords) ? c.keywords.filter(k => KEYWORDS[k]) : [],
     armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
-    ...(+c.set > 1 ? { set: Math.min(9, Math.round(+c.set)) } : {}),   // 弾（なし＝第1弾）
+    ...(normSet(c.set) ? { set: normSet(c.set) } : {}),   // 弾（なし＝第1弾）
     // 歯車を使う：数（使ってもよい枚数）か "all"（すべて使う）
     ...(c.gear === "all" ? { gear: "all" } : +c.gear > 0 ? { gear: Math.min(20, Math.round(+c.gear)) } : {}),
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],
@@ -550,9 +557,10 @@ function normalizeData(data) {
       last: Object.assign({}, DEFAULT_ODDS.last, (x.odds && x.odds.last) || {})
     },
     open: x.open !== false,
-    ...(+x.set > 1 ? { set: Math.min(9, Math.round(+x.set)) } : {}),
-    // 第2弾以降：パックの世界と、パック開放戦の相手（CPU デッキの id・強さ）
-    ...(WORLDS[x.world] ? { world: x.world } : {}),
+    ...(normSet(x.set) ? { set: normSet(x.set) } : {}),
+    // 第1弾以外：パック開放戦のルール（gateRule・gateWorld）と相手（CPU デッキの id・強さ）
+    ...(normSet(x.set) ? { gateRule: GATE_RULES[x.gateRule] ? x.gateRule : "world" } : {}),
+    ...(WORLDS[x.gateWorld] ? { gateWorld: x.gateWorld } : {}),
     ...(x.gateDeck ? { gateDeck: String(x.gateDeck) } : {}),
     ...(["easy", "normal", "hard"].includes(x.gateLevel) ? { gateLevel: x.gateLevel } : {})
   }));
