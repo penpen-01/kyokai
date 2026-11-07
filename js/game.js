@@ -302,18 +302,26 @@ const canTarget = u => !hidden(u) && !kw(u, "elusive");
 /* ランダムな1体に選ばれるか（隠密は選ばれない。呪文耐性は選ばれる） */
 const canRandom = u => !hidden(u);
 /* 対象を選ぶ役割で、選べるキャラ */
-function targetables(pi, role) {
-  if (role === "any") return [...S.players[pi].field, ...S.players[opp(pi)].field.filter(canTarget)];
-  const f = S.players[roleSide(pi, role)].field;
+/* カード d の効果が、その役割の対象を世界で絞っているか（「自分の神話のキャラ1体」など） */
+function roleWorld(d, role) {
+  const e = d && (d.effects || []).find(e => e.kind === "unit" && e.world && UTOS[e.to] && UTOS[e.to].role === role && whenOf(e) === "play");
+  return e ? e.world : null;
+}
+const worldOK = (u, w) => !w || (DEF[u.id] && DEF[u.id].world === w);
+function targetables(pi, role, d) {
+  const w = roleWorld(d, role);
+  if (role === "any") return [...S.players[pi].field, ...S.players[opp(pi)].field.filter(canTarget)].filter(u => worldOK(u, w));
+  const f = S.players[roleSide(pi, role)].field.filter(u => worldOK(u, w));
   return role === "enemy" || role === "enemyF" ? f.filter(canTarget) : f;
 }
 /* その役割で選べるもの（uid の並び。「相手（キャラかプレイヤー）」は "face" も選べる） */
-function targetOpts(pi, role) {
-  const u = targetables(pi, role).map(x => x.uid);
+function targetOpts(pi, role, d) {
+  const u = targetables(pi, role, d).map(x => x.uid);
   return role === "enemyF" ? [...u, "face"] : u;
 }
 /* 役割ごとに、そのキャラ（またはプレイヤー）を選べるか */
-function roleAllows(pi, role, owner, u) {
+function roleAllows(pi, role, owner, u, d) {
+  if (!worldOK(u, roleWorld(d, role))) return false;
   if (role === "any") return owner === pi || canTarget(u);
   if (owner !== roleSide(pi, role)) return false;
   return role === "enemy" || role === "enemyF" ? canTarget(u) : true;
@@ -340,7 +348,7 @@ function handReset(p) { p.handCut = []; p.handCutT = []; }
 function roleSide(pi, role) { return role === "enemy" || role === "enemyF" ? opp(pi) : pi; }
 /* 実際に選ぶ必要がある対象（キャラで、その側にキャラがいない効果は選ばずに空振り） */
 function neededRoles(pi, d) {
-  return cardTargetRoles(d).filter(r => targetOpts(pi, r).length > 0);
+  return cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > 0);
 }
 
 function canPlay(pi, idx) {
@@ -362,7 +370,7 @@ function canPlay(pi, idx) {
   // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
   if (d.type === "spell") {
     for (const r of cardTargetRoles(d)) {
-      if (!targetOpts(pi, r).length) return { ok: false, reason: r === "enemy" ? (S.players[opp(pi)].field.length ? "対象に選べる相手キャラがいません（隠密・呪文耐性）" : "対象の相手キャラがいません") : "対象の自分のキャラがいません" };
+      if (!targetOpts(pi, r, d).length) return { ok: false, reason: roleWorld(d, r) ? `対象にできる${WORLDS[roleWorld(d, r)]}のキャラがいません` : r === "enemy" ? (S.players[opp(pi)].field.length ? "対象に選べる相手キャラがいません（隠密・呪文耐性）" : "対象の相手キャラがいません") : "対象の自分のキャラがいません" };
     }
   }
   return { ok: true };
@@ -386,7 +394,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   const targets = normTargets(pi, d, targetsIn);
   const roles = neededRoles(pi, d);
   for (const r of roles) {
-    if (!targetOpts(pi, r).includes(targets[r])) return false;
+    if (!targetOpts(pi, r, d).includes(targets[r])) return false;
   }
   const cost = effCost(pi, d, idx);
   const spend = d.gear === "all" ? gearsOf(p) : useGear && gearChoice(pi, idx) ? d.gear : 0;
@@ -458,9 +466,9 @@ function unitTargets(pi, e, targets, self) {
   const wf = u => !e.world || (DEF[u.id] && DEF[u.id].world === e.world);
   const rnd = a => a.length ? [a[Math.floor(Math.random() * a.length)]] : [];
   switch (e.to) {
-    case "enemy1": { const u = en.field.find(x => x.uid === targets.enemy); return u ? [u] : []; }
-    case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self); return u ? [u] : []; }
-    case "any1": { const u = findUnit(targets.any); return u && u !== self ? [u] : []; }
+    case "enemy1": { const u = en.field.find(x => x.uid === targets.enemy && wf(x)); return u ? [u] : []; }
+    case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self && wf(x)); return u ? [u] : []; }
+    case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }
     case "enemyF": { if (targets.enemyF === "face") return ["face"]; const u = en.field.find(x => x.uid === targets.enemyF); return u ? [u] : []; }
     case "enemyRand": return rnd(en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)));
     case "ownRand": return rnd(me.field.filter(x => x.hp > 0 && x !== self && wf(x)));
@@ -1091,7 +1099,7 @@ function legalActions(pi) {
     const roles = neededRoles(pi, DEF[id]);
     let combos = [{}];
     roles.forEach(r => {
-      const opts = targetOpts(pi, r);
+      const opts = targetOpts(pi, r, DEF[id]);
       combos = combos.flatMap(c => opts.map(o => ({ ...c, [r]: o })));
     });
     const gearOpts = gearChoice(pi, idx) ? [true, false] : [false];
@@ -1238,7 +1246,7 @@ function curRole() { return ui.mode === "target" ? ui.roles[Object.keys(ui.picke
 function isTargetable(pi, u) {
   if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u, selectedUnit());
   const r = curRole();
-  return !!r && roleAllows(ME, r, pi, u);
+  return !!r && roleAllows(ME, r, pi, u, DEF[S.players[ME].hand[ui.sel.idx]]);
 }
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
 function beginPlay(idx, gear) {
@@ -1708,6 +1716,7 @@ function dropAction(x, y) {
       if (!chk.ok) return () => toast(chk.reason);
       const uid = +unitEl.dataset.uid, tu = S.players[z.units].field.find(x => x.uid === uid);
       if (z.role === "enemy" && tu && !canTarget(tu)) return () => toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません");
+      if (tu && !worldOK(tu, roleWorld(d, z.role))) return () => toast(`${WORLDS[roleWorld(d, z.role)]}のキャラを選んでください`);
       return () => gearChoice(ME, idx) ? beginPlay(idx) : doPlay(idx, { [z.role]: uid });
     }
     if (!fieldEl || +fieldEl.dataset.zone !== ME) return null;
@@ -2569,7 +2578,7 @@ document.addEventListener("click", e => {
       const r = curRole();
       const tu = S.players[owner].field.find(x => x.uid === uid);
       if (r && tu && (r === "any" || owner === roleSide(ME, r))) {
-        if (!roleAllows(ME, r, owner, tu)) { toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません"); return; }
+        if (!roleAllows(ME, r, owner, tu, DEF[S.players[ME].hand[ui.sel.idx]])) { if (tu && !worldOK(tu, roleWorld(DEF[S.players[ME].hand[ui.sel.idx]], r))) { toast(`${WORLDS[roleWorld(DEF[S.players[ME].hand[ui.sel.idx]], r)]}のキャラを選んでください`); return; } toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません"); return; }
         pickTarget(uid); return;
       }
       return;

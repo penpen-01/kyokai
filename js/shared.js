@@ -162,7 +162,7 @@ function toPhrase(e, isChar, auto) {
   if (auto && to === "any1") return "ランダムなキャラ1体";
   if (auto && to === "enemyF") return "ランダムな相手キャラ1体か相手プレイヤー";
   return {
-    enemy1: "相手キャラ1体", own1: isChar ? "このキャラ以外の自分のキャラ1体" : "自分のキャラ1体", any1: isChar ? "このキャラ以外のキャラ1体（自分か相手）" : "キャラ1体（自分か相手）",
+    enemy1: w ? `相手の${w}キャラ1体` : "相手キャラ1体", own1: isChar ? `このキャラ以外の自分の${w}キャラ1体` : `自分の${w}キャラ1体`, any1: isChar ? `このキャラ以外の${w}キャラ1体（自分か相手）` : `${w}キャラ1体（自分か相手）`,
     enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
     enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
   }[to] || "（対象未設定）";
@@ -498,7 +498,7 @@ function normEffect(e, type) {
     if (out.kw === "armor") out.n = Math.max(1, Math.min(9, Math.round(+e.n || 1)));   // 装甲は数値つき（装甲2など）
     if (ua.kw && e.turn) out.turn = true;
     if (ua.token && e.card) out.card = String(e.card);
-    if (UTOS[to].world && WORLDS[e.world]) out.world = e.world;
+    if ((UTOS[to].world || ["enemy1", "own1", "any1"].includes(to)) && WORLDS[e.world]) out.world = e.world;   // 選ぶ対象も世界で絞れる（強い付与は「自分の神話のキャラ1体」など）
   } else if (e.kind === "player") {
     out.act = PACTS[e.act] ? e.act : "dmg";
     out.who = PWHO[e.who] ? e.who : "opp";
