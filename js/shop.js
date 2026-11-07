@@ -34,7 +34,7 @@ const Shop = {
   /* 交換できるカード：今買えるパックに入っているカード（パックに出ないカードは交換でも出さない） */
   pool() {
     const seen = new Set(), out = [];
-    PACKS.filter(p => p.open && setOpen(p.set)).forEach(p => Packs.pool(p).forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); out.push(c); } }));
+    PACKS.filter(p => p.open && setOpen(p.set, p.world)).forEach(p => Packs.pool(p).forEach(c => { if (!seen.has(c.id)) { seen.add(c.id); out.push(c); } }));
     return out.sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.cost - b.cost);
   },
 

@@ -44,7 +44,14 @@ const Admin = {
         </div>
         <label class="check" style="max-width:320px"><input type="checkbox" data-admin="pk-open" ${p.open ? "checked" : ""}><span><b>販売中</b><span>ゲームのパック一覧に表示する</span></span></label>
         <div class="field"><span class="lab">弾</span><div class="seg" role="group" aria-label="パックの弾">${Object.entries(SETS).slice(0, 3).map(([k, v]) => `<button type="button" data-act="pkSet" data-v="${k}" aria-pressed="${pset === +k}">${v}</button>`).join("")}</div>
-          <span class="hint small">下のカード一覧は、この弾のカードだけ出ます。第2弾以降のパックは、その弾を開放したプレイヤーにだけ表示されます。</span></div>
+          <span class="hint small">下のカード一覧は、この弾のカードだけ出ます。</span></div>
+        ${pset > 1 ? `<div class="field"><span class="lab">世界（パック開放戦）</span><div class="seg" role="group" aria-label="パックの世界">${Object.entries(WORLDS).map(([k, v]) => `<button type="button" data-act="pkWorld" data-v="${k}" aria-pressed="${p.world === k}">${v}</button>`).join("")}</div>
+          <span class="hint small">第2弾以降のパックは、プレイヤーがこの世界のカードだけのデッキで「パック開放戦」に勝つまで、ショップに出ません（そのパックの弾・世界のカードも一覧や交換に出ません）。世界を決めないと、だれにも表示されません。</span></div>
+        <div class="frow">
+          <div class="field grow"><label for="pk-gdeck">開放戦の相手（CPU のデッキ）</label>
+            <select class="txt" id="pk-gdeck" data-admin="pk-gdeck"><option value="">自動（この世界だけの CPU デッキ。なければ上級のデッキ）</option>${(DATA.decks || []).filter(d => d.level !== "test").map(d => `<option value="${esc(d.id)}" ${p.gateDeck === d.id ? "selected" : ""}>${esc(d.name)}</option>`).join("")}</select></div>
+          <div class="field"><span class="lab">開放戦の強さ</span><div class="seg" role="group" aria-label="開放戦の強さ">${[["easy", "初級"], ["normal", "中級"], ["hard", "上級"]].map(([k, v]) => `<button type="button" data-act="pkGLevel" data-v="${k}" aria-pressed="${(p.gateLevel || "hard") === k}">${v}</button>`).join("")}</div></div>
+        </div>` : ""}
       </div>
       <div class="fgroup">
         <span class="gl">排出率（%）</span>
@@ -290,6 +297,8 @@ const Admin = {
       case "packDel": this.confirm = { kind: "pack" }; this.renderPacks(); return true;
       case "packDelYes": DATA.packs = DATA.packs.filter(p => p.id !== this.packId); this.packId = null; this.confirm = null; this.touch(this.renderPacks); return true;
       case "pkAll": { const ps = this.pack().set || 1; this.pack().cards = DATA.cards.filter(c => c.limit > 0 && (c.set || 1) === ps).map(c => c.id); this.touch(this.renderPacks); return true; }
+      case "pkWorld": this.pack().world = el.dataset.v; this.touch(this.renderPacks); return true;
+      case "pkGLevel": this.pack().gateLevel = el.dataset.v; this.touch(this.renderPacks); return true;
       case "pkSet": { const p = this.pack(), n = +el.dataset.v; if (n > 1) p.set = n; else delete p.set; this.touch(this.renderPacks); return true; }
       case "pkNoStarter": this.pack().cards = DATA.cards.filter(c => c.limit > 0 && !c.id.startsWith("st-")).map(c => c.id); this.touch(this.renderPacks); return true;
       case "pkNone": this.pack().cards = []; this.touch(this.renderPacks); return true;
@@ -383,6 +392,7 @@ document.addEventListener("change", e => {
   }
   const k = t.dataset && t.dataset.admin;
   if (k === "pk-open") { Admin.pack().open = t.checked; Admin.touch(Admin.renderPacks); }
+  if (k === "pk-gdeck") { const p = Admin.pack(); if (t.value) p.gateDeck = t.value; else delete p.gateDeck; Admin.touch(Admin.renderPacks); }
   if (k === "starter") { DATA.config.STARTER_DECK = t.value; Admin.touch(Admin.renderEco); }
   if (k === "sample") { DATA.config.SAMPLE_DECKS = t.checked; Admin.touch(Admin.renderEco); }
   if (k === "deck-level") { const d = DATA.decks.find(x => x.id === t.dataset.id); if (d) { d.level = t.value; Admin.touch(); } }

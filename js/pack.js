@@ -86,7 +86,7 @@ const Packs = {
   /* ---------- 画面 ---------- */
   showShop(msg) {
     this.logOpen = false;
-    const open = PACKS.filter(p => p.open && setOpen(p.set));
+    const open = PACKS.filter(p => p.open && setOpen(p.set, p.world));
     const acctNote = Account.status === "ready" ? "" : Account.status === "offline" ? `<p class="callout warn"><b>オフラインです</b>通信できるところで開き直してから、パックを開けてください。</p>`
       : Account.status === "free" ? `<p class="callout"><b>試遊モード</b>パックは開けません（すべてのカードを使えます）。</p>`
       : `<p class="callout warn"><b>アカウントを読み込めていません</b>通信状態を確認して、開き直してください。</p>`;

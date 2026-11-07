@@ -1492,6 +1492,7 @@ html.nofx .card .shine{display:none}
 /* ---- 一人で対戦：モードの一覧 ---- */
 .lvl-mode{--lc:#c9a24a;min-height:84px}
 .lvl-mode.m-world{--lc:#7fb3ff}
+.lvl-mode.m-gate{--lc:#ffcf6e}
 .lvl-mode.m-prac{--lc:#8fb0ff;min-height:72px}
 .lvl-mode.m-off{--lc:#555b7a;opacity:.55;cursor:default}
 .lvl-mode .ptag{margin-left:8px}
@@ -1584,3 +1585,8 @@ html.nofx .card .shine{display:none}
 .pk-btn.sr b{color:#ffd36e}
 
 .lvls-off .lvl{opacity:.45;filter:grayscale(.6);cursor:not-allowed}
+/* パック開放戦：結果画面の「開放されました」 */
+.gate-open{display:flex;flex-direction:column;align-items:center;gap:4px;margin:6px 0 10px;padding:12px 14px;border-radius:12px;text-align:center;
+  background:radial-gradient(120% 140% at 50% 0%,rgba(255,214,120,.22),rgba(255,214,120,.04) 70%);border:1px solid rgba(255,214,120,.55);box-shadow:0 0 24px rgba(255,200,90,.18)}
+.gate-open b{font-size:17px;color:#ffe2a0}
+.gate-open small{color:var(--muted,#b9b2a2);font-size:12px}

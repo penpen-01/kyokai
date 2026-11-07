@@ -6,13 +6,15 @@ const WORLDS = { myth: "神話", fan: "幻想", mech: "機械" };
 const TYPES = { char: "キャラクター", spell: "魔法" };
 /* 弾（カードとパックの区分）。第2弾以降は、パック開放戦に勝つまでプレイヤーには見せない */
 const SETS = { 1: "第1弾", 2: "第2弾", 3: "第3弾", 4: "第4弾" };
-function setOpen(n) {
+/* 第2弾以降は世界ごとに開く（「2-mech」＝第2弾の機械。その世界のパック開放戦に勝つと開く） */
+const openKey = (n, world) => `${n}-${world}`;
+function setOpen(n, world) {
   if (!n || n <= 1) return true;
   if (typeof DATA_INFO !== "undefined" && DATA_INFO.draft) return true;   // 試遊中（?draft）はすべて見える
-  return typeof Account !== "undefined" && !!(Account.data && (Account.data.sets || []).includes(n));
+  return typeof Account !== "undefined" && !!(Account.data && (Account.data.opened || []).includes(openKey(n, world)));
 }
-/* プレイヤーに見せてよいカード（開放していない弾のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
-const cardShown = c => !!c && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
+/* プレイヤーに見せてよいカード（開放していない弾・世界のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
+const cardShown = c => !!c && (setOpen(c.set, c.world) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
 
 /* キャラクターの能力（キーワード） */
 const KEYWORDS = {
@@ -548,7 +550,11 @@ function normalizeData(data) {
       last: Object.assign({}, DEFAULT_ODDS.last, (x.odds && x.odds.last) || {})
     },
     open: x.open !== false,
-    ...(+x.set > 1 ? { set: Math.min(9, Math.round(+x.set)) } : {})
+    ...(+x.set > 1 ? { set: Math.min(9, Math.round(+x.set)) } : {}),
+    // 第2弾以降：パックの世界と、パック開放戦の相手（CPU デッキの id・強さ）
+    ...(WORLDS[x.world] ? { world: x.world } : {}),
+    ...(x.gateDeck ? { gateDeck: String(x.gateDeck) } : {}),
+    ...(["easy", "normal", "hard"].includes(x.gateLevel) ? { gateLevel: x.gateLevel } : {})
   }));
   config.SAMPLE_DECKS = config.SAMPLE_DECKS !== false;
   config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";
