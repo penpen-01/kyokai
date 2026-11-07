@@ -1,5 +1,5 @@
 {
- "version": 62,
+ "version": 63,
  "updated": "2026-11-08",
  "config": {
   "PLAYER_HP": 20,
@@ -260,6 +260,80 @@
    "set": "2-1",
    "gateRule": "world",
    "gateWorld": "mech",
+   "gateLevel": "hard"
+  },
+  {
+   "id": "pack2-2",
+   "name": "第2弾-2 神話（仮）",
+   "price": 200,
+   "size": 4,
+   "cards": [
+    "y2-angel",
+    "y2-egg",
+    "y2-dragoon",
+    "y2-whelp",
+    "y2-disciple",
+    "y2-second",
+    "y2-gale",
+    "y2-feather",
+    "y2-roar",
+    "y2-lightshield",
+    "y2-prayer",
+    "y2-gatekeeper",
+    "y2-wyvern",
+    "y2-archer",
+    "y2-smith",
+    "y2-squad",
+    "y2-nestguard",
+    "y2-redwing",
+    "y2-healer",
+    "y2-guardian",
+    "y2-rider",
+    "y2-iai",
+    "y2-scale",
+    "y2-thunderdrake",
+    "y2-tsubame",
+    "y2-call",
+    "y2-breath",
+    "y2-twinblade",
+    "y2-valkyrie",
+    "y2-halo",
+    "y2-hoard",
+    "y2-shizuku",
+    "y2-archangel",
+    "y2-crimson",
+    "y2-dragonknight",
+    "y2-horn",
+    "y2-spring",
+    "y2-nest",
+    "y2-pegasi",
+    "y2-lightwing",
+    "y2-stormdrake",
+    "y2-feast",
+    "y2-dragonking",
+    "y2-kensei",
+    "y2-worldeater"
+   ],
+   "odds": {
+    "normal": {
+     "common": 70,
+     "rare": 22,
+     "sr": 6.4,
+     "ur": 1.5,
+     "legend": 0.1
+    },
+    "last": {
+     "common": 0,
+     "rare": 70,
+     "sr": 23,
+     "ur": 6,
+     "legend": 1
+    }
+   },
+   "open": false,
+   "set": "2-2",
+   "gateRule": "world",
+   "gateWorld": "myth",
    "gateLevel": "hard"
   }
  ],
@@ -4727,6 +4801,1224 @@
    "gear": "all",
    "artNote": "金と黒の巨大な合体ロボ。背中に光輪のような巨大歯車が回る。雲を突き抜けて立ち、地上を見下ろす",
    "art": "art/m2-godgear-8700fd9925.webp"
+  },
+  {
+   "id": "tk-wyrmling",
+   "name": "子竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "token": true,
+   "artNote": "赤い鱗の子どもの竜。大型犬ほどの大きさで、小さな翼を広げ、口の端から火の粉をこぼしながら飛びかかる。岩山の上"
+  },
+  {
+   "id": "tk-angel",
+   "name": "天使の羽兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "神",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [
+    "shield"
+   ],
+   "effects": [],
+   "token": true,
+   "artNote": "白い翼と小さな丸盾を持つ、少年の姿の見習いの天使兵。体を淡い光の膜が包む。雲の上の白い回廊"
+  },
+  {
+   "id": "tk-pegasus",
+   "name": "天馬",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [
+    "haste"
+   ],
+   "effects": [],
+   "token": true,
+   "artNote": "金のたてがみの白い天馬が、翼を大きく広げて夕焼けの空を駆ける。乗り手はいない"
+  },
+  {
+   "id": "tk-youngdragon",
+   "name": "若竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 0,
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "token": true,
+   "artNote": "卵の殻を突き破って飛び出した、まだ若い赤銅色の竜。翼を半分広げ、殻のかけらが宙に舞う。溶岩の洞窟"
+  },
+  {
+   "id": "tk-elderdragon",
+   "name": "古竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 7,
+   "atk": 7,
+   "hp": 7,
+   "glyph": "神",
+   "limit": 0,
+   "rarity": "ur",
+   "keywords": [
+    "rush",
+    "trample"
+   ],
+   "effects": [],
+   "token": true,
+   "artNote": "巣を崩して目覚めた、山のように大きな黒い古竜。長い首をもたげ、目と喉の奥が溶岩のように光る。火山の火口"
+  },
+  {
+   "id": "y2-angel",
+   "name": "見習い天使",
+   "world": "myth",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "shield"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "dmg",
+     "who": "self",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "白い服に小さな翼の見習いの天使の少女。両手で小さな光の玉を抱え、少し不安そうに前を見る。雲の切れ間から光が差す神殿の屋根の上"
+  },
+  {
+   "id": "y2-egg",
+   "name": "竜の卵",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 0,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "destroy",
+     "to": "self",
+     "n": 0,
+     "when": "turnStart"
+    },
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-youngdragon",
+     "when": "turnStart"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "溶岩の割れ目に置かれた、赤と金の模様の大きな竜の卵。殻にひびが入り、中から赤い光と小さな爪がのぞく"
+  },
+  {
+   "id": "y2-dragoon",
+   "name": "竜騎兵見習い",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "set": "2-2",
+   "artNote": "小型の竜にまたがった若い騎兵が、長い槍を突き出して突撃する。相手は幻想の世界の小鬼の群れ。草原"
+  },
+  {
+   "id": "y2-whelp",
+   "name": "火吹き竜の子",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyF",
+     "n": 1
+    }
+   ],
+   "set": "2-2",
+   "artNote": "岩の上で胸をふくらませ、小さな炎を吹き出す子どもの竜。炎の先で機械の世界の小型ドローンが焦げて落ちる"
+  },
+  {
+   "id": "y2-disciple",
+   "name": "道場の門下生",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "readySelf",
+     "n": 1,
+     "when": "kill"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "白い道着に木刀を持つ少年の門下生が、踏み込んで木の人形を真っ二つにする。古い板張りの道場、障子から朝日"
+  },
+  {
+   "id": "y2-second",
+   "name": "二の太刀",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 0,
+     "kw": "twice",
+     "turn": true,
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "一太刀目の残像が残ったまま、二太刀目を振り抜く剣士の腕と刀。弧を描く二本の光の筋。背景は暗い竹林"
+  },
+  {
+   "id": "y2-gale",
+   "name": "天の導き",
+   "world": "myth",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 10,
+     "world": "myth",
+     "ctype": "spell"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "夜空の星座の光が一筋の道になって地上へ伸び、その先で道に迷った若い戦士が顔を上げる"
+  },
+  {
+   "id": "y2-feather",
+   "name": "天の羽衣",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 0,
+     "kw": "shield",
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "空から舞い降りた白い光の羽衣が、傷ついた兵士の肩をふわりと包む。羽根が光の粒になって舞う"
+  },
+  {
+   "id": "y2-roar",
+   "name": "竜の咆哮",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "ownAll",
+     "n": 1,
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "崖の上で天に向かって吠える赤い竜。咆哮の衝撃波で雲が割れ、下の兵士たちが武器を掲げる"
+  },
+  {
+   "id": "y2-lightshield",
+   "name": "光盾の兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "hp",
+     "to": "self",
+     "n": 1,
+     "when": "healed"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "光でできた大きな円盾を構える若い女性の兵。盾に機械の世界の砲弾が当たって砕ける。神殿の階段"
+  },
+  {
+   "id": "y2-prayer",
+   "name": "天使の祈り",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 3
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    }
+   ],
+   "set": "2-2",
+   "artNote": "ひざまずいて手を組む天使の背中。翼から光がこぼれ、足元の焼けた大地に花が咲き戻っていく"
+  },
+  {
+   "id": "y2-gatekeeper",
+   "name": "聖域の門番",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "set": "2-2",
+   "artNote": "白い大理石の門の前に立つ、背の高い翼の門番。長い槍を斜めに構え、兜の奥の目が金色に光る。夜明け"
+  },
+  {
+   "id": "y2-wyvern",
+   "name": "翼竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "set": "2-2",
+   "artNote": "緑の鱗の翼竜が急降下し、後ろ足の爪で幻想の世界の巨大な蜘蛛をつかむ。深い谷"
+  },
+  {
+   "id": "y2-archer",
+   "name": "天弓の射手",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRand",
+     "n": 2
+    }
+   ],
+   "set": "2-2",
+   "artNote": "雲の上に立つ女性の射手が、光の弓を引き絞る。矢の先が地上の機械の砲台を狙う"
+  },
+  {
+   "id": "y2-smith",
+   "name": "戦場の鍛冶師",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "own1",
+     "n": 2
+    }
+   ],
+   "set": "2-2",
+   "artNote": "戦場の簡易の鍛冶場で、たくましい鍛冶師が真っ赤な剣を打つ。火花が飛び、後ろで兵士が待つ"
+  },
+  {
+   "id": "y2-squad",
+   "name": "天使の隊列",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-angel"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "雲の中から、白い翼の小さな天使の兵たちが一列に並んで降りてくる。先頭がラッパを吹く"
+  },
+  {
+   "id": "y2-nestguard",
+   "name": "竜の巣の番竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "set": "2-2",
+   "artNote": "卵の並ぶ巣の前でとぐろを巻き、首をもたげて威嚇する灰色の大きな竜。火山の洞窟"
+  },
+  {
+   "id": "y2-redwing",
+   "name": "赤鱗の飛竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "haste"
+   ],
+   "effects": [],
+   "set": "2-2",
+   "artNote": "赤い鱗の大きな飛竜が、炎を引いて城壁の上を低く飛び抜ける。城壁の兵士が伏せる"
+  },
+  {
+   "id": "y2-healer",
+   "name": "癒しの天使",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "heal",
+     "to": "ownAll",
+     "n": 1,
+     "when": "turnEnd"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "柔らかな金の光をまとった天使が、両手を広げて傷ついた兵士たちを癒す。野営地の夜、たき火"
+  },
+  {
+   "id": "y2-guardian",
+   "name": "守護天使",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "self",
+     "n": 1,
+     "when": "healed"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "大きな白い翼で背後の子どもたちを包むように守る、銀の鎧の天使。正面から幻想の魔獣が迫る"
+  },
+  {
+   "id": "y2-rider",
+   "name": "竜使いの少女",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-wyrmling"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "赤いスカーフの少女が、肩に乗った子竜の頭をなでる。足元にも子竜がじゃれつく。山の竜舎"
+  },
+  {
+   "id": "y2-iai",
+   "name": "抜刀術",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "own1",
+     "n": 2,
+     "world": "myth"
+    },
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 0,
+     "kw": "trample",
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "鞘から刀を抜き放つ一瞬。刃の光が一直線に走り、機械兵の装甲ごと後ろの壁まで斬り裂く"
+  },
+  {
+   "id": "y2-scale",
+   "name": "竜鱗の盾",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "hp",
+     "to": "own1",
+     "n": 3
+    },
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 1,
+     "kw": "armor"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "竜の鱗を何枚も重ねて作った赤い大盾。盾が炎の息を受け止め、両側に炎が流れる"
+  },
+  {
+   "id": "y2-thunderdrake",
+   "name": "雷鳴竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemy1",
+     "n": 2
+    }
+   ],
+   "set": "2-2",
+   "artNote": "稲妻をまとった青い竜が、雷雲の中から現れて口から雷を吐く。地上の幻想の世界の巨木が裂ける"
+  },
+  {
+   "id": "y2-tsubame",
+   "name": "燕返し",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 0,
+     "kw": "pierce",
+     "turn": true,
+     "world": "myth"
+    },
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "own1",
+     "n": 1,
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "宙を舞う燕の群れの中で、剣士が守りの盾を構えた敵の頭上を飛び越え、背後の敵将へ刀を切り返す"
+  },
+  {
+   "id": "y2-call",
+   "name": "天使の号令",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "hp",
+     "to": "ownAll",
+     "n": 2,
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "空中の大天使がラッパを吹き鳴らし、地上の兵士たち全員の体に光の膜が広がる"
+  },
+  {
+   "id": "y2-breath",
+   "name": "竜の吐息",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyAll",
+     "n": 1
+    },
+    {
+     "kind": "player",
+     "act": "dmg",
+     "who": "opp",
+     "n": 2
+    },
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyAll",
+     "n": 1,
+     "cond": "worldGE",
+     "cn": 2,
+     "cworld": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "上空の竜が地面をなめるように炎を吐き、機械の世界の小型ドローンの群れが炎に包まれる"
+  },
+  {
+   "id": "y2-twinblade",
+   "name": "二刀の剣士",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "twice"
+   ],
+   "effects": [],
+   "set": "2-2",
+   "artNote": "両手に長さの違う刀を持つ、片目に傷のある青年の剣士。背中合わせの敵を同時に斬る。雨の夜の橋の上"
+  },
+  {
+   "id": "y2-valkyrie",
+   "name": "戦乙女の長",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "ownAll",
+     "n": 0,
+     "kw": "rush",
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "翼の兜をかぶった戦乙女の長が、剣を天に掲げて号令をかける。後ろに並ぶ戦乙女たちが一斉に飛び立つ"
+  },
+  {
+   "id": "y2-halo",
+   "name": "光輪の天使",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "lifesteal"
+   ],
+   "effects": [],
+   "set": "2-2",
+   "artNote": "頭上に光の輪を浮かべた天使が、光の剣で幻想の世界の影の魔物を斬る。斬られた影が光に溶ける"
+  },
+  {
+   "id": "y2-hoard",
+   "name": "竜の財宝",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 2,
+     "cond": "worldGE",
+     "cn": 2,
+     "cworld": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "洞窟の奥に積み上がった金貨と宝石の山。その上で眠る竜の尾だけが見える"
+  },
+  {
+   "id": "y2-shizuku",
+   "name": "剣聖の高弟シズク",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "twice"
+   ],
+   "effects": [
+    {
+     "kind": "readySelf",
+     "n": 1,
+     "when": "kill"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "青い羽織に長い黒髪を一つに束ねた女性の剣士。抜き身の刀を低く構え、足元に斬られた機械兵の残骸。月夜の城下町の屋根の上"
+  },
+  {
+   "id": "y2-archangel",
+   "name": "天使長",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "ownAll",
+     "n": 0,
+     "kw": "shield",
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "六枚の白い翼を広げた天使長が、巨大な光の盾を地上に向けて掲げる。光の盾が兵士たちの上に広がる。雲の上の神殿"
+  },
+  {
+   "id": "y2-crimson",
+   "name": "紅蓮竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 6,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "rush",
+    "trample"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "dmg",
+     "who": "opp",
+     "n": 2,
+     "when": "kill"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "全身が燃える溶岩でできたような紅蓮の竜。噛み砕いた機械の巨兵の残骸を足で踏みつけ、炎を吐く"
+  },
+  {
+   "id": "y2-dragonknight",
+   "name": "天翔ける竜騎士",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "ownAll",
+     "n": 1,
+     "world": "myth",
+     "when": "attack"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "白銀の鎧の騎士が、青い竜にまたがって雲を突き抜け、槍を前に突き出す。後ろに竜騎兵の編隊"
+  },
+  {
+   "id": "y2-horn",
+   "name": "総攻撃の角笛",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "ownAll",
+     "n": 1,
+     "world": "myth"
+    },
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "ownAll",
+     "n": 0,
+     "kw": "pierce",
+     "turn": true,
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "丘の上の英雄が巨大な角笛を吹き鳴らし、背後の軍勢が守りの壁を飛び越えて駆け出す。地平線に敵の機械の軍勢"
+  },
+  {
+   "id": "y2-spring",
+   "name": "天馬の加護",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 0,
+     "kw": "haste",
+     "world": "myth"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "戦士の背中に、光でできた天馬の翼が生える。翼のひと打ちで戦士が地を蹴り、戦場の向こうへ飛び出す"
+  },
+  {
+   "id": "y2-nest",
+   "name": "竜の巣",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 0,
+   "hp": 6,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "destroy",
+     "to": "self",
+     "n": 0,
+     "when": "turnStart"
+    },
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-elderdragon",
+     "when": "turnStart"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "火山の火口近くの岩棚に作られた巨大な竜の巣。中央の黒い卵に大きなひびが入り、溶岩のような光がもれる"
+  },
+  {
+   "id": "y2-pegasi",
+   "name": "天馬の群れ",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-pegasus"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "夕焼けの空を、金のたてがみの白い天馬の群れが一斉に駆け降りてくる。先頭の天馬がいななく"
+  },
+  {
+   "id": "y2-lightwing",
+   "name": "光翼の大天使",
+   "world": "myth",
+   "type": "char",
+   "cost": 7,
+   "atk": 3,
+   "hp": 8,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 5
+    },
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRand",
+     "n": 3,
+     "when": "healed"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "金と白の八枚の翼を持つ大天使が、天から光の柱とともに降臨する。光の柱に打たれた機械の巨兵が崩れる"
+  },
+  {
+   "id": "y2-stormdrake",
+   "name": "嵐の古竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 6,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "haste"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRand",
+     "n": 2,
+     "when": "attack"
+    }
+   ],
+   "pay": {
+    "kind": "life",
+    "n": 3
+   },
+   "set": "2-2",
+   "artNote": "嵐の雲そのもののような灰色の古竜。翼から竜巻が生まれ、幻想の世界の森を根こそぎ巻き上げる"
+  },
+  {
+   "id": "y2-feast",
+   "name": "神々の宴",
+   "world": "myth",
+   "type": "spell",
+   "cost": 6,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "both",
+     "to": "ownAll",
+     "n": 2,
+     "world": "myth"
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 2
+    }
+   ],
+   "set": "2-2",
+   "artNote": "天上の大広間で、神々と英雄たちが杯を掲げる。杯から金の光があふれ、戦士たちの体に力がみなぎる"
+  },
+  {
+   "id": "y2-dragonking",
+   "name": "竜騎王レグナス",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 5,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-wyrmling"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "黒い竜にまたがった王が、炎の剣を掲げる。左右に子竜を従え、背後で城が燃える"
+  },
+  {
+   "id": "y2-kensei",
+   "name": "剣聖ヴァルトール",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 5,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "twice",
+    "rush",
+    "shield"
+   ],
+   "effects": [
+    {
+     "kind": "readySelf",
+     "n": 1,
+     "when": "kill"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "銀の長髪と白いひげの老剣聖。古代の神殿の騎士のような白銀の軽鎧に、ぼろぼろの青いマント。両手で一本の長い直剣を静かに構え、剣身に古い文字が光る。周りに斬り伏せられた機械の巨兵と幻想の魔獣。崩れた神殿の柱と、雲の切れ間からの月光。静かだが圧倒的"
+  },
+  {
+   "id": "y2-worldeater",
+   "name": "天喰らいの竜",
+   "world": "myth",
+   "type": "char",
+   "cost": 9,
+   "atk": 9,
+   "hp": 9,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "silence",
+     "to": "enemyAll",
+     "n": 0
+    },
+    {
+     "kind": "player",
+     "act": "dmg",
+     "who": "opp",
+     "n": 3,
+     "when": "attack"
+    }
+   ],
+   "set": "2-2",
+   "artNote": "空を覆うほど巨大な黒い竜が、太陽に食らいつく。地上は暗くなり、竜の影に入った敵の天使や機械の光がすべて消えていく"
   }
  ]
 }
