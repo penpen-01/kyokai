@@ -112,6 +112,7 @@ const UACTS = {
   silence:   { label: "沈黙させる（効果と能力を消す）" },
   bounce:    { label: "手札に戻す" },
   shuffle:   { label: "山札に混ぜる" },
+  banish:    { label: "亜空間に送る（持ち主の次のターンの始めに戻る）" },
   transform: { label: "変身させる", token: true },
   swap:      { label: "攻撃力と体力を入れ替える" },
   copy:      { label: "複製を自分の場に出す（今の状態ごと）" },
@@ -167,6 +168,7 @@ function unitText(e, T) {
     case "shuffle": return side === "enemy" ? `${T}を相手の山札に混ぜる（トークンは消える）。` : `${T}を持ち主の山札に混ぜる（トークンは消える）。`;
     case "transform": return e.card ? `${T}を${tokDesc(e)}に変身させる。` : `${T}を、効果も能力もない1/1に変身させる。`;
     case "swap": return `${T}の攻撃力と体力を入れ替える。`;
+    case "banish": return side === "own" ? `${T}を亜空間に送る（次の自分のターンの始めに、同じ場所に戻る）。` : side === "enemy" ? `${T}を亜空間に送る（相手の次のターンの始めに戻る）。` : `${T}を亜空間に送る（持ち主の次のターンの始めに戻る）。`;
     case "copy": return `${T}の複製を、自分の場に1体出す（受けたダメージ・強化・与えられた能力もそのまま写す。登場時の効果は発動しない）。`;
     case "steal": return `${T}を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。`;
   }
@@ -239,7 +241,7 @@ const DEFAULT_CONFIG = {
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
   STREAK_STEP: 10, STREAK_MAX: 50,
-  BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, SAMPLE_ONLINE_DAY: 3,
+  BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, SAMPLE_ONLINE_DAY: 3, SAMPLE_CPU: 1,
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
@@ -275,6 +277,7 @@ const CONFIG_INFO = {
   BOSS_PITY:     { label: "隠しボス：天井（上級でこの回数勝つと必ず出る）", min: 1, max: 999, group: "eco" },
   BOSS_HP:       { label: "隠しボス：ボスの体力", min: 1, max: 99, group: "eco" },
   SAMPLE_ONLINE_DAY: { label: "サンプルデッキ：友達との対戦で1日に使える回数", min: 0, max: 99, group: "eco" },
+  SAMPLE_CPU:    { label: "サンプルデッキ：CPU戦でも使える（1＝使える・0＝使えない。正式リリースで0に）", min: 0, max: 1, group: "eco" },
   STONE_GET_COMMON:  { label: "分解でもらえる魔石：コモン", min: 0, max: 100000, group: "eco" },
   STONE_GET_RARE:    { label: "分解でもらえる魔石：レア", min: 0, max: 100000, group: "eco" },
   STONE_GET_SR:      { label: "分解でもらえる魔石：SR", min: 0, max: 100000, group: "eco", step: 10 },

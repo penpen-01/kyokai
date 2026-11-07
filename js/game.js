@@ -269,6 +269,16 @@ function banishOwn(pi) {
   p.field = [];
   log(`${pname(pi)}のキャラは亜空間に送られた（次の${pname(pi)}のターンに戻る）。`);
 }
+/* キャラ1体だけを亜空間に送る（持ち主の次のターンの始めに戻る） */
+function banishUnit(side, u) {
+  const p = S.players[side];
+  const slot = slotLayout(p).findIndex(x => x && !x.void && x.u === u);
+  if (slot < 0) return;
+  p.field = p.field.filter(x => x !== u);
+  (p.voidU || (p.voidU = [])).push({ u, slot });
+  fx(unitSel(u.uid), "亜空間へ", "heal");
+  log(`${cname(u.id)}は亜空間に送られた（次の${pname(side)}のターンに戻る）。`);
+}
 function returnFromVoid(pi) {
   const p = S.players[pi];
   if (!voidOf(p).length) return;
@@ -477,6 +487,7 @@ function unitEffect(pi, e, targets, self) {
       case "silence": silenceUnit(u); break;
       case "bounce": bounce(side, u, "hand"); break;
       case "shuffle": bounce(side, u, "deck"); break;
+      case "banish": banishUnit(side, u); break;
       case "swap": swapStats(u); break;
       case "transform": {
         const t = DEF[e.card], before = cname(u.id);
@@ -949,8 +960,8 @@ function simulate(fn) {
 function effValue(e) {
   const n = Math.abs(e.n || 1), k = e.kind;
   if (k === "unit") {
-    const many = ["enemyAll", "ownAll", "all"].includes(e.to), mine = sideOfTo(e.to) === "own", good = { dmg: !mine, destroy: !mine, freeze: !mine, silence: !mine, bounce: !mine, shuffle: !mine, transform: !mine, steal: true, copy: true, heal: true, grant: true, unfreeze: true, swap: true, atk: (e.n > 0) === mine, hp: (e.n > 0) === mine, both: (e.n > 0) === mine }[e.act];
-    const base = { dmg: n * 0.9, destroy: 3, freeze: 1.2, unfreeze: 0.8, atk: n * 0.9, hp: n * 0.9, both: n * 1.6, heal: n * 0.5, grant: 1.2, silence: 1.5, bounce: 2.5, shuffle: 3, transform: 3, swap: 1, copy: 3, steal: 3.5 }[e.act] || 0.8;
+    const many = ["enemyAll", "ownAll", "all"].includes(e.to), mine = sideOfTo(e.to) === "own", good = { dmg: !mine, destroy: !mine, freeze: !mine, silence: !mine, bounce: !mine, shuffle: !mine, transform: !mine, steal: true, copy: true, heal: true, grant: true, unfreeze: true, swap: true, banish: true, atk: (e.n > 0) === mine, hp: (e.n > 0) === mine, both: (e.n > 0) === mine }[e.act];
+    const base = { dmg: n * 0.9, destroy: 3, freeze: 1.2, unfreeze: 0.8, atk: n * 0.9, hp: n * 0.9, both: n * 1.6, heal: n * 0.5, grant: 1.2, silence: 1.5, bounce: 2.5, shuffle: 3, transform: 3, swap: 1, copy: 3, steal: 3.5, banish: 0.6 }[e.act] || 0.8;
     const v = base * (many ? 1.8 : 1) * (e.to === "all" ? 0.4 : 1);
     return good ? v : -v * 0.6;
   }
@@ -2077,9 +2088,10 @@ function showCpuSelect() {
       <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck.name)}</b></span>
       <button type="button" class="btn sm" data-act="decks">変更</button>
     </div>
-    ${deck.free && Decks.sampleOK() ? `<p class="callout warn"><b>サンプルデッキは CPU戦で使えません</b>サンプルデッキが使えるのは、練習対戦と友達との対戦だけです。「変更」から、自分のカードで組んだデッキを選んでください。</p>` : ""}
-    <div class="lvls ${deck.free && Decks.sampleOK() ? "lvls-off" : ""}">${Object.entries(CPU_LEVELS).map(([k, v]) => `
-      <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}" ${deck.free && Decks.sampleOK() ? "disabled" : ""}>
+    ${deck.free && Decks.sampleOK() && CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝や隠しボスにも数えません（ベータの間だけ CPU戦でも使えます）。</p>` : ""}
+    ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキは CPU戦で使えません</b>サンプルデッキが使えるのは、練習対戦と友達との対戦だけです。「変更」から、自分のカードで組んだデッキを選んでください。</p>` : ""}
+    <div class="lvls ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "lvls-off" : ""}">${Object.entries(CPU_LEVELS).map(([k, v]) => `
+      <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}" ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "disabled" : ""}>
         <span class="lvl-art" ${face(k) ? `style="background-image:url('${esc(face(k))}')"` : ""}></span>
         <span class="lvl-body">
           <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
@@ -2127,7 +2139,7 @@ function startPractice() {
 function startCpuGame(level) {
   const mine = Decks.readyDeck(msg => Decks.showList(msg));
   if (!mine) return;
-  if (mine.sample) { toast("サンプルデッキは CPU戦では使えません（練習対戦と友達との対戦だけ）"); return showCpuSelect(); }
+  if (mine.sample && !CONFIG.SAMPLE_CPU) { toast("サンプルデッキは CPU戦では使えません（練習対戦と友達との対戦だけ）"); return showCpuSelect(); }
   const lv = CPU_LEVELS[level] ? level : "normal";
   if (lv === "hard" && Account.data && Account.data.bossNext && !mine.sample && ["ready", "offline"].includes(Account.status)) return startBossGame(mine);
   const cpu = Decks.randomPreset(lv);

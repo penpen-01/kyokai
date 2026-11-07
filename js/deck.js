@@ -211,7 +211,7 @@ const Decks = {
         ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
-      ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）だけです。CPU戦・世界限定戦では使えません。</p>` : ""}
+      ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）${CONFIG.SAMPLE_CPU ? "。ベータの間は CPU戦でも使えます（Gと連勝・隠しボスはなし）" : "だけです。CPU戦・世界限定戦では使えません"}。</p>` : ""}
       <p class="hint dl-hint">${tab === "world" ? "世界限定戦で使うデッキです。1つの世界を決めて、その世界のカードだけで30枚を組みます。"
         : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです（ベータ限定）。勝ってもGはもらえません。"
         : tab === "cpu" ? "CPU が使っているデッキです。"
