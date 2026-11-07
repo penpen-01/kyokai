@@ -358,7 +358,7 @@ function effOptsHTML(e, i) {
       out.push(`<label class="eff-opt chk"><input type="checkbox" data-eff-turn="${i}" ${e.turn ? "checked" : ""}><span>このターンだけ</span></label>`);
     }
     if (ua.token) out.push(tokSel("card", "変身先", "char", true));
-    if (UTOS[e.to] && UTOS[e.to].world) out.push(sel("world", "世界で絞る", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
+    if (UTOS[e.to] && (UTOS[e.to].world || ["enemy1", "own1", "any1"].includes(e.to))) out.push(sel("world", "世界で絞る", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
     if (ua.signed) out.push(`<span class="hint small">数値を−にすると下げます（例：−2で攻撃力-2）。</span>`);
   } else if (e.kind === "player") {
     out.push(sel("act", "何をする", Object.entries(PACTS), e.act || "draw"));
