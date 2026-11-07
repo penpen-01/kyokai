@@ -414,7 +414,7 @@ function playCard(pi, idx, targetsIn) {
 
 function addUnit(pi, id) {
   const d = DEF[id];
-  const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, ready: d.keywords.includes("haste") && !d.keywords.includes("noattack") };
+  const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, born: S.turnNo, ready: (d.keywords.includes("haste") || d.keywords.includes("rush")) && !d.keywords.includes("noattack") };
   S.players[pi].field.push(u);
   trigUnits(pi, "allyEnter", u);
   return u;
@@ -717,7 +717,7 @@ function grant(u, e) {
   if (e.turn && !(u.kws || []).includes(e.kw)) u.tmpKws = [...new Set([...(u.tmpKws || []), e.kw])];   // このターンだけ：ターンの終わりに消す
   log(`${cname(u.id)}は${KEYWORDS[e.kw].label}を得た。`);
   u.kws = [...new Set([...(u.kws || []), e.kw])];
-  if (e.kw === "haste" && !u.frozen && !kw(u, "noattack") && !u.swings) u.ready = true;
+  if ((e.kw === "haste" || e.kw === "rush") && !u.frozen && !kw(u, "noattack") && !u.swings) u.ready = true;
   if (e.kw === "shield") u.shieldUsed = false;
   if (e.kw === "stealth") u.revealed = false;
   if (e.kw === "noattack") u.ready = false;
@@ -832,7 +832,10 @@ function cleanup() {
 const guards = pi => S.players[pi].field.filter(u => kw(u, "guard") && !hidden(u));
 /* 相手プレイヤーは、相手の場に守護がいなければいつでも攻撃できる（2026-10 ルール変更）。
    直撃を持つキャラは守護を無視できる */
+/* 突進：場に出たターンは、キャラにしか攻撃できない（速攻も持っていれば制限なし） */
+const rushOnly = u => !!(u && kw(u, "rush") && !kw(u, "haste") && u.born === S.turnNo);
 function canAttackPlayer(pi, u) {
+  if (rushOnly(u)) return false;
   if (!guards(opp(pi)).length) return true;
   return !!(u && kw(u, "pierce"));
 }
@@ -1677,7 +1680,7 @@ function dropAction(x, y) {
   }
   if (plEl && +plEl.dataset.player === OP) {
     const u = S.players[ME].field.find(x => x.uid === uid);
-    if (!canAttackPlayer(ME, u)) return () => toast("守護を持つキャラがいるので、相手の本体は攻撃できません");
+    if (!canAttackPlayer(ME, u)) return () => toast(rushOnly(u) ? "突進：場に出たターンは、キャラにしか攻撃できません" : "守護を持つキャラがいるので、相手の本体は攻撃できません");
     return () => doAttack(uid, "player");
   }
   return null;
