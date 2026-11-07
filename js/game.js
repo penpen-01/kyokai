@@ -1960,7 +1960,7 @@ function detailNavHTML(ids, cur, act) {
 }
 function stepId(ids, cur, d) { const i = ids.indexOf(cur); return i < 0 ? cur : ids[(i + d + ids.length) % ids.length]; }
 function showCardList() {
-  const usable = CARDS.filter(c => c.limit > 0);
+  const usable = CARDS.filter(c => c.limit > 0 && cardShown(c));
   const collect = ["ready", "offline"].includes(Account.status);
   const hide = c => collect && Account.owned(c.id) <= 0;
   const ownedN = usable.filter(c => Account.owned(c.id) > 0).length;

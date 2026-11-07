@@ -4,6 +4,15 @@
 
 const WORLDS = { myth: "神話", fan: "幻想", mech: "機械" };
 const TYPES = { char: "キャラクター", spell: "魔法" };
+/* 弾（カードとパックの区分）。第2弾以降は、パック開放戦に勝つまでプレイヤーには見せない */
+const SETS = { 1: "第1弾", 2: "第2弾", 3: "第3弾", 4: "第4弾" };
+function setOpen(n) {
+  if (!n || n <= 1) return true;
+  if (typeof DATA_INFO !== "undefined" && DATA_INFO.draft) return true;   // 試遊中（?draft）はすべて見える
+  return typeof Account !== "undefined" && !!(Account.data && (Account.data.sets || []).includes(n));
+}
+/* プレイヤーに見せてよいカード（開放していない弾のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
+const cardShown = c => !!c && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
 
 /* キャラクターの能力（キーワード） */
 const KEYWORDS = {
@@ -519,6 +528,7 @@ function normalizeData(data) {
     keywords: Array.isArray(c.keywords) ? c.keywords.filter(k => KEYWORDS[k]) : [],
     armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
+    ...(+c.set > 1 ? { set: Math.min(9, Math.round(+c.set)) } : {}),   // 弾（なし＝第1弾）
     // 歯車を使う：数（使ってもよい枚数）か "all"（すべて使う）
     ...(c.gear === "all" ? { gear: "all" } : +c.gear > 0 ? { gear: Math.min(20, Math.round(+c.gear)) } : {}),
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],
@@ -537,7 +547,8 @@ function normalizeData(data) {
       normal: Object.assign({}, DEFAULT_ODDS.normal, (x.odds && x.odds.normal) || {}),
       last: Object.assign({}, DEFAULT_ODDS.last, (x.odds && x.odds.last) || {})
     },
-    open: x.open !== false
+    open: x.open !== false,
+    ...(+x.set > 1 ? { set: Math.min(9, Math.round(+x.set)) } : {})
   }));
   config.SAMPLE_DECKS = config.SAMPLE_DECKS !== false;
   config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";

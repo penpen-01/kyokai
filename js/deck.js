@@ -329,7 +329,7 @@ const Decks = {
   poolCards() {
     const f = this.filter, q = f.q.trim(), ed = this.editing;
     const unb = this.unbound(ed);
-    return CARDS.filter(c => c.limit > 0)
+    return CARDS.filter(c => c.limit > 0 && cardShown(c))
       .filter(c => f.type === "all" || c.type === f.type)
       .filter(c => f.world === "all" || c.world === f.world)
       .filter(c => !this.isWorld(ed) || c.world === ed.world)

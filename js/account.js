@@ -81,6 +81,7 @@ const Account = {
       tickets: Math.max(0, Math.floor(+d.tickets || 0)),
       // SR以上確定パック券（隠しボスの報酬）
       srTickets: Math.max(0, Math.floor(+d.srTickets || 0)),
+      sets: Array.isArray(d.sets) ? d.sets.filter(n => Number.isInteger(n) && n > 1) : [],   // 開放した弾（パック開放戦に勝つと増える）
       // サンプルデッキで友達と対戦した回数（その日の分。日本時間で日付が変わると0に戻る）
       ...(d.sampleDay && /^\d{4}-\d{2}-\d{2}$/.test(d.sampleDay.d) ? { sampleDay: { d: d.sampleDay.d, n: Math.max(0, Math.floor(+d.sampleDay.n || 0)) } } : {}),
       // 隠しボス：最後に会ってから上級で勝った回数（天井用）と、次の上級戦でボスが出るか
@@ -261,7 +262,7 @@ const Account = {
   showIcons(from) {
     if (from) this.iconFrom = from;
     const list = this.iconChoices(), cur = this.icon();
-    const total = CARDS.filter(c => c.type === "char" && c.art && c.limit > 0).length;
+    const total = CARDS.filter(c => c.type === "char" && c.art && c.limit > 0 && cardShown(c)).length;
     const back = this.iconFrom === "options" ? "options" : "optBack";
     openOverlay(`<div class="panel wide">
       <div class="topbar"><button type="button" class="btn sm" data-act="${back}">← 戻る</button><b>アイコン</b></div>
