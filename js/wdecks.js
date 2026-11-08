@@ -7,7 +7,7 @@
    editor.js の DATA / saveDraft / renderStatus、lab.js の Lab を使う
    ========================================================= */
 
-const WD_LEVELS = { easy: "CPU初級", normal: "CPU中級", hard: "CPU上級", boss: "隠しボス", test: "検証用" };
+const WD_LEVELS = { easy: "CPU初級", normal: "CPU中級", hard: "CPU上級", boss: "隠しボス", test: "検証用", gate: "開放戦用" };
 
 const WDecks = {
   id: null,          // 開いているデッキ

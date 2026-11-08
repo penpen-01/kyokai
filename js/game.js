@@ -2224,7 +2224,7 @@ const PRACTICE = { deck: null, level: "normal" };
 function showPractice() {
   if (!Decks.readyDeck(msg => Decks.showList(msg))) return;
   const mine = Decks.mine().filter(d => !Decks.problems(d).length);
-  const cpu = PRESETS.filter(p => p.level !== "test" && !deckProblems(p, DEF, CONFIG).length);
+  const cpu = PRESETS.filter(p => !["test", "gate"].includes(p.level) && !deckProblems(p, DEF, CONFIG).length);
   if (!PRACTICE.deck || ![...mine, ...cpu].some(d => d.id === PRACTICE.deck)) PRACTICE.deck = (mine[0] || cpu[0] || {}).id;
   const row = (d, tag) => { const k = Decks.keyCard(d);
     return `<button type="button" class="pr-deck ${PRACTICE.deck === d.id ? "on" : ""}" data-act="prDeck" data-id="${esc(d.id)}">
@@ -2417,7 +2417,7 @@ function gateOpponent(p) {
   const fixed = PRESETS.find(d => d.id === p.gateDeck);
   if (ok(fixed)) return fixed;
   const pool = PRESETS.filter(d => ok(d) && (gateRule(p) !== GATE_RULES.world || deckWorld(d) === p.gateWorld));
-  return pool.find(d => d.level === "hard") || pool[0] || PRESETS.find(d => ok(d) && d.level === "hard") || null;
+  return pool.find(d => d.level === "gate") || pool.find(d => d.level === "hard") || pool[0] || PRESETS.find(d => ok(d) && d.level === "hard") || null;
 }
 /* 1つめの画面：どのパックの開放戦に挑むか */
 function showGate() {
@@ -2517,7 +2517,7 @@ function showWorldSelect() {
 }
 /* 相手：その強さの CPU 用デッキのうち、1つの世界だけのもの（なければ、ほかの強さから） */
 function worldOpponent(level) {
-  const ok = PRESETS.filter(p => p.level !== "test" && deckWorld(p) && !deckProblems(p, DEF, CONFIG).length);
+  const ok = PRESETS.filter(p => !["test", "gate"].includes(p.level) && deckWorld(p) && !deckProblems(p, DEF, CONFIG).length);
   const at = ok.filter(p => p.level === level);
   const pool = at.length ? at : ok;
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;

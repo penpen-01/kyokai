@@ -578,7 +578,7 @@ function normalizeData(data) {
   })).filter(c => c.id);
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
-    level: ["easy", "normal", "hard", "boss", "test"].includes(x.level) ? x.level : "normal"   // test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用
+    level: ["easy", "normal", "hard", "boss", "test", "gate"].includes(x.level) ? x.level : "normal"   // test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用、gate = パック開放戦の相手（ふだんのCPU戦では使わない）
   }));
   const packs = (Array.isArray(d.packs) ? d.packs : []).filter(x => x && x.id).map(x => ({
     id: String(x.id), name: String(x.name || "パック"), price: Math.max(0, +x.price || 0), size: Math.max(1, Math.min(10, +x.size || 5)),

@@ -1,6 +1,6 @@
 {
- "version": 78,
- "updated": "2026-11-08",
+ "version": 79,
+ "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -260,7 +260,8 @@
    "set": "2-1",
    "gateRule": "world",
    "gateWorld": "mech",
-   "gateLevel": "hard"
+   "gateLevel": "hard",
+   "gateDeck": "gate-mech"
   },
   {
    "id": "pack2-2",
@@ -334,7 +335,8 @@
    "set": "2-2",
    "gateRule": "world",
    "gateWorld": "myth",
-   "gateLevel": "hard"
+   "gateLevel": "hard",
+   "gateDeck": "gate-myth"
   },
   {
    "id": "pack2-3",
@@ -408,7 +410,8 @@
    "set": "2-3",
    "gateRule": "world",
    "gateWorld": "fan",
-   "gateLevel": "hard"
+   "gateLevel": "hard",
+   "gateDeck": "gate-fan"
   }
  ],
  "decks": [
@@ -696,6 +699,91 @@
     "f-thief": 1
    },
    "level": "boss"
+  },
+  {
+   "id": "gate-mech",
+   "name": "開放戦 機械（仮）",
+   "cards": {
+    "m2-gearsmith": 1,
+    "m2-box": 1,
+    "m2-alarm": 2,
+    "m2-shorten": 1,
+    "m2-furnace": 2,
+    "m2-transfer": 1,
+    "m2-patch": 2,
+    "m2-welder": 2,
+    "m2-laser": 1,
+    "m2-net": 2,
+    "m2-capsule": 1,
+    "m2-zenmai": 1,
+    "m2-jumper2": 3,
+    "m2-automaton": 1,
+    "m2-hacker": 1,
+    "n-workbot": 1,
+    "m2-exo": 1,
+    "x-executor": 2,
+    "omega": 1,
+    "m2-dozer": 1,
+    "sentinel": 1,
+    "n-massprod": 1
+   },
+   "level": "gate"
+  },
+  {
+   "id": "gate-myth",
+   "name": "開放戦 神話（仮）",
+   "cards": {
+    "y2-angel": 2,
+    "y2-gale": 1,
+    "y2-egg": 1,
+    "y2-dragoon": 2,
+    "y2-whelp": 2,
+    "y2-disciple": 2,
+    "y2-feather": 2,
+    "y2-roar": 2,
+    "y2-lightshield": 1,
+    "y2-healer": 2,
+    "y2-scale": 2,
+    "y2-hoard": 1,
+    "y2-prayer": 1,
+    "y2-twinblade": 2,
+    "y2-kensei": 1,
+    "n-skypaladin": 1,
+    "y2-dragonking": 1,
+    "y2-archangel": 1,
+    "y2-feast": 1,
+    "y2-dragonknight": 1,
+    "y2-lightwing": 1
+   },
+   "level": "gate"
+  },
+  {
+   "id": "gate-fan",
+   "name": "開放戦 幻想（仮）",
+   "cards": {
+    "f2-kit": 1,
+    "f2-moonwalk": 1,
+    "f2-squirrel": 2,
+    "f2-sleepgrass": 1,
+    "f2-rebloom": 1,
+    "f2-sake": 1,
+    "f2-tanuki": 2,
+    "f2-lantern": 3,
+    "f2-oni": 2,
+    "f2-pebble": 1,
+    "f2-homeward": 2,
+    "f2-herbgirl": 1,
+    "f2-broom": 2,
+    "f2-bell": 3,
+    "f2-thorn": 1,
+    "f2-dancer": 1,
+    "f-healer": 1,
+    "f-abyss": 1,
+    "f2-storyteller": 1,
+    "n-fairyking": 1,
+    "f-whisper": 1
+   },
+   "level": "gate"
   }
  ],
  "serials": [

@@ -111,7 +111,7 @@ const Decks = {
     return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}) };
   },
   randomPreset(level) {
-    const ok0 = PRESETS.filter(p => p.level !== "test" && deckProblems(p, DEF, CONFIG).length === 0);
+    const ok0 = PRESETS.filter(p => !["test", "gate"].includes(p.level) && deckProblems(p, DEF, CONFIG).length === 0);
     let ok = ok0.filter(p => !level || p.level === level);
     if (!ok.length) ok = ok0;
     return ok.length ? ok[Math.floor(Math.random() * ok.length)] : null;
@@ -247,7 +247,7 @@ const Decks = {
     openOverlay(`<div class="panel wide">
       ${this.topbar("用意されたデッキから作る", "decks")}
       <p class="lead small">CPUが使っているデッキをコピーして、サンプルデッキとして編集できます。</p>
-      <ul class="dlist">${PRESETS.filter(d => d.level !== "test").map(d => `<li class="drow"><span class="drow-main"><b>${esc(d.name)}</b><span class="hint">${{ easy: "初級", normal: "中級", hard: "上級" }[d.level] || ""}CPU用 ・ ${deckCount(d)}枚</span></span>
+      <ul class="dlist">${PRESETS.filter(d => !["test", "gate"].includes(d.level)).map(d => `<li class="drow"><span class="drow-main"><b>${esc(d.name)}</b><span class="hint">${{ easy: "初級", normal: "中級", hard: "上級" }[d.level] || ""}CPU用 ・ ${deckCount(d)}枚</span></span>
         <div class="drow-acts"><button type="button" class="btn sm" data-act="deckFromPreset" data-id="${esc(d.id)}">コピーして編集</button></div></li>`).join("")}</ul>
     </div>`, "start", true);
   },
