@@ -1,5 +1,5 @@
 {
- "version": 76,
+ "version": 77,
  "updated": "2026-11-08",
  "config": {
   "PLAYER_HP": 20,
@@ -334,6 +334,80 @@
    "set": "2-2",
    "gateRule": "world",
    "gateWorld": "myth",
+   "gateLevel": "hard"
+  },
+  {
+   "id": "pack2-3",
+   "name": "第2弾-3 幻想（仮）",
+   "price": 200,
+   "size": 4,
+   "cards": [
+    "f2-kit",
+    "f2-susuki",
+    "f2-tanuki",
+    "f2-lantern",
+    "f2-oni",
+    "f2-pebble",
+    "f2-moonwalk",
+    "f2-squirrel",
+    "f2-homeward",
+    "f2-herbgirl",
+    "f2-sleepgrass",
+    "f2-broom",
+    "f2-bell",
+    "f2-thorn",
+    "f2-blackcat",
+    "f2-crystal",
+    "f2-serpent",
+    "f2-ringfairy",
+    "f2-bakefox",
+    "f2-dancer",
+    "f2-kamikakushi",
+    "f2-rebloom",
+    "f2-windfairy",
+    "f2-imp",
+    "f2-mouthwitch",
+    "f2-cycle",
+    "f2-icequeen",
+    "f2-frogcurse",
+    "f2-candyhouse",
+    "f2-sapling",
+    "f2-sake",
+    "f2-kohaku",
+    "f2-silentnight",
+    "f2-mirror",
+    "f2-nightmare",
+    "f2-karla",
+    "f2-wolf",
+    "f2-chorus",
+    "f2-wisp",
+    "f2-storyteller",
+    "f2-moonwitch",
+    "f2-sleepcastle",
+    "f2-curtain",
+    "f2-tamamo",
+    "f2-walpurgis"
+   ],
+   "odds": {
+    "normal": {
+     "common": 70,
+     "rare": 22,
+     "sr": 6.4,
+     "ur": 1.5,
+     "legend": 0.1
+    },
+    "last": {
+     "common": 0,
+     "rare": 70,
+     "sr": 23,
+     "ur": 6,
+     "legend": 1
+    }
+   },
+   "open": false,
+   "set": "2-3",
+   "gateRule": "world",
+   "gateWorld": "fan",
    "gateLevel": "hard"
   }
  ],
@@ -6069,6 +6143,1229 @@
    "set": "2-2",
    "artNote": "レジェンドのキャラクター。今の絵の雰囲気（紫の雲、黒い竜、赤く光る体の筋、地上の小さな敵の影）は残す。 場面：空を覆うほど巨大な黒い竜が、太陽に食らいついている瞬間。太陽の半分はすでに竜の口の中に入り、上下の牙が太陽にはっきり食い込んでいる。噛まれた太陽の縁は欠けて、牙のすき間から金色の光と炎が噴き出す。日食のように空が暗くなり、太陽の光の輪（コロナ）が竜の頭の後ろで大きく広がる。 見やすさ：竜の体の輪郭は、太陽の光で金色の縁取り（逆光のふち）をつけて、暗い背景からはっきり浮かび上がらせる。体の赤い光の筋も明るく。空は真っ黒にせず、深い紫と赤い夕焼け色のグラデーション。 地上：画面の下の端に、竜の影に入って光が消えていく天使と機械の兵の小さなシルエット。 構図：下から見上げる大きなあおり。竜の頭と太陽が画面の上半分の主役。竜の体は画面からはみ出すほど大きく。",
    "art": "art/y2-worldeater-a4c8a510ff.webp"
+  },
+  {
+   "id": "tk-foxfire",
+   "name": "狐火",
+   "world": "fan",
+   "type": "spell",
+   "cost": 0,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRandF",
+     "n": 1
+    }
+   ],
+   "token": true,
+   "artNote": "夜の闇に浮かぶ、青白い炎の玉。中にうっすら狐の顔の形が見える。ふわふわと揺れている。背景は暗い竹林"
+  },
+  {
+   "id": "tk-leaf",
+   "name": "化け葉",
+   "world": "fan",
+   "type": "spell",
+   "cost": 0,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "own1",
+     "n": 0,
+     "kw": "pierce",
+     "turn": true,
+     "world": "fan"
+    },
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "own1",
+     "n": 1,
+     "world": "fan"
+    }
+   ],
+   "token": true,
+   "artNote": "狐が頭に乗せて化けるための、一枚の緑の木の葉。葉のまわりで白い煙がぽんと立つ"
+  },
+  {
+   "id": "tk-frog",
+   "name": "カエル",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "token": true,
+   "artNote": "魔女の呪いでカエルにされた、小さな王冠をかぶった緑のカエル。困った顔で蓮の葉の上に座っている"
+  },
+  {
+   "id": "f2-kit",
+   "name": "狐の子",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-foxfire"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "ふさふさの尻尾の子狐が、前足の上に小さな青い狐火を浮かべて遊んでいる。夜の竹やぶ"
+  },
+  {
+   "id": "f2-susuki",
+   "name": "すすき野の狐",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "shrink": {
+    "n": 1,
+    "world": "fan"
+   },
+   "set": "2-3",
+   "artNote": "月夜のすすきの原で、大きな赤茶色の狐が振り返る。すすきの穂の間に小さな狐火がいくつも灯る"
+  },
+  {
+   "id": "f2-tanuki",
+   "name": "化け狸",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-leaf"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "頭に葉っぱを乗せた丸っこい狸が、ぽんと煙を立てて、お地蔵さんの姿に化けかけている（下半分はまだ狸）"
+  },
+  {
+   "id": "f2-lantern",
+   "name": "狐の提灯",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 2,
+     "card": "tk-foxfire"
+    }
+   ],
+   "shrink": {
+    "n": 1,
+    "world": "fan"
+   },
+   "set": "2-3",
+   "artNote": "狐の顔が描かれた古い紙の提灯が、ひとりでに浮かんで夜道を照らす。提灯の口から狐火がこぼれる"
+  },
+  {
+   "id": "f2-oni",
+   "name": "育ち盛りの小鬼",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "grow": {
+    "n": 1,
+    "world": "fan",
+    "stat": true
+   },
+   "set": "2-3",
+   "artNote": "頭に小さな角が一本の、いがぐり頭の小鬼。自分より大きな金棒を引きずりながら、得意げに胸を張る"
+  },
+  {
+   "id": "f2-pebble",
+   "name": "木霊の礫",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemy1",
+     "n": 3
+    }
+   ],
+   "grow": {
+    "n": 1,
+    "world": "fan",
+    "dmg": true
+   },
+   "set": "2-3",
+   "artNote": "森の木霊（白くて小さな丸い精）たちが、いっせいに小石を投げつける。小石が光の尾を引く"
+  },
+  {
+   "id": "f2-moonwalk",
+   "name": "月夜の散歩",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "own1",
+     "n": 0,
+     "world": "fan"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "満月の下、妖精が森の動物たちを連れて、光る花の咲く小道を散歩する"
+  },
+  {
+   "id": "f2-squirrel",
+   "name": "どんぐりリス",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1,
+     "when": "back"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "ほっぺをどんぐりでぱんぱんにしたリスが、木のうろの家に駆け込む"
+  },
+  {
+   "id": "f2-homeward",
+   "name": "帰り道の妖精",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "own1",
+     "n": 0,
+     "world": "fan"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 2
+    }
+   ],
+   "set": "2-3",
+   "artNote": "ランタンを持った小さな妖精が、迷子の子うさぎの手を引いて、光る小道を家へ帰っていく"
+  },
+  {
+   "id": "f2-herbgirl",
+   "name": "薬草つみの娘",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 2
+    }
+   ],
+   "set": "2-3",
+   "artNote": "かごいっぱいに薬草をつんだ、三つ編みの村の娘。森の小川のほとりでしゃがんで、光る草をつむ"
+  },
+  {
+   "id": "f2-sleepgrass",
+   "name": "ねむり草",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemy1",
+     "n": 1
+    }
+   ],
+   "set": "2-3",
+   "artNote": "青紫の小さな花から、きらきらした眠りの粉が舞い、神話の世界の大きな獅子がこっくりと眠り込む"
+  },
+  {
+   "id": "f2-broom",
+   "name": "箒の配達人",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1
+    }
+   ],
+   "set": "2-3",
+   "artNote": "箒にまたがった少女の魔女が、手紙の束を抱えて月夜の町の屋根の上を飛ぶ"
+  },
+  {
+   "id": "f2-bell",
+   "name": "静けさの鈴",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "silence",
+     "to": "enemyRand",
+     "n": 0
+    }
+   ],
+   "set": "2-3",
+   "artNote": "小さな銀の鈴が澄んだ音を立て、音の波紋に触れた神話の兵士の剣から光が消える"
+  },
+  {
+   "id": "f2-thorn",
+   "name": "茨の罠",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemy1",
+     "n": 2
+    },
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemy1",
+     "n": 1,
+     "cond": "playedGE",
+     "cn": 1
+    }
+   ],
+   "set": "2-3",
+   "artNote": "地面から一気に伸びた紫の茨が、機械の兵の足に巻きつく"
+  },
+  {
+   "id": "f2-blackcat",
+   "name": "黒猫の使い魔",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "stealth"
+   ],
+   "effects": [],
+   "set": "2-3",
+   "artNote": "魔女の使い魔の黒猫が、塀の上から金色の目で見下ろす。首に小さな鈴。夜の路地"
+  },
+  {
+   "id": "f2-crystal",
+   "name": "のぞき見の水晶玉",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "peekDiscard",
+     "n": 1
+    }
+   ],
+   "set": "2-3",
+   "artNote": "紫の布をかけた机の上の水晶玉に、相手の手札のカードがぼんやり映る。のぞき込む魔女の目"
+  },
+  {
+   "id": "f2-serpent",
+   "name": "霧の大蛇",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 4,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [],
+   "set": "2-3",
+   "artNote": "濃い霧の中から、白い大蛇が大口を開けて飛びかかる。金色の目が光る"
+  },
+  {
+   "id": "f2-ringfairy",
+   "name": "輪舞の妖精",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "both",
+     "to": "self",
+     "n": 2,
+     "cond": "playedGE",
+     "cn": 2
+    }
+   ],
+   "set": "2-3",
+   "artNote": "きのこの輪の上で、小さな妖精たちが手をつないで輪になって踊る。真ん中の妖精がひときわ明るく光る"
+  },
+  {
+   "id": "f2-bakefox",
+   "name": "化け狐",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-leaf"
+    },
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-foxfire"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "着物姿の娘に化けた狐。足元の影だけが狐の形で、片手に木の葉、片手に狐火"
+  },
+  {
+   "id": "f2-dancer",
+   "name": "狐の舞い手",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-foxfire"
+    }
+   ],
+   "shrink": {
+    "n": 1,
+    "world": "fan"
+   },
+   "set": "2-3",
+   "artNote": "狐の面をつけた舞い手が、扇を広げて舞台から飛び降り、目の前の敵に斬りかかる。夜祭りの舞台"
+  },
+  {
+   "id": "f2-kamikakushi",
+   "name": "神隠し",
+   "world": "fan",
+   "type": "spell",
+   "cost": 8,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "enemy1",
+     "n": 0
+    }
+   ],
+   "shrink": {
+    "n": 1,
+    "world": "fan"
+   },
+   "set": "2-3",
+   "artNote": "夕暮れの鳥居の向こうに、神話の世界の兵士が狐火に導かれて消えていく。鳥居の上に狐の影"
+  },
+  {
+   "id": "f2-rebloom",
+   "name": "還り咲き",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "own1",
+     "n": 0,
+     "world": "fan"
+    },
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "anyRand",
+     "n": 2
+    }
+   ],
+   "set": "2-3",
+   "artNote": "枯れかけた花が光の粒になって種に戻り、はじけた花びらが刃になって四方へ飛ぶ"
+  },
+  {
+   "id": "f2-windfairy",
+   "name": "風の妖精",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRand",
+     "n": 1
+    },
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "self",
+     "n": 0,
+     "when": "turnEnd"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "緑の風に乗って飛ぶ、木の葉の羽の妖精。くるりと宙返りして、元来た森へ帰っていく"
+  },
+  {
+   "id": "f2-imp",
+   "name": "いたずら小鬼",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRand",
+     "n": 2,
+     "when": "back"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "とんがり耳の小鬼が、にやにや笑いながら木の上から栗のいがを投げる"
+  },
+  {
+   "id": "f2-mouthwitch",
+   "name": "口封じの魔女",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "silence",
+     "to": "enemy1",
+     "n": 0
+    }
+   ],
+   "set": "2-3",
+   "artNote": "唇に人差し指を当てた、銀の髪の魔女。指先から出た紫の糸が、機械の兵の口と目を縫いとめる"
+  },
+  {
+   "id": "f2-cycle",
+   "name": "森の循環",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "recycle",
+     "n": 3,
+     "world": "fan"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 3,
+     "cond": "recycled"
+    },
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 1,
+     "cond": "recycled"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "落ち葉が土に還り、そこから新しい芽が光りながら顔を出す。森の小さな生き物たちが見守る"
+  },
+  {
+   "id": "f2-icequeen",
+   "name": "眠りの魔女",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 10,
+   "hp": 10,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemy1",
+     "n": 1
+    },
+    {
+     "kind": "wakeTimer",
+     "n": 5
+    }
+   ],
+   "set": "2-3",
+   "artNote": "巨大な白い花のつぼみの中で、膝を抱えて眠る大きな魔女。まわりの空気が凍って霜の花が咲き、近づいた敵の兵士まで眠り込んでいる。つぼみが少しだけ開きかけている"
+  },
+  {
+   "id": "f2-frogcurse",
+   "name": "カエルの呪い",
+   "world": "fan",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "transform",
+     "to": "enemy1",
+     "n": 0,
+     "card": "tk-frog"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "魔女の杖から緑の光がほとばしり、神話の世界の鎧の騎士が、ぽんっとカエルに変わる瞬間。兜だけが地面に落ちる"
+  },
+  {
+   "id": "f2-candyhouse",
+   "name": "お菓子の家",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 0,
+   "hp": 6,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard",
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "act": "draw",
+     "who": "self",
+     "n": 2,
+     "when": "death"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "森の中のクッキーとキャンディでできた小さな家。屋根の上から魔女の黒猫がのぞく"
+  },
+  {
+   "id": "f2-sapling",
+   "name": "樹海の若木",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "grow": {
+    "n": 1,
+    "world": "fan",
+    "stat": true
+   },
+   "set": "2-3",
+   "artNote": "苔むした森の中、光を浴びてぐんぐん伸びる若木の精。幹に優しい顔、枝を腕のように広げて仲間をかばう"
+  },
+  {
+   "id": "f2-sake",
+   "name": "狐の祝い酒",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "own1",
+     "n": 1,
+     "world": "fan",
+     "turn": true
+    }
+   ],
+   "grow": {
+    "n": 1,
+    "world": "fan",
+    "num": true
+   },
+   "set": "2-3",
+   "artNote": "朱塗りの杯になみなみと注がれた、金色に光る狐の祝い酒。杯を掲げる狐の手"
+  },
+  {
+   "id": "f2-kohaku",
+   "name": "妖狐の姫コハク",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "stealth"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyRandF",
+     "n": 2,
+     "when": "attack"
+    }
+   ],
+   "shrink": {
+    "n": 1,
+    "world": "fan"
+   },
+   "set": "2-3",
+   "artNote": "白い着物に赤い帯、狐の耳と三本の尾を持つ姫。扇を広げると、まわりに狐火が三つ浮かぶ。夜の朱塗りの鳥居"
+  },
+  {
+   "id": "f2-silentnight",
+   "name": "静寂の夜",
+   "world": "fan",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "silence",
+     "to": "all",
+     "n": 0
+    },
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemyAll",
+     "n": 1
+    }
+   ],
+   "set": "2-3",
+   "artNote": "満月の夜、森全体が青い静けさに包まれ、敵も味方も、天使の光も機械の目の光も、すべてふっと消えて眠りにつく"
+  },
+  {
+   "id": "f2-mirror",
+   "name": "鏡写しの魔法",
+   "world": "fan",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "copy",
+     "to": "own1",
+     "n": 0,
+     "world": "fan"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "古い姿見の鏡の中から、映っていた妖精がもう一人そっくりそのまま抜け出してくる"
+  },
+  {
+   "id": "f2-nightmare",
+   "name": "月影の夢魔",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "stealth"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "enemyRand",
+     "n": 0,
+     "when": "back"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "月の影から現れた、羊の角と蝙蝠の羽の夢魔の少女。眠る兵士の枕元で、夢の泡をふっと吹く"
+  },
+  {
+   "id": "f2-karla",
+   "name": "黒き森の魔女カーラ",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "transform",
+     "to": "enemyRand",
+     "n": 0,
+     "card": "tk-frog"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "黒い森の奥、ねじれた杖を持つ長い黒髪の魔女。足元に何匹ものカエルが並び、魔女は不敵に笑う"
+  },
+  {
+   "id": "f2-wolf",
+   "name": "森の賢狼",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 5,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "own1",
+     "n": 0,
+     "world": "fan"
+    },
+    {
+     "kind": "unit",
+     "act": "atk",
+     "to": "self",
+     "n": 2,
+     "cond": "bounced"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "銀の毛並みの大きな狼が遠吠えすると、森の仲間たちが光になって森の奥へ帰り、狼の体に力がみなぎる"
+  },
+  {
+   "id": "f2-chorus",
+   "name": "妖精の大合唱",
+   "world": "fan",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "both",
+     "to": "ownAll",
+     "n": 1,
+     "world": "fan"
+    },
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemyAll",
+     "n": 1,
+     "cond": "playedGE",
+     "cn": 3
+    }
+   ],
+   "set": "2-3",
+   "artNote": "満月の森で、何十もの妖精が輪になって歌う。歌声が光の波になって森じゅうに広がる"
+  },
+  {
+   "id": "f2-wisp",
+   "name": "鬼火の大玉",
+   "world": "fan",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyAll",
+     "n": 3
+    }
+   ],
+   "grow": {
+    "n": 1,
+    "world": "fan",
+    "dmg": true
+   },
+   "set": "2-3",
+   "artNote": "青白い鬼火が何十も集まって一つの巨大な炎の玉になり、敵の陣地の真ん中へ落ちて広がる"
+  },
+  {
+   "id": "f2-storyteller",
+   "name": "千夜の語り部",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 6,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 10,
+     "world": "fan",
+     "ctype": "spell",
+     "when": "turnEnd"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "ランプの灯る天幕の中、語り部の女性が本を開くと、ページから物語の竜や妖精や魔女が光になって飛び出す"
+  },
+  {
+   "id": "f2-moonwitch",
+   "name": "月夜の大魔女",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "transform",
+     "to": "anyRand",
+     "n": 0,
+     "card": "tk-youngdragon"
+    },
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemyRand",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "満月を背に、大釜の上に浮かぶ銀髪の大魔女。釜の煙の中に別の世界への裂け目が開き、敵の兵士が赤銅色の若い竜の姿に変わっていく"
+  },
+  {
+   "id": "f2-sleepcastle",
+   "name": "茨の城の眠り姫",
+   "world": "fan",
+   "type": "char",
+   "cost": 7,
+   "atk": 3,
+   "hp": 8,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "guard",
+    "poison"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "freeze",
+     "to": "enemyAll",
+     "n": 1,
+     "cond": "playedGE",
+     "cn": 2
+    }
+   ],
+   "set": "2-3",
+   "artNote": "茨に覆われた古城の塔の上、眠る姫のまわりから茨が一斉に伸び、攻め寄せた機械と神話の兵をすべて絡め取る"
+  },
+  {
+   "id": "f2-curtain",
+   "name": "おとぎ話の幕引き",
+   "world": "fan",
+   "type": "spell",
+   "cost": 9,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "bounce",
+     "to": "enemyAll",
+     "n": 0
+    }
+   ],
+   "req": {
+    "n": 2,
+    "world": "fan",
+    "orEmpty": true
+   },
+   "set": "2-3",
+   "artNote": "巨大な絵本のページが閉じていき、ページの上にいた敵の軍勢が、物語ごと本の中に吸い込まれていく。夜の森の舞台"
+  },
+  {
+   "id": "f2-tamamo",
+   "name": "白面九尾タマモ",
+   "world": "fan",
+   "type": "char",
+   "cost": 10,
+   "atk": 7,
+   "hp": 7,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "stealth"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "dmg",
+     "to": "enemyAll",
+     "n": 1,
+     "per": "played"
+    },
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-foxfire",
+     "when": "turnEnd"
+    }
+   ],
+   "shrink": {
+    "n": 1,
+    "world": "fan"
+   },
+   "set": "2-3",
+   "artNote": "白い毛並みに九本の尾を広げた巨大な妖狐。九本の尾の先すべてに狐火が燃え、夜空を覆う。足元に朱塗りの神社"
+  },
+  {
+   "id": "f2-walpurgis",
+   "name": "夜会の大魔女ヴァルプルギス",
+   "world": "fan",
+   "type": "char",
+   "cost": 8,
+   "atk": 6,
+   "hp": 7,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "act": "transform",
+     "to": "enemyRand",
+     "n": 0,
+     "card": "tk-frog"
+    },
+    {
+     "kind": "unit",
+     "act": "transform",
+     "to": "enemyRand",
+     "n": 0,
+     "card": "tk-frog"
+    },
+    {
+     "kind": "peekDiscard",
+     "n": 1,
+     "when": "turnEnd"
+    }
+   ],
+   "set": "2-3",
+   "artNote": "満月の夜、山頂の大夜会。巨大な魔法陣の中心に立つ大魔女が両手を広げ、無数の魔女たちが箒で空を舞う。大魔女の髪は紫の炎のように揺れる"
   }
  ]
 }
