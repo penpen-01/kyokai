@@ -211,6 +211,7 @@ function startTurn(pi, skipDraw) {
   p.field.forEach(u => { u.swings = 0; u.thawed = false; if (u.frozen) { u.ready = false; u.frozen = false; u.thawed = true; } else u.ready = !kw(u, "noattack"); });
   // 特殊勝利：場にいるまま、自分のターンの始めを決めた回数むかえると勝ち
   for (const u of p.field) {
+    if (u.wakeIn != null && !u.silenced) { u.wakeIn--; if (u.wakeIn <= 0) { u.wakeIn = null; silenceUnit(u); if (!u.thawed) u.ready = true; log(`${cname(u.id)}が目覚めた（沈黙して不動が解けた）。このターンから攻撃できる。`); } else fx(unitSel(u.uid), `目覚めまで${u.wakeIn}`, "trig"); }
     if (u.winIn == null || u.silenced) continue;
     u.winIn--;
     if (u.winIn <= 0) { log(`${cname(u.id)}の力で、${pname(pi)}の勝利！`); S.specialWin = pi; break; }
@@ -243,6 +244,7 @@ function endTurn(pi) {
     p.field.forEach(u => {
       if (u.tmpKws) { u.kws = (u.kws || []).filter(k => !u.tmpKws.includes(k)); delete u.tmpKws; }
       if (u.tmpArmor) { u.armorPlus = Math.max(0, (u.armorPlus || 0) - u.tmpArmor); delete u.tmpArmor; }
+      if (u.tmpAtk) { u.atk = Math.max(0, u.atk - u.tmpAtk); delete u.tmpAtk; }   // このターンだけの攻撃力
     });
   });
   startTurn(opp(pi), false);
@@ -429,7 +431,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   S.gearSpent = spend;
   S.dmgBonus = grow && d.grow.dmg ? grow : 0;
   S.numBonus = grow && d.grow.num ? grow : 0;
-  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; }
+  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
   if (d.type === "spell") trigUnits(pi, "spell");
   trigUnits(pi, "cardPlay", self, { card: id });
   // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
@@ -466,6 +468,7 @@ function condOK(pi, e, self) {
     case "handGE": return p.hand.length >= e.cn;
     case "maxEGE": return p.maxE >= e.cn;
     case "gearPaid": return (S.gearSpent || 0) > 0;
+    case "recycled": return (S.recycled || 0) > 0;
     case "gearNone": return !(S.gearSpent > 0);
   }
   return true;
@@ -484,6 +487,8 @@ function unitTargets(pi, e, targets, self) {
     case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }
     case "enemyF": { if (targets.enemyF === "face") return ["face"]; const u = en.field.find(x => x.uid === targets.enemyF); return u ? [u] : []; }
     case "enemyRand": return rnd(en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)));
+    case "enemyRandF": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)), "face"]);
+    case "anyRand": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x)), ...me.field.filter(x => x.hp > 0 && x !== self)].filter(wf));
     case "ownRand": return rnd(me.field.filter(x => x.hp > 0 && x !== self && wf(x)));
     case "enemyAll": return en.field.filter(wf);
     case "ownAll": return me.field.filter(wf);
@@ -504,7 +509,7 @@ function unitEffect(pi, e, targets, self) {
     }
     const side = sideOf(u); if (side < 0) return;
     switch (e.act) {
-      case "dmg": if (e.to === "enemyRand") log(`${cname(u.id)}に${n}ダメージ。`); hitUnit(u, n); break;
+      case "dmg": if (e.to === "enemyRand" || e.to === "enemyRandF") log(`${cname(u.id)}に${n}ダメージ。`); hitUnit(u, n); break;
       case "destroy": destroyUnit(u); break;
       case "freeze": freezeUnit(u); break;
       case "unfreeze": {
@@ -516,7 +521,7 @@ function unitEffect(pi, e, targets, self) {
         if (n > 0) buff(u, n, 0);   // 解除できたキャラだけ攻撃力を上げる
         break;
       }
-      case "atk": if (n >= 0) buff(u, n, 0); else debuff(u, -n); break;
+      case "atk": if (n >= 0) { buff(u, n, 0); if (e.turn) u.tmpAtk = (u.tmpAtk || 0) + n; } else debuff(u, -n); break;
       case "hp": if (n >= 0) buff(u, 0, n); else shrinkHp(u, -n); break;
       case "both": if (n >= 0) buff(u, n, n); else { debuff(u, -n); shrinkHp(u, -n); } break;
       case "heal": { const h = Math.min(n, u.maxHp - u.hp); if (h > 0) { u.hp += h; fx(unitSel(u.uid), "+" + h, "heal"); } break; }
@@ -600,6 +605,7 @@ function discardRandom(q, pi) {
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
   if (e.per === "gear") { const k = S.gearSpent || 0; if (!k) return; e = { ...e, n: e.n * k }; }
+  if (e.per === "played") { const k = Math.max(0, (S.players[pi].played || 0) - 1); if (!k) return; e = { ...e, n: e.n * k }; }
   if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気（ダメージ）
   else if (S.numBonus && e.n > 0 && e.act !== "dmg" && !["costDown", "winTimer", "merge", "tutor"].includes(e.kind)) e = { ...e, n: e.n + S.numBonus };   // 妖気（そのほかの数）
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
@@ -678,6 +684,26 @@ function effect(pi, e, targets, self) {
       me.hand.forEach((id, i) => { const c = DEF[id]; if (c && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype)) { arr[i] = (arr[i] || 0) + n; k++; } });
       log(k ? `${pname(pi)}の手札の${e.world ? WORLDS[e.world] + "の" : ""}${e.ctype === "char" ? "キャラ" : e.ctype === "spell" ? "魔法" : "カード"}${k}枚のコストが${n}下がった${e.dur === "game" ? "" : "（このターン）"}。` : "コストが下がるカードが手札になかった。");
       if (k) fx(playerSel(pi), `コスト-${n}`, "heal");
+      break;
+    }
+    case "wakeTimer": if (self && self.hp > 0) { self.wakeIn = n; fx(unitSel(self.uid), `目覚めまで${n}`, "trig"); } break;
+    case "recycle": {
+      const g = me.grave || [];
+      const pick = g.filter(id => DEF[id] && !DEF[id].token && (!e.world || DEF[id].world === e.world)).slice(-n);
+      pick.forEach(id => { g.splice(g.lastIndexOf(id), 1); me.deck.splice(Math.floor(Math.random() * (me.deck.length + 1)), 0, id); });
+      S.recycled = pick.length;
+      log(pick.length ? `倒された${pick.map(cname).join("・")}を山札に混ぜた。` : "山札に戻せるキャラがいなかった。");
+      break;
+    }
+    case "peekDiscard": {
+      const q = opp(pi), h = S.players[q].hand;
+      if (!h.length) { log(`${pname(q)}の手札は0枚だった。`); break; }
+      log(`${pname(q)}の手札：${h.map(cname).join("・")}`);
+      const top = Math.max(...h.map(id => (DEF[id] ? DEF[id].cost : 0)));
+      const cands = h.map((id, i) => i).filter(i => (DEF[h[i]] ? DEF[h[i]].cost : 0) === top);
+      const i = cands[Math.floor(Math.random() * cands.length)];
+      if (h[i] === GEAR_ID) { spendGears(S.players[q], 1); log(`${pname(q)}は歯車を1枚捨てさせられた。`); break; }
+      const id = handTake(S.players[q], i); log(`${pname(q)}は${cname(id)}を捨てさせられた。`);
       break;
     }
     case "winTimer": if (self && self.hp > 0) { self.winIn = n; log(`${cname(self.id)}：あと${n}回、自分のターンの始めをむかえると勝利。`); fx(unitSel(self.uid), `勝利まで${n}`, "trig"); } break;
