@@ -155,3 +155,4 @@
 - 次：幻想のイラスト（依頼文 https://claude.ai/artifact/KqnGC47H2eQU4TzxCnGwmf 、入れるのは `python3 scratchpad/fan2art/put.py <グループ> 画像…`、並びは scratchpad/fan2art/order.json）→ 3パックそろったので全体の強さ調整 → 開放戦の相手デッキと世界だけの CPU デッキ → パック名。
 - カード工房に、化かし・妖気・使える条件を設定する画面がまだない（書き出しでは消えない）。
 - 気になる強さ：ヴァルプルギス（毎ターン捨てさせ）、茨の城の眠り姫、コハク。
+- 全カード調整（11-09 朝）：CPU中級3000試合（scratchpad/bal/allsim.js → bal.json）。世界ごと：神話59%・幻想49%・機械44%。調整案17枚 https://claude.ai/artifact/3tzAv6tzH1CBXxrTqFs5wN （オーナーの返事待ち）。工房に化かし・妖気・使える条件・歯車の設定を追加、工房の一覧の光を止めて軽くした（重さの原因はUR・レジェンドの光のアニメ107個）。
