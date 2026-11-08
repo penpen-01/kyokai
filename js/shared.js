@@ -239,7 +239,8 @@ const WHENS = {
   face:      { label: "相手プレイヤーにダメージを与えたとき", head: "このキャラが相手プレイヤーにダメージを与えたとき" },
   drawn:     { label: "自分がカードを引いたとき",     head: "自分がカードを引いたとき" },
   healed:    { label: "自分の体力が回復したとき",     head: "自分の体力が回復したとき" },
-  voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" }
+  voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" },
+  back:      { label: "場から手札に戻ったとき",       head: "場から手札に戻ったとき" }
 };
 /* 効果ごとの条件（effect.cond）。満たしていないとその効果は発動しない。cn＝数値、cworld＝世界 */
 const CONDS = {
@@ -400,6 +401,7 @@ function cardTextLines(card) {
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
+  if (card.shrink) lines.push(`手札にある間、自分が${card.shrink.world ? WORLDS[card.shrink.world] + "の" : ""}${card.shrink.ctype === "spell" ? "魔法" : card.shrink.ctype === "char" ? "キャラ" : "カード"}を使うたびに、このカードのコストが${card.shrink.n}下がる。`);
   if (card.gear) lines.push(card.gear === "all" ? "歯車すべて：出すときに、手札の歯車をすべて使う。" : `歯車${card.gear}：出すときに、手札の歯車を${card.gear}枚使ってもよい。`);
   if (card.type === "char") {
     // タイミングごとに1行（登場時 → ほかのタイミングの順）
@@ -540,6 +542,8 @@ function normalizeData(data) {
     armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
     ...(normSet(c.set) ? { set: normSet(c.set) } : {}),   // 弾（なし＝第1弾）
+    // 手札で小さくなる：手札にある間、自分が（世界・種類の）カードを使うたびにコストが n 下がる
+    ...(c.shrink && +c.shrink.n > 0 ? { shrink: { n: Math.min(9, Math.round(+c.shrink.n)), ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}) } } : {}),
     // 歯車を使う：数（使ってもよい枚数）か "all"（すべて使う）
     ...(c.gear === "all" ? { gear: "all" } : +c.gear > 0 ? { gear: Math.min(20, Math.round(+c.gear)) } : {}),
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],

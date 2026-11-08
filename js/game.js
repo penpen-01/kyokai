@@ -425,6 +425,9 @@ function playCard(pi, idx, targetsIn, useGear) {
   try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; }
   if (d.type === "spell") trigUnits(pi, "spell");
   trigUnits(pi, "cardPlay", self, { card: id });
+  // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
+  p.hand.forEach((hid, i) => { const h = DEF[hid], k = h && h.shrink;
+    if (k && (!k.world || k.world === d.world) && (!k.ctype || k.ctype === d.type)) { (p.handCut || (p.handCut = []))[i] = ((p.handCut[i]) || 0) + k.n; } });
   cleanup();
   if (!checkWin()) render();
   return true;
@@ -780,6 +783,13 @@ function bounce(pi, u, to) {
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
   if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); return; }
   p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
+  // 場から手札に戻ったとき の効果（対象はランダム。戻す効果が続けて起きすぎないように3回まで）
+  const back = (DEF[u.id].effects || []).filter(e => whenOf(e) === "back");
+  if (back.length && (S.backDepth || 0) < 3) {
+    S.backDepth = (S.backDepth || 0) + 1;
+    log(`${cname(u.id)}の効果（場から手札に戻ったとき）。`);
+    try { back.forEach(e => effect(pi, e, autoTargets(pi, null), null)); } finally { S.backDepth--; }
+  }
 }
 /* 沈黙：効果と能力をすべて失う（上がった攻撃力・体力はそのまま） */
 function silenceUnit(u) {
