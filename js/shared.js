@@ -256,12 +256,15 @@ const CONDS = {
   handZero:{ label: "手札が0枚",                  text: () => "自分の手札が0枚なら", noN: true },
   handGE:  { label: "手札がN枚以上",              text: e => `自分の手札が${e.cn}枚以上なら` },
   maxEGE:  { label: "最大エナジーがN以上",        text: e => `自分のエナジーの最大値が${e.cn}以上なら` },
+  bounced: { label: "手札に戻せた", text: () => "手札に戻せたら", noN: true },
   recycled:{ label: "山札に戻せた", text: () => "1枚でも戻せたら", noN: true },
   gearPaid:{ label: "出すときに歯車を使った",     text: () => "歯車を使ったなら", noN: true },
   gearNone:{ label: "出すときに歯車を使わなかった", text: () => "歯車を使わなかったなら", noN: true }
 };
 /* 歯車：手札で重なるカード（何枚あっても手札1枠。枚数は p.gears）。これだけでは使えず、「歯車を使う」カードの材料になる */
 const GEAR_ID = "tk-gear";
+/* 使える条件の文 */
+const reqText = r => `使える条件：自分の場に${r.world ? WORLDS[r.world] + "の" : ""}キャラが${r.n}体以上いる${r.orEmpty ? "か、自分の場にキャラが1体もいない" : ""}とき`;
 const condText = (e, isChar = true) => (e && CONDS[e.cond] ? CONDS[e.cond].text(e, isChar) : "");
 const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
 /* 使ったとき（登場時）の効果だけ */
@@ -410,6 +413,7 @@ function cardTextLines(card) {
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
   const useWhat = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
+  if (card.req) lines.unshift(reqText(card.req) + "。");
   if (card.shrink) lines.push(`化かし：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが1下がる。`);
   if (card.grow) { const g = card.grow, w = [];
     if (g.stat && card.type === "char") w.push("攻撃力と体力");
@@ -560,6 +564,7 @@ function normalizeData(data) {
     ...(normSet(c.set) ? { set: normSet(c.set) } : {}),   // 弾（なし＝第1弾）
     // 手札で小さくなる：手札にある間、自分が（世界・種類の）カードを使うたびにコストが n 下がる
     // 妖気：このターン、（世界・種類の）カードを使うたびに、手札のこのカードが1ずつ強くなる。stat＝攻撃力と体力、dmg＝効果のダメージ、num＝そのほかの効果の数
+    ...(c.req && +c.req.n > 0 ? { req: { n: Math.min(5, Math.round(+c.req.n)), ...(WORLDS[c.req.world] ? { world: c.req.world } : {}), ...(c.req.orEmpty ? { orEmpty: true } : {}) } } : {}),
     ...(c.grow ? { grow: { n: 1, ...(WORLDS[c.grow.world] ? { world: c.grow.world } : {}), ...(["char", "spell"].includes(c.grow.ctype) ? { ctype: c.grow.ctype } : {}),
       ...(c.grow.stat || c.grow.dmg || c.grow.num ? { stat: !!c.grow.stat, dmg: !!c.grow.dmg, num: !!c.grow.num } : c.type === "spell" ? { stat: false, dmg: true, num: false } : { stat: true, dmg: false, num: false }) } } : {}),
     ...(c.shrink ? { shrink: { n: 1, ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}) } } : {}),

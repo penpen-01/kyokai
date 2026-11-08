@@ -356,10 +356,17 @@ function neededRoles(pi, d) {
   return cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > 0);
 }
 
+/* 使える条件（card.req）：自分の場に（世界の）キャラが N 体以上、または（orEmpty）自分の場が空 */
+function reqOK(pi, r) {
+  const f = S.players[pi].field;
+  const n = f.filter(u => !r.world || (DEF[u.id] && DEF[u.id].world === r.world)).length;
+  return n >= (r.n || 0) || (r.orEmpty && f.length === 0);
+}
 function canPlay(pi, idx) {
   const p = S.players[pi], d = DEF[p.hand[idx]];
   if (!d) return { ok: false, reason: "そのカードはありません" };
   if (d.id === GEAR_ID) return { ok: false, reason: "歯車はこれだけでは使えません" };
+  if (d.req && !reqOK(pi, d.req)) return { ok: false, reason: reqText(d.req) };
   if (S.over || S.phase !== "play" || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
   if (effCost(pi, d, idx) > p.e) return { ok: false, reason: "エナジーが足りません" };
   const sac = d.pay && d.pay.kind === "sacrifice";
@@ -428,7 +435,7 @@ function playCard(pi, idx, targetsIn, useGear) {
     // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
   }
-  S.gearSpent = spend;
+  S.gearSpent = spend; S.bouncedNow = 0;
   S.dmgBonus = grow && d.grow.dmg ? grow : 0;
   S.numBonus = grow && d.grow.num ? grow : 0;
   try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
@@ -469,6 +476,7 @@ function condOK(pi, e, self) {
     case "maxEGE": return p.maxE >= e.cn;
     case "gearPaid": return (S.gearSpent || 0) > 0;
     case "recycled": return (S.recycled || 0) > 0;
+    case "bounced": return (S.bouncedNow || 0) > 0;
     case "gearNone": return !(S.gearSpent > 0);
   }
   return true;
@@ -821,6 +829,7 @@ function bounce(pi, u, to) {
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
   if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); return; }
   p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
+  S.bouncedNow = (S.bouncedNow || 0) + 1;   // 「戻せたら」の条件用
   // 場から手札に戻ったとき の効果（対象はランダム。戻す効果が続けて起きすぎないように3回まで）
   const back = (DEF[u.id].effects || []).filter(e => whenOf(e) === "back");
   if (back.length && (S.backDepth || 0) < 3) {
