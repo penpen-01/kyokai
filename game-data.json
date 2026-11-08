@@ -1,5 +1,5 @@
 {
- "version": 77,
+ "version": 78,
  "updated": "2026-11-08",
  "config": {
   "PLAYER_HP": 20,
@@ -2813,7 +2813,7 @@
    "type": "char",
    "cost": 2,
    "atk": 0,
-   "hp": 4,
+   "hp": 5,
    "glyph": "自",
    "limit": 3,
    "rarity": "common",
@@ -3495,7 +3495,7 @@
    "name": "据置砲台カノン",
    "world": "mech",
    "type": "char",
-   "cost": 5,
+   "cost": 4,
    "atk": 0,
    "hp": 7,
    "glyph": "砲",
@@ -4331,7 +4331,7 @@
    "name": "歯車プレス機",
    "world": "mech",
    "type": "char",
-   "cost": 3,
+   "cost": 2,
    "atk": 0,
    "hp": 4,
    "glyph": "機",
@@ -5676,7 +5676,7 @@
    "type": "char",
    "cost": 5,
    "atk": 3,
-   "hp": 4,
+   "hp": 5,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -5807,7 +5807,7 @@
    "type": "char",
    "cost": 6,
    "atk": 6,
-   "hp": 5,
+   "hp": 4,
    "glyph": "神",
    "limit": 3,
    "rarity": "sr",
@@ -5985,7 +5985,7 @@
      "kind": "player",
      "act": "heal",
      "who": "self",
-     "n": 5
+     "n": 2
     },
     {
      "kind": "unit",
@@ -6096,15 +6096,31 @@
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "twice",
-    "rush",
-    "shield"
+    "rush"
    ],
    "effects": [
     {
      "kind": "readySelf",
      "n": 1,
      "when": "kill"
+    },
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "self",
+     "n": 1,
+     "kw": "twice",
+     "cond": "maxEGE",
+     "cn": 8
+    },
+    {
+     "kind": "unit",
+     "act": "grant",
+     "to": "self",
+     "n": 1,
+     "kw": "shield",
+     "cond": "maxEGE",
+     "cn": 10
     }
    ],
    "set": "2-2",
@@ -7263,7 +7279,7 @@
      "to": "enemyAll",
      "n": 1,
      "cond": "playedGE",
-     "cn": 2
+     "cn": 3
     }
    ],
    "set": "2-3",
@@ -7361,7 +7377,7 @@
     {
      "kind": "peekDiscard",
      "n": 1,
-     "when": "turnEnd"
+     "when": "oppTurnEnd"
     }
    ],
    "set": "2-3",

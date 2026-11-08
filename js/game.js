@@ -235,6 +235,7 @@ function endTurn(pi) {
     if (kw(u, "doom")) { if (u.doomArmed) { log(`${cname(u.id)}は死の宣告で破壊された。`); destroyUnit(u); } else u.doomArmed = true; }
   });
   trigUnits(pi, "turnEnd");
+  trigUnits(opp(pi), "oppTurnEnd");   // 相手のターンの終わりに発動する効果
   cleanup();
   if (checkWin()) return;
   // 「このターンだけ」の能力・装甲・コスト低下を消す

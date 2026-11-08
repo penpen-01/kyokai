@@ -234,6 +234,7 @@ const WHENS = {
   death:     { label: "倒されたとき",                 head: "倒されたとき" },
   turnStart: { label: "自分のターンの始め",           head: "自分のターンの始めに" },
   turnEnd:   { label: "自分のターンの終わり",         head: "自分のターンの終わりに" },
+  oppTurnEnd:{ label: "相手のターンの終わり",         head: "相手のターンの終わりに" },
   attack:    { label: "攻撃したとき",                 head: "攻撃したとき" },
   kill:      { label: "攻撃で敵キャラを倒したとき",   head: "攻撃で敵キャラを倒したとき" },
   survive:   { label: "ダメージを受けて生き残ったとき", head: "ダメージを受けて生き残ったとき" },
