@@ -673,6 +673,9 @@ function exportJSON() {
     if (c.pay) o.pay = c.pay;
     if (c.set) o.set = c.set;     // 弾（第1弾は書かない）
     if (c.gear) o.gear = c.gear;  // 歯車を使うカード
+    if (c.shrink) o.shrink = c.shrink;   // 化かし（手札で小さくなる）
+    if (c.grow) o.grow = c.grow;         // 妖気（手札で強くなる）
+    if (c.req) o.req = c.req;            // 使える条件
     if (c.note) o.note = c.note;
     if (c.art) o.art = c.art;
     return o;

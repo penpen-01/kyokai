@@ -367,3 +367,4 @@ img{max-width:100%}
 @media (prefers-reduced-motion:reduce){.card .wintag{animation:none}}
 /* 歯車（手札で重なる）：右下に枚数 */
 .card .gearcnt{position:absolute;z-index:6;right:4cqw;bottom:22cqw;min-width:22cqw;padding:1cqw 3cqw;border-radius:99px;background:linear-gradient(180deg,#f4d58a,#b8862e);color:#2a1a04;font-weight:900;font-size:11cqw;line-height:1.2;text-align:center;box-shadow:0 0 0 .8cqw rgba(0,0,0,.45),0 1cqw 3cqw rgba(0,0,0,.5)}
+.card .growb{display:block;font-size:8cqw;color:#ffd27a;font-weight:900;line-height:1.1}

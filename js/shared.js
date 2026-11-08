@@ -68,6 +68,9 @@ const EFFECTS = {
   player:      { group: "プレイヤー", label: "プレイヤーに効果（ダメージ・回復・ドロー・捨てる）", text: (n, e) => playerText(e), opts: ["pact", "who"] },
   merge:       { group: "トークン", label: "合体（場の部品を破壊して、キャラを出す）", text: (n, e) => `自分の場に「${tokName(e)}」が${n}体以上いれば、それを${n}体破壊して、${intoDesc(e)}を出す（登場時の効果も発動する）。`, opts: ["token", "into"], tokenType: "char" },
   costDown:    { group: "エナジー", label: "手札のカードのコストを下げる（このターン・ずっと）", text: (n, e) => `${e && e.dur === "game" ? "" : "このターン、"}今の自分の手札の${worldNo(e)}${ctypeName(e)}すべてのコストを${n}下げる（0より下がらない${e && e.dur === "game" ? "。手札にある間ずっと" : ""}）。`, opts: ["world", "ctype", "dur"] },
+  wakeTimer:   { group: "このキャラ", label: "目覚め（自分のターンの始めをN回むかえると、このキャラは沈黙する＝不動などが解ける）", text: n => `自分のターンの始めを${n}回むかえると、このキャラは沈黙する（不動などの能力が消え、攻撃できるようになる）。`, self: true },
+  recycle:     { group: "ドロー", label: "倒された自分のキャラを山札に戻す（墓地からN枚）", text: (n, e) => `この対戦で倒された自分の${worldNo(e)}キャラを${n}枚まで、山札に混ぜる。`, opts: ["world"] },
+  peekDiscard: { group: "妨害", label: "相手の手札を見て、いちばんコストの高いカードを捨てさせる", text: () => "相手の手札をすべて見て、いちばんコストの高いカード1枚を捨てさせる。", noN: true },
   winTimer:    { group: "このキャラ", label: "特殊勝利（場にいるまま、自分のターンの始めをN回むかえると勝ち）", text: n => `このキャラが場にいるまま、自分のターンの始めを${n}回むかえると、勝利する（場を離れると数え直し）。`, self: true },
   draw:        { legacy: true, group: "ドロー", label: "カードを引く",                  text: n => `カードを${n}枚引く。` },
   refresh:     { group: "ドロー", label: "手札を入れ替える",              text: n => n ? `手札をすべて山札に戻して切り直し、その枚数より${n}枚多く引く。` : "手札をすべて山札に戻して切り直し、同じ枚数を引く。", min: 0 },
@@ -144,6 +147,8 @@ const UTOS = {
   any1:      { label: "選んだキャラ（自分か相手）", role: "any" },
   enemyF:    { label: "選んだ相手（キャラか相手プレイヤー）", role: "enemyF", side: "enemy", faceOnly: true },
   enemyRand: { label: "ランダムな相手キャラ", side: "enemy" },
+  enemyRandF:{ label: "ランダムな相手（キャラか相手プレイヤー）", side: "enemy" },
+  anyRand:   { label: "このキャラ以外のランダムなキャラ（自分か相手）" },
   ownRand:   { label: "ランダムな自分のキャラ", side: "own" },
   enemyAll:  { label: "相手キャラ全体", side: "enemy", world: true },
   ownAll:    { label: "自分のキャラ全体", side: "own", world: true },
@@ -163,7 +168,7 @@ function toPhrase(e, isChar, auto) {
   if (auto && to === "enemyF") return "ランダムな相手キャラ1体か相手プレイヤー";
   return {
     enemy1: w ? `相手の${w}キャラ1体` : "相手キャラ1体", own1: isChar ? `このキャラ以外の自分の${w}キャラ1体` : `自分の${w}キャラ1体`, any1: isChar ? `このキャラ以外の${w}キャラ1体（自分か相手）` : `${w}キャラ1体（自分か相手）`,
-    enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
+    enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
     enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
   }[to] || "（対象未設定）";
 }
@@ -177,7 +182,7 @@ function unitText(e, T) {
     case "destroy": return `${T}を破壊する。`;
     case "freeze": return side === "enemy" ? `${T}は、次の相手のターンに攻撃できない。` : side === "own" ? `${T}は、次の自分のターンに攻撃できない。` : `${T}は、持ち主の次のターンに攻撃できない。`;
     case "unfreeze": return e.n > 0 ? `${T}の行動不能を解除し、解除したキャラの攻撃力を+${e.n}する（このターンに攻撃できなかったキャラは、攻撃できるようになる）。` : `${T}の行動不能を解除する（このターンに攻撃できなかったキャラは、攻撃できるようになる）。`;
-    case "atk": return `${T}の攻撃力を${sg(n)}する。`;
+    case "atk": return `${T}の攻撃力を${sg(n)}する${e.turn ? "（このターンだけ）" : ""}。`;
     case "hp": return `${T}の体力を${sg(n)}する。`;
     case "both": return `${T}を${sg(n)}/${sg(n)}する。`;
     case "heal": return `${T}の体力を${n}回復する。`;
@@ -239,21 +244,27 @@ const WHENS = {
   face:      { label: "相手プレイヤーにダメージを与えたとき", head: "このキャラが相手プレイヤーにダメージを与えたとき" },
   drawn:     { label: "自分がカードを引いたとき",     head: "自分がカードを引いたとき" },
   healed:    { label: "自分の体力が回復したとき",     head: "自分の体力が回復したとき" },
-  voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" }
+  voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" },
+  back:      { label: "場から手札に戻ったとき",       head: "場から手札に戻ったとき" }
 };
 /* 効果ごとの条件（effect.cond）。満たしていないとその効果は発動しない。cn＝数値、cworld＝世界 */
 const CONDS = {
   hpLE:    { label: "自分の体力がN以下",          text: e => `自分の体力が${e.cn}以下なら` },
   worldGE: { label: "自分の場に（世界の）キャラがN体以上", text: (e, isChar) => `自分の場に${WORLDS[e.cworld] ? WORLDS[e.cworld] + "の" : ""}キャラが${e.cn}体以上いれば${isChar ? "（このキャラも数える）" : ""}` , world: true },
   combo:   { label: "このターン、すでにほかのカードを使った（コンボ）", text: () => "このターン、すでにほかのカードを使っていれば", noN: true },
+  playedGE:{ label: "詠唱N（このターン、先にカードをN枚以上使った）", text: e => `詠唱${e.cn}（このターン、先にカードを${e.cn}枚以上使っていれば）` },
   handZero:{ label: "手札が0枚",                  text: () => "自分の手札が0枚なら", noN: true },
   handGE:  { label: "手札がN枚以上",              text: e => `自分の手札が${e.cn}枚以上なら` },
   maxEGE:  { label: "最大エナジーがN以上",        text: e => `自分のエナジーの最大値が${e.cn}以上なら` },
+  bounced: { label: "手札に戻せた", text: () => "手札に戻せたら", noN: true },
+  recycled:{ label: "山札に戻せた", text: () => "1枚でも戻せたら", noN: true },
   gearPaid:{ label: "出すときに歯車を使った",     text: () => "歯車を使ったなら", noN: true },
   gearNone:{ label: "出すときに歯車を使わなかった", text: () => "歯車を使わなかったなら", noN: true }
 };
 /* 歯車：手札で重なるカード（何枚あっても手札1枠。枚数は p.gears）。これだけでは使えず、「歯車を使う」カードの材料になる */
 const GEAR_ID = "tk-gear";
+/* 使える条件の文 */
+const reqText = r => `使える条件：自分の場に${r.world ? WORLDS[r.world] + "の" : ""}キャラが${r.n}体以上いる${r.orEmpty ? "か、自分の場にキャラが1体もいない" : ""}とき`;
 const condText = (e, isChar = true) => (e && CONDS[e.cond] ? CONDS[e.cond].text(e, isChar) : "");
 const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
 /* 使ったとき（登場時）の効果だけ */
@@ -384,6 +395,7 @@ function effectsText(card, list, auto) {
       t = unitText(e, T);
     } else t = EFFECTS[e.kind].text(e.n, e);
     if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
+    if (e.per === "played") t = `このターン、このカードより先に使ったカード1枚につき、${t}`;
     if (e.cond && CONDS[e.cond]) t = `${condText(e, isChar)}、${t}`;
     if (k > 1) t = e.kind === "unit" && e.act === "dmg" && e.to === "enemyRand" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
     out.push(t);
@@ -400,6 +412,14 @@ function cardTextLines(card) {
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
+  const useWhat = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
+  if (card.req) lines.unshift(reqText(card.req) + "。");
+  if (card.shrink) lines.push(`化かし：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが1下がる。`);
+  if (card.grow) { const g = card.grow, w = [];
+    if (g.stat && card.type === "char") w.push("攻撃力と体力");
+    if (g.dmg) w.push("効果で与えるダメージ");
+    if (g.num) w.push("効果の数（引く枚数・回復量など）");
+    lines.push(`妖気：このターン、自分が${useWhat(g)}を使うたびに、手札のこのカードの${w.join("・")}が1上がる（ターンの終わりに元に戻る）。`); }
   if (card.gear) lines.push(card.gear === "all" ? "歯車すべて：出すときに、手札の歯車をすべて使う。" : `歯車${card.gear}：出すときに、手札の歯車を${card.gear}枚使ってもよい。`);
   if (card.type === "char") {
     // タイミングごとに1行（登場時 → ほかのタイミングの順）
@@ -446,11 +466,12 @@ function cardHTML(card, o = {}) {
     : `<span class="glyph">${esc(card.glyph || "？")}</span>`;
   let stats;
   if (card.type === "char") {
-    const atk = u ? u.atk : card.atk, hp = u ? u.hp : card.hp;
-    stats = `<span class="stats"><span class="atk ${u && u.atk > card.atk ? "up" : ""}">${atk}</span>`
-      + `<span class="hp ${u && u.hp < u.maxHp ? "hurt" : u && u.maxHp > card.hp ? "up" : ""}">${hp}</span></span>`;
+    const g = card.grow && card.grow.stat ? o.grow || 0 : 0;   // 妖気で手札のうちに強くなった分
+    const atk = u ? u.atk : card.atk + g, hp = u ? u.hp : card.hp + g;
+    stats = `<span class="stats"><span class="atk ${(u && u.atk > card.atk) || g ? "up" : ""}">${atk}</span>`
+      + `<span class="hp ${u && u.hp < u.maxHp ? "hurt" : (u && u.maxHp > card.hp) || g ? "up" : ""}">${hp}</span></span>`;
   } else {
-    stats = `<span class="stats spelltag">魔法</span>`;
+    stats = `<span class="stats spelltag">魔法${o.grow ? `<b class="growb">妖気+${o.grow}</b>` : ""}</span>`;
   }
   const tag = o.static ? "div" : "button";
   // 場のキャラは、与えられた能力も見せる。沈黙したキャラは能力なし
@@ -471,7 +492,7 @@ function cardHTML(card, o = {}) {
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
     ${o.count ? `<span class="gearcnt" aria-label="${o.count}枚">×${o.count}</span>` : ""}
-    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}
+    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}${u && u.wakeIn != null && !u.silenced ? `<span class="wintag wake" title="目覚めまであと${u.wakeIn}回">目覚めまで${u.wakeIn}</span>` : ""}
     <span class="foot"><span class="nm ${nmLen(card) >= 11 ? "xlong x3" : nmLen(card) >= 10 ? "xlong x2" : nmLen(card) >= 9 ? "xlong" : nmLen(card) >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
@@ -510,7 +531,8 @@ function normEffect(e, type) {
   if (o.includes("kw") && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
   if (o.includes("world") && WORLDS[e.world]) out.world = e.world;
   if (o.includes("ctype") && TYPES[e.ctype]) out.ctype = e.ctype;
-  if (e.per === "gear") out.per = "gear";   // 使った歯車1枚ごとに n 倍
+  if (e.per === "gear" || e.per === "played") out.per = e.per;   // 使った歯車／先に使ったカード 1枚ごとに n 倍
+  if (e.turn && e.act === "atk") out.turn = true;   // 攻撃力アップ（このターンだけ）
   if (CONDS[e.cond]) {
     out.cond = e.cond;
     if (!CONDS[e.cond].noN) out.cn = Math.max(0, Math.min(30, Math.round(+e.cn || 0)));
@@ -540,6 +562,12 @@ function normalizeData(data) {
     armor: c.type === "spell" ? 0 : Math.max(0, Math.min(9, +c.armor || 0)),
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
     ...(normSet(c.set) ? { set: normSet(c.set) } : {}),   // 弾（なし＝第1弾）
+    // 手札で小さくなる：手札にある間、自分が（世界・種類の）カードを使うたびにコストが n 下がる
+    // 妖気：このターン、（世界・種類の）カードを使うたびに、手札のこのカードが1ずつ強くなる。stat＝攻撃力と体力、dmg＝効果のダメージ、num＝そのほかの効果の数
+    ...(c.req && +c.req.n > 0 ? { req: { n: Math.min(5, Math.round(+c.req.n)), ...(WORLDS[c.req.world] ? { world: c.req.world } : {}), ...(c.req.orEmpty ? { orEmpty: true } : {}) } } : {}),
+    ...(c.grow ? { grow: { n: 1, ...(WORLDS[c.grow.world] ? { world: c.grow.world } : {}), ...(["char", "spell"].includes(c.grow.ctype) ? { ctype: c.grow.ctype } : {}),
+      ...(c.grow.stat || c.grow.dmg || c.grow.num ? { stat: !!c.grow.stat, dmg: !!c.grow.dmg, num: !!c.grow.num } : c.type === "spell" ? { stat: false, dmg: true, num: false } : { stat: true, dmg: false, num: false }) } } : {}),
+    ...(c.shrink ? { shrink: { n: 1, ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}) } } : {}),
     // 歯車を使う：数（使ってもよい枚数）か "all"（すべて使う）
     ...(c.gear === "all" ? { gear: "all" } : +c.gear > 0 ? { gear: Math.min(20, Math.round(+c.gear)) } : {}),
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],

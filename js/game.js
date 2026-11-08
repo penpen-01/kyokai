@@ -211,6 +211,7 @@ function startTurn(pi, skipDraw) {
   p.field.forEach(u => { u.swings = 0; u.thawed = false; if (u.frozen) { u.ready = false; u.frozen = false; u.thawed = true; } else u.ready = !kw(u, "noattack"); });
   // 特殊勝利：場にいるまま、自分のターンの始めを決めた回数むかえると勝ち
   for (const u of p.field) {
+    if (u.wakeIn != null && !u.silenced) { u.wakeIn--; if (u.wakeIn <= 0) { u.wakeIn = null; silenceUnit(u); if (!u.thawed) u.ready = true; log(`${cname(u.id)}が目覚めた（沈黙して不動が解けた）。このターンから攻撃できる。`); } else fx(unitSel(u.uid), `目覚めまで${u.wakeIn}`, "trig"); }
     if (u.winIn == null || u.silenced) continue;
     u.winIn--;
     if (u.winIn <= 0) { log(`${cname(u.id)}の力で、${pname(pi)}の勝利！`); S.specialWin = pi; break; }
@@ -239,9 +240,11 @@ function endTurn(pi) {
   // 「このターンだけ」の能力・装甲・コスト低下を消す
   S.players.forEach(p => {
     p.handCutT = [];
+    p.handGrow = [];   // 妖気はそのターンだけ
     p.field.forEach(u => {
       if (u.tmpKws) { u.kws = (u.kws || []).filter(k => !u.tmpKws.includes(k)); delete u.tmpKws; }
       if (u.tmpArmor) { u.armorPlus = Math.max(0, (u.armorPlus || 0) - u.tmpArmor); delete u.tmpArmor; }
+      if (u.tmpAtk) { u.atk = Math.max(0, u.atk - u.tmpAtk); delete u.tmpAtk; }   // このターンだけの攻撃力
     });
   });
   startTurn(opp(pi), false);
@@ -338,11 +341,13 @@ function effCost(pi, d, idx) {
 function handTake(p, idx) {
   const [id] = p.hand.splice(idx, 1);
   if (p.handCut) p.handCut.splice(idx, 1);
+  if (p.handGrow) p.handGrow.splice(idx, 1);
   if (p.handCutT) p.handCutT.splice(idx, 1);
   return id;
 }
 /* 手札を作り直したとき（入れ替え・マリガン）は、コスト低下も消す */
-function handReset(p) { p.handCut = []; p.handCutT = []; }
+function handReset(p) { p.handCut = []; p.handCutT = []; p.handGrow = []; }
+const handGrowAt = (p, idx) => (p.handGrow || [])[idx] || 0;
 
 /* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか（any は両方） */
 function roleSide(pi, role) { return role === "enemy" || role === "enemyF" ? opp(pi) : pi; }
@@ -351,10 +356,17 @@ function neededRoles(pi, d) {
   return cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > 0);
 }
 
+/* 使える条件（card.req）：自分の場に（世界の）キャラが N 体以上、または（orEmpty）自分の場が空 */
+function reqOK(pi, r) {
+  const f = S.players[pi].field;
+  const n = f.filter(u => !r.world || (DEF[u.id] && DEF[u.id].world === r.world)).length;
+  return n >= (r.n || 0) || (r.orEmpty && f.length === 0);
+}
 function canPlay(pi, idx) {
   const p = S.players[pi], d = DEF[p.hand[idx]];
   if (!d) return { ok: false, reason: "そのカードはありません" };
   if (d.id === GEAR_ID) return { ok: false, reason: "歯車はこれだけでは使えません" };
+  if (d.req && !reqOK(pi, d.req)) return { ok: false, reason: reqText(d.req) };
   if (S.over || S.phase !== "play" || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
   if (effCost(pi, d, idx) > p.e) return { ok: false, reason: "エナジーが足りません" };
   const sac = d.pay && d.pay.kind === "sacrifice";
@@ -397,6 +409,7 @@ function playCard(pi, idx, targetsIn, useGear) {
     if (!targetOpts(pi, r, d).includes(targets[r])) return false;
   }
   const cost = effCost(pi, d, idx);
+  const grow = handGrowAt(p, idx);
   const spend = d.gear === "all" ? gearsOf(p) : useGear && gearChoice(pi, idx) ? d.gear : 0;
   handTake(p, idx);
   p.e -= cost;
@@ -418,13 +431,21 @@ function playCard(pi, idx, targetsIn, useGear) {
   let self = null;
   if (d.type === "char") {
     self = addUnit(pi, id);
+    if (grow && d.grow.stat) { self.atk += grow; self.hp += grow; self.maxHp += grow; }
     // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
   }
-  S.gearSpent = spend;
-  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; }
+  S.gearSpent = spend; S.bouncedNow = 0;
+  S.dmgBonus = grow && d.grow.dmg ? grow : 0;
+  S.numBonus = grow && d.grow.num ? grow : 0;
+  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
   if (d.type === "spell") trigUnits(pi, "spell");
   trigUnits(pi, "cardPlay", self, { card: id });
+  // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
+  p.hand.forEach((hid, i) => { const h = DEF[hid], k = h && h.shrink;
+    if (k && (!k.world || k.world === d.world) && (!k.ctype || k.ctype === d.type)) { (p.handCut || (p.handCut = []))[i] = ((p.handCut[i]) || 0) + k.n; }
+    const g = h && h.grow;
+    if (g && (!g.world || g.world === d.world) && (!g.ctype || g.ctype === d.type)) { (p.handGrow || (p.handGrow = []))[i] = ((p.handGrow[i]) || 0) + g.n; } });
   cleanup();
   if (!checkWin()) render();
   return true;
@@ -449,10 +470,13 @@ function condOK(pi, e, self) {
     case "hpLE": return p.hp <= e.cn;
     case "worldGE": return p.field.filter(u => u.hp > 0 && (!e.cworld || (DEF[u.id] && DEF[u.id].world === e.cworld))).length >= e.cn;
     case "combo": return (p.played || 0) >= 2;   // いま使っているカードを含めて2枚目以上
+    case "playedGE": return (p.played || 0) - 1 >= e.cn;   // 詠唱N：このカードより先に N 枚
     case "handZero": return p.hand.length === 0;
     case "handGE": return p.hand.length >= e.cn;
     case "maxEGE": return p.maxE >= e.cn;
     case "gearPaid": return (S.gearSpent || 0) > 0;
+    case "recycled": return (S.recycled || 0) > 0;
+    case "bounced": return (S.bouncedNow || 0) > 0;
     case "gearNone": return !(S.gearSpent > 0);
   }
   return true;
@@ -471,6 +495,8 @@ function unitTargets(pi, e, targets, self) {
     case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }
     case "enemyF": { if (targets.enemyF === "face") return ["face"]; const u = en.field.find(x => x.uid === targets.enemyF); return u ? [u] : []; }
     case "enemyRand": return rnd(en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)));
+    case "enemyRandF": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)), "face"]);
+    case "anyRand": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x)), ...me.field.filter(x => x.hp > 0 && x !== self)].filter(wf));
     case "ownRand": return rnd(me.field.filter(x => x.hp > 0 && x !== self && wf(x)));
     case "enemyAll": return en.field.filter(wf);
     case "ownAll": return me.field.filter(wf);
@@ -491,7 +517,7 @@ function unitEffect(pi, e, targets, self) {
     }
     const side = sideOf(u); if (side < 0) return;
     switch (e.act) {
-      case "dmg": if (e.to === "enemyRand") log(`${cname(u.id)}に${n}ダメージ。`); hitUnit(u, n); break;
+      case "dmg": if (e.to === "enemyRand" || e.to === "enemyRandF") log(`${cname(u.id)}に${n}ダメージ。`); hitUnit(u, n); break;
       case "destroy": destroyUnit(u); break;
       case "freeze": freezeUnit(u); break;
       case "unfreeze": {
@@ -503,7 +529,7 @@ function unitEffect(pi, e, targets, self) {
         if (n > 0) buff(u, n, 0);   // 解除できたキャラだけ攻撃力を上げる
         break;
       }
-      case "atk": if (n >= 0) buff(u, n, 0); else debuff(u, -n); break;
+      case "atk": if (n >= 0) { buff(u, n, 0); if (e.turn) u.tmpAtk = (u.tmpAtk || 0) + n; } else debuff(u, -n); break;
       case "hp": if (n >= 0) buff(u, 0, n); else shrinkHp(u, -n); break;
       case "both": if (n >= 0) buff(u, n, n); else { debuff(u, -n); shrinkHp(u, -n); } break;
       case "heal": { const h = Math.min(n, u.maxHp - u.hp); if (h > 0) { u.hp += h; fx(unitSel(u.uid), "+" + h, "heal"); } break; }
@@ -587,6 +613,9 @@ function discardRandom(q, pi) {
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
   if (e.per === "gear") { const k = S.gearSpent || 0; if (!k) return; e = { ...e, n: e.n * k }; }
+  if (e.per === "played") { const k = Math.max(0, (S.players[pi].played || 0) - 1); if (!k) return; e = { ...e, n: e.n * k }; }
+  if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気（ダメージ）
+  else if (S.numBonus && e.n > 0 && e.act !== "dmg" && !["costDown", "winTimer", "merge", "tutor"].includes(e.kind)) e = { ...e, n: e.n + S.numBonus };   // 妖気（そのほかの数）
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
   if (e.kind === "player") return playerEffect(pi, e);
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;
@@ -663,6 +692,26 @@ function effect(pi, e, targets, self) {
       me.hand.forEach((id, i) => { const c = DEF[id]; if (c && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype)) { arr[i] = (arr[i] || 0) + n; k++; } });
       log(k ? `${pname(pi)}の手札の${e.world ? WORLDS[e.world] + "の" : ""}${e.ctype === "char" ? "キャラ" : e.ctype === "spell" ? "魔法" : "カード"}${k}枚のコストが${n}下がった${e.dur === "game" ? "" : "（このターン）"}。` : "コストが下がるカードが手札になかった。");
       if (k) fx(playerSel(pi), `コスト-${n}`, "heal");
+      break;
+    }
+    case "wakeTimer": if (self && self.hp > 0) { self.wakeIn = n; fx(unitSel(self.uid), `目覚めまで${n}`, "trig"); } break;
+    case "recycle": {
+      const g = me.grave || [];
+      const pick = g.filter(id => DEF[id] && !DEF[id].token && (!e.world || DEF[id].world === e.world)).slice(-n);
+      pick.forEach(id => { g.splice(g.lastIndexOf(id), 1); me.deck.splice(Math.floor(Math.random() * (me.deck.length + 1)), 0, id); });
+      S.recycled = pick.length;
+      log(pick.length ? `倒された${pick.map(cname).join("・")}を山札に混ぜた。` : "山札に戻せるキャラがいなかった。");
+      break;
+    }
+    case "peekDiscard": {
+      const q = opp(pi), h = S.players[q].hand;
+      if (!h.length) { log(`${pname(q)}の手札は0枚だった。`); break; }
+      log(`${pname(q)}の手札：${h.map(cname).join("・")}`);
+      const top = Math.max(...h.map(id => (DEF[id] ? DEF[id].cost : 0)));
+      const cands = h.map((id, i) => i).filter(i => (DEF[h[i]] ? DEF[h[i]].cost : 0) === top);
+      const i = cands[Math.floor(Math.random() * cands.length)];
+      if (h[i] === GEAR_ID) { spendGears(S.players[q], 1); log(`${pname(q)}は歯車を1枚捨てさせられた。`); break; }
+      const id = handTake(S.players[q], i); log(`${pname(q)}は${cname(id)}を捨てさせられた。`);
       break;
     }
     case "winTimer": if (self && self.hp > 0) { self.winIn = n; log(`${cname(self.id)}：あと${n}回、自分のターンの始めをむかえると勝利。`); fx(unitSel(self.uid), `勝利まで${n}`, "trig"); } break;
@@ -780,6 +829,14 @@ function bounce(pi, u, to) {
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
   if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); return; }
   p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
+  S.bouncedNow = (S.bouncedNow || 0) + 1;   // 「戻せたら」の条件用
+  // 場から手札に戻ったとき の効果（対象はランダム。戻す効果が続けて起きすぎないように3回まで）
+  const back = (DEF[u.id].effects || []).filter(e => whenOf(e) === "back");
+  if (back.length && (S.backDepth || 0) < 3) {
+    S.backDepth = (S.backDepth || 0) + 1;
+    log(`${cname(u.id)}の効果（場から手札に戻ったとき）。`);
+    try { back.forEach(e => effect(pi, e, autoTargets(pi, null), null)); } finally { S.backDepth--; }
+  }
 }
 /* 沈黙：効果と能力をすべて失う（上がった攻撃力・体力はそのまま） */
 function silenceUnit(u) {
@@ -1339,7 +1396,7 @@ function render() {
       // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
       const dim = !DEF[id] || (id !== GEAR_ID && S.turn === ME && !S.over && !canPlay(ME, i).ok);
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
-      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}) });
+      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}), ...(handGrowAt(me, i) ? { grow: handGrowAt(me, i) } : {}) });
     }).join("")}</div>
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
