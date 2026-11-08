@@ -253,6 +253,8 @@ function renderEditor() {
           </div>
         </div>` : ""}
 
+        ${specialHTML(c, isChar)}
+
         <div class="fgroup">
           <span class="gl">代償</span>
           <p class="hint">カードを使うときに支払う追加のコストです。コストの割に強い効果をつけるときに使います。</p>
@@ -357,6 +359,7 @@ function effOptsHTML(e, i) {
       out.push(sel("kw", "能力", [["", "選んでください"], ...Object.entries(KEYWORDS).map(([k, v]) => [k, v.label]), ["armor", "装甲（数値）"]], e.kw || ""));
       out.push(`<label class="eff-opt chk"><input type="checkbox" data-eff-turn="${i}" ${e.turn ? "checked" : ""}><span>このターンだけ</span></label>`);
     }
+    if (e.act === "atk") out.push(`<label class="eff-opt chk"><input type="checkbox" data-eff-turn="${i}" ${e.turn ? "checked" : ""}><span>このターンだけ</span></label>`);
     if (ua.token) out.push(tokSel("card", "変身先", "char", true));
     if (UTOS[e.to] && (UTOS[e.to].world || ["enemy1", "own1", "any1"].includes(e.to))) out.push(sel("world", "世界で絞る", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
     if (ua.signed) out.push(`<span class="hint small">数値を−にすると下げます（例：−2で攻撃力-2）。</span>`);
@@ -382,6 +385,7 @@ function effCondHTML(e, i) {
     </select></label>
     ${cd && !cd.noN ? `<label class="eff-opt"><span>N</span>${stepper("cnd-" + i, e.cn ?? 1, `効果${i + 1}の条件の数値`)}</label>` : ""}
     ${cd && cd.world ? `<label class="eff-opt"><span>世界</span><select data-eff-opt="${i}" data-opt="cworld" id="ef-cworld-${i}"><option value="">すべて</option>${Object.entries(WORLDS).map(([k, v]) => `<option value="${k}" ${e.cworld === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}
+    ${EFFECTS[e.kind] && !effNoN(EFFECTS[e.kind], e) ? `<label class="eff-opt"><span>数を掛ける</span><select data-eff-per="${i}"><option value="">なし</option><option value="played" ${e.per === "played" ? "selected" : ""}>先に使ったカード1枚につき</option><option value="gear" ${e.per === "gear" ? "selected" : ""}>使った歯車1枚につき</option></select></label>` : ""}
   </div>`;
 }
 function targetWarn(c) {
@@ -401,6 +405,35 @@ function targetWarn(c) {
 }
 
 /* ---------- 値の変更 ---------- */
+/* 手札と使い方の特別なきまり：化かし・妖気・使える条件・歯車 */
+function specialHTML(c, isChar) {
+  const wsel = (key, val) => `<select class="txt sm" data-sp="${key}"><option value="">どの世界のカードでも</option>${Object.entries(WORLDS).map(([k, v]) => `<option value="${k}" ${val === k ? "selected" : ""}>${v}のカード</option>`).join("")}</select>`;
+  const chk = (key, on, label) => `<label class="eff-opt chk"><input type="checkbox" data-sp="${key}" ${on ? "checked" : ""}><span>${label}</span></label>`;
+  const g = c.grow || {}, r = c.req || {};
+  return `<div class="fgroup">
+    <span class="gl">手札と使い方の特別なきまり</span>
+    <p class="hint">化かし＝手札にある間、決めた世界のカードを使うたびにコストが1下がる（ずっと）。妖気＝このターン、決めた世界のカードを使うたびに、手札のこのカードが1ずつ強くなる（ターンの終わりに元に戻る）。使える条件＝自分の場の状態で使えるかが決まる。</p>
+    <div class="eff-opts">${chk("shrink", !!c.shrink, "<b>化かし</b>")}${c.shrink ? wsel("shrinkWorld", c.shrink.world) : ""}</div>
+    <div class="eff-opts">${chk("grow", !!c.grow, "<b>妖気</b>")}${c.grow ? wsel("growWorld", g.world) + (isChar ? chk("growStat", g.stat, "攻撃力と体力") : "") + chk("growDmg", g.dmg, "効果のダメージ") + chk("growNum", g.num, "そのほかの効果の数") : ""}</div>
+    <div class="eff-opts">${chk("req", !!c.req, "<b>使える条件</b>")}${c.req ? `<span class="eff-opt">自分の場に</span>${wsel("reqWorld", r.world).replace("どの世界のカードでも", "どの世界でも").replace(/のカード</g, "の<")}<span class="eff-opt">キャラが</span>${stepper("reqn", r.n || 1, "条件の体数")}<span class="eff-opt">体以上</span>${chk("reqEmpty", r.orEmpty, "または自分の場にキャラがいないとき")}` : ""}</div>
+    <div class="eff-opts"><label class="eff-opt"><span><b>歯車を使う</b></span><select class="txt sm" data-sp="gear"><option value="">使わない</option><option value="n" ${typeof c.gear === "number" ? "selected" : ""}>決めた枚数を使ってもよい</option><option value="all" ${c.gear === "all" ? "selected" : ""}>手札の歯車をすべて使う</option></select></label>${typeof c.gear === "number" ? stepper("gearn", c.gear, "使う歯車の枚数") : ""}</div>
+  </div>`;
+}
+function spChange(c, t) {
+  const k = t.dataset.sp, on = t.checked, v = t.value;
+  if (k === "shrink") { if (on) c.shrink = { n: 1, world: c.world }; else delete c.shrink; }
+  else if (k === "shrinkWorld") { if (v) c.shrink.world = v; else delete c.shrink.world; }
+  else if (k === "grow") { if (on) c.grow = { n: 1, world: c.world, ...(c.type === "char" ? { stat: true } : { dmg: true }) }; else delete c.grow; }
+  else if (k === "growWorld") { if (v) c.grow.world = v; else delete c.grow.world; }
+  else if (k === "growStat") c.grow.stat = on;
+  else if (k === "growDmg") c.grow.dmg = on;
+  else if (k === "growNum") c.grow.num = on;
+  else if (k === "req") { if (on) c.req = { n: 2, world: c.world }; else delete c.req; }
+  else if (k === "reqWorld") { if (v) c.req.world = v; else delete c.req.world; }
+  else if (k === "reqEmpty") { if (on) c.req.orEmpty = true; else delete c.req.orEmpty; }
+  else if (k === "gear") { if (v === "all") c.gear = "all"; else if (v === "n") c.gear = 2; else delete c.gear; }
+  changed(); renderEditor();
+}
 function clamp(v, lo, hi) { v = Math.round(+v); if (!isFinite(v)) v = lo; return Math.min(hi, Math.max(lo, v)); }
 
 function setNum(name, value) {
@@ -429,6 +462,8 @@ function setNum(name, value) {
   else if (name === "atk") v = c.atk = clamp(value, 0, 30);
   else if (name === "armor") v = c.armor = clamp(value, 0, 9);
   else if (name === "pay") v = c.pay.n = clamp(value, 1, 30);
+  else if (name === "reqn") v = c.req.n = clamp(value, 1, 5);
+  else if (name === "gearn") v = c.gear = clamp(value, 1, 10);
   else if (name === "hp") v = c.hp = clamp(value, 1, 30);
   else if (name === "limit") {
     const was = c.limit;
@@ -554,6 +589,8 @@ document.addEventListener("change", e => {
     }
     changed(); renderEditor(); return;
   }
+  if (t.dataset.sp != null) { spChange(curCard(), t); return; }
+  if (t.dataset.effPer != null) { const e = curCard().effects[+t.dataset.effPer]; if (t.value) e.per = t.value; else delete e.per; changed(); renderEditor(); return; }
   if (t.dataset.effTurn != null) { const e = curCard().effects[+t.dataset.effTurn]; if (t.checked) e.turn = true; else delete e.turn; changed(); renderEditor(); return; }
   if (t.dataset.effCond != null) { const e = curCard().effects[+t.dataset.effCond]; if (t.value) { e.cond = t.value; if (e.cn == null) e.cn = 1; } else { delete e.cond; delete e.cn; delete e.cworld; } changed(); renderEditor(); return; }
   if (t.dataset.effWhen != null) { const e = curCard().effects[+t.dataset.effWhen]; if (t.value === "play") delete e.when; else e.when = t.value; changed(); renderEditor(); return; }

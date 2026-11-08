@@ -276,3 +276,6 @@ select.txt{appearance:auto;-webkit-appearance:auto}
 /* 弾のしるし（カード一覧） */
 .setb{display:inline-block;font-size:10.5px;line-height:1.5;padding:0 5px;border-radius:4px;border:1px solid currentColor;margin-right:4px;opacity:.85}
 .setb.s2{color:#7fc4ff}.setb.s3{color:#ffb36b}
+/* 一覧の小さなカードは光らせない（UR・レジェンドの光が何十枚も同時に動いて重くなるため。プレビューだけ光る） */
+#list .card *, #list .card *::before, #list .card *::after { animation: none !important; }
+#list .row { content-visibility: auto; contain-intrinsic-size: auto 84px; }
