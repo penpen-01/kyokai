@@ -239,6 +239,7 @@ function endTurn(pi) {
   // 「このターンだけ」の能力・装甲・コスト低下を消す
   S.players.forEach(p => {
     p.handCutT = [];
+    p.handGrow = [];   // 妖気はそのターンだけ
     p.field.forEach(u => {
       if (u.tmpKws) { u.kws = (u.kws || []).filter(k => !u.tmpKws.includes(k)); delete u.tmpKws; }
       if (u.tmpArmor) { u.armorPlus = Math.max(0, (u.armorPlus || 0) - u.tmpArmor); delete u.tmpArmor; }
@@ -421,13 +422,14 @@ function playCard(pi, idx, targetsIn, useGear) {
   let self = null;
   if (d.type === "char") {
     self = addUnit(pi, id);
-    if (grow) { self.atk += grow; self.hp += grow; self.maxHp += grow; }
+    if (grow && d.grow.stat) { self.atk += grow; self.hp += grow; self.maxHp += grow; }
     // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
   }
   S.gearSpent = spend;
-  S.dmgBonus = d.type === "spell" ? grow : 0;
-  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; }
+  S.dmgBonus = grow && d.grow.dmg ? grow : 0;
+  S.numBonus = grow && d.grow.num ? grow : 0;
+  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; }
   if (d.type === "spell") trigUnits(pi, "spell");
   trigUnits(pi, "cardPlay", self, { card: id });
   // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
@@ -598,7 +600,8 @@ function discardRandom(q, pi) {
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
   if (e.per === "gear") { const k = S.gearSpent || 0; if (!k) return; e = { ...e, n: e.n * k }; }
-  if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気
+  if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気（ダメージ）
+  else if (S.numBonus && e.n > 0 && e.act !== "dmg" && !["costDown", "winTimer", "merge", "tutor"].includes(e.kind)) e = { ...e, n: e.n + S.numBonus };   // 妖気（そのほかの数）
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
   if (e.kind === "player") return playerEffect(pi, e);
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;

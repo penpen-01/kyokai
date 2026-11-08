@@ -403,8 +403,12 @@ function cardTextLines(card) {
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
   const useWhat = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
-  if (card.shrink) lines.push(`化かし${card.shrink.n}：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが${card.shrink.n}下がる。`);
-  if (card.grow) lines.push(`妖気${card.grow.n}：手札にある間、自分が${useWhat(card.grow)}を使うたびに、${card.type === "char" ? `このカードの攻撃力と体力が${card.grow.n}上がる` : `このカードが与えるダメージが${card.grow.n}上がる`}。`);
+  if (card.shrink) lines.push(`化かし：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが1下がる。`);
+  if (card.grow) { const g = card.grow, w = [];
+    if (g.stat && card.type === "char") w.push("攻撃力と体力");
+    if (g.dmg) w.push("効果で与えるダメージ");
+    if (g.num) w.push("効果の数（引く枚数・回復量など）");
+    lines.push(`妖気：このターン、自分が${useWhat(g)}を使うたびに、手札のこのカードの${w.join("・")}が1上がる（ターンの終わりに元に戻る）。`); }
   if (card.gear) lines.push(card.gear === "all" ? "歯車すべて：出すときに、手札の歯車をすべて使う。" : `歯車${card.gear}：出すときに、手札の歯車を${card.gear}枚使ってもよい。`);
   if (card.type === "char") {
     // タイミングごとに1行（登場時 → ほかのタイミングの順）
@@ -451,12 +455,12 @@ function cardHTML(card, o = {}) {
     : `<span class="glyph">${esc(card.glyph || "？")}</span>`;
   let stats;
   if (card.type === "char") {
-    const g = o.grow || 0;   // 妖気で手札のうちに強くなった分
+    const g = card.grow && card.grow.stat ? o.grow || 0 : 0;   // 妖気で手札のうちに強くなった分
     const atk = u ? u.atk : card.atk + g, hp = u ? u.hp : card.hp + g;
     stats = `<span class="stats"><span class="atk ${(u && u.atk > card.atk) || g ? "up" : ""}">${atk}</span>`
       + `<span class="hp ${u && u.hp < u.maxHp ? "hurt" : (u && u.maxHp > card.hp) || g ? "up" : ""}">${hp}</span></span>`;
   } else {
-    stats = `<span class="stats spelltag">魔法${o.grow ? `<b class="growb">ダメージ+${o.grow}</b>` : ""}</span>`;
+    stats = `<span class="stats spelltag">魔法${o.grow ? `<b class="growb">妖気+${o.grow}</b>` : ""}</span>`;
   }
   const tag = o.static ? "div" : "button";
   // 場のキャラは、与えられた能力も見せる。沈黙したキャラは能力なし
@@ -547,8 +551,10 @@ function normalizeData(data) {
     pay: c.pay && PAYS[c.pay.kind] ? { kind: c.pay.kind, n: Math.max(1, +c.pay.n || 1) } : null,
     ...(normSet(c.set) ? { set: normSet(c.set) } : {}),   // 弾（なし＝第1弾）
     // 手札で小さくなる：手札にある間、自分が（世界・種類の）カードを使うたびにコストが n 下がる
-    ...(c.grow && +c.grow.n > 0 ? { grow: { n: Math.min(9, Math.round(+c.grow.n)), ...(WORLDS[c.grow.world] ? { world: c.grow.world } : {}), ...(["char", "spell"].includes(c.grow.ctype) ? { ctype: c.grow.ctype } : {}) } } : {}),
-    ...(c.shrink && +c.shrink.n > 0 ? { shrink: { n: Math.min(9, Math.round(+c.shrink.n)), ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}) } } : {}),
+    // 妖気：このターン、（世界・種類の）カードを使うたびに、手札のこのカードが1ずつ強くなる。stat＝攻撃力と体力、dmg＝効果のダメージ、num＝そのほかの効果の数
+    ...(c.grow ? { grow: { n: 1, ...(WORLDS[c.grow.world] ? { world: c.grow.world } : {}), ...(["char", "spell"].includes(c.grow.ctype) ? { ctype: c.grow.ctype } : {}),
+      ...(c.grow.stat || c.grow.dmg || c.grow.num ? { stat: !!c.grow.stat, dmg: !!c.grow.dmg, num: !!c.grow.num } : c.type === "spell" ? { stat: false, dmg: true, num: false } : { stat: true, dmg: false, num: false }) } } : {}),
+    ...(c.shrink ? { shrink: { n: 1, ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}) } } : {}),
     // 歯車を使う：数（使ってもよい枚数）か "all"（すべて使う）
     ...(c.gear === "all" ? { gear: "all" } : +c.gear > 0 ? { gear: Math.min(20, Math.round(+c.gear)) } : {}),
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],
