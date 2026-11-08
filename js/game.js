@@ -338,11 +338,13 @@ function effCost(pi, d, idx) {
 function handTake(p, idx) {
   const [id] = p.hand.splice(idx, 1);
   if (p.handCut) p.handCut.splice(idx, 1);
+  if (p.handGrow) p.handGrow.splice(idx, 1);
   if (p.handCutT) p.handCutT.splice(idx, 1);
   return id;
 }
 /* 手札を作り直したとき（入れ替え・マリガン）は、コスト低下も消す */
-function handReset(p) { p.handCut = []; p.handCutT = []; }
+function handReset(p) { p.handCut = []; p.handCutT = []; p.handGrow = []; }
+const handGrowAt = (p, idx) => (p.handGrow || [])[idx] || 0;
 
 /* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか（any は両方） */
 function roleSide(pi, role) { return role === "enemy" || role === "enemyF" ? opp(pi) : pi; }
@@ -397,6 +399,7 @@ function playCard(pi, idx, targetsIn, useGear) {
     if (!targetOpts(pi, r, d).includes(targets[r])) return false;
   }
   const cost = effCost(pi, d, idx);
+  const grow = handGrowAt(p, idx);
   const spend = d.gear === "all" ? gearsOf(p) : useGear && gearChoice(pi, idx) ? d.gear : 0;
   handTake(p, idx);
   p.e -= cost;
@@ -418,16 +421,20 @@ function playCard(pi, idx, targetsIn, useGear) {
   let self = null;
   if (d.type === "char") {
     self = addUnit(pi, id);
+    if (grow) { self.atk += grow; self.hp += grow; self.maxHp += grow; }
     // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
   }
   S.gearSpent = spend;
-  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; }
+  S.dmgBonus = d.type === "spell" ? grow : 0;
+  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; }
   if (d.type === "spell") trigUnits(pi, "spell");
   trigUnits(pi, "cardPlay", self, { card: id });
   // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
   p.hand.forEach((hid, i) => { const h = DEF[hid], k = h && h.shrink;
-    if (k && (!k.world || k.world === d.world) && (!k.ctype || k.ctype === d.type)) { (p.handCut || (p.handCut = []))[i] = ((p.handCut[i]) || 0) + k.n; } });
+    if (k && (!k.world || k.world === d.world) && (!k.ctype || k.ctype === d.type)) { (p.handCut || (p.handCut = []))[i] = ((p.handCut[i]) || 0) + k.n; }
+    const g = h && h.grow;
+    if (g && (!g.world || g.world === d.world) && (!g.ctype || g.ctype === d.type)) { (p.handGrow || (p.handGrow = []))[i] = ((p.handGrow[i]) || 0) + g.n; } });
   cleanup();
   if (!checkWin()) render();
   return true;
@@ -452,6 +459,7 @@ function condOK(pi, e, self) {
     case "hpLE": return p.hp <= e.cn;
     case "worldGE": return p.field.filter(u => u.hp > 0 && (!e.cworld || (DEF[u.id] && DEF[u.id].world === e.cworld))).length >= e.cn;
     case "combo": return (p.played || 0) >= 2;   // いま使っているカードを含めて2枚目以上
+    case "playedGE": return (p.played || 0) - 1 >= e.cn;   // 詠唱N：このカードより先に N 枚
     case "handZero": return p.hand.length === 0;
     case "handGE": return p.hand.length >= e.cn;
     case "maxEGE": return p.maxE >= e.cn;
@@ -590,6 +598,7 @@ function discardRandom(q, pi) {
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
   if (e.per === "gear") { const k = S.gearSpent || 0; if (!k) return; e = { ...e, n: e.n * k }; }
+  if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
   if (e.kind === "player") return playerEffect(pi, e);
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;
@@ -1349,7 +1358,7 @@ function render() {
       // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
       const dim = !DEF[id] || (id !== GEAR_ID && S.turn === ME && !S.over && !canPlay(ME, i).ok);
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
-      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}) });
+      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}), ...(handGrowAt(me, i) ? { grow: handGrowAt(me, i) } : {}) });
     }).join("")}</div>
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
