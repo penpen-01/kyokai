@@ -147,3 +147,4 @@
 - 幻想案 3回目（11-08 深夜）：キーワード 化かしN（card.shrink）・妖気N（card.grow、p.handGrow／S.dmgBonus）・詠唱N（cond playedGE）を kakunin v127 に。オーナーのお気に入り：タマモ・コハク・お菓子の家。0コストトークン配布は4枚に削減。
 - 幻想案 4回目（11-09 0時台）：化かし・妖気は1固定、妖気はそのターンだけ・stat/dmg/num を別設定（kakunin v128）。沈黙3段階、隠密4枚に、直撃・突進追加、山札切れ対策（森の循環・ドロー削減）。
 - 幻想案 5回目（11-09 深夜）：kakunin v129 に 墓地→山札 recycle（me.grave＝倒された自分のキャラ。第3弾の墓地復活にも使える）・peekDiscard（相手の手札を見て最高コストを捨てさせる）・wakeTimer（目覚め）・対象 enemyRandF/anyRand・atk の turn・per played。#41 月夜の大魔女の「若竜」はカエルの書き間違いと解釈（確認待ち）。
+- 幻想案 6回目（11-09 3時前）：kakunin v130 に 使える条件 card.req {n, world, orEmpty}・条件 bounced。月夜の大魔女は神話の若竜で確定（次元をこえて呼び替える設定）。気になる：ヴァルプルギスの毎ターン捨てさせが強い可能性。
