@@ -138,5 +138,5 @@
 - main v115・カードデータ v63。kakunin は main と同じ。
 - 第2弾-1（機械）：45枚＋トークン2、イラストすべて入り済み。パック pack2-1 は販売停止中。
 - 第2弾-2（神話）：45枚＋トークン5（子竜・天使の羽兵・天馬・若竜R・古竜UR）を game-data に追加済み（set "2-2"・glyph 神）。パック pack2-2「第2弾-2 神話（仮）」販売停止中、開放戦は世界限定（神話）・上級。
-- 次：神話のイラスト（オーナーが Gemini で生成）。依頼文 https://claude.ai/artifact/2QrBDXTkGcw4U9J2vbhK3U 。並び順は scratchpad/myth2art/order.json、入れるのは `python3 scratchpad/myth2art/put.py コモン① 画像…`（入れたらカードの形で sheet.py で確認 → コミット）。
+- 次：神話のイラスト（オーナーが Gemini で生成）。剣聖の流派6枚（ヴァルトール→シズク→門下生・二の太刀・燕返し・抜刀術）は別グループで、第1弾 剣聖の弟子の絵を参考画像にして同じ人物をそろえる（ページ再生成は scratchpad/myth2art/gen_page.py）。依頼文 https://claude.ai/artifact/2QrBDXTkGcw4U9J2vbhK3U 。並び順は scratchpad/myth2art/order.json、入れるのは `python3 scratchpad/myth2art/put.py コモン① 画像…`（入れたらカードの形で sheet.py で確認 → コミット）。
 - そのあと：第2弾-3（幻想）のカード案 → 3つそろってから強さの最終調整 → 開放戦の相手デッキ・機械/神話/幻想だけの CPU デッキ → パック名。
