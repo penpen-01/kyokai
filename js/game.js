@@ -2401,8 +2401,11 @@ function showSolo() {
 const GATE = { pack: null, deck: null };
 const gateOpened = p => !!(Account.data && (Account.data.opened || []).includes(p.set));
 /* 開放戦のあるパック（all=true なら開放ずみも含む） */
+/* オーナーの試し用：アドレスの末尾に ?gatetest を付けると、販売前のパックの開放戦にも挑める。
+   試しでは勝っても開放しない（自分のアカウントに第2弾が開かないように）。何度でも挑める */
+const GATE_TEST = /[?&]gatetest\b/.test(location.search);
 function gatePacks(all) {
-  return PACKS.filter(p => p.open && p.set && p.set !== "1" && (all || !gateOpened(p)));
+  return PACKS.filter(p => (p.open || GATE_TEST) && p.set && p.set !== "1" && (all || GATE_TEST || !gateOpened(p)));
 }
 function gateArt(p) {
   const c = (p.cards || []).map(id => DEF[id]).filter(c => c && c.art && ["legend", "ur"].includes(c.rarity))[0];
@@ -2422,13 +2425,14 @@ function gateOpponent(p) {
 /* 1つめの画面：どのパックの開放戦に挑むか */
 function showGate() {
   const all = gatePacks(true);
-  const row = x => { const done = gateOpened(x), art = gateArt(x);
+  const row = x => { const done = gateOpened(x) && !GATE_TEST, art = gateArt(x);
     return `<button type="button" class="pr-deck gate-row ${done ? "done" : ""}" data-act="gatePack" data-id="${esc(x.id)}" ${done ? "disabled" : ""}>
       <span class="cs-deck-art" ${art ? `style="background-image:url('${esc(art)}')"` : ""}></span>
       <span class="cs-deck-txt"><small>${esc(setName(x.set))}・${gateRule(x).label}${x.gateRule !== "free" && x.gateWorld ? `（${WORLDS[x.gateWorld]}）` : ""}</small><b>${esc(x.name)}</b></span>
       ${done ? `<span class="usingtag done">開放ずみ</span>` : `<span class="lvl-go" aria-hidden="true">›</span>`}</button>`; };
   openOverlay(`<div class="panel">
     ${Decks.topbar("パック開放戦", "solo")}
+    ${GATE_TEST ? `<p class="callout">試しモード（?gatetest）：販売前のパックにも挑めます。勝っても開放はされません。</p>` : ""}
     <p class="lead small">新しいパックは、そのパックの開放戦に勝つとショップに並びます。それまでは、そのパックのカードはカード一覧にも出ず、交換もできません。</p>
     ${all.length ? `<h3 class="sec">挑むパックを選ぶ</h3><div class="pr-list">${all.map(row).join("")}</div>` : `<p class="callout">開放戦のあるパックは、まだありません。</p>`}
   </div>`, "start", true);
@@ -2474,6 +2478,7 @@ function startGateGame() {
 /* 開放戦に勝ったら、そのパックの弾を開く（結果画面で1回だけ呼ばれる） */
 function gateReward() {
   const B = S && S.battle; if (!B || !B.key) return null;
+  if (GATE_TEST) { toast("試しモードなので、パックは開放しません"); return null; }
   const o = Account.data.opened || (Account.data.opened = []);
   if (!o.includes(B.key)) o.push(B.key);
   const p = PACKS.find(x => x.id === B.pack);
