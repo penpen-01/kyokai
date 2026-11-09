@@ -1,5 +1,5 @@
 {
- "version": 85,
+ "version": 86,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6274,7 +6274,8 @@
    "shrink": {
     "n": 1,
     "world": "fan"
-   }
+   },
+   "art": "art/f2-susuki-123bc1b4a0.webp"
   },
   {
    "id": "f2-tanuki",
@@ -6468,7 +6469,8 @@
      "who": "self"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-herbgirl-79e2e715b5.webp"
   },
   {
    "id": "f2-sleepgrass",
@@ -6511,7 +6513,8 @@
      "who": "self"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-broom-ff7dfd01c1.webp"
   },
   {
    "id": "f2-bell",
@@ -6531,7 +6534,8 @@
      "to": "enemyRand"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-bell-e4066c6d67.webp"
   },
   {
    "id": "f2-thorn",
@@ -6559,7 +6563,8 @@
      "cn": 1
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-thorn-a2fed73803.webp"
   },
   {
    "id": "f2-blackcat",
@@ -6576,7 +6581,8 @@
     "stealth"
    ],
    "effects": [],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-blackcat-e2d9b3e5c9.webp"
   },
   {
    "id": "f2-crystal",
@@ -6594,7 +6600,8 @@
      "n": 1
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-crystal-d5349de68e.webp"
   },
   {
    "id": "f2-serpent",
@@ -6611,7 +6618,8 @@
     "rush"
    ],
    "effects": [],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-serpent-13ed862b3b.webp"
   },
   {
    "id": "f2-ringfairy",
@@ -6635,7 +6643,8 @@
      "cn": 2
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-ringfairy-14527566f0.webp"
   },
   {
    "id": "f2-bakefox",
