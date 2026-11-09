@@ -251,13 +251,13 @@ select.txt{appearance:auto;-webkit-appearance:auto}
 .wd-mix{display:flex;flex-direction:column;gap:4px;color:var(--muted)}
 .wd-mix b{color:var(--fg)}
 .wd-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.wd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:14px 8px}
-.wd-tile{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:block}
+.wd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px 8px}
+.wd-tile{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:block;padding-bottom:12px}
 .wd-tile .card{width:100%;cursor:pointer}
 .wd-tile:focus-visible{outline:2px solid var(--fg);outline-offset:2px;border-radius:6px}
 .wd-tile.missing{aspect-ratio:5/7;border:1px dashed var(--danger);border-radius:6px;display:grid;place-items:center;font-size:10px;color:var(--danger);text-align:center}
 .pool .wd-tile.maxed{opacity:.45}
-.wd-badge{position:absolute;left:50%;transform:translateX(-50%);bottom:-9px;white-space:nowrap;z-index:2;font-size:11px;font-weight:800;padding:1px 6px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.wd-badge{position:absolute;left:50%;transform:translateX(-50%);bottom:0;white-space:nowrap;z-index:2;font-size:11px;font-weight:800;padding:1px 6px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-variant-numeric:tabular-nums}
 .wd-badge.in{background:var(--gold);color:#1a1408;border-color:var(--gold)}
 
 /* ---- AIの道具 ---- */
@@ -281,4 +281,42 @@ select.txt{appearance:auto;-webkit-appearance:auto}
 :is(.card:not(#edPreview .card)), :is(.card:not(#edPreview .card))::before, :is(.card:not(#edPreview .card))::after,
 .card:not(#edPreview .card) *, .card:not(#edPreview .card) *::before, .card:not(#edPreview .card) *::after { animation: none !important; }
 #list .row { content-visibility: auto; contain-intrinsic-size: auto 84px; }
-.wd-grid.pool .wd-tile{content-visibility:auto;contain-intrinsic-size:auto 120px}
+/* 見えている分だけ描く。はみ出すと切れるので、枚数バッジはタイルの内側（下の余白）に置く */
+.wd-grid.pool .wd-tile{content-visibility:auto;contain-intrinsic-size:auto 136px;padding-top:4px}
+
+/* ---- スマホ（iPhone など、幅820px以下） ----
+   カード・デッキは「一覧」と「編集」を1画面ずつ切り替える。ヘッダーは詰め、タブとボタンの列は横にスクロールする */
+.m-back{display:none}
+@media (max-width:820px){
+  .m-back{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:6px;width:100%;
+    padding:12px 14px;margin-bottom:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    font-size:15px;font-weight:700;color:var(--fg)}
+  .m-back:focus-visible{outline:2px solid var(--fg)}
+  body.m-edit #tab-cards .listcol{display:none}
+  body:not(.m-edit) #tab-cards .editcol{display:none}
+  .wd-wrap.has .wd-listcol{display:none}
+  .wd-wrap:not(.has) .wd-editcol{display:none}
+
+  .top-in{gap:8px;padding-block:10px 6px}
+  .brand h1{font-size:19px}
+  .brand .sub{display:none}
+  .status{min-width:0;flex-basis:100%;order:3;gap:6px 10px}
+  .top-actions{margin-left:auto}
+  .top-actions .btn{padding:8px 12px;font-size:13px}
+  .tabs{overflow-x:auto;scrollbar-width:none;gap:0;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:none;white-space:nowrap;padding:10px 12px;font-size:14px}
+
+  .seg{max-width:100%;overflow-x:auto;scrollbar-width:none}
+  .seg::-webkit-scrollbar{display:none}
+  .seg button{flex:none;white-space:nowrap;padding:9px 12px}
+  .listbar{flex-wrap:wrap}
+  .btn.sm{padding:9px 12px;font-size:13px}
+
+  /* iPhone は 16px 未満の入力欄を触ると画面が拡大されるので、入力欄は 16px にする */
+  input, select, textarea, .txt{font-size:16px !important}
+
+  .wd-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}
+  .wd-filters input{max-width:none !important;width:100%}
+}
+@media (max-width:820px){ #tab-decks:has(.wd-wrap.has) > h2, #tab-decks:has(.wd-wrap.has) > .hint{display:none} }

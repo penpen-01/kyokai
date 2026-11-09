@@ -185,6 +185,7 @@ function renderEditor() {
   if (!c) { el.innerHTML = `<div class="empty-ed">左の一覧からカードを選ぶか、「新しいカード」を作ってください。</div>`; return; }
   const isChar = c.type === "char";
   el.innerHTML = `
+    <button type="button" class="m-back" data-act="mBack">← カード一覧に戻る</button>
     <div class="ed">
       <div class="ed-preview" id="edPreview"></div>
       <div class="ed-form">
@@ -483,10 +484,19 @@ function setCopies(id, value) {
   if (id === curId) renderEditor();
 }
 
+/* スマホ（幅820px以下）では、一覧と編集を1画面ずつ切り替える。一覧のスクロール位置は戻ったときに復元する */
+const isNarrow = () => matchMedia("(max-width:820px)").matches;
+let listScrollY = 0;
+function mobileEdit(on) {
+  if (on === document.body.classList.contains("m-edit")) return;
+  if (on) listScrollY = window.scrollY;
+  document.body.classList.toggle("m-edit", on);
+  window.scrollTo(0, on ? 0 : listScrollY);
+}
 function select(id) {
   curId = id; confirmDelete = false;
   renderList(); renderEditor();
-  if (matchMedia("(max-width:820px)").matches) $("#editor").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (isNarrow()) mobileEdit(true);
 }
 
 /* ---------- イベント ---------- */
@@ -641,6 +651,7 @@ function act(name, el) {
   const c = curCard();
   switch (name) {
     case "more": toggleMore($("#more").hidden); break;
+    case "mBack": mobileEdit(false); break;
     case "new": {
       const card = normalizeData({ cards: [{ id: newId(), name: "新しいカード", world: "fan", type: "char", cost: 2, atk: 2, hp: 2, glyph: "新", limit: 3, set: setFilter === "all" ? "1" : setFilter }] }).cards[0];   // 絞っている弾のカードとして作る
       DATA.cards.push(card);

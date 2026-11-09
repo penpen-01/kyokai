@@ -45,7 +45,7 @@ const WDecks = {
     el.innerHTML = `
       <h2>デッキ</h2>
       <p class="hint">CPUが使うデッキと、検証用のデッキをここで組みます。CPUは、対戦で選ばれた強さのデッキの中からランダムに1つ使います。「検証用」はCPUもプレイヤーも使わず、検証タブだけで使えます。変更は「公開する」までゲームには出ません。</p>
-      <div class="wd-wrap">
+      <div class="wd-wrap ${d ? "has" : ""}">
         <div class="wd-listcol">${this.listHTML()}</div>
         <div class="wd-editcol">${d ? this.editHTML(d) : `<div class="fgroup"><p class="hint">左の一覧からデッキを選ぶか、新しく作ってください。</p></div>`}</div>
       </div>`;
@@ -84,7 +84,8 @@ const WDecks = {
     const isStarter = DATA.config.STARTER_DECK === d.id;
     const seg = (k, v, label) => `<button type="button" data-act="wdFilter" data-k="${k}" data-v="${v}" aria-pressed="${this.f[k] === v}">${label}</button>`;
     const conf = this.confirmDel === d.id;
-    return `<div class="fgroup">
+    return `<button type="button" class="m-back" data-act="wdBack">← デッキ一覧に戻る</button>
+    <div class="fgroup">
       <div class="frow">
         <div class="field grow"><label for="wd-name">名前</label><input class="txt" id="wd-name" data-wd="name" value="${esc(d.name)}" maxlength="16"></div>
         <div class="field"><label for="wd-level">使い道</label>
@@ -144,7 +145,8 @@ const WDecks = {
   handleAct(act, el) {
     const id = el && el.dataset.id, d = this.deck();
     switch (act) {
-      case "wdOpen": this.id = id; this.confirmDel = null; this.msg = ""; this.render(); return true;
+      case "wdOpen": this.id = id; this.confirmDel = null; this.msg = ""; this.render(); if (matchMedia("(max-width:820px)").matches) window.scrollTo(0, 0); return true;
+      case "wdBack": this.id = null; this.confirmDel = null; this.render(); return true;
       case "wdNew": {
         const nd = { id: this.newId(), name: "新しいデッキ", cards: {}, level: "test" };
         DATA.decks.push(nd); this.id = nd.id; this.msg = ""; this.touch(); return true;
