@@ -1037,7 +1037,13 @@ let resultTimer = null;
 function scheduleResult() {
   clearTimeout(resultTimer);
   const g = S;
-  resultTimer = setTimeout(() => { if (S !== g || !S.over) return; resultShown = true; render(); showResult(myResult()); }, 700);
+  // 最後の攻撃などの演出が終わるのを待ってから、決着の演出（Finale）→ タップで結果の画面
+  resultTimer = setTimeout(async () => {
+    if (S !== g || !S.over) return;
+    await Motion.idle();
+    if (S !== g) return;
+    Finale.play(myResult(), () => { if (S !== g) return; resultShown = true; render(); showResult(myResult()); });
+  }, 450);
 }
 
 /* ---------- CPU ----------
@@ -1291,7 +1297,7 @@ function pbarHTML(pi) {
   const hp = Math.max(0, p.hp);
   return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.turn === pi && !S.over ? "active" : ""}">
     <div class="pl-left">${left}</div>
-    <button type="button" class="avatar ${tgt ? "tgt" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
+    <button type="button" class="avatar ${tgt ? "tgt" : ""} ${S.over && resultShown && S.winner !== "draw" && S.winner !== pi ? "fin-broken" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
       <span class="halo" aria-hidden="true"></span>
       <span class="face">${art ? iconImgHTML(icon) : `<span class="glyph">召</span>`}</span>
       <span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
@@ -2148,8 +2154,7 @@ function giveReward(res) {
   }
   if (r.g) Account.addGold(r.g);       // 連勝数も一緒に保存される
   else if (counts) Account.saveNow();   // 負け：連勝が0になったこと・ボスの天井などを保存
-  rewarded[S.gid] = r;
-  Sound.play(res === "win" ? "win" : res === "lose" ? "lose" : "click");
+  rewarded[S.gid] = r;   // 勝ち負けの音は決着の演出（Finale）で鳴らす
   return r;
 }
 
@@ -2160,35 +2165,60 @@ function streakHTML(r, res) {
     const next = Account.streakBonus(r.wins + 1);
     const now = r.wins >= 2 ? `${r.wins}連勝！${r.bonus ? `ボーナス +${r.bonus}%` : ""}` : "連勝スタート";
     const tail = next > r.bonus ? `次も勝てば +${next}%` : next ? `ボーナスは最大の +${next}%` : "";
-    return `<p class="streak">${now}${tail ? `<small>${tail}</small>` : ""}</p>`;
+    const n = Math.min(r.wins, 10);
+    const flames = Array.from({ length: n }, (_, i) => `<i class="flame" style="--i:${i}"></i>`).join("") + (r.wins > 10 ? `<em>+${r.wins - 10}</em>` : "");
+    return `<div class="streak res-streak"><span class="flames" aria-hidden="true">${flames}</span><b>${now}</b>${tail ? `<small>${tail}</small>` : ""}</div>`;
   }
   return r.prev >= 2 ? `<p class="streak lost">${r.prev}連勝で途切れました</p>` : "";
 }
 
 function showResult(res) {
   if (!res) return;
-  const label = { win: "勝利", lose: "敗北", draw: "引分" }[res];
   const online = MODE === "online";
   const r = giveReward(res), g = r.g;
-  openOverlay(`<div class="panel">
-    <p class="result ${res}">${label}</p>
-    ${g ? `<p class="reward">+${g}G <small>（所持 ${Account.gold}G）</small></p>` : ""}
+  const en = { win: "VICTORY", lose: "DEFEAT", draw: "DRAW" }[res], ja = { win: "勝利", lose: "敗北", draw: "引き分け" }[res];
+  const B = S && S.battle;
+  const notes = [
+    B && B.kind === "world" && !r.sample ? "世界限定戦（連勝ボーナスはありません）" : "",
+    S && S.practice ? "練習対戦なので、Gと連勝はつきません" : r.sample && res === "win" ? "サンプルデッキの対戦なので、Gはもらえません" : ""
+  ].filter(Boolean);
+  // 次にすること：大きいボタン1つ＋小さいボタン
+  const again = online
+    ? (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
+    : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
+    : `<button type="button" class="btn primary res-main" data-act="cpuAgain">同じ強さでもう一度</button>`;
+  const sub = [
+    !online && !(B && B.kind === "gate" && r.gate) ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
+    `<button type="button" class="res-sub" data-act="log">${RES_IC.log}<span>ログ</span></button>`,
+    `<button type="button" class="res-sub" data-act="closeOverlay">${RES_IC.board}<span>盤面</span></button>`,
+    `<button type="button" class="res-sub" data-act="toTitle">${RES_IC.home}<span>${online ? "部屋を出る" : "タイトル"}</span></button>`
+  ].join("");
+  openOverlay(`<div class="panel res-panel res-${res}">
+    <div class="res-head"><span class="res-en">${en}</span><b class="res-ja">${ja}</b></div>
+    ${g ? `<div class="res-reward">${curIcon("gold", "res-coin")}<b class="res-g" data-to="${g}">+0</b><span class="res-gl">G</span><small>所持 ${Account.gold.toLocaleString()}G</small></div>` : ""}
+    ${streakHTML(r, res)}
     ${r.boss ? bossRewardHTML(r.boss) : ""}
     ${r.gate ? `<div class="gate-open"><b>「${esc(r.gate.name)}」が開放されました！</b><small>ショップに並びました。このパックのカードもカード一覧に出ます</small></div>` : ""}
     ${r.bossSign ? `<p class="boss-sign">……境界が、揺らいでいる。<small>次の上級戦で、何かが起こるかもしれない</small></p>` : ""}
-    ${S && S.battle && S.battle.kind === "world" && !r.sample ? `<p class="streak lost">世界限定戦（連勝ボーナスはありません）</p>` : ""}
-    ${S && S.practice ? `<p class="streak lost">練習対戦なので、Gと連勝はつきません</p>` : r.sample && res === "win" ? `<p class="streak lost">サンプルデッキの対戦なので、Gはもらえません</p>` : ""}
-    ${streakHTML(r, res)}
-    <p class="lead" style="text-align:center">${S.turnNo}ターンで決着。残り体力 ${esc(S.players[ME].name)} ${Math.max(0, S.players[ME].hp)} ／ ${esc(S.players[OP].name)} ${Math.max(0, S.players[OP].hp)}</p>
-    ${online
-      ? (Online.role === "host" ? `<button type="button" class="btn primary" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
-      : `${S.battle && S.battle.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary" data-act="cpuAgain">もう一度挑む</button>`) : `<button type="button" class="btn primary" data-act="cpuAgain">同じ強さでもう一度</button>`}
-         ${S.battle && S.battle.kind === "gate" && r.gate ? "" : `<button type="button" class="btn" data-act="cpuReselect">${S.battle && ["world", "gate"].includes(S.battle.kind) ? "デッキや強さを選び直す" : "強さを選び直す"}</button>`}`}
-    <button type="button" class="btn" data-act="log">プレイログを見る</button>
-    <button type="button" class="btn" data-act="closeOverlay">盤面を見る</button>
-    <button type="button" class="btn" data-act="toTitle">${online ? "部屋を出てタイトルに戻る" : "タイトルに戻る"}</button>
+    ${notes.map(t => `<p class="streak lost">${t}</p>`).join("")}
+    <div class="res-acts">${again}<div class="res-subs">${sub}</div></div>
   </div>`, "result");
+  // G を 0 から数え上げる
+  const el = document.querySelector(".res-g");
+  if (el) {
+    const to = +el.dataset.to, t0 = performance.now(), dur = Motion.reduced ? 1 : 900;
+    const step = t => { const k = Math.min(1, (t - t0) / dur), v = Math.round(to * (1 - Math.pow(1 - k, 3)));
+      if (!el.isConnected) return; el.textContent = "+" + v.toLocaleString(); if (k < 1) requestAnimationFrame(step); else el.classList.add("done"); };
+    requestAnimationFrame(step);
+    Sound.play("rare", 1);
+  }
 }
+const RES_IC = {
+  again: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  log: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 11h7M9 15h7M9 7h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  board: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M9 5v14M15 5v14" stroke="currentColor" stroke-width="1.6"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7M5 10v10h5v-6h4v6h5V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`
+};
 
 function toTitle() {
   if (MODE === "online") Online.leave();
@@ -2198,6 +2228,7 @@ function toTitle() {
   MODE = "cpu"; setPerspective(0);
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
+  Finale.reset();
   if (typeof Cinema !== "undefined") Cinema.reset();
   clearTimeout(resultTimer);
   app.innerHTML = ""; app.classList.remove("battle", "pre");

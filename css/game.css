@@ -1618,3 +1618,85 @@ html.nofx .card .shine{display:none}
 .pick-info{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
 .pick-info small{color:var(--muted);font-size:12px}
 .pick-info p{margin:4px 0 0;font-size:13px;line-height:1.6}
+
+/* ---------- 決着の演出（js/finale.js） ---------- */
+.fin{position:fixed;inset:0;z-index:40;display:grid;place-items:center;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.fin-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:finflash .55s ease-out forwards}
+@keyframes finflash{0%{opacity:0}12%{opacity:.92}100%{opacity:0}}
+.fin-bg{position:absolute;inset:0;opacity:0;transition:opacity .5s}
+.fin-win .fin-bg{background:radial-gradient(ellipse at 50% 46%,rgba(255,214,120,.35),rgba(20,12,0,.72) 62%)}
+.fin-lose .fin-bg{background:radial-gradient(ellipse at 50% 46%,rgba(60,8,12,.55),rgba(0,0,0,.85) 65%)}
+.fin-draw .fin-bg{background:radial-gradient(ellipse at 50% 46%,rgba(200,210,230,.2),rgba(0,0,0,.8) 65%)}
+.fin.show .fin-bg{opacity:1}
+.fin-rays{position:absolute;left:50%;top:46%;width:180vmax;height:180vmax;transform:translate(-50%,-50%) scale(.3);opacity:0;
+  background:repeating-conic-gradient(from 0deg,rgba(255,226,150,.28) 0deg 5deg,transparent 5deg 15deg);
+  -webkit-mask:radial-gradient(circle,#000 8%,transparent 55%);mask:radial-gradient(circle,#000 8%,transparent 55%);transition:transform .7s cubic-bezier(.2,.8,.3,1),opacity .4s}
+.fin.show .fin-rays{opacity:1;transform:translate(-50%,-50%) scale(1);animation:finspin 14s linear infinite}
+@keyframes finspin{to{rotate:360deg}}
+.fin-title{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0;transform:scale(2.4);filter:blur(10px)}
+.fin.show .fin-title{animation:fintitle .55s cubic-bezier(.15,.9,.25,1.15) forwards}
+@keyframes fintitle{0%{opacity:0;transform:scale(2.4);filter:blur(10px)}60%{opacity:1;filter:blur(0)}100%{opacity:1;transform:scale(1);filter:none}}
+.fin-en{position:relative;font-family:"Cinzel","Shippori Mincho B1",serif;font-weight:900;font-size:clamp(46px,15vw,120px);letter-spacing:.08em;line-height:1;
+  background:linear-gradient(180deg,#fffbe8 0%,#ffe08a 34%,#c8902c 52%,#ffe7a6 70%,#9a6a1c 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 #5a3a06) drop-shadow(0 0 18px rgba(255,200,90,.7))}
+.fin-en::after{content:attr(data-t);position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.95) 50%,transparent 65%) -200% 0/200% 100% no-repeat;-webkit-background-clip:text;background-clip:text;color:transparent;animation:finshine 2.2s .9s ease-in-out infinite}
+@keyframes finshine{0%{background-position:-200% 0}55%,100%{background-position:200% 0}}
+.fin-lose .fin-en{background:linear-gradient(180deg,#f2f2f6 0%,#9aa0ad 45%,#4a4f5c 55%,#c3c7d0 75%,#3a3e48 100%);-webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 2px 0 #12141a) drop-shadow(0 0 22px rgba(220,40,50,.6))}
+.fin-lose .fin-en::after{display:none}
+.fin-draw .fin-en{background:linear-gradient(180deg,#fff,#c9d2e6 50%,#7b86a0);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 16px rgba(180,200,255,.6))}
+.fin-ja{font-family:var(--f-display);font-weight:800;font-size:clamp(22px,6vw,40px);letter-spacing:.6em;padding-left:.6em;color:#fff3cf;text-shadow:0 0 12px rgba(255,190,80,.8)}
+.fin-lose .fin-ja{color:#e7c6c8;text-shadow:0 0 12px rgba(200,30,40,.8)}
+.fin-sparks{position:absolute;inset:0;opacity:0;transition:opacity .3s}
+.fin.show .fin-sparks{opacity:1}
+.fin-sparks i{position:absolute;left:var(--x);bottom:-10px;width:calc(6px*var(--s));height:calc(6px*var(--s));border-radius:50%;background:#ffe08a;box-shadow:0 0 10px #ffc94d;animation:finup 2.6s var(--d) linear infinite}
+@keyframes finup{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-105vh) translateX(20px);opacity:0}}
+.fin-lose .fin-sparks i{top:-10px;bottom:auto;background:#8d8f99;box-shadow:none;animation-name:findown;animation-duration:3.4s}
+@keyframes findown{0%{transform:translateY(0);opacity:0}15%{opacity:.7}100%{transform:translateY(105vh) translateX(-30px);opacity:0}}
+.fin-draw .fin-sparks{display:none}
+.fin-tap{position:absolute;bottom:12vh;left:0;right:0;text-align:center;margin:0;font-weight:700;letter-spacing:.2em;color:#fff;opacity:0;text-shadow:0 1px 6px #000}
+.fin.ready .fin-tap{animation:fintap 1.4s ease-in-out infinite}
+@keyframes fintap{0%,100%{opacity:.35}50%{opacity:1}}
+/* 負けた側の顔：ひび → 砕ける。盤面を見るときはひびの入った白黒のまま */
+.avatar.fin-crack .face{animation:fincrack .45s steps(3) forwards}
+@keyframes fincrack{0%{filter:none}40%{filter:brightness(2.2) contrast(1.4)}100%{filter:grayscale(1) brightness(.8) contrast(1.3)}}
+.avatar.fin-crack .face::after,.avatar.fin-broken .face::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 50 18 8M50 50 92 20M50 50 80 96M50 50 6 70M50 50 46 2M50 50 98 62M30 30 10 34M70 34 86 44M64 74 46 92M28 62 22 88' stroke='%23fff' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3Cpath d='M50 50 18 8M50 50 92 20M50 50 80 96M50 50 6 70M50 50 46 2M50 50 98 62' stroke='%23000' stroke-width='.8' fill='none' opacity='.6'/%3E%3C/svg%3E") center/100% 100%}
+.avatar .face{position:relative}
+.avatar.fin-gone{visibility:hidden}
+.avatar.fin-broken .face{filter:grayscale(1) brightness(.7)}
+#app.fin-gray{transition:filter .8s;filter:grayscale(.85) brightness(.55)}
+
+/* ---------- 結果の画面 ---------- */
+.res-panel{text-align:center;gap:14px}
+.res-head{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:6px}
+.res-en{font-family:"Cinzel","Shippori Mincho B1",serif;font-weight:900;font-size:clamp(36px,11vw,64px);letter-spacing:.08em;line-height:1;
+  background:linear-gradient(180deg,#fffbe8,#ffe08a 38%,#c8902c 55%,#ffe7a6 75%,#9a6a1c);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 12px rgba(255,200,90,.45))}
+.res-lose .res-en{background:linear-gradient(180deg,#f2f2f6,#9aa0ad 45%,#4a4f5c 58%,#c3c7d0 78%,#3a3e48);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 12px rgba(220,40,50,.45))}
+.res-draw .res-en{background:linear-gradient(180deg,#fff,#c9d2e6 50%,#7b86a0);-webkit-background-clip:text;background-clip:text}
+.res-ja{font-family:var(--f-display);font-size:18px;letter-spacing:.5em;padding-left:.5em;color:var(--muted)}
+.res-reward{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:14px 12px;border-radius:14px;background:radial-gradient(ellipse at 50% 0,rgba(255,214,120,.18),rgba(0,0,0,.25));border:1px solid rgba(255,214,120,.35)}
+.res-coin{width:40px;height:40px;animation:rescoin 1s ease-out}
+@keyframes rescoin{0%{transform:scale(0) rotate(-200deg)}70%{transform:scale(1.2) rotate(10deg)}100%{transform:none}}
+.res-g{font-family:var(--f-display);font-weight:800;font-size:40px;color:#ffe08a;font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(255,190,80,.5)}
+.res-g.done{animation:respop .35s ease-out}
+@keyframes respop{50%{transform:scale(1.18)}}
+.res-gl{font-family:var(--f-display);font-weight:800;font-size:22px;color:#ffe08a}
+.res-reward small{flex-basis:100%;color:var(--muted)}
+.res-streak{display:flex;flex-direction:column;align-items:center;gap:4px}
+.res-streak b{font-size:16px}
+.res-streak small{display:block;color:var(--muted);font-weight:500}
+.flames{display:flex;gap:4px;align-items:flex-end;min-height:26px}
+.flames em{font-style:normal;font-weight:800;color:#ffb347;font-size:13px}
+.flame{width:16px;height:24px;border-radius:50% 50% 45% 45% / 62% 62% 38% 38%;background:radial-gradient(ellipse at 50% 78%,#fff6c8 0 18%,#ffcc4d 32%,#ff7a1a 62%,rgba(255,60,0,0) 75%);
+  transform-origin:50% 100%;opacity:0;animation:flamein .35s calc(.9s + var(--i)*.09s) ease-out forwards,flicker 1.1s calc(var(--i)*.13s) ease-in-out infinite alternate;filter:drop-shadow(0 0 6px rgba(255,140,40,.8))}
+@keyframes flamein{from{opacity:0;transform:scale(.2)}to{opacity:1}}
+@keyframes flicker{0%{scale:1 1}50%{scale:.92 1.08}100%{scale:1.05 .95}}
+.res-acts{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.res-main{padding:16px;font-size:17px}
+.res-subs{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
+.res-sub{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:12px;font-weight:700;color:var(--fg)}
+.res-sub svg{width:22px;height:22px}
+.res-sub:hover{background:rgba(255,255,255,.08)}
+.res-sub:focus-visible{outline:2px solid var(--gold)}
+@media (prefers-reduced-motion:reduce){.fin *,.flame,.res-coin{animation-duration:.01s!important;animation-iteration-count:1!important}}
