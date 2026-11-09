@@ -1,5 +1,5 @@
 {
- "version": 98,
+ "version": 99,
  "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
@@ -35,7 +35,7 @@
   "STONE_COST_SR": 400,
   "STONE_COST_UR": 1000,
   "STONE_COST_LEGEND": 2500,
-  "STONE_TICKET": 150,
+  "STONE_TICKET": 300,
   "SEASON": "beta",
   "STARTER_DECK": "starter",
   "SAMPLE_DECKS": true
