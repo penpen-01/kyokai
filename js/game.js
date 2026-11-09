@@ -50,13 +50,13 @@ async function loadCardData() {
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
-  NEWS = data.news; MAIL = data.mail; LOGIN = data.login;
+  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || [];
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 let SERIALS = []; // シリアルコード（ハッシュ）
-let NEWS = [], MAIL = [], LOGIN = [];   // お知らせ・メール（js/inbox.js）
+let NEWS = [], MAIL = [], LOGIN = [], PICKS = [];   // お知らせ・メール（js/inbox.js）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
 /* デッキ（{id: 枚数}）を、シャッフルした山札（idの並び）にする */

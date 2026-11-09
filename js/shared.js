@@ -337,7 +337,7 @@ const DRAFT_KEY = "kyokai-draft-v1";
 
 /* ---------- シリアルコード ---------- */
 /* 端末の日付（YYYY-MM-DD）。有効期限は日本時間などその人の日付で判定する */
-const localDate = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const localDate = (d = new Date()) => { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const SERIAL_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const serialNorm = s => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 const serialFmt = s => serialNorm(s).replace(/(.{4})(?=.)/g, "$1-");
@@ -498,6 +498,11 @@ function cardHTML(card, o = {}) {
     <span class="foot"><span class="nm ${nmLen(card) >= 11 ? "xlong x3" : nmLen(card) >= 10 ? "xlong x2" : nmLen(card) >= 9 ? "xlong" : nmLen(card) >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
+const MAIL_TO = { all: "全員（これから始める人にも届く）", before: "送った日までに始めた人だけ", new: "送った日から後に始めた人（ずっと届く）" };
+/* 選択券で選べるカード */
+function pickPool(pk, defs) {
+  return defs.filter(c => c && !c.token && !c.boss && c.limit > 0 && pk.rarity.includes(c.rarity) && (!pk.sets.length || pk.sets.includes(c.set || "1")));
+}
 const DEFAULT_LOGIN = [{ gold: 50 }, { gold: 50 }, { stones: 20 }, { gold: 100 }, { gold: 50 }, { stones: 30 }, { tickets: 1 }];
 /* 効果1つの欠けを補う（追加の設定：card＝トークン、kw＝与える能力、world＝世界の絞り込み、ctype＝カードの種類） */
 function normEffect(e, type) {
@@ -609,11 +614,18 @@ function normalizeData(data) {
   // お知らせ（アップデート内容など）と、メール（全員に届く。Gや魔石、パック券、カードを付けられる）
   const date = v => (/^\d{4}-\d{2}-\d{2}$/.test(v || "") ? v : "");
   const news = (Array.isArray(d.news) ? d.news : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), title: String(x.title || "お知らせ").slice(0, 40), body: String(x.body || "").slice(0, 2000) }));
+  // 選択券：受け取ると、決められたレア度・弾のカードから好きな1枚を選べる。特別なものなので、作るたびに名前を変える（例：リリース記念レジェンド選択券）
+  const picks = (Array.isArray(d.picks) ? d.picks : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id)).map(x => ({ id: String(x.id), name: String(x.name || "カード選択券").slice(0, 30),
+    rarity: (Array.isArray(x.rarity) ? x.rarity : [x.rarity]).filter(r => RARITY[r]), sets: (Array.isArray(x.sets) ? x.sets : []).map(s => String(s) === "1" ? "1" : normSet(s)).filter(Boolean) }));
+  const pickIds = new Set(picks.map(p => p.id));
+  const cleanPicks = o => Object.fromEntries(Object.entries(o || {}).filter(([k, v]) => pickIds.has(k) && +v > 0).map(([k, v]) => [k, Math.min(9, Math.floor(+v))]));
+  // メールの宛先 to：all＝全員（これから始める人にも届く）／before＝送った日までに始めた人だけ（お詫び・告知）／new＝送った日から後に始めた人（歓迎メール。期限なしで、ずっと届く）
   const mail = (Array.isArray(d.mail) ? d.mail : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), until: date(x.until), title: String(x.title || "運営からのメール").slice(0, 40), body: String(x.body || "").slice(0, 1000),
-    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards) }));
+    to: ["all", "before", "new"].includes(x.to) ? x.to : "all",
+    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards), picks: cleanPicks(x.picks) }));
   // ログインボーナス（7日で1周。休んでも進んだ分は消えない）
   const login = (Array.isArray(d.login) && d.login.length ? d.login : DEFAULT_LOGIN).slice(0, 14).map(x => ({ gold: Math.max(0, Math.floor(+(x && x.gold) || 0)), stones: Math.max(0, Math.floor(+(x && x.stones) || 0)), tickets: Math.max(0, Math.floor(+(x && x.tickets) || 0)) }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login };
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks };
 }
 
 function cleanDeckCards(cards) {

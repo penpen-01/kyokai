@@ -1603,3 +1603,15 @@ html.nofx .card .shine{display:none}
 .gate-rule .gr-misc{color:var(--muted,#b9b2a2);font-size:12.5px}
 .gate-row.done{opacity:.55}
 .usingtag.done{background:#3a4060;color:#cfd3ea}
+/* 選択券：好きなカード1枚と交換 */
+.pick-have{margin-bottom:10px;border:1px solid rgba(255,224,138,.5)}
+.pick .pk-have{margin-left:auto;color:#ffe08a;font-weight:700}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;padding-bottom:84px}
+.pick-tile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:12px;border:2px solid transparent}
+.pick-tile .card{width:100%;max-width:150px}
+.pick-tile small{font-size:12px;color:var(--muted)}
+.pick-tile.on{border-color:#ffe08a;background:rgba(255,224,138,.12)}
+.pick-tile:focus-visible{outline:2px solid #ffe08a}
+.pick-bar{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;margin:0 -4px;border-radius:12px;background:rgba(12,14,28,.94);border:1px solid rgba(255,255,255,.12)}
+.pick-bar span{flex:1;min-width:180px}
+@media (max-width:520px){ .pick-grid{grid-template-columns:repeat(3,1fr);gap:6px} }
