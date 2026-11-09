@@ -1,5 +1,5 @@
 {
- "version": 83,
+ "version": 84,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -704,7 +704,7 @@
   },
   {
    "id": "gate-mech",
-   "name": "開放戦 機械（仮）",
+   "name": "歯車仕掛けの機神",
    "cards": {
     "m2-godgear": 2,
     "m2-gearsmith": 3,
@@ -731,7 +731,7 @@
   },
   {
    "id": "gate-myth",
-   "name": "開放戦 神話（仮）",
+   "name": "剣聖の一門",
    "cards": {
     "y2-angel": 1,
     "y2-egg": 2,
@@ -764,7 +764,7 @@
   },
   {
    "id": "gate-fan",
-   "name": "開放戦 幻想（仮）",
+   "name": "九尾の化かし宴",
    "cards": {
     "f2-tamamo": 3,
     "f2-sleepcastle": 1,
