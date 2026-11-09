@@ -103,6 +103,7 @@ const Publish = {
     const cfgDiff = Object.keys(np.config).filter(k => !["SEASON", "SAMPLE_DECKS"].includes(k) && np.config[k] !== pub.config[k]);
     if (cfgDiff.length) lines.push(`数値の設定を変更：${cfgDiff.map(k => `${(CONFIG_INFO[k] && CONFIG_INFO[k].label) || k} ${pub.config[k]}→${np.config[k]}`).join("、")}`);
     if (np.config.SAMPLE_DECKS !== pub.config.SAMPLE_DECKS) lines.push(np.config.SAMPLE_DECKS ? "サンプルデッキ（全カード）を使えるようにする" : "サンプルデッキ（全カード）を終了する");
+    if (typeof Notice !== "undefined" && Notice.dirty) lines.push("告知の控え（notice.json）を更新");
     if (!lines.length) lines.push("公開中の内容と同じです（変更はありません）。");
     return lines;
   },
@@ -184,6 +185,8 @@ const Publish = {
         if (!ok && status !== 409) break;
       }
       if (!ok) { this.busy = false; return this.progress(this.errText(status), true); }
+      try { await Notice.publish((p, o) => this.api(p, o), this.cfg.branch, t => this.b64(t)); }
+      catch (e) { this.busy = false; return this.progress("カードは公開しましたが、告知の控え（notice.json）を送れませんでした。もう一度「公開する」を押してください。", true); }
       DATA.version = out.version; DATA.updated = out.updated;
       exportedSnap = snap();
       flushSave();

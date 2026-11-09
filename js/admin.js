@@ -151,6 +151,7 @@ const Admin = {
       </div>
       <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
       <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
+      <div class="fgroup" id="notice-box">${Notice.html()}</div>
       <div class="fgroup">
         <span class="gl">ログインボーナス</span>
         <p class="hint">1日1回、ホームを開いたときにもらえます。上から順に1日ずつ進み、最後まで行ったら最初に戻ります。休んでも進んだ分は消えません。</p>

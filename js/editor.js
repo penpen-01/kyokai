@@ -645,6 +645,7 @@ function toggleMore(open) {
 function act(name, el) {
   if (["pubSettings", "pubHistory", "export", "import", "revert", "restoreBackup"].includes(name)) toggleMore(false);
   if (Admin.act(name, el)) return;
+  if (Notice.act(name, el)) return;
   if (WDecks.handleAct(name, el)) return;
   if (typeof AiTools !== "undefined" && AiTools.act(name, el)) return;
   if (Lab.act(name, el)) return;
