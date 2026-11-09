@@ -1,6 +1,6 @@
 {
  "version": 97,
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -6089,8 +6089,8 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-wyrmling",
-     "when": "attack"
+     "when": "attack",
+     "card": "tk-wyrmling"
     }
    ],
    "set": "2-2",
@@ -6208,7 +6208,6 @@
      "act": "grant",
      "to": "own1",
      "kw": "pierce",
-     "turn": true,
      "world": "fan"
     },
     {
@@ -6216,7 +6215,8 @@
      "n": 1,
      "act": "atk",
      "to": "own1",
-     "world": "fan"
+     "world": "fan",
+     "turn": true
     }
    ],
    "token": true,
@@ -6656,8 +6656,8 @@
    "world": "fan",
    "type": "char",
    "cost": 2,
-   "atk": 2,
-   "hp": 2,
+   "atk": 1,
+   "hp": 1,
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
@@ -6683,8 +6683,8 @@
    "world": "fan",
    "type": "char",
    "cost": 5,
-   "atk": 3,
-   "hp": 3,
+   "atk": 2,
+   "hp": 2,
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
@@ -6764,7 +6764,7 @@
    "world": "fan",
    "type": "char",
    "cost": 2,
-   "atk": 2,
+   "atk": 1,
    "hp": 1,
    "glyph": "幻",
    "limit": 3,
@@ -6773,7 +6773,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 1,
+     "n": 2,
      "act": "dmg",
      "to": "enemyRand"
     },
@@ -6848,12 +6848,11 @@
    "effects": [
     {
      "kind": "recycle",
-     "n": 3,
-     "world": "fan"
+     "n": 5
     },
     {
      "kind": "player",
-     "n": 3,
+     "n": 2,
      "act": "heal",
      "who": "self",
      "cond": "recycled"
@@ -6954,7 +6953,7 @@
    "type": "char",
    "cost": 3,
    "atk": 1,
-   "hp": 3,
+   "hp": 4,
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
@@ -7013,16 +7012,19 @@
    "glyph": "幻",
    "limit": 3,
    "rarity": "sr",
-   "keywords": [
-    "stealth"
-   ],
+   "keywords": [],
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
      "when": "attack",
      "act": "dmg",
-     "to": "enemyRandF"
+     "to": "enemyRand"
+    },
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-foxfire"
     }
    ],
    "set": "2-3",
@@ -7229,18 +7231,16 @@
    "type": "char",
    "cost": 6,
    "atk": 4,
-   "hp": 6,
+   "hp": 5,
    "glyph": "幻",
    "limit": 3,
    "rarity": "ur",
    "keywords": [],
    "effects": [
     {
-     "kind": "tutor",
+     "kind": "summon",
      "n": 10,
-     "when": "turnEnd",
-     "world": "fan",
-     "ctype": "spell"
+     "when": "turnStart"
     }
    ],
    "set": "2-3",
@@ -7275,7 +7275,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-moonwitch-c253f540b5.webp"
+   "art": "art/f2-moonwitch-fcb977ce5b.webp"
   },
   {
    "id": "f2-sleepcastle",
