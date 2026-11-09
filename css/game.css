@@ -924,11 +924,14 @@ body{
 /* 亜空間に送られたキャラ（その場所は空けたまま） */
 .slot.voidslot{position:relative}
 .card.voided{filter:grayscale(.6) brightness(.45) hue-rotate(200deg) blur(.6px);opacity:.75}
-.slot.voidslot::after{content:"";position:absolute;inset:6% 4%;border-radius:8px;pointer-events:none;
-  background:radial-gradient(circle, rgba(150,110,255,.35), transparent 70%);box-shadow:inset 0 0 0 1.5px rgba(170,130,255,.7), 0 0 14px rgba(150,110,255,.5);animation:voidpulse 2s ease-in-out infinite}
+/* 戻るまでカードは見せず、宇宙の穴だけ（2026-11-10 オーナー） */
+.void-hole{display:block;width:100%;aspect-ratio:5/7;border-radius:10px;opacity:.85;
+  background:radial-gradient(1.2px 1.2px at 22% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 22%,#cfe0ff,transparent),radial-gradient(1.4px 1.4px at 58% 72%,#fff,transparent),radial-gradient(1px 1px at 30% 80%,#ffd9f2,transparent),radial-gradient(1px 1px at 82% 60%,#fff,transparent),
+    radial-gradient(ellipse at 40% 45%,rgba(120,80,255,.45),transparent 55%),radial-gradient(ellipse at 65% 60%,rgba(255,90,190,.25),transparent 50%),radial-gradient(circle,#0b0f2e,#05060f 75%);
+  box-shadow:inset 0 0 0 1.5px rgba(140,160,255,.45),0 0 14px rgba(90,110,255,.35);animation:voidpulse 3s ease-in-out infinite}
 .voidtag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;font-size:11px;font-weight:800;letter-spacing:.1em;color:#e6dcff;background:rgba(40,20,80,.85);padding:2px 8px;border-radius:99px;border:1px solid rgba(170,130,255,.8);white-space:nowrap}
-@keyframes voidpulse{50%{box-shadow:inset 0 0 0 1.5px rgba(170,130,255,.95), 0 0 22px rgba(150,110,255,.8)}}
-@media (prefers-reduced-motion: reduce){ .slot.voidslot::after{animation:none} }
+@keyframes voidpulse{50%{box-shadow:inset 0 0 0 1.5px rgba(160,180,255,.8),0 0 22px rgba(110,130,255,.6)}}
+@media (prefers-reduced-motion: reduce){ .void-hole{animation:none} }
 
 /* =========================================================
    対戦の大きな演出（js/cinema.js）
@@ -1662,7 +1665,6 @@ html.nofx .card .shine{display:none}
 @keyframes fincrack{0%{filter:none}40%{filter:brightness(2.2) contrast(1.4)}100%{filter:grayscale(1) brightness(.8) contrast(1.3)}}
 .avatar.fin-crack .face::after,.avatar.fin-broken .face::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 50 18 8M50 50 92 20M50 50 80 96M50 50 6 70M50 50 46 2M50 50 98 62M30 30 10 34M70 34 86 44M64 74 46 92M28 62 22 88' stroke='%23fff' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3Cpath d='M50 50 18 8M50 50 92 20M50 50 80 96M50 50 6 70M50 50 46 2M50 50 98 62' stroke='%23000' stroke-width='.8' fill='none' opacity='.6'/%3E%3C/svg%3E") center/100% 100%}
-.avatar .face{position:relative}
 .avatar.fin-gone{visibility:hidden}
 .avatar.fin-broken .face{filter:grayscale(1) brightness(.7)}
 #app.fin-gray{transition:filter .8s;filter:grayscale(.85) brightness(.55)}
@@ -1704,7 +1706,12 @@ html.nofx .card .shine{display:none}
 /* ---------- 効果の演出（js/vfx.js） ---------- */
 .vfx{position:fixed;transform:translate(-50%,-50%);pointer-events:none}
 .float.ice{color:#bfe9ff} .float.mute{color:#d6c3ff} .float.trans{color:#ffd0f2} .float.void{color:#c59bff} .float.poison{color:#c7f07a} .float.guard{color:#bcd8ff} .float.gearf{color:#e9c675}
-/* 光の弾 */
+/* 効果のダメージ：当たった側が揺れて白く光る（属性なし）。キャラが出した効果は、そのキャラが少し動く */
+.v-shake{animation:vshake .32s ease-out}
+@keyframes vshake{20%{transform:translateX(-6px) rotate(-2deg)}45%{transform:translateX(5px) rotate(1.5deg)}70%{transform:translateX(-3px)}100%{transform:none}}
+.v-impact i{display:block;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle,#fff,rgba(255,255,255,.5) 40%,transparent 70%);animation:vimpact .4s ease-out forwards}
+@keyframes vimpact{0%{transform:scale(.3);opacity:1}100%{transform:scale(4);opacity:0}}
+/* 光の弾（使っていない） */
 .v-bolt{transform:translate(-50%,-50%)}
 .v-bolt i{display:block;width:46px;height:12px;border-radius:999px;background:linear-gradient(90deg,transparent,var(--c) 55%,#fff);box-shadow:0 0 14px var(--c),0 0 28px var(--c)}
 .v-hit i{display:block;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 0 0 var(--c);animation:vhit .42s ease-out forwards}
@@ -1722,7 +1729,7 @@ html.nofx .card .shine{display:none}
 .v-poof i{position:absolute;left:0;top:0;width:44px;height:44px;margin:-22px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#e6dcf5 45%,rgba(200,180,230,0) 72%);animation:vpoof .8s var(--d) ease-out forwards;opacity:0}
 @keyframes vpoof{0%{transform:rotate(var(--a)) translateX(0) scale(.3);opacity:1}60%{opacity:.9}100%{transform:rotate(var(--a)) translateX(46px) scale(1.6);opacity:0}}
 /* 亜空間：紫の渦 */
-.v-void i{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#2a0a55,#9b5cff,#170433,#c99bff,#2a0a55);-webkit-mask:radial-gradient(circle,transparent 18%,#000 22%,#000 60%,transparent 70%);mask:radial-gradient(circle,transparent 18%,#000 22%,#000 60%,transparent 70%);animation:vvoid .9s ease-in-out forwards}
+.v-void i{position:absolute;inset:0;border-radius:50%;background:radial-gradient(1.5px 1.5px at 30% 35%,#fff,transparent),radial-gradient(1.5px 1.5px at 65% 60%,#fff,transparent),radial-gradient(1px 1px at 45% 75%,#cfe0ff,transparent),conic-gradient(from 0deg,#05061a,#3a2bd0,#0a0b2a,#e05ab8,#101040,#5fb8ff,#05061a);-webkit-mask:radial-gradient(circle,transparent 18%,#000 22%,#000 60%,transparent 70%);mask:radial-gradient(circle,transparent 18%,#000 22%,#000 60%,transparent 70%);animation:vvoid .9s ease-in-out forwards}
 .v-void.back i{animation-direction:reverse}
 @keyframes vvoid{0%{transform:scale(.2) rotate(0);opacity:0}30%{opacity:1}100%{transform:scale(1.1) rotate(540deg);opacity:0}}
 /* 貫通：斜めの光の筋 */
@@ -1759,3 +1766,5 @@ html.nofx .card .shine{display:none}
 .arrow.on .ar-aim{opacity:1}
 .arrow.on .ar-aim circle:first-child{stroke:#ff5a4a;stroke-width:3;animation-duration:.9s}
 @keyframes araim{to{transform:rotate(360deg)}}
+/* 言葉の札（解除・奪った・合体 など）：明朝の大文字ではなく、小さく読みやすい札に */
+.float.word{font-family:var(--f-body,"Zen Kaku Gothic New",sans-serif);font-size:13px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:999px;background:rgba(10,14,30,.82);border:1px solid currentColor;text-shadow:none;box-shadow:0 2px 10px rgba(0,0,0,.5)}

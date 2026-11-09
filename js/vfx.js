@@ -56,18 +56,18 @@ const Vfx = {
       case "freeze": {
         const d = this.add("v-ice", c.x, c.y, Array.from({ length: 8 }, (_, i) => `<i style="--a:${i * 45}deg"></i>`).join(""));
         d.style.width = r.width + "px"; d.style.height = r.height + "px";
-        this.later(d, 900); this.float(r, text || "凍結", "ice");
+        this.later(d, 900); 
         Sound.play("buff"); if (!R) Motion.hold(300); return;
       }
       case "silence": {
         const d = this.add("v-chain", c.x, c.y, `<i></i><i></i>`);
         d.style.width = r.width * 1.1 + "px"; d.style.height = r.height + "px";
-        this.later(d, 950); this.float(r, text || "沈黙", "mute");
+        this.later(d, 950); 
         Sound.play("hit"); if (!R) Motion.hold(300); return;
       }
       case "poof": {
         const d = this.add("v-poof", c.x, c.y, Array.from({ length: 9 }, (_, i) => `<i style="--a:${i * 40}deg;--d:${(i % 3) * 40}ms"></i>`).join(""));
-        this.later(d, 900); this.float(r, text || "変身", "trans");
+        this.later(d, 900); 
         Sound.play("flip"); if (!R) Motion.hold(380); return;
       }
       case "tohand": case "todeck": {
@@ -76,13 +76,14 @@ const Vfx = {
         const g = e.cloneNode(true); g.removeAttribute("data-uid"); g.classList.add("ghostcard");
         Object.assign(g.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px" });
         this.layer().appendChild(g);
+        e.style.visibility = "hidden";   // 場に残った影を見せない
         if (to && !R) {
           const t = this.center(to.getBoundingClientRect());
           g.animate([{ transform: "none", opacity: 1, filter: "brightness(1.6)" },
             { transform: `translate(${(t.x - c.x) * .2}px,${(t.y - c.y) * .2 - 20}px) scale(1.05) rotate(-6deg)`, opacity: 1, offset: .3 },
             { transform: `translate(${t.x - c.x}px,${t.y - c.y}px) scale(.35) rotate(8deg)`, opacity: 0 }], { duration: 560, easing: "cubic-bezier(.4,0,.6,1)", fill: "forwards" });
         }
-        this.later(g, 600); this.float(r, text, "heal");
+        this.later(g, 600); 
         Sound.play("flip"); if (!R) Motion.hold(380); return;
       }
       case "void": case "voidback": {
@@ -90,30 +91,30 @@ const Vfx = {
         d.style.width = d.style.height = Math.max(r.width, r.height) * 1.1 + "px";
         this.later(d, 900);
         if (kind === "void") { const g = e.cloneNode(true); g.removeAttribute("data-uid"); g.classList.add("ghostcard");
-          Object.assign(g.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px" }); this.layer().appendChild(g);
+          Object.assign(g.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px" }); this.layer().appendChild(g); e.style.visibility = "hidden";
           if (!R) g.animate([{ transform: "none", opacity: 1 }, { transform: "scale(.1) rotate(220deg)", opacity: 0, filter: "hue-rotate(90deg) brightness(2)" }], { duration: 600, easing: "ease-in", fill: "forwards" });
           this.later(g, 650); }
-        this.float(r, text || (kind === "void" ? "亜空間へ" : "帰還"), "void");
+        
         Sound.play(kind === "void" ? "flip" : "buff"); if (!R) Motion.hold(kind === "void" ? 420 : 300); return;
       }
       case "pierce": {
         const d = this.add("v-pierce", c.x, c.y, "<i></i>"); this.later(d, 700);
-        this.float(r, text || "貫通", "dmg"); return;
+        return;
       }
       case "poison": {
         const d = this.add("v-poison", c.x, c.y, Array.from({ length: 7 }, (_, i) => `<i style="--x:${(i - 3) * 9}px;--d:${i * 50}ms"></i>`).join(""));
         d.style.width = r.width + "px"; d.style.height = r.height + "px";
-        this.later(d, 900); this.float(r, text || "毒", "poison");
+        this.later(d, 900); 
         Sound.play("hit"); if (!R) Motion.hold(300); return;
       }
       case "guard": {
         const d = this.add("v-guard", c.x, c.y, `<svg viewBox="0 0 40 46"><path d="M20 2 37 8v14c0 11-8 18-17 22C11 40 3 33 3 22V8z" fill="rgba(140,190,255,.25)" stroke="#bcd8ff" stroke-width="2.4"/></svg>`);
-        this.later(d, 900); this.float(r, text || "守護", "guard"); return;
+        this.later(d, 900); return;
       }
       case "gear": {
         const up = /^\+/.test(text || "");
         const d = this.add("v-gear " + (up ? "up" : "down"), c.x, c.y, Array.from({ length: 4 }, (_, i) => `<i style="--i:${i}">${GEAR_SVG}</i>`).join(""));
-        this.later(d, 1000); this.float(r, text, up ? "heal" : "gearf");
+        this.later(d, 1000); 
         Sound.play(up ? "buff" : "flip"); return;
       }
     }
@@ -127,20 +128,22 @@ const Vfx = {
     this.later(d, 1000);
   },
 
+  /* 効果のダメージ：キャラが出した効果なら、そのキャラが相手へ少し動く。当たった側は揺れて白く光る（属性の色は付けない） */
   bolt(src, dst, world, multi, R) {
-    const o = this.origin(src), t = this.el(dst);
-    if (!o || !t) return;
+    const t = this.el(dst); if (!t) return;
     const tr = t.getBoundingClientRect(), tc = this.center(tr);
-    const color = WORLD_COLOR[world] || "#ffd86b";
-    const d = this.add("v-bolt", o.x, o.y, "<i></i>");
-    d.style.setProperty("--c", color);
-    const ang = Math.atan2(tc.y - o.y, tc.x - o.x) * 180 / Math.PI;
-    const ms = R ? 1 : 300;
-    d.animate([{ transform: `translate(-50%,-50%) rotate(${ang}deg) scale(.6)` },
-      { transform: `translate(calc(-50% + ${tc.x - o.x}px), calc(-50% + ${tc.y - o.y}px)) rotate(${ang}deg) scale(1.1)` }], { duration: ms, easing: "cubic-bezier(.5,0,.8,.6)", fill: "forwards" });
-    setTimeout(() => { d.remove(); const h = this.add("v-hit", tc.x, tc.y, "<i></i>"); h.style.setProperty("--c", color); this.later(h, 420); }, ms);
-    Sound.play("flip");
-    if (!multi && !R) Motion.hold(ms + 30);
+    const s = /^cast:/.test(src || "") ? null : this.el(src);
+    const delay = s && !R ? 140 : 0;
+    if (s && !R) {
+      const sc = this.center(s.getBoundingClientRect()), dx = (tc.x - sc.x) * 0.12, dy = (tc.y - sc.y) * 0.12;
+      s.animate([{ transform: "none" }, { transform: `translate(${dx}px,${dy}px) scale(1.06)`, offset: .45 }, { transform: "none" }], { duration: 300, easing: "ease-out" });
+    }
+    setTimeout(() => {
+      if (!t.isConnected) return;
+      if (!R) { t.classList.remove("v-shake"); void t.offsetWidth; t.classList.add("v-shake"); setTimeout(() => t.classList.remove("v-shake"), 340); }
+      const h = this.add("v-impact", tc.x, tc.y, "<i></i>"); this.later(h, 420);
+    }, delay);
+    if (!multi && !R) Motion.hold(delay + 120);
   },
 
   /* 捨てられたカードを真ん中に見せる（両方の画面） */

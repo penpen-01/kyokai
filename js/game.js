@@ -269,7 +269,7 @@ function banishOwn(pi) {
   if (!p.field.length) return;
   const slots = slotLayout(p);
   p.voidU = slots.map((x, slot) => x ? { u: x.u, slot } : null).filter(Boolean);
-  p.field.forEach(u => fx(unitSel(u.uid), "亜空間へ", "heal"));
+  p.field.forEach(u => fx(unitSel(u.uid), "亜空間へ", "void"));
   p.field = [];
   log(`${pname(pi)}のキャラは亜空間に送られた（次の${pname(pi)}のターンに戻る）。`);
 }
@@ -608,7 +608,6 @@ function addGears(pi, n) {
   }
   p.gears = (p.gears || 0) + n;
   log(`${pname(pi)}は歯車を${n}枚手札に加えた（${p.gears}枚）。`);
-  fx(playerSel(pi), `歯車+${n}`, "gear");
 }
 function spendGears(p, n) {
   p.gears = Math.max(0, (p.gears || 0) - n);
@@ -619,7 +618,7 @@ function discardRandom(q, pi) {
   const p = S.players[q];
   if (!p.hand.length) return;
   const i = Math.floor(Math.random() * p.hand.length);
-  if (p.hand[i] === GEAR_ID) { spendGears(p, 1); log(`${pname(q)}は歯車を1枚捨て${q === pi ? "た" : "させられた"}（残り${p.gears || 0}枚）。`); fx(playerSel(q), "歯車-1", "gear"); return; }
+  if (p.hand[i] === GEAR_ID) { spendGears(p, 1); log(`${pname(q)}は歯車を1枚捨て${q === pi ? "た" : "させられた"}（残り${p.gears || 0}枚）。`); return; }
   const id = handTake(p, i);
   log(`${pname(q)}は${cname(id)}を捨て${q === pi ? "た" : "させられた"}。`);
   fx("reveal", id, `reveal:${q}:捨て${q === pi ? "た" : "させられた"}カード`);
@@ -725,7 +724,7 @@ function effect(pi, e, targets, self) {
       const top = Math.max(...h.map(id => (DEF[id] ? DEF[id].cost : 0)));
       const cands = h.map((id, i) => i).filter(i => (DEF[h[i]] ? DEF[h[i]].cost : 0) === top);
       const i = cands[Math.floor(Math.random() * cands.length)];
-      if (h[i] === GEAR_ID) { spendGears(S.players[q], 1); log(`${pname(q)}は歯車を1枚捨てさせられた。`); fx(playerSel(q), "歯車-1", "gear"); break; }
+      if (h[i] === GEAR_ID) { spendGears(S.players[q], 1); log(`${pname(q)}は歯車を1枚捨てさせられた。`); break; }
       const id = handTake(S.players[q], i); log(`${pname(q)}は${cname(id)}を捨てさせられた。`);
       fx("reveal", id, `reveal:${q}:捨てさせられたカード`);
       break;
@@ -1360,7 +1359,7 @@ function fieldHTML(pi) {
     const x = layout[i], u = x && x.u;
     if (!u) { s += `<div class="slot"><span class="empty"></span></div>`; continue; }
     if (x.void) {
-      s += `<div class="slot voidslot" title="亜空間：次の${esc(p.name)}のターンに戻る">${cardHTML(DEF[u.id], { unit: u, cls: "voided", showCost: false })}<span class="voidtag">亜空間</span></div>`;
+      s += `<div class="slot voidslot" title="亜空間：次の${esc(p.name)}のターンに戻る" aria-label="亜空間（次の${esc(p.name)}のターンに戻る）"><span class="void-hole" aria-hidden="true"></span></div>`;   // 戻るまでカードは見せない
       continue;
     }
     const cls = [
@@ -1888,7 +1887,7 @@ function runFx(sel, text, cls) {
     else Motion.spark(r);
   }
   const t = document.createElement("span");
-  t.className = "float " + cls;
+  t.className = "float " + cls + (cls === "trig" || /^[+\-−]?\d/.test(text) ? "" : " word");   // 数字は大きく、言葉（解除・奪った など）は小さな札に
   t.textContent = text;
   t.style.left = r.left + r.width / 2 + "px";
   t.style.top = r.top + r.height / 2 + "px";
