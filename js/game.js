@@ -70,6 +70,8 @@ function buildPile(deck) {
    流れ：じゃんけん（rps）→ 勝った人が先攻・後攻を選ぶ（choose）→ マリガン（mulligan）→ 対戦（play） */
 function newGame(names, decks) {
   if (!SIM && typeof Motion !== "undefined") Motion.reset();
+  if (!SIM && typeof Finale !== "undefined") Finale.reset();   // 前の対戦の「負けで灰色」を残さない
+  if (!SIM) preloadArts(decks.flatMap(d => Object.keys(d.cards || {})).concat(["tk-gear", "tk-foxfire", "tk-leaf", "tk-frog", "coin"]));
   S = {
     gid: Math.random().toString(36).slice(2, 10),
     phase: "rps",
@@ -514,6 +516,12 @@ function unitEffect(pi, e, targets, self) {
   if (!list.length) return;
   if (["enemyAll", "ownAll", "all"].includes(e.to)) log(`${e.to === "enemyAll" ? "相手キャラ全体" : e.to === "ownAll" ? "自分のキャラ全体" : "すべてのキャラ"}に効果。`);
   if (e.act === "dmg") boltFx(pi, self, list.map(u => (u === "face" ? playerSel(opp(pi)) : unitSel(u.uid))));
+  // 全体・複数に効く効果は、演出をいっぺんに出して最後に1回だけ待つ
+  const multi = list.length > 1 && !SIM;
+  if (multi) S.fxMulti = true;
+  try { unitEach(pi, e, list, self, me, n); } finally { if (multi) { S.fxMulti = false; if (["freeze", "silence", "transform", "bounce", "shuffle", "banish"].includes(e.act)) fx("wait", "", "wait:300"); } }
+}
+function unitEach(pi, e, list, self, me, n) {
   list.forEach(u => {
     if (u === "face") {
       if (e.act === "dmg") { log(`${pname(opp(pi))}に${n}ダメージ。`); hitPlayer(opp(pi), n); }
@@ -1388,8 +1396,16 @@ function endButtonHTML() {
 let renderDeferred = false;
 let lastTurnKey = "";
 let lastBannerKey = "";
+/* 対戦中は描き直すたびに絵が作り直されるので、遅れて出る（一瞬消える）ことがないよう同期で描く */
+let CARD_EAGER = false;
+const artCache = new Map();
+function preloadArts(ids) {
+  ids.forEach(id => { const d = DEF[id]; if (!d || !d.art || artCache.has(d.art)) return;
+    const im = new Image(); im.src = d.art; artCache.set(d.art, im); if (im.decode) im.decode().catch(() => {}); });
+}
 function render() {
   if (!S || SIM) return;
+  CARD_EAGER = true;
   if (MODE === "online" && Online.role === "host") Online.publish();
   // ドラッグ中に盤面を作り直すと、指の下のカードが消えて指を離した合図が届かなくなる（iPhoneなど）。
   // そのためドラッグが終わるまで描き直しを待つ
@@ -1464,7 +1480,7 @@ function pregameHTML() {
     const done = S.mull[ME];
     opSt = S.mull[OP] != null ? `<em class="ok">準備完了</em>` : `<em>考え中${dots}</em>`;
     body = `<div class="pg-title sm"><span class="pg-chip ${S.first === ME ? "first" : "second"}">${S.first === ME ? "先攻" : "後攻"}</span><b>最初の手札</b></div>
-      <div class="pg-hand5 ${done == null ? "deal" : ""}">${me.hand.map((id, i) => `<div class="pg-hc" style="--i:${i};--r:${(i - (me.hand.length - 1) / 2) * 4}deg;--o:${Math.abs(i - (me.hand.length - 1) / 2) * 6}px">${cardHTML(DEF[id], { static: true, attrs: `data-hand="${i}"` })}</div>`).join("")}</div>
+      <div class="pg-hand5 ${done == null ? "deal" : ""}" style="--n:${Math.max(me.hand.length, 4)}">${me.hand.map((id, i) => `<div class="pg-hc" style="--i:${i};--r:${(i - (me.hand.length - 1) / 2) * 3}deg;--o:${Math.abs(i - (me.hand.length - 1) / 2) * 4}px">${cardHTML(DEF[id], { static: true, attrs: `data-hand="${i}"` })}</div>`).join("")}</div>
       ${done == null ? `<div class="pg-btns">
           <button type="button" class="btn primary" data-act="mull" data-v="0" ${wait ? "disabled" : ""}>このまま始める</button>
           <button type="button" class="btn pg-redo" data-act="mull" data-v="1" ${wait ? "disabled" : ""}>${RES_IC.again}引き直す</button>
@@ -1753,11 +1769,11 @@ function startDrag() {
     svg.setAttribute("class", "arrow");
     // 攻撃の矢印：弧を描く光の帯＋先の照準。狙えるものに重なると照準が赤く締まる
     svg.innerHTML = `<defs><linearGradient id="arg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".15"/><stop offset=".6" stop-color="#ff9a5a"/><stop offset="1" stop-color="#ff5a4a"/></linearGradient>
-        <filter id="arglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-      <path class="ar-glow" d="" fill="none" stroke="url(#arg)" stroke-width="11" stroke-linecap="round" opacity=".35" filter="url(#arglow)"/>
+</defs>
+      <path class="ar-glow" d="" fill="none" stroke="url(#arg)" stroke-width="11" stroke-linecap="round" opacity=".3"/>
       <path class="ar-line" d="" fill="none" stroke="url(#arg)" stroke-width="5" stroke-linecap="round"/>
       <path class="ar-dash" d="" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 14" opacity=".9"/>
-      <path class="ar-head" d="M-13,-11 L9,0 L-13,11 L-7,0 Z" fill="#ff5a4a" stroke="#ffe0c0" stroke-width="1.5" filter="url(#arglow)"/>
+      <path class="ar-head" d="M-13,-11 L9,0 L-13,11 L-7,0 Z" fill="#ff5a4a" stroke="#ffe0c0" stroke-width="1.5"/>
       <g class="ar-aim"><circle r="22" fill="none" stroke="#ffe0c0" stroke-width="2" stroke-dasharray="10 7"/><circle r="5" fill="#ff5a4a"/></g>`;
     $("#fx").appendChild(svg);
     drag.svg = svg;
@@ -1845,6 +1861,7 @@ function toast(msg) {
 /* 演出。対人戦のホストでは、相手の画面でも同じ演出を出すために記録しておく */
 function fx(sel, text, cls) {
   if (SIM) return;
+  if (S && S.fxMulti && /^(freeze|silence|poof|tohand|todeck|void|poison|guard)$/.test(cls)) cls += ":m";
   if (MODE === "online" && Online.role === "host") Online.queueFx(sel, text, cls);
   playFx(sel, text, cls);
 }
@@ -1855,7 +1872,7 @@ function playFx(sel, text, cls) {
   runFx(sel, text, cls);
 }
 function runFx(sel, text, cls) {
-  if (/^(bolt|freeze|silence|poof|tohand|todeck|void|voidback|pierce|poison|guard|gear|reveal|peek)(:|$)/.test(cls || "")) { Vfx.run(sel, text, cls); return; }
+  if (/^(bolt|freeze|silence|poof|tohand|todeck|void|voidback|pierce|poison|guard|gear|reveal|peek|wait)(:|$)/.test(cls || "")) { Vfx.run(sel, text, cls); return; }
   if (sel === "sfx") { Sound.play(text); return; }
   if (cls === "lunge") { Motion.lunge(sel, text); return; }
   if (sel === "cast") { Motion.cast(text, +cls.slice(4)); return; }
@@ -2262,6 +2279,7 @@ function toTitle() {
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
   Finale.reset();
+  CARD_EAGER = false;
   if (typeof Cinema !== "undefined") Cinema.reset();
   clearTimeout(resultTimer);
   app.innerHTML = ""; app.classList.remove("battle", "pre");

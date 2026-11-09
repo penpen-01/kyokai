@@ -1,5 +1,5 @@
 {
- "version": 100,
+ "version": 101,
  "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
@@ -259,7 +259,7 @@
      "legend": 1
     }
    },
-   "open": false,
+   "open": true,
    "set": "2-1",
    "gateRule": "world",
    "gateWorld": "mech",
@@ -334,7 +334,7 @@
      "legend": 1
     }
    },
-   "open": false,
+   "open": true,
    "set": "2-2",
    "gateRule": "world",
    "gateWorld": "myth",
@@ -409,7 +409,7 @@
      "legend": 1
     }
    },
-   "open": false,
+   "open": true,
    "set": "2-3",
    "gateRule": "world",
    "gateWorld": "fan",

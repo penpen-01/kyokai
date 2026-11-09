@@ -1877,3 +1877,28 @@ html.nofx .card .shine{display:none}
 .mgrid .card *, .mgrid .card *::before, .mgrid .card *::after { animation: none !important; }
 /* 一覧のカードは、画面に見えているものだけ描く（何百枚あっても開くのが速い）。枚数の札などはカードの外（.dtile）にあるので切れない */
 .dgrid .dtile > .card{content-visibility:auto;contain-intrinsic-size:auto 64px auto 90px}
+/* 凍結（2026-11-10 手直し）：霜が広がり、雪の結晶が光り、氷の破片が飛ぶ */
+.v-ice{background:none;box-shadow:none;animation:vice2 1s ease-out forwards}
+.v-ice .frost{position:absolute;inset:0;border-radius:8px;
+  background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(170,225,255,.35) 40%,rgba(120,190,255,.55)),
+    repeating-linear-gradient(60deg,rgba(255,255,255,.25) 0 2px,transparent 2px 9px),repeating-linear-gradient(-60deg,rgba(255,255,255,.2) 0 1px,transparent 1px 11px);
+  box-shadow:inset 0 0 0 2px rgba(230,248,255,.95),inset 0 0 24px #e6f7ff,0 0 22px rgba(140,210,255,.9);clip-path:circle(0% at 50% 50%);animation:vfrost .45s ease-out forwards}
+@keyframes vfrost{to{clip-path:circle(75% at 50% 50%)}}
+.v-ice .flake{position:absolute;left:50%;top:50%;width:46%;aspect-ratio:1;transform:translate(-50%,-50%) scale(0) rotate(-90deg);filter:drop-shadow(0 0 6px #bfe9ff);animation:vflake .6s .1s cubic-bezier(.2,1.4,.4,1) forwards}
+.v-ice .flake svg{width:100%;height:100%}
+@keyframes vflake{to{transform:translate(-50%,-50%) scale(1) rotate(0)}}
+.v-ice i{width:6px;height:var(--l);background:linear-gradient(#fff,#a8dcff 60%,rgba(120,190,255,0));clip-path:polygon(50% 0,100% 30%,50% 100%,0 30%);animation:vshard .55s ease-out forwards}
+@keyframes vice2{0%{opacity:1}80%{opacity:1}100%{opacity:0}}
+/* 毒（手直し）：紫の煙と、ぶくぶくの泡 */
+.v-poison{box-shadow:none;animation:fade 1s ease-out forwards}
+.v-poison .fume{position:absolute;inset:-6%;border-radius:12px;background:radial-gradient(ellipse at 50% 70%,rgba(170,40,220,.75),rgba(90,10,140,.55) 45%,rgba(40,0,70,0) 75%);mix-blend-mode:screen;animation:vfume 1s ease-out forwards}
+@keyframes vfume{0%{opacity:0;transform:scale(.6)}30%{opacity:1}100%{opacity:0;transform:scale(1.15) translateY(-10px)}}
+.v-poison i{top:auto;bottom:12%;width:calc(12px*var(--s));height:calc(12px*var(--s));border-radius:50%;background:radial-gradient(circle at 35% 30%,#f4c8ff,#b23be0 45%,#5a0f80);box-shadow:0 0 8px #c04cff;animation:vbub .8s var(--d) ease-out forwards}
+@keyframes vbub{0%{opacity:0;transform:translateY(0) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translateY(-70px) scale(1.2)}}
+.float.poison{color:#e09bff}
+/* 変身の煙を短く */
+.v-poof i{animation-duration:.55s}
+/* マリガン：何枚でも画面に収める（重ねて並べる）。ボタンと重ならないよう下に余白 */
+.pg-hand5{max-width:440px;padding:0 10px;margin-bottom:16px;--w:calc((100% + (var(--n) - 1)*12px)/var(--n))}
+.pg-hc{flex:0 0 var(--w);max-width:var(--w);margin:0 0 0 -12px}
+.pg-hc:first-child{margin-left:0}

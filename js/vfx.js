@@ -42,8 +42,12 @@ const Vfx = {
 
   run(sel, text, cls, retry) {
     const [kind, a, b] = cls.split(":");
+    const multi = /:m$/.test(cls);   // 全体の効果：いっぺんに出して、最後にまとめて待つ（wait）
     const R = Motion.reduced;
+    const hold = ms => { if (!R && !multi) Motion.hold(ms); };
+    const snd = n => { if (!multi || !this.sndAt || Date.now() - this.sndAt > 120) { this.sndAt = Date.now(); Sound.play(n); } };
     switch (kind) {
+      case "wait": if (!R) Motion.hold(+a || 300); return;
       case "bolt": return this.bolt(sel, text, a, b === "m", R);
       case "reveal": return this.reveal(text, +a, b || "捨てられた", R);
       case "peek": return this.peek(text, +a, R);
@@ -54,21 +58,21 @@ const Vfx = {
     if (!r.width) return;
     switch (kind) {
       case "freeze": {
-        const d = this.add("v-ice", c.x, c.y, Array.from({ length: 8 }, (_, i) => `<i style="--a:${i * 45}deg"></i>`).join(""));
+        const d = this.add("v-ice", c.x, c.y, `<b class="frost"></b><b class="flake">${SNOW_SVG}</b>` + Array.from({ length: 10 }, (_, i) => `<i style="--a:${i * 36 + (i % 2) * 14}deg;--l:${14 + (i % 3) * 8}px"></i>`).join(""));
         d.style.width = r.width + "px"; d.style.height = r.height + "px";
-        this.later(d, 900); 
-        Sound.play("buff"); if (!R) Motion.hold(300); return;
+        this.later(d, 1000); 
+        snd("buff"); hold(260); return;
       }
       case "silence": {
         const d = this.add("v-chain", c.x, c.y, `<i></i><i></i>`);
         d.style.width = r.width * 1.1 + "px"; d.style.height = r.height + "px";
         this.later(d, 950); 
-        Sound.play("hit"); if (!R) Motion.hold(300); return;
+        snd("hit"); hold(240); return;
       }
       case "poof": {
         const d = this.add("v-poof", c.x, c.y, Array.from({ length: 9 }, (_, i) => `<i style="--a:${i * 40}deg;--d:${(i % 3) * 40}ms"></i>`).join(""));
         this.later(d, 900); 
-        Sound.play("flip"); if (!R) Motion.hold(380); return;
+        snd("flip"); hold(170); return;
       }
       case "tohand": case "todeck": {
         const pi = +a;
@@ -84,7 +88,7 @@ const Vfx = {
             { transform: `translate(${t.x - c.x}px,${t.y - c.y}px) scale(.35) rotate(8deg)`, opacity: 0 }], { duration: 560, easing: "cubic-bezier(.4,0,.6,1)", fill: "forwards" });
         }
         this.later(g, 600); 
-        Sound.play("flip"); if (!R) Motion.hold(380); return;
+        snd("flip"); hold(260); return;
       }
       case "void": case "voidback": {
         const d = this.add("v-void " + (kind === "voidback" ? "back" : ""), c.x, c.y, "<i></i>");
@@ -95,17 +99,17 @@ const Vfx = {
           if (!R) g.animate([{ transform: "none", opacity: 1 }, { transform: "scale(.1) rotate(220deg)", opacity: 0, filter: "hue-rotate(90deg) brightness(2)" }], { duration: 600, easing: "ease-in", fill: "forwards" });
           this.later(g, 650); }
         
-        Sound.play(kind === "void" ? "flip" : "buff"); if (!R) Motion.hold(kind === "void" ? 420 : 300); return;
+        snd(kind === "void" ? "flip" : "buff"); hold(kind === "void" ? 300 : 220); return;
       }
       case "pierce": {
         const d = this.add("v-pierce", c.x, c.y, "<i></i>"); this.later(d, 700);
         return;
       }
       case "poison": {
-        const d = this.add("v-poison", c.x, c.y, Array.from({ length: 7 }, (_, i) => `<i style="--x:${(i - 3) * 9}px;--d:${i * 50}ms"></i>`).join(""));
+        const d = this.add("v-poison", c.x, c.y, `<b class="fume"></b>` + Array.from({ length: 9 }, (_, i) => `<i style="--x:${(i - 4) * 9}px;--d:${(i * 53) % 260}ms;--s:${.6 + (i % 3) * .3}"></i>`).join(""));
         d.style.width = r.width + "px"; d.style.height = r.height + "px";
         this.later(d, 900); 
-        Sound.play("hit"); if (!R) Motion.hold(300); return;
+        snd("hit"); hold(260); return;
       }
       case "guard": {
         const d = this.add("v-guard", c.x, c.y, `<svg viewBox="0 0 40 46"><path d="M20 2 37 8v14c0 11-8 18-17 22C11 40 3 33 3 22V8z" fill="rgba(140,190,255,.25)" stroke="#bcd8ff" stroke-width="2.4"/></svg>`);
@@ -155,7 +159,7 @@ const Vfx = {
     this.layer().appendChild(w);
     setTimeout(() => w.remove(), R ? 800 : 1300);
     Sound.play("destroy");
-    Motion.hold(R ? 500 : 950);
+    Motion.hold(R ? 450 : 700);
   },
   /* 相手の手札を見た（見た人の画面だけに並べる） */
   peek(ids, pi, R) {
@@ -170,3 +174,4 @@ const Vfx = {
   }
 };
 const GEAR_SVG = `<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.9 2.2-2-.4a7 7 0 0 0-.8-1.9l1.2-1.7-1.9-1.9-1.7 1.2a7 7 0 0 0-1.9-.8l-.4-2h-2.8l-.4 2a7 7 0 0 0-1.9.8L6.6 4.8 4.7 6.7l1.2 1.7a7 7 0 0 0-.8 1.9l-2 .4v2.8l2 .4c.2.7.4 1.3.8 1.9l-1.2 1.7 1.9 1.9 1.7-1.2c.6.4 1.2.6 1.9.8l.4 2h2.8l.4-2c.7-.2 1.3-.4 1.9-.8l1.7 1.2 1.9-1.9-1.2-1.7c.4-.6.6-1.2.8-1.9l2-.4z" fill="#d9b25c" stroke="#5a3d0c" stroke-width=".8"/></svg>`;
+const SNOW_SVG = `<svg viewBox="0 0 40 40"><g stroke="#f4fbff" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M20 3v34M5.3 11.5l29.4 17M5.3 28.5l29.4-17"/><path d="M20 9l-4-4M20 9l4-4M20 31l-4 4M20 31l4 4M10 14l-5 .5M10 14l-1.5-5M30 26l5-.5M30 26l1.5 5M10 26l-5-.5M10 26l-1.5 5M30 14l5 .5M30 14l1.5-5"/></g></svg>`;
