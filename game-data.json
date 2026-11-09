@@ -1,5 +1,5 @@
 {
- "version": 101,
+ "version": 102,
  "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
@@ -7366,7 +7366,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-moonwitch-fcb977ce5b.webp"
+   "art": "art/f2-moonwitch-c253f540b5.webp"
   },
   {
    "id": "f2-sleepcastle",

@@ -3,7 +3,7 @@
 #   python3 tools/art/put.py f2-kit=画像1.png f2-moonwalk=画像2.png ...
 #   python3 tools/art/put.py --order 並び.json グループ名 画像1 画像2 ...   （並び.json = {"グループ名": [カードID, ...]}）
 # 400×560 の WebP にして art/<ID>-<ハッシュ>.webp に置き、game-data.json の art を書き換え、version を1つ上げる。
-# 古い絵のファイルは消す。入れたあとは sw.js の CACHE を上げてコミットする。
+# 古い絵のファイルは消さない。入れたあとは sw.js の CACHE を上げてコミットする。
 import sys, json, io, hashlib, os
 from PIL import Image, ImageOps
 
@@ -27,7 +27,7 @@ for i, f in files:
     b = io.BytesIO(); im.save(b, "WEBP", quality=82, method=6); data = b.getvalue()
     path = f"art/{i}-{hashlib.sha1(data).hexdigest()[:10]}.webp"
     open(path, "wb").write(data); by[i]["art"] = path
-    if old and old != path and os.path.exists(old): os.remove(old)
+    # 古い絵は消さない（カード工房を開いたままの人が古い指定で公開しても、絵が消えないように）
     print(i, by[i]["name"], path)
 d["version"] += 1
 json.dump(d, open("game-data.json", "w"), ensure_ascii=False, indent=1)

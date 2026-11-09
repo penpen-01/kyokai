@@ -114,9 +114,12 @@ const Publish = {
     try { pub = normalizeData(await fetchPublished()); } catch {}
     const out = exportJSON();
     const seasonChange = pub && normalizeData(out).config.SEASON !== pub.config.SEASON;
+    // この画面を開いたあとに、サイトのデータが別の所（Claude の更新など）で新しくなっている
+    const stale = pub && (+pub.version || 0) >= (+out.version || 0);
     const size = new Blob([JSON.stringify(out)]).size;
     openModal(`<div class="dialog wide" role="dialog" aria-labelledby="pbT">
       <h3 id="pbT">サイトに公開しますか？</h3>
+      ${stale ? `<p class="warnbox"><b>この画面を開いたあとに、サイトのデータが更新されています（サイト v${pub.version}・この画面 v${DATA.version}）。</b>このまま公開すると、その更新（イラストの差し替え・パックの設定など）が消えます。いったん「やめる」を押して、ページを読み込み直してから編集し直してください。</p>` : ""}
       ${seasonChange ? `<p class="warnbox"><b>シーズンが「${esc(pub.config.SEASON)}」から「${esc(normalizeData(out).config.SEASON)}」に変わります。</b>公開すると、全員の所持カード・G・デッキがリセットされ、新規スタートになります。</p>` : ""}
       <ul class="difflist">${this.diffSummary(pub, out).map(l => `<li>${esc(l)}</li>`).join("")}</ul>
       <div class="field"><label for="pub-note">変更のメモ（履歴に残ります・任意）</label>
@@ -124,7 +127,7 @@ const Publish = {
       <p class="hint">データ ${fmtBytes(size)}。公開すると1〜2分でサイトに反映され、遊ぶ人はゲームを開き直すと新しい内容になります。</p>
       <div class="acts">
         <button type="button" class="btn" data-act="closeModal">やめる</button>
-        <button type="button" class="btn ${seasonChange ? "danger" : "primary"}" data-act="pubGo">${seasonChange ? "リセットして公開する" : "公開する"}</button>
+        <button type="button" class="btn ${seasonChange || stale ? "danger" : "primary"}" data-act="pubGo">${stale ? "それでも上書きして公開する" : seasonChange ? "リセットして公開する" : "公開する"}</button>
       </div>
     </div>`);
   },
