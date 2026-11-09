@@ -1,5 +1,5 @@
 {
- "version": 94,
+ "version": 95,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6728,7 +6728,7 @@
     "n": 1,
     "world": "fan"
    },
-   "art": "art/f2-kamikakushi-f2b101da33.webp"
+   "art": "art/f2-kamikakushi-98870d9c20.webp"
   },
   {
    "id": "f2-rebloom",
