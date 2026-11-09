@@ -123,7 +123,7 @@ const Admin = {
             <div class="frow">
               <input class="txt" data-admin="deck-name" data-id="${esc(d.id)}" value="${esc(d.name)}" maxlength="16" aria-label="デッキ名" style="flex:1;min-width:140px">
               <select class="txt" data-admin="deck-level" data-id="${esc(d.id)}" aria-label="CPUの強さ" style="width:auto">
-                ${["easy", "normal", "hard"].map(l => `<option value="${l}" ${d.level === l ? "selected" : ""}>${{ easy: "初級", normal: "中級", hard: "上級" }[l]}</option>`).join("")}
+                ${["easy", "normal", "hard", "ex"].map(l => `<option value="${l}" ${d.level === l ? "selected" : ""}>${{ easy: "初級", normal: "中級", hard: "上級", ex: "超級" }[l]}</option>`).join("")}
               </select>
               ${isStarter ? `<span class="tagS">スターター</span>` : ""}
             </div>
@@ -142,7 +142,7 @@ const Admin = {
           <textarea class="txt" id="cpu-code" rows="3" placeholder="KYK1:..."></textarea>
           <div class="frow">
             <select class="txt" id="cpu-level" style="width:auto">
-              <option value="easy">初級</option><option value="normal" selected>中級</option><option value="hard">上級</option>
+              <option value="easy">初級</option><option value="normal" selected>中級</option><option value="hard">上級</option><option value="ex">超級</option>
             </select>
             <button type="button" class="btn sm primary" data-act="cpuAdd">追加</button>
             <span class="warn">${esc(this.importMsg)}</span>

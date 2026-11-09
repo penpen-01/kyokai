@@ -7,7 +7,7 @@
    ========================================================= */
 
 const ACCT_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const STREAK_LEVELS = ["easy", "normal", "hard"];
+const STREAK_LEVELS = ["easy", "normal", "hard", "ex"];
 
 const Account = {
   code: null,

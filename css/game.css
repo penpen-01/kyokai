@@ -402,7 +402,7 @@ body{
 .lvl span{font-size:12px;color:var(--muted)}
 .lvl:hover{border-color:var(--gold)}
 .lvl:focus-visible{outline:2px solid var(--fg)}
-.lvl-easy b{color:var(--heal)} .lvl-normal b{color:var(--gold)} .lvl-hard b{color:var(--danger)}
+.lvl-easy b{color:var(--heal)} .lvl-normal b{color:var(--gold)} .lvl-hard b{color:var(--danger)} .lvl-ex b{color:#c78bff}
 
 /* ---- タイトル ---- */
 .titlegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr));gap:8px}
@@ -1186,7 +1186,7 @@ body{
 .lvls{gap:10px}
 .lvl{--lc:var(--heal);position:relative;flex-direction:row;align-items:stretch;gap:0;padding:0;min-height:104px;overflow:hidden;border-radius:14px;
   border:1px solid color-mix(in srgb,var(--lc) 45%,#2b3150);background:#121527;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:transform .12s,border-color .12s}
-.lvl-normal{--lc:var(--gold)} .lvl-hard{--lc:#ff7a68}
+.lvl-normal{--lc:var(--gold)} .lvl-hard{--lc:#ff7a68} .lvl-ex{--lc:#c78bff}
 .lvl:hover{border-color:var(--lc);transform:translateY(-1px)}
 .lvl:active{transform:scale(.99)}
 .lvl-art{position:absolute;inset:0;background:#1b2140 70% 20%/cover no-repeat;opacity:.55}

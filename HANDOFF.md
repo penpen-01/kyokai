@@ -24,6 +24,7 @@
 - リリースごとに `sw.js` の `CACHE` の番号を上げる
 - イラストは `tools/art/put.py` で入れる（400×560 の WebP、`art/<ID>-<ハッシュ>.webp`、version を上げる）。依頼文の作り方とコツは `tools/art/README.md`
 - シミュレーションは `tools/sim/`（README あり）。開放戦デッキの勝率は `node tools/sim/gate_eval.js 試合数 出力.json`（先に `python3 -m http.server 8765`）
+- **告知**：正式リリース後、プレイヤーに見えるゲームの仕組みを変えて main に入れたら、`notice.json` の `notes` に `{"date": "YYYY-MM-DD", "text": "変更の説明（プレイヤー向けの言葉で）"}` を1行足す（工房の修正・カードの数値は自動で拾うので書かない）。オーナーが工房の「告知の下書き」からまとめてメールにする
 - Firebase のルール（database.rules.json）を変えたら、オーナーに Firebase の画面へ貼り直してもらう
 
 ## 現在のルール

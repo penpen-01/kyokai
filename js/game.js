@@ -1049,8 +1049,12 @@ let CPU_LEVEL = "normal";
 const CPU_LEVELS = {
   easy:   { label: "初級", desc: "のんびり遊べる相手" },
   normal: { label: "中級", desc: "それなりに考えて戦う" },
-  hard:   { label: "上級", desc: "先を読んで最善手を狙う" }
+  hard:   { label: "上級", desc: "先を読んで最善手を狙う" },
+  ex:     { label: "超級", desc: "第2弾のカードを使いこなす強敵" }   // 考え方は上級と同じ。デッキが強い。第2弾をすべて開放すると出る
 };
+const REWARD_KEY = { easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD", ex: "REWARD_EX" };
+/* 選べる強さ（超級は開いた人だけ）。AI だけを選ぶ画面（練習・世界限定）は超級を出さない */
+const cpuLevels = (withEx) => Object.entries(CPU_LEVELS).filter(([k]) => k !== "ex" || (withEx && exOpen()));
 
 function simulate(fn) {
   const real = S, wasSim = SIM;
@@ -1180,7 +1184,7 @@ function cpuChoose(pi) {
   // 初級：手の良し悪しはざっくり見るが、得になる手の上位3つからでたらめに選ぶ（2026-11-02：前の「完全にでたらめ」は弱すぎた）
   const easy = CPU_LEVEL === "easy";
   const base = evaluate(S, pi);
-  const hard = CPU_LEVEL === "hard";
+  const hard = CPU_LEVEL === "hard" || CPU_LEVEL === "ex";
   const tries = hard ? 2 : 1; // ランダムな効果があるので、上級は複数回試して平均をとる
   // 上級は「この手のあとに続けて打てる一番よい手」まで読む（2手先）
   // エナジーを増やすだけのカード（境界の欠片・双子の妖精の効果など）は、それだけでは盤面が変わらないので、
@@ -2106,7 +2110,7 @@ function giveReward(res) {
   if (res === "win" && counts) {
     const base = MODE === "online" ? CONFIG.REWARD_ONLINE
       : B && B.reward != null ? B.reward
-      : { easy: CONFIG.REWARD_EASY, normal: CONFIG.REWARD_NORMAL, hard: CONFIG.REWARD_HARD }[CPU_LEVEL] || 0;
+      : CONFIG[REWARD_KEY[CPU_LEVEL]] || 0;
     r.bonus = r.cpu ? Account.streakBonus(r.wins) : 0;
     r.g = Math.round(base * (100 + r.bonus) / 100);
   }
@@ -2193,9 +2197,9 @@ function showCpuSelect() {
   const deck = Decks.selected(), key = Decks.keyCard(deck);
   // 強さごとの見本の絵：その強さの CPU デッキの代表カード
   // 強さごとの見本の絵（オーナー指定：初級＝見習い剣士・中級＝戦神の化身・上級＝審判の熾天使）
-  const FACE = { easy: "squire", normal: "wargod", hard: "n-seraph" };
+  const FACE = { easy: "squire", normal: "wargod", hard: "n-seraph", ex: "f2-tamamo" };
   const face = lv => { const c = DEF[FACE[lv]]; return c && c.art ? c.art : ""; };
-  const stars = { easy: 1, normal: 2, hard: 3 };
+  const stars = { easy: 1, normal: 2, hard: 3, ex: 3 };
   openOverlay(`<div class="panel">
     ${Decks.topbar("CPU戦", "solo")}
     <div class="cs-deck">
@@ -2205,13 +2209,13 @@ function showCpuSelect() {
     </div>
     ${deck.free && Decks.sampleOK() && CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝や隠しボスにも数えません（ベータの間だけ CPU戦でも使えます）。</p>` : ""}
     ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキは CPU戦で使えません</b>サンプルデッキが使えるのは、練習対戦と友達との対戦だけです。「変更」から、自分のカードで組んだデッキを選んでください。</p>` : ""}
-    <div class="lvls ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "lvls-off" : ""}">${Object.entries(CPU_LEVELS).map(([k, v]) => `
+    <div class="lvls ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "lvls-off" : ""}">${cpuLevels(true).map(([k, v]) => `
       <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}" ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "disabled" : ""}>
         <span class="lvl-art" ${face(k) ? `style="background-image:url('${esc(face(k))}')"` : ""}></span>
         <span class="lvl-body">
           <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
           <span class="lvl-desc">${v.desc}</span>
-          <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}</b>G</em>${streakTag(k)}</span>
+          <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[REWARD_KEY[k]]}</b>G</em>${streakTag(k)}</span>
         </span>
         <span class="lvl-go" aria-hidden="true">›</span>
       </button>`).join("")}</div>
@@ -2224,13 +2228,13 @@ const PRACTICE = { deck: null, level: "normal" };
 function showPractice() {
   if (!Decks.readyDeck(msg => Decks.showList(msg))) return;
   const mine = Decks.mine().filter(d => !Decks.problems(d).length);
-  const cpu = PRESETS.filter(p => !["test", "gate"].includes(p.level) && !deckProblems(p, DEF, CONFIG).length);
+  const cpu = PRESETS.filter(p => !hiddenDeck(p) && !deckProblems(p, DEF, CONFIG).length);
   if (!PRACTICE.deck || ![...mine, ...cpu].some(d => d.id === PRACTICE.deck)) PRACTICE.deck = (mine[0] || cpu[0] || {}).id;
   const row = (d, tag) => { const k = Decks.keyCard(d);
     return `<button type="button" class="pr-deck ${PRACTICE.deck === d.id ? "on" : ""}" data-act="prDeck" data-id="${esc(d.id)}">
       <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
       <span class="cs-deck-txt"><small>${tag}</small><b>${esc(d.name)}</b></span>${PRACTICE.deck === d.id ? `<span class="usingtag">CPU が使う</span>` : ""}</button>`; };
-  const lv = Object.entries(CPU_LEVELS).map(([k, v]) => `<button type="button" data-act="prLevel" data-v="${k}" aria-pressed="${PRACTICE.level === k}">${v.label}</button>`).join("");
+  const lv = cpuLevels(false).map(([k, v]) => `<button type="button" data-act="prLevel" data-v="${k}" aria-pressed="${PRACTICE.level === k}">${v.label}</button>`).join("");
   openOverlay(`<div class="panel">
     ${Decks.topbar("練習対戦", "solo")}
     <p class="lead small">CPU に使わせるデッキと、CPU の強さを選んでください。あなたは「${esc(Decks.selected().name)}」で戦います。練習なので、Gと連勝はつきません。</p>
@@ -2255,7 +2259,7 @@ function startCpuGame(level) {
   const mine = Decks.readyDeck(msg => Decks.showList(msg));
   if (!mine) return;
   if (mine.sample && !CONFIG.SAMPLE_CPU) { toast("サンプルデッキは CPU戦では使えません（練習対戦と友達との対戦だけ）"); return showCpuSelect(); }
-  const lv = CPU_LEVELS[level] ? level : "normal";
+  const lv = CPU_LEVELS[level] && (level !== "ex" || exOpen()) ? level : "normal";
   if (lv === "hard" && Account.data && Account.data.bossNext && !mine.sample && ["ready", "offline"].includes(Account.status)) return startBossGame(mine);
   const cpu = Decks.randomPreset(lv);
   if (!cpu) return Decks.showList("CPU用のサンプルデッキがありません");
@@ -2432,7 +2436,7 @@ function showGate() {
       ${done ? `<span class="usingtag done">開放ずみ</span>` : `<span class="lvl-go" aria-hidden="true">›</span>`}</button>`; };
   openOverlay(`<div class="panel">
     ${Decks.topbar("パック開放戦", "solo")}
-    ${GATE_TEST ? `<p class="callout">試しモード（?gatetest）：販売前のパックにも挑めます。勝っても開放はされません。</p>` : ""}
+    ${GATE_TEST ? `<p class="callout">試しモード（?gatetest）：販売前のパックにも挑めます。勝っても開放はされません。CPU戦の超級も出ます。</p>` : ""}
     <p class="lead small">新しいパックは、そのパックの開放戦に勝つとショップに並びます。それまでは、そのパックのカードはカード一覧にも出ず、交換もできません。</p>
     ${all.length ? `<h3 class="sec">挑むパックを選ぶ</h3><div class="pr-list">${all.map(row).join("")}</div>` : `<p class="callout">開放戦のあるパックは、まだありません。</p>`}
   </div>`, "start", true);
@@ -2455,7 +2459,7 @@ function showGatePack() {
     <div class="gate-rule">
       <p class="gr-common">パック開放戦は、パックごとに決められたルールのもとで戦います。</p>
       <p class="gr-this"><span>今回のルール：${esc(rule.label)}</span>${esc(rule.text(p))}</p>
-      <p class="gr-misc">サンプルデッキでは挑めません。相手は CPU（${CPU_LEVELS[lv].label}）。勝つとパックが開き、Gももらえます（${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[lv]]}G）。負けても何度でも挑めます。</p>
+      <p class="gr-misc">サンプルデッキでは挑めません。相手は CPU（${CPU_LEVELS[lv].label}）。勝つとパックが開き、Gももらえます（${CONFIG[REWARD_KEY[lv]]}G）。負けても何度でも挑めます。</p>
     </div>
     <h3 class="sec">使うデッキ</h3>
     ${decks.length ? `<div class="pr-list">${decks.map(deckRow).join("")}</div>`
@@ -2511,18 +2515,18 @@ function showWorldSelect() {
       : `<p class="callout">使える限定構築のデッキがありません。デッキ編成の「限定構築」で作ってください。</p>
          <button type="button" class="btn" data-act="decks">デッキ編成へ</button>`}
     ${list.length ? `<h3 class="sec">相手の強さ</h3>
-    <div class="lvls">${Object.entries(CPU_LEVELS).map(([k, v]) => `
+    <div class="lvls">${cpuLevels(false).map(([k, v]) => `
       <button type="button" class="lvl lvl-${k}" data-act="wbLevel" data-v="${k}">
         <span class="lvl-body">
           <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
-          <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[{ easy: "REWARD_EASY", normal: "REWARD_NORMAL", hard: "REWARD_HARD" }[k]]}</b>G</em></span>
+          <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[REWARD_KEY[k]]}</b>G</em></span>
         </span><span class="lvl-go" aria-hidden="true">›</span>
       </button>`).join("")}</div>` : ""}
   </div>`, "start", true);
 }
 /* 相手：その強さの CPU 用デッキのうち、1つの世界だけのもの（なければ、ほかの強さから） */
 function worldOpponent(level) {
-  const ok = PRESETS.filter(p => !["test", "gate"].includes(p.level) && deckWorld(p) && !deckProblems(p, DEF, CONFIG).length);
+  const ok = PRESETS.filter(p => !hiddenDeck(p) && deckWorld(p) && !deckProblems(p, DEF, CONFIG).length);
   const at = ok.filter(p => p.level === level);
   const pool = at.length ? at : ok;
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;

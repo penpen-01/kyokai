@@ -275,7 +275,7 @@ const playEffects = card => (card.effects || []).filter(e => whenOf(e) === "play
 const DEFAULT_CONFIG = {
   PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
   // ここから下はゲームの裏側（報酬・配布）
-  STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_ONLINE: 80,
+  STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_EX: 450, REWARD_ONLINE: 80,
   STREAK_STEP: 10, STREAK_MAX: 50,
   BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, SAMPLE_ONLINE_DAY: 3, SAMPLE_CPU: 1,
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
@@ -306,6 +306,7 @@ const CONFIG_INFO = {
   REWARD_EASY:   { label: "CPU初級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_NORMAL: { label: "CPU中級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_HARD:   { label: "CPU上級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
+  REWARD_EX:     { label: "CPU超級に勝ったときのG（第2弾をすべて開放すると出る）", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_ONLINE: { label: "対人戦に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   STREAK_STEP:   { label: "CPU戦の連勝ボーナス：1連勝ごとに増える割合（%）", min: 0, max: 100, group: "eco" },
   STREAK_MAX:    { label: "CPU戦の連勝ボーナス：上限（%）", min: 0, max: 500, group: "eco", step: 10 },
@@ -498,6 +499,11 @@ function cardHTML(card, o = {}) {
     <span class="foot"><span class="nm ${nmLen(card) >= 11 ? "xlong x3" : nmLen(card) >= 10 ? "xlong x2" : nmLen(card) >= 9 ? "xlong" : nmLen(card) >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 
+/* 超級 CPU：第2弾（2-1・2-2・2-3）をすべて開放した人だけが戦える */
+const EX_SETS = ["2-1", "2-2", "2-3"];
+const exOpen = () => /[?&]gatetest\b/.test(location.search) || EX_SETS.every(s => setOpen(s));   // ?gatetest（オーナーの試し用）でも出る
+/* ふだんの CPU戦・練習・CPU用一覧に出さないデッキ（検証用・開放戦用・まだ開いていない超級） */
+const hiddenDeck = d => ["test", "gate"].includes(d.level) || (d.level === "ex" && !exOpen());
 const MAIL_TO = { all: "全員（これから始める人にも届く）", before: "送った日までに始めた人だけ", new: "送った日から後に始めた人（ずっと届く）" };
 /* 選択券で選べるカード */
 function pickPool(pk, defs) {
@@ -584,7 +590,7 @@ function normalizeData(data) {
   })).filter(c => c.id);
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
-    level: ["easy", "normal", "hard", "boss", "test", "gate"].includes(x.level) ? x.level : "normal"   // test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用、gate = パック開放戦の相手（ふだんのCPU戦では使わない）
+    level: ["easy", "normal", "hard", "ex", "boss", "test", "gate"].includes(x.level) ? x.level : "normal"   // ex = 超級（第2弾をすべて開放すると出る）、test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用、gate = パック開放戦の相手（ふだんのCPU戦では使わない）
   }));
   const packs = (Array.isArray(d.packs) ? d.packs : []).filter(x => x && x.id).map(x => ({
     id: String(x.id), name: String(x.name || "パック"), price: Math.max(0, +x.price || 0), size: Math.max(1, Math.min(10, +x.size || 5)),
