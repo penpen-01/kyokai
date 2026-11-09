@@ -59,10 +59,17 @@ const Cinema = {
     document.body.appendChild(el);
     return el;
   },
-  /* 帯の中の大きな絵（アイコンのカードの絵） */
-  art(pi) {
+  /* デッキの代表カード（なければアイコンのカード） */
+  keyCard(pi) {
+    const d = S.decks && S.decks[pi];
+    const k = d && typeof Decks !== "undefined" ? Decks.keyCard({ cards: d.cards || {}, key: d.key }) : null;
+    if (k) return k;
     const id = typeof playerIcon === "function" ? playerIcon(pi) : null;
-    const c = id && DEF[id];
+    return id && DEF[id] && DEF[id].art ? DEF[id] : null;
+  },
+  /* 帯の中の大きな絵（代表カードの絵をぼかして敷く） */
+  art(pi) {
+    const c = this.keyCard(pi);
     return c && c.art ? `style="background-image:url('${esc(c.art)}')"` : "";
   },
   face(pi) {
@@ -77,11 +84,13 @@ const Cinema = {
   },
 
   /* ---------- 試合開始：VS ---------- */
+  /* お互いのデッキの代表カードが斜めから飛び込んでぶつかり、はじけて左右に分かれ、VS */
   intro() {
     Sound.play("open");
-    this.layer("intro", this.bands(`<div class="cv-vs" aria-label="VS">VS</div>`));
-    setTimeout(() => Sound.play("hit"), Motion.reduced ? 0 : 650);
-    return Motion.reduced ? 1200 : 2600;
+    const kc = (pi, cls) => { const c = this.keyCard(pi); return c ? `<div class="cv-kc ${cls}">${cardHTML(c, { static: true })}</div>` : ""; };
+    this.layer("intro", this.bands(`<div class="cv-clash">${kc(OP, "op")}${kc(ME, "me")}<i class="cv-boom"></i></div><div class="cv-vs" aria-label="VS">VS</div>`));
+    if (!Motion.reduced) { setTimeout(() => Sound.play("destroy"), 480); setTimeout(() => Sound.play("hit"), 1050); }
+    return Motion.reduced ? 1200 : 2900;
   },
 
   /* ---------- じゃんけん：お互いの手が上と下から飛び出して、すぐ結果 ---------- */
@@ -89,7 +98,7 @@ const Cinema = {
     const v = last.winner == null ? "tie" : last.winner === ME ? "win" : "lose";
     const verdict = v === "tie" ? "あいこ！" : v === "win" ? "あなたの勝ち！" : "相手の勝ち";
     const hands = `相手：${RPS[last.hands[OP]]} ／ あなた：${RPS[last.hands[ME]]}`;
-    const sub = hands + "　" + (v === "tie" ? "もう一度" : v === "win" ? "先攻か後攻かを選べます" : "相手が先攻か後攻かを選びます");
+    const sub = hands;
     const hand = (pi, cls) => `<div class="cv-hand ${cls} ${last.winner === pi ? "won" : last.winner == null ? "" : "lost"}">
         <img class="real" src="ui/rps-${last.hands[pi]}.webp" alt="" draggable="false"></div>`;
     this.layer("rpsc " + v, this.bands(`
@@ -103,14 +112,16 @@ const Cinema = {
   },
 
   /* ---------- 先攻／後攻 ---------- */
+  /* 先攻／後攻：大きな紋章が叩きつけられて、光の輪が広がる */
   order() {
     const meFirst = S.first === ME;
-    const card = (pi, cls) => `<div class="cv-ocard ${cls}"><div class="cv-oin">
-        <span class="cv-oback"></span><span class="cv-ofront ${S.first === pi ? "first" : "second"}"><b>${S.first === pi ? "先攻" : "後攻"}</b></span></div></div>`;
-    this.layer("orderc", this.bands(`${card(OP, "op")}${card(ME, "me")}
-      <div class="cv-verdict ${meFirst ? "win" : "tie"}"><b>あなたは${meFirst ? "先攻" : "後攻"}</b><small>${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」（エナジー+1を1回）を持って始めます"}</small></div>`));
-    if (!Motion.reduced) setTimeout(() => Sound.play("flip"), 700);
-    return Motion.reduced ? 1500 : 2700;
+    this.layer("orderc", this.bands(`<div class="cv-emb ${meFirst ? "first" : "second"}">
+        <i class="cv-ring"></i><i class="cv-ring r2"></i>
+        <div class="cv-medal"><span>${meFirst ? "FIRST" : "SECOND"}</span><b>${meFirst ? "先攻" : "後攻"}</b></div>
+        <p class="cv-emb-sub">${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」を持って始めます"}</p>
+      </div>`));
+    if (!Motion.reduced) { setTimeout(() => Sound.play("hit"), 380); setTimeout(() => Sound.play(meFirst ? "rare" : "flip"), 450); }
+    return Motion.reduced ? 1400 : 2300;
   },
 
   /* ---------- ターンの始め ---------- */

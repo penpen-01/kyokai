@@ -75,7 +75,7 @@ function newGame(names, decks) {
     phase: "rps",
     players: [mkPlayer(names[0], decks[0]), mkPlayer(names[1], decks[1])],
     rps: { picks: [null, null], round: 1, last: null }, rpsWinner: null, first: null, mull: [null, null],
-    decks: decks.map(d => ({ name: d.name, cards: d.cards, ...(d.icon ? { icon: d.icon } : {}) })),
+    decks: decks.map(d => ({ name: d.name, cards: d.cards, ...(d.icon ? { icon: d.icon } : {}), ...(d.key ? { key: d.key } : {}) })),
     turn: 0, turnNo: 0, over: false, winner: null, log: [], uidN: 0, seq: 0
   };
   ui = { sel: null, mode: null };
@@ -1441,48 +1441,43 @@ const rpsImg = k => `<img class="rpsimg" src="ui/rps-${k}.webp" alt="" draggable
 function pregameHTML() {
   const me = S.players[ME], op = S.players[OP];
   const wait = typeof Online !== "undefined" && MODE === "online" && Online.blocked();
-  const head = `<div class="pre-head">
-      <div class="pre-p op"><b>${esc(op.name)}</b><span>${esc(op.deckName || "")}</span></div>
-      <span class="pre-vs">VS</span>
-      <div class="pre-p me"><b>${esc(me.name)}</b><span>${esc(me.deckName || "")}</span></div>
-    </div>`;
-  let body = "";
+  const face = pi => { const id = playerIcon(pi); return `<span class="pg-face">${id ? iconImgHTML(id) : `<span class="glyph">召</span>`}</span>`; };
+  const plate = (pi, status) => { const p = S.players[pi];
+    return `<div class="pg-plate ${pi === ME ? "me" : "op"}">${face(pi)}<span class="pg-name"><b>${esc(p.name)}</b><small>${esc(p.deckName || "")}</small></span>${status ? `<span class="pg-st">${status}</span>` : ""}</div>`; };
+  const dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
+  let body = "", opSt = "", meSt = "", ph = S.phase;
   const last = S.rps.last;
-  // じゃんけんの結果は大きな演出（js/cinema.js）で見せるので、ここでは一行だけ
-  const lastLine = last ? `<p class="datainfo">相手：${RPS[last.hands[OP]]} ／ あなた：${RPS[last.hands[ME]]}</p>` : "";
-  if (S.phase === "rps") {
+  if (ph === "rps") {
     const mine = S.rps.picks[ME];
-    body = `<h2 class="pre-title">${last ? "あいこ！ もう一度" : "じゃんけん"}</h2>
-      ${last ? lastLine : `<p class="lead">勝った人が、先攻か後攻かを選べます。</p>`}
-      ${mine ? `<p class="pre-wait">${RPS[mine] ? `あなたは${RPS[mine]}。` : "選びました。"}相手を待っています…</p>` : `
-      <div class="rps">${Object.entries(RPS).map(([k, v]) => `<button type="button" class="rpsbtn" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}
-      ${S.rps.picks[OP] ? `<p class="datainfo">相手は選び終わっています</p>` : ""}`;
-  } else if (S.phase === "choose") {
-    body = `<h2 class="pre-title">${S.rpsWinner === ME ? "あなたの勝ち！" : "相手の勝ち"}</h2>
-      ${lastLine}
-      ${S.rpsWinner === ME ? `
-        <p class="lead">先攻か後攻かを選んでください。先攻は最初のターンにカードを引きません。</p>
-        <div class="pre-btns">
-          <button type="button" class="btn primary" data-act="choose" data-v="1" ${wait ? "disabled" : ""}>先攻をとる</button>
-          <button type="button" class="btn" data-act="choose" data-v="0" ${wait ? "disabled" : ""}>後攻をとる</button>
-        </div>` : `<p class="pre-wait">相手が先攻・後攻を選んでいます…</p>`}`;
-  } else if (S.phase === "mulligan") {
+    opSt = S.rps.picks[OP] ? `<em class="ok">選択済み</em>` : `<em>考え中${dots}</em>`;
+    body = `<div class="pg-title"><b>${last ? "あいこ！" : "じゃんけん"}</b><small>${last ? "もう一度" : "勝てば先攻・後攻を選べる"}</small></div>
+      ${mine ? `<div class="pg-chosen">${rpsImg(mine)}<span>${RPS[mine]}</span></div><p class="pg-wait">相手を待っています${dots}</p>`
+        : `<div class="pg-rps">${Object.entries(RPS).map(([k, v], i) => `<button type="button" class="pg-hand" style="--i:${i}" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}`;
+  } else if (ph === "choose") {
+    const win = S.rpsWinner === ME;
+    body = `<div class="pg-title ${win ? "win" : ""}"><b>${win ? "あなたの勝ち！" : "相手の勝ち"}</b><small>${win ? "先攻か後攻かを選んでください" : ""}</small></div>
+      ${win ? `<div class="pg-order">
+          <button type="button" class="pg-opt first" data-act="choose" data-v="1" ${wait ? "disabled" : ""}><span class="pg-oen">FIRST</span><b>先攻</b><small>先に動ける<br>最初のターンは引かない</small></button>
+          <button type="button" class="pg-opt second" data-act="choose" data-v="0" ${wait ? "disabled" : ""}><span class="pg-oen">SECOND</span><b>後攻</b><small>「境界の欠片」で<br>1回だけエナジー+1</small></button>
+        </div>` : `<p class="pg-wait">相手が先攻・後攻を選んでいます${dots}</p>`}`;
+  } else if (ph === "mulligan") {
     const done = S.mull[ME];
-    body = `<h2 class="pre-title">最初の手札</h2>
-      <p class="lead">あなたは<b>${S.first === ME ? "先攻" : "後攻"}</b>です。${done == null ? "この手札で始めるか、1回だけ全部引き直せます。" : ""}</p>
-      <div class="mull-hand">${me.hand.map((id, i) => cardHTML(DEF[id], { static: true, attrs: `data-hand="${i}"` })).join("")}</div>
-      ${done == null ? `
-        <div class="pre-btns">
+    opSt = S.mull[OP] != null ? `<em class="ok">準備完了</em>` : `<em>考え中${dots}</em>`;
+    body = `<div class="pg-title sm"><span class="pg-chip ${S.first === ME ? "first" : "second"}">${S.first === ME ? "先攻" : "後攻"}</span><b>最初の手札</b></div>
+      <div class="pg-hand5 ${done == null ? "deal" : ""}">${me.hand.map((id, i) => `<div class="pg-hc" style="--i:${i};--r:${(i - (me.hand.length - 1) / 2) * 4}deg;--o:${Math.abs(i - (me.hand.length - 1) / 2) * 6}px">${cardHTML(DEF[id], { static: true, attrs: `data-hand="${i}"` })}</div>`).join("")}</div>
+      ${done == null ? `<div class="pg-btns">
           <button type="button" class="btn primary" data-act="mull" data-v="0" ${wait ? "disabled" : ""}>このまま始める</button>
-          <button type="button" class="btn" data-act="mull" data-v="1" ${wait ? "disabled" : ""}>全部引き直す</button>
-        </div>
-        <p class="datainfo">引き直すと、手札をすべて山札に戻して切り直し、${CONFIG.START_HAND}枚引きます。</p>`
-      : `<p class="pre-wait">${done ? "引き直しました。" : "この手札で始めます。"}相手を待っています…</p>`}`;
+          <button type="button" class="btn pg-redo" data-act="mull" data-v="1" ${wait ? "disabled" : ""}>${RES_IC.again}引き直す</button>
+        </div><p class="pg-hint">引き直しは1回だけ（全部入れ替え）</p>`
+      : `<p class="pg-wait">${done ? "引き直しました。" : ""}相手を待っています${dots}</p>`}`;
   }
   const net = typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : "";
-  return `<div class="pre">
+  return `<div class="pre pg pg-${ph}">
+    <div class="pg-bg" aria-hidden="true"></div>
     <div class="pre-top"><button type="button" class="chip" data-act="menu">メニュー</button></div>
-    ${head}<div class="pre-body">${body}</div>${net}</div>`;
+    ${plate(OP, opSt)}
+    <div class="pg-center">${body}</div>
+    ${plate(ME, meSt)}${net}</div>`;
 }
 
 function doRps(v) {
