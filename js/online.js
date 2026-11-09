@@ -257,6 +257,7 @@ const Online = {
     if (!this.guestDeck || this.guestDeck.by !== this.room.guest || !this.myDeck) return;
     MODE = "online"; setPerspective(0);
     $("#overlay").hidden = true;
+    this.logSent = null;
     newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], [this.myDeck, this.guestDeck]);
   },
 
@@ -264,6 +265,7 @@ const Online = {
     if (this.role !== "host" || !this.room || !this.room.guest || !S) return;
     if (this.oppLeft) return toast("相手が退出しているため、もう一度対戦できません");
     $("#overlay").hidden = true;
+    this.logSent = null;
     newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], S.decks);
   },
 
@@ -287,7 +289,13 @@ const Online = {
       // じゃんけんでは、ゲストが選ぶまでホストの手を伏せる
       let out = S;
       if (S.phase === "rps" && S.rps.picks[0] && !S.rps.picks[1]) out = { ...S, rps: { ...S.rps, picks: ["?", null] } };
-      const payload = JSON.stringify({ S: out, fx: this.fxq });
+      // ログは増え続けて毎回の送信が重くなるので、前回から増えた分だけ送る（15回に1回と決着時はまとめて送り直す）
+      const L = S.log || [];
+      this.pubN = (this.pubN || 0) + 1;
+      if (this.logSent == null || this.logSent > L.length || this.pubN % 15 === 0 || S.over) this.logSent = 0;
+      const lg = { base: this.logSent, add: L.slice(this.logSent) };
+      this.logSent = L.length;
+      const payload = JSON.stringify({ S: { ...out, log: [] }, lg, fx: this.fxq });
       this.fxq = [];
       Net.update(`rooms/${this.code}`, { state: payload, status: S.over ? "over" : "playing" }).catch(e => console.error(e));
     });
@@ -350,7 +358,9 @@ const Online = {
     // 演出は、古い盤面（倒れる前のキャラがまだいる状態）の上で再生する
     if (S && !isNewGame && Array.isArray(p.fx)) p.fx.forEach(f => playFx(f[0], f[1], f[2]));
     const wasOver = S && S.over;
+    const prevLog = (S && !isNewGame && S.log) || [];
     S = p.S;
+    if (p.lg) S.log = prevLog.slice(0, p.lg.base).concat(p.lg.add || []);   // ログは増えた分だけ届く
     MODE = "online"; setPerspective(1);
     this.pending = false;
     clearTimeout(this.pendingTimer);

@@ -1870,3 +1870,10 @@ html.nofx .card .shine{display:none}
 .pg-redo{display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .pg-redo svg{width:18px;height:18px}
 .pg-hint{margin:-8px 0 0;font-size:12px;color:var(--muted)}
+/* 一覧（図鑑・デッキ編成・選択券など）の小さなカードは光らせない。UR・レジェンドの光が何十枚も同時に動くと、スマホが重くなるため（大きく見せる画面と対戦中は光る） */
+.dgrid .card, .dgrid .card *, .dgrid .card::before, .dgrid .card::after, .dgrid .card *::before, .dgrid .card *::after,
+.dbgrid .card, .dbgrid .card *, .dbgrid .card::before, .dbgrid .card::after, .dbgrid .card *::before, .dbgrid .card *::after,
+.pick-grid .card, .pick-grid .card *, .pick-grid .card::before, .pick-grid .card::after, .pick-grid .card *::before, .pick-grid .card *::after,
+.mgrid .card *, .mgrid .card *::before, .mgrid .card *::after { animation: none !important; }
+/* 一覧のカードは、画面に見えているものだけ描く（何百枚あっても開くのが速い）。枚数の札などはカードの外（.dtile）にあるので切れない */
+.dgrid .dtile > .card{content-visibility:auto;contain-intrinsic-size:auto 64px auto 90px}
