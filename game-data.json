@@ -1,5 +1,5 @@
 {
- "version": 82,
+ "version": 83,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -3992,7 +3992,7 @@
    "name": "溶鉱炉",
    "world": "mech",
    "type": "spell",
-   "cost": 1,
+   "cost": 0,
    "glyph": "機",
    "limit": 3,
    "rarity": "common",
@@ -4101,7 +4101,7 @@
    "effects": [
     {
      "kind": "tutor",
-     "n": 3,
+     "n": 6,
      "world": "mech",
      "ctype": "char"
     }
@@ -4165,7 +4165,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 3,
+     "n": 2,
      "act": "dmg",
      "to": "enemy1",
      "cond": "gearNone"
@@ -4179,7 +4179,7 @@
     }
    ],
    "set": "2-1",
-   "gear": 2,
+   "gear": 1,
    "art": "art/m2-crane-ba58805be9.webp"
   },
   {
@@ -4284,7 +4284,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 3,
+     "n": 4,
      "when": "voidBack",
      "act": "dmg",
      "to": "enemyRand"
@@ -4299,7 +4299,7 @@
    "world": "mech",
    "type": "char",
    "cost": 2,
-   "atk": 1,
+   "atk": 2,
    "hp": 3,
    "glyph": "機",
    "limit": 3,
@@ -4311,7 +4311,6 @@
      "n": 1,
      "when": "cardPlay",
      "pw": "mech",
-     "pt": "spell",
      "card": "tk-gear"
     }
    ],
@@ -4402,8 +4401,8 @@
    "world": "mech",
    "type": "char",
    "cost": 2,
-   "atk": 0,
-   "hp": 4,
+   "atk": 1,
+   "hp": 3,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
@@ -4413,7 +4412,7 @@
    "effects": [
     {
      "kind": "tokenHand",
-     "n": 1,
+     "n": 2,
      "when": "turnEnd",
      "card": "tk-gear"
     }
@@ -4513,21 +4512,21 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
      "act": "dmg",
-     "to": "enemyF",
+     "to": "enemy1",
      "cond": "gearNone"
     },
     {
      "kind": "unit",
-     "n": 5,
+     "n": 6,
      "act": "dmg",
      "to": "enemyF",
      "cond": "gearPaid"
     }
    ],
    "set": "2-1",
-   "gear": 3,
+   "gear": 2,
    "art": "art/m2-catapult-cb2477e76e.webp"
   },
   {
@@ -4542,7 +4541,8 @@
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "guard"
+    "guard",
+    "elusive"
    ],
    "effects": [
     {
@@ -4671,13 +4671,15 @@
    "name": "装甲司令塔",
    "world": "mech",
    "type": "char",
-   "cost": 6,
+   "cost": 5,
    "atk": 4,
-   "hp": 6,
+   "hp": 4,
    "glyph": "機",
    "limit": 3,
    "rarity": "sr",
-   "keywords": [],
+   "keywords": [
+    "elusive"
+   ],
    "effects": [
     {
      "kind": "unit",
@@ -4696,9 +4698,9 @@
    "name": "次元跳躍兵",
    "world": "mech",
    "type": "char",
-   "cost": 4,
+   "cost": 3,
    "atk": 4,
-   "hp": 4,
+   "hp": 2,
    "glyph": "機",
    "limit": 3,
    "rarity": "sr",
@@ -4726,15 +4728,17 @@
    "glyph": "機",
    "limit": 3,
    "rarity": "sr",
-   "keywords": [],
+   "keywords": [
+    "elusive"
+   ],
    "effects": [
     {
      "kind": "unit",
-     "n": 1,
+     "n": 2,
      "when": "cardPlay",
      "pw": "mech",
      "act": "dmg",
-     "to": "enemyRand"
+     "to": "enemyRandF"
     }
    ],
    "set": "2-1",
@@ -4773,13 +4777,14 @@
    "world": "mech",
    "type": "char",
    "cost": 8,
-   "atk": 0,
-   "hp": 10,
+   "atk": 12,
+   "hp": 12,
    "glyph": "機",
    "limit": 3,
    "rarity": "ur",
    "keywords": [
-    "noattack"
+    "noattack",
+    "elusive"
    ],
    "effects": [
     {
@@ -4831,6 +4836,10 @@
      "to": "enemyF"
     }
    ],
+   "pay": {
+    "kind": "life",
+    "n": 3
+   },
    "set": "2-1",
    "art": "art/m2-particle-86d1930d83.webp"
   },
@@ -4870,13 +4879,13 @@
    "world": "mech",
    "type": "char",
    "cost": 10,
-   "atk": 0,
+   "atk": 10,
    "hp": 10,
    "glyph": "機",
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "noattack"
+    "rush"
    ],
    "effects": [
     {
@@ -4893,7 +4902,7 @@
      "who": "opp"
     }
    ],
-   "armor": 2,
+   "armor": 1,
    "set": "2-1",
    "art": "art/m2-disaster-a179dcefc8.webp"
   },
@@ -4904,7 +4913,7 @@
    "type": "char",
    "cost": 6,
    "atk": 0,
-   "hp": 0,
+   "hp": 1,
    "glyph": "機",
    "limit": 3,
    "rarity": "legend",
@@ -5331,7 +5340,7 @@
      "kind": "unit",
      "n": 2,
      "act": "dmg",
-     "to": "enemyRand"
+     "to": "enemy1"
     }
    ],
    "set": "2-2",
@@ -5649,14 +5658,8 @@
      "to": "enemyAll"
     },
     {
-     "kind": "player",
-     "n": 2,
-     "act": "dmg",
-     "who": "opp"
-    },
-    {
      "kind": "unit",
-     "n": 1,
+     "n": 3,
      "act": "dmg",
      "to": "enemyAll",
      "cond": "worldGE",
@@ -5681,7 +5684,20 @@
    "keywords": [
     "twice"
    ],
-   "effects": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyRand"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyRand"
+    }
+   ],
    "set": "2-2",
    "art": "art/y2-twinblade-4797d24c96.webp"
   },
@@ -5691,13 +5707,13 @@
    "world": "myth",
    "type": "char",
    "cost": 5,
-   "atk": 3,
+   "atk": 4,
    "hp": 5,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "rush"
+    "regen"
    ],
    "effects": [
     {
@@ -5705,8 +5721,7 @@
      "n": 1,
      "act": "grant",
      "to": "ownAll",
-     "kw": "rush",
-     "world": "myth"
+     "kw": "rush"
     }
    ],
    "set": "2-2",
@@ -5772,15 +5787,10 @@
    "limit": 3,
    "rarity": "sr",
    "keywords": [
-    "twice"
+    "twice",
+    "pierce"
    ],
-   "effects": [
-    {
-     "kind": "readySelf",
-     "n": 1,
-     "when": "kill"
-    }
-   ],
+   "effects": [],
    "set": "2-2",
    "art": "art/y2-shizuku-b57724c1b9.webp"
   },
@@ -5818,7 +5828,7 @@
    "type": "char",
    "cost": 6,
    "atk": 6,
-   "hp": 4,
+   "hp": 3,
    "glyph": "神",
    "limit": 3,
    "rarity": "sr",
@@ -6079,7 +6089,8 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-wyrmling"
+     "card": "tk-wyrmling",
+     "when": "attack"
     }
    ],
    "set": "2-2",
