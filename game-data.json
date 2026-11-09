@@ -1,5 +1,5 @@
 {
- "version": 84,
+ "version": 85,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6254,7 +6254,8 @@
      "card": "tk-foxfire"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-kit-58d471901d.webp"
   },
   {
    "id": "f2-susuki",
@@ -6294,7 +6295,8 @@
      "card": "tk-leaf"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-tanuki-d5455c8206.webp"
   },
   {
    "id": "f2-lantern",
@@ -6317,7 +6319,8 @@
    "shrink": {
     "n": 1,
     "world": "fan"
-   }
+   },
+   "art": "art/f2-lantern-75aee71e1e.webp"
   },
   {
    "id": "f2-oni",
@@ -6339,7 +6342,8 @@
     "stat": true,
     "dmg": false,
     "num": false
-   }
+   },
+   "art": "art/f2-oni-dfef436efe.webp"
   },
   {
    "id": "f2-pebble",
@@ -6387,7 +6391,8 @@
      "world": "fan"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-moonwalk-394615a02d.webp"
   },
   {
    "id": "f2-squirrel",
@@ -6410,7 +6415,8 @@
      "who": "self"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-squirrel-b8382084bc.webp"
   },
   {
    "id": "f2-homeward",
@@ -6439,7 +6445,8 @@
      "who": "self"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-homeward-fe56372f27.webp"
   },
   {
    "id": "f2-herbgirl",
@@ -6481,7 +6488,8 @@
      "to": "enemy1"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-sleepgrass-a3022393c7.webp"
   },
   {
    "id": "f2-broom",
