@@ -1,5 +1,5 @@
 {
- "version": 87,
+ "version": 88,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -7025,7 +7025,8 @@
    "shrink": {
     "n": 1,
     "world": "fan"
-   }
+   },
+   "art": "art/f2-kohaku-440d5f0080.webp"
   },
   {
    "id": "f2-silentnight",
@@ -7051,7 +7052,8 @@
      "to": "enemyAll"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-silentnight-26296770f7.webp"
   },
   {
    "id": "f2-mirror",
@@ -7072,7 +7074,8 @@
      "world": "fan"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-mirror-64cb2f19a3.webp"
   },
   {
    "id": "f2-nightmare",
@@ -7097,7 +7100,8 @@
      "to": "enemyRand"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-nightmare-5bb8ae682d.webp"
   },
   {
    "id": "f2-karla",
@@ -7120,7 +7124,8 @@
      "card": "tk-frog"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-karla-b5c1ed2f56.webp"
   },
   {
    "id": "f2-wolf",
@@ -7152,7 +7157,8 @@
      "cond": "bounced"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-wolf-34a3ee4aa0.webp"
   },
   {
    "id": "f2-chorus",
@@ -7181,7 +7187,8 @@
      "cn": 3
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-chorus-88dcc7819e.webp"
   },
   {
    "id": "f2-wisp",
@@ -7208,7 +7215,8 @@
     "stat": false,
     "dmg": true,
     "num": false
-   }
+   },
+   "art": "art/f2-wisp-6e50cd45a3.webp"
   },
   {
    "id": "f2-storyteller",
