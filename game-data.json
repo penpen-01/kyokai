@@ -1,5 +1,5 @@
 {
- "version": 91,
+ "version": 92,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6189,7 +6189,7 @@
     }
    ],
    "token": true,
-   "art": "art/tk-foxfire-ec0081e6be.webp"
+   "art": "art/tk-foxfire-6c140255e3.webp"
   },
   {
    "id": "tk-leaf",
@@ -6420,7 +6420,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-squirrel-b8382084bc.webp"
+   "art": "art/f2-squirrel-f31d7b77f2.webp"
   },
   {
    "id": "f2-homeward",
@@ -6538,7 +6538,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-bell-e4066c6d67.webp"
+   "art": "art/f2-bell-ce0ec1d104.webp"
   },
   {
    "id": "f2-thorn",
@@ -6674,7 +6674,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-bakefox-482be281cd.webp"
+   "art": "art/f2-bakefox-a4e371c8ad.webp"
   },
   {
    "id": "f2-dancer",
@@ -6832,7 +6832,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-mouthwitch-8fa8d58c87.webp"
+   "art": "art/f2-mouthwitch-50be8292fd.webp"
   },
   {
    "id": "f2-cycle",
