@@ -11,7 +11,7 @@ const Mull = {
     if (!S) { this.close(); return; }
     // 引き直したあと、相手がもう決めていて対戦が始まっていても、配り直しは見せる
     if (this.redeal === S.gid && !this.dealt.has(`${S.gid}-re`)) { this.dealt.add(`${S.gid}-re`); this.close(); this.deal(); return; }
-    if (this.busy) { this.hideUnlanded(); return; }
+    if (this.busy || this.waiting) { this.hideUnlanded(); return; }
     if (S.phase !== "mulligan") { this.close(); return; }
     const key = `${S.gid}-${S.mull[ME] ? "re" : "first"}`;
     if (!this.dealt.has(key)) { this.dealt.add(key); this.deal(); return; }
@@ -21,31 +21,22 @@ const Mull = {
   hideUnlanded() { this.cards().forEach((c, i) => { c.style.visibility = i < this.landed ? "" : "hidden"; }); },
 
   async deal() {
-    this.busy = true; this.landed = 0; this.close();
+    this.waiting = true; this.landed = 0; this.close();
     this.hideUnlanded();
     if (typeof Cinema !== "undefined" && S.phase === "mulligan") await Cinema.idle();   // 先攻・後攻の演出が終わってから（配り直しは待たない）
-    if (!S) { this.busy = false; return; }
-    const pile = document.querySelector("#app .pile .pback") || document.querySelector("#app .pile");
-    const n = this.cards().length, step = Motion.reduced ? 0 : 120;
+    this.waiting = false;
+    if (!S) return;
+    this.busy = true;
+    const n = this.cards().length, step = Motion.reduced ? 0 : 130;
     for (let i = 0; i < n; i++) {
       const c = this.cards()[i];
       if (!c) break;
-      if (pile && !Motion.reduced) {
-        const a = pile.getBoundingClientRect(), b = c.getBoundingClientRect();
-        const f = document.createElement("div");
-        f.className = "drawfly";
-        Object.assign(f.style, { left: a.left + "px", top: a.top + "px", width: a.width + "px", height: a.height + "px" });
-        document.getElementById("fx").appendChild(f);
-        f.animate([{ transform: "none", opacity: 1 },
-          { transform: `translate(${b.left - a.left}px,${b.top - a.top}px) scale(${b.width / a.width},${b.height / a.height})`, opacity: 1 }],
-          { duration: 240, easing: "cubic-bezier(.3,.7,.3,1)", fill: "forwards" });
-        setTimeout(() => f.remove(), 260);
-      }
-      Sound.play("flip");
-      await new Promise(r => setTimeout(r, step + (Motion.reduced ? 0 : 120)));
       this.landed = i + 1; this.hideUnlanded();
+      Motion.flyIn(c);
+      Sound.play("flip");
+      await new Promise(r => setTimeout(r, step));
     }
-    await new Promise(r => setTimeout(r, Motion.reduced ? 0 : 250));
+    await new Promise(r => setTimeout(r, Motion.reduced ? 0 : 320));
     this.busy = false;
     this.after();
   },
@@ -73,8 +64,8 @@ const Mull = {
 
   /* ボタンを押したとき：引き直すなら手札を山札へ戻してから */
   choose(redraw, go) {
-    if (redraw) this.redeal = S.gid;
-    if (!redraw || Motion.reduced) { this.close(); return go(); }
+    if (redraw) { this.redeal = S.gid; this.busy = true; }   // 配り直しが終わるまで、ターンの帯を待たせる
+    if (!redraw || Motion.reduced) { this.close(); if (Motion.reduced) this.busy = false; return go(); }
     const pile = document.querySelector("#app .pile .pback") || document.querySelector("#app .pile");
     const cs = this.el ? [...this.el.querySelectorAll(".pg-hc")] : [];
     if (pile) {

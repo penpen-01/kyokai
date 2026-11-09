@@ -37,6 +37,7 @@ const Cinema = {
   next() {
     clearTimeout(this.timer); clearTimeout(this.fadeT);
     const old = document.getElementById("cine"); if (old) old.remove();
+    if (this.q.length && typeof Mull !== "undefined" && Mull.busy) { this.playing = "wait"; this.timer = setTimeout(() => this.next(), 100); return; }   // 手札を配り終わってから
     const fn = this.q.shift();
     if (!fn) { this.playing = null; return; }
     this.playing = fn;

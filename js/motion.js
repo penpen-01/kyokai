@@ -44,7 +44,7 @@ const Motion = {
   /* 対局が変わったら演出の状態を捨てる */
   reset() {
     clearTimeout(this.timer);
-    this.until = 0; this.queue = []; this.renderPending = false; this.ret = null;
+    this.until = 0; this.queue = []; this.renderPending = false; this.ret = null; this.pendDraw = 0;
   },
 
   /* ---------- 攻撃 ---------- */
@@ -122,28 +122,23 @@ const Motion = {
     if (img && img.decode) { img.decode().then(show, show); setTimeout(show, 250); } else show();
   },
 
-  /* ---------- ドロー：山札から手札へカードが飛ぶ ---------- */
+  /* ---------- ドロー：引いたカードが山札から手札の位置へ、表のまま飛んでくる（マリガンの配りと同じ動き） ---------- */
+  pendDraw: 0,
   draw(pi) {
-    if (this.reduced || pi !== ME) return;   // 真ん中の山札は自分のものなので、自分が引いたときだけ
-    const pile = document.querySelector(".pile .pback");
-    if (!pile) return;
-    const a = pile.getBoundingClientRect();
-    const to = pi === ME ? document.querySelector(".hand") : document.querySelector(`[data-player="${pi}"]`);
-    if (!to || !a.width) return;
-    const b = to.getBoundingClientRect();
-    const c = document.createElement("div");
-    c.className = "drawfly";
-    Object.assign(c.style, { left: a.left + "px", top: a.top + "px", width: a.width + "px", height: a.height + "px" });
-    $("#fx").appendChild(c);
-    const dx = b.left + b.width / 2 - (a.left + a.width / 2), dy = b.top + b.height / 2 - (a.top + a.height / 2);
-    const big = pi === ME ? 2.2 : 1.2;
-    c.animate([
-      { transform: "translate(0,0) scale(1) rotate(0)", opacity: 0 },
-      { transform: `translate(${dx * .35}px,${dy * .35 - 30}px) scale(${big}) rotate(-8deg)`, opacity: 1, offset: .45 },
-      { transform: `translate(${dx}px,${dy}px) scale(${big * .8}) rotate(0)`, opacity: 0 }
-    ], { duration: 560, easing: "cubic-bezier(.3,.7,.3,1)", fill: "forwards" });
-    setTimeout(() => c.remove(), 600);
-    if (typeof Sound !== "undefined") Sound.play("flip");
+    if (pi !== ME) return;   // 相手の手札は見えないので、自分が引いたときだけ
+    this.pendDraw++;
+  },
+  /* el（手札のカード）を山札の位置から飛ばしてくる */
+  flyIn(el, delay = 0) {
+    const pile = document.querySelector("#app .pile .pback") || document.querySelector("#app .pile");
+    if (!pile || !el || this.reduced) return;
+    const a = pile.getBoundingClientRect(), b = el.getBoundingClientRect();
+    if (!a.width || !b.width) return;
+    const dx = a.left + a.width / 2 - (b.left + b.width / 2), dy = a.top + a.height / 2 - (b.top + b.height / 2), k = a.width / b.width;
+    el.animate([{ transform: `translate(${dx}px,${dy}px) scale(${k})`, opacity: 0 },
+      { transform: `translate(${dx * .35}px,${dy * .35 - 24}px) scale(1.15)`, opacity: 1, offset: .55 },
+      { transform: getComputedStyle(el).transform === "none" ? "none" : getComputedStyle(el).transform }],
+      { duration: 300, delay, easing: "cubic-bezier(.3,.7,.3,1)", fill: "backwards" });
   },
 
   /* ---------- 撃破：砕けて消える ---------- */
@@ -211,6 +206,14 @@ const Motion = {
   /* ---------- 描き直しの後：戻る動き・召喚の動き ---------- */
   afterRender() {
     if (!S) return;
+    // 引いたカード（手札の最後に加わったもの）を山札から飛ばす
+    if (this.pendDraw && S.phase === "play") {
+      const n = this.pendDraw, len = S.players[ME].hand.length; this.pendDraw = 0;
+      for (let k = 0; k < n; k++) {
+        const el = document.querySelector(`#app .hand > [data-hand="${len - n + k}"]`);
+        if (el) { this.flyIn(el, k * 120); if (typeof Sound !== "undefined") setTimeout(() => Sound.play("flip"), k * 120); }
+      }
+    }
     if (this.ret) {
       const r = this.ret; this.ret = null;
       const el = document.querySelector("#app " + r.sel);
