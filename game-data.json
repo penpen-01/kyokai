@@ -1,5 +1,5 @@
 {
- "version": 92,
+ "version": 93,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6374,7 +6374,8 @@
     "stat": false,
     "dmg": true,
     "num": false
-   }
+   },
+   "art": "art/f2-pebble-0467452bea.webp"
   },
   {
    "id": "f2-moonwalk",
@@ -6450,7 +6451,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-homeward-fe56372f27.webp"
+   "art": "art/f2-homeward-392791a959.webp"
   },
   {
    "id": "f2-herbgirl",
@@ -6702,7 +6703,7 @@
     "n": 1,
     "world": "fan"
    },
-   "art": "art/f2-dancer-bcbffc0176.webp"
+   "art": "art/f2-dancer-b694bf56ac.webp"
   },
   {
    "id": "f2-kamikakushi",
@@ -7191,7 +7192,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-chorus-88dcc7819e.webp"
+   "art": "art/f2-chorus-a5c9bf3283.webp"
   },
   {
    "id": "f2-wisp",
@@ -7274,7 +7275,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-moonwitch-c70c3e5b63.webp"
+   "art": "art/f2-moonwitch-fcb977ce5b.webp"
   },
   {
    "id": "f2-sleepcastle",
