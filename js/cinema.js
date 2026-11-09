@@ -62,7 +62,10 @@ const Cinema = {
   /* デッキの代表カード（なければアイコンのカード） */
   keyCard(pi) {
     const d = S.decks && S.decks[pi];
-    const k = d && typeof Decks !== "undefined" ? Decks.keyCard({ cards: d.cards || {}, key: d.key }) : null;
+    // デッキ編成で決めた代表カード（★）。決めていなければ、いちばんレアで重いカード
+    if (d && d.key && DEF[d.key] && DEF[d.key].art && (d.cards || {})[d.key]) return DEF[d.key];
+    const R = ["common", "rare", "sr", "ur", "legend"];
+    const k = d && Object.keys(d.cards || {}).map(id => DEF[id]).filter(c => c && c.art).sort((a, b) => R.indexOf(b.rarity) - R.indexOf(a.rarity) || b.cost - a.cost)[0];
     if (k) return k;
     const id = typeof playerIcon === "function" ? playerIcon(pi) : null;
     return id && DEF[id] && DEF[id].art ? DEF[id] : null;
@@ -115,13 +118,21 @@ const Cinema = {
   /* 先攻／後攻：大きな紋章が叩きつけられて、光の輪が広がる */
   order() {
     const meFirst = S.first === ME;
+    // 光が集まる → 紋章のコインが高速で回る → 減速して表が決まる → 閃光と光の輪 → 説明
     this.layer("orderc", this.bands(`<div class="cv-emb ${meFirst ? "first" : "second"}">
-        <i class="cv-ring"></i><i class="cv-ring r2"></i>
-        <div class="cv-medal"><span>${meFirst ? "FIRST" : "SECOND"}</span><b>${meFirst ? "先攻" : "後攻"}</b></div>
+        <i class="cv-gather"></i><i class="cv-ring"></i><i class="cv-ring r2"></i><i class="cv-ring r3"></i>
+        <div class="cv-coin"><div class="cv-coin-in">
+          <div class="cv-medal cv-face-back"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 10 62 38 90 50 62 62 50 90 38 62 10 50 38 38z" fill="none" stroke="#e9c873" stroke-width="3"/><circle cx="50" cy="50" r="9" fill="#e9c873"/></svg></div>
+          <div class="cv-medal cv-face-front"><span>${meFirst ? "FIRST" : "SECOND"}</span><b>${meFirst ? "先攻" : "後攻"}</b></div>
+        </div></div>
+        <i class="cv-burst"></i>
         <p class="cv-emb-sub">${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」を持って始めます"}</p>
       </div>`));
-    if (!Motion.reduced) { setTimeout(() => Sound.play("hit"), 380); setTimeout(() => Sound.play(meFirst ? "rare" : "flip"), 450); }
-    return Motion.reduced ? 1400 : 2300;
+    if (!Motion.reduced) {
+      [200, 420, 640, 860, 1060].forEach(t => setTimeout(() => Sound.play("flip"), t));
+      setTimeout(() => { Sound.play("hit"); Sound.play(meFirst ? "rare" : "buff"); }, 1450);
+    }
+    return Motion.reduced ? 1400 : 3300;
   },
 
   /* ---------- ターンの始め ---------- */

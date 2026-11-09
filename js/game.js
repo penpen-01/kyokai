@@ -2580,7 +2580,7 @@ function startGateGame() {
   if (!opp) { toast("開放戦の相手のデッキが見つかりません"); return showGatePack(); }
   const icon = Account.icon();
   const lv = p.gateLevel || "hard";
-  startBattle({ kind: "gate", level: lv, mine: { name: d.name, cards: { ...d.cards }, ...(icon ? { icon } : {}) }, opp,
+  startBattle({ kind: "gate", level: lv, mine: { name: d.name, cards: { ...d.cards }, ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}) }, opp,
     oppName: "開放戦の番人", streak: false, extra: { pack: p.id, key: p.set } });
 }
 /* 開放戦に勝ったら、そのパックの弾を開く（結果画面で1回だけ呼ばれる） */
@@ -2639,7 +2639,7 @@ function startWorldGame(level) {
   const d = worldDecks().find(x => x.id === WORLDB.deck);
   if (!d) return showWorldSelect();
   const icon = Account.icon();
-  const mine = { name: d.name, cards: { ...d.cards }, ...(d.free && Decks.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}) };
+  const mine = { name: d.name, cards: { ...d.cards }, ...(d.free && Decks.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}) };
   const lv = CPU_LEVELS[level] ? level : "normal";
   const opp = worldOpponent(lv);
   if (!opp) return showWorldSelect();

@@ -106,7 +106,7 @@ const Vfx = {
         return;
       }
       case "poison": {
-        const d = this.add("v-poison", c.x, c.y, `<b class="fume"></b>` + Array.from({ length: 9 }, (_, i) => `<i style="--x:${(i - 4) * 9}px;--d:${(i * 53) % 260}ms;--s:${.6 + (i % 3) * .3}"></i>`).join(""));
+        const d = this.add("v-poison", c.x, c.y, `<b class="fume"></b><b class="skull">${SKULL_SVG}</b>` + Array.from({ length: 12 }, (_, i) => `<i style="--x:${(i - 4) * 9}px;--d:${(i * 53) % 260}ms;--s:${.6 + (i % 3) * .3}"></i>`).join(""));
         d.style.width = r.width + "px"; d.style.height = r.height + "px";
         this.later(d, 900); 
         snd("hit"); hold(260); return;
@@ -175,3 +175,4 @@ const Vfx = {
 };
 const GEAR_SVG = `<svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.9 2.2-2-.4a7 7 0 0 0-.8-1.9l1.2-1.7-1.9-1.9-1.7 1.2a7 7 0 0 0-1.9-.8l-.4-2h-2.8l-.4 2a7 7 0 0 0-1.9.8L6.6 4.8 4.7 6.7l1.2 1.7a7 7 0 0 0-.8 1.9l-2 .4v2.8l2 .4c.2.7.4 1.3.8 1.9l-1.2 1.7 1.9 1.9 1.7-1.2c.6.4 1.2.6 1.9.8l.4 2h2.8l.4-2c.7-.2 1.3-.4 1.9-.8l1.7 1.2 1.9-1.9-1.2-1.7c.4-.6.6-1.2.8-1.9l2-.4z" fill="#d9b25c" stroke="#5a3d0c" stroke-width=".8"/></svg>`;
 const SNOW_SVG = `<svg viewBox="0 0 40 40"><g stroke="#f4fbff" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M20 3v34M5.3 11.5l29.4 17M5.3 28.5l29.4-17"/><path d="M20 9l-4-4M20 9l4-4M20 31l-4 4M20 31l4 4M10 14l-5 .5M10 14l-1.5-5M30 26l5-.5M30 26l1.5 5M10 26l-5-.5M10 26l-1.5 5M30 14l5 .5M30 14l1.5-5"/></g></svg>`;
+const SKULL_SVG = `<svg viewBox="0 0 40 40"><path d="M20 4C11 4 5 10 5 18c0 5 2.5 8.5 6 10.5V34h18v-5.5c3.5-2 6-5.5 6-10.5C35 10 29 4 20 4z" fill="#d9a3f5" stroke="#3a0758" stroke-width="2"/><circle cx="14" cy="19" r="4.2" fill="#3a0758"/><circle cx="26" cy="19" r="4.2" fill="#3a0758"/><path d="M20 23l-2.5 4h5z" fill="#3a0758"/><path d="M15 34v-4M20 34v-4M25 34v-4" stroke="#3a0758" stroke-width="1.8"/></svg>`;
