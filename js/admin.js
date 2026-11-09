@@ -43,7 +43,7 @@ const Admin = {
           <div class="field"><span class="lab">1パックの枚数</span>${stepper("pk-size", p.size, "枚数")}</div>
         </div>
         <label class="check" style="max-width:320px"><input type="checkbox" data-admin="pk-open" ${p.open ? "checked" : ""}><span><b>販売中</b><span>ゲームのパック一覧に表示する</span></span></label>
-        <div class="field"><span class="lab">弾</span><div class="seg" role="group" aria-label="パックの弾">${Object.entries(SETS).map(([k, v]) => `<button type="button" data-act="pkSet" data-v="${k}" aria-pressed="${pset === k}">${v}</button>`).join("")}</div>
+        <div class="field"><span class="lab">弾</span><div class="seg" role="group" aria-label="パックの弾">${SET_KEYS.map(k => [k, SETS[k]]).map(([k, v]) => `<button type="button" data-act="pkSet" data-v="${k}" aria-pressed="${pset === k}">${v}</button>`).join("")}</div>
           <span class="hint small">下のカード一覧は、この弾のカードだけ出ます。第2弾は世界ごとに 2-1・2-2・2-3 の3つに分かれます。</span></div>
       </div>
       ${pset !== "1" ? `<div class="fgroup">

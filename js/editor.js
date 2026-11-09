@@ -222,7 +222,7 @@ function renderEditor() {
           <div class="field grow">
             <span class="lab">弾</span>
             <div class="seg wide" role="group" aria-label="弾">
-              ${Object.entries(SETS).map(([k, v]) => `<button type="button" data-set="${k}" aria-pressed="${(c.set || "1") === k}">${v}</button>`).join("")}
+              ${SET_KEYS.map(k => [k, SETS[k]]).map(([k, v]) => `<button type="button" data-set="${k}" aria-pressed="${(c.set || "1") === k}">${v}</button>`).join("")}
             </div>
             <span class="hint small">第1弾以外のカードは、プレイヤーがその弾（第2弾-1など）のパック開放戦に勝つまで、カード一覧・デッキ作り・交換に出ません（試遊中は見えます）。</span>
           </div>

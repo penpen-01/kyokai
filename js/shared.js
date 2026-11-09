@@ -8,6 +8,7 @@ const TYPES = { char: "キャラクター", spell: "魔法" };
 /* 弾は「1」「2-1」「2-2」「2-3」「3」のような文字。第2弾は世界ごとに3つ（2-1・2-2・2-3）に分かれて出る。
    第1弾以外は、その弾のパック開放戦に勝つまでプレイヤーに見せない（開放はパックの弾ごと） */
 const SETS = { "1": "第1弾", "2-1": "第2弾-1", "2-2": "第2弾-2", "2-3": "第2弾-3", "3": "第3弾" };
+const SET_KEYS = ["1", "2-1", "2-2", "2-3", "3"];   // 並び順（SETS を Object.entries で回すと "1","3" が先に来てしまうので、必ずこちらを使う）
 const setName = s => SETS[s || "1"] || `第${String(s).replace("-", "弾-")}${String(s).includes("-") ? "" : "弾"}`;
 const normSet = v => { const s = String(v ?? "").trim(); return /^\d{1,2}(-\d{1,2})?$/.test(s) && s !== "1" ? s : ""; };
 function setOpen(s) {
