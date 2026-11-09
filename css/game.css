@@ -1615,3 +1615,6 @@ html.nofx .card .shine{display:none}
 .pick-bar{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;margin:0 -4px;border-radius:12px;background:rgba(12,14,28,.94);border:1px solid rgba(255,255,255,.12)}
 .pick-bar span{flex:1;min-width:180px}
 @media (max-width:520px){ .pick-grid{grid-template-columns:repeat(3,1fr);gap:6px} }
+.pick-info{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
+.pick-info small{color:var(--muted);font-size:12px}
+.pick-info p{margin:4px 0 0;font-size:13px;line-height:1.6}
