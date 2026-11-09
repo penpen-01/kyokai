@@ -1759,13 +1759,8 @@ html.nofx .card .shine{display:none}
 .v-peek-row{display:flex;gap:6px;justify-content:center;max-width:96vw;flex-wrap:wrap}
 .v-peek .castcard{width:min(18vw,96px)}
 /* 攻撃の矢印 */
-.arrow .ar-dash{animation:ardash .5s linear infinite}
-@keyframes ardash{to{stroke-dashoffset:-16}}
-.arrow .ar-aim{opacity:0;transition:opacity .15s}
-.arrow .ar-aim circle:first-child{transform-origin:0 0;animation:araim 2.4s linear infinite}
+.arrow .ar-aim{opacity:0}
 .arrow.on .ar-aim{opacity:1}
-.arrow.on .ar-aim circle:first-child{stroke:#ff5a4a;stroke-width:3;animation-duration:.9s}
-@keyframes araim{to{transform:rotate(360deg)}}
 /* 言葉の札（解除・奪った・合体 など）：明朝の大文字ではなく、小さく読みやすい札に */
 .float.word{font-family:var(--f-body,"Zen Kaku Gothic New",sans-serif);font-size:13px;font-weight:700;letter-spacing:.08em;padding:3px 10px;border-radius:999px;background:rgba(10,14,30,.82);border:1px solid currentColor;text-shadow:none;box-shadow:0 2px 10px rgba(0,0,0,.5)}
 
@@ -1861,7 +1856,7 @@ html.nofx .card .shine{display:none}
 .pg-chip.first{color:#2a1d06;background:linear-gradient(180deg,#ffe7a3,#c8963c)}
 .pg-chip.second{color:#0e1322;background:linear-gradient(180deg,#eef3fc,#9fb2d6)}
 .pg-hand5{display:flex;justify-content:center;width:100%;max-width:420px;padding:0 6px}
-.pg-hc{flex:1 1 0;max-width:110px;margin:0 -4px;transform:rotate(var(--r)) translateY(var(--o));transform-origin:50% 120%}
+
 .pg-hc .card{width:100%;cursor:default;box-shadow:0 8px 18px rgba(0,0,0,.6)}
 .pg-hand5.deal .pg-hc{animation:pgdeal .45s calc(.15s + var(--i)*.09s) cubic-bezier(.2,1.2,.4,1) both}
 @keyframes pgdeal{from{opacity:0;translate:0 -40vh;rotate:-20deg}to{opacity:1;translate:0 0;rotate:0deg}}
@@ -1898,10 +1893,10 @@ html.nofx .card .shine{display:none}
 .float.poison{color:#e09bff}
 /* 変身の煙を短く */
 .v-poof i{animation-duration:.55s}
-/* マリガン：何枚でも画面に収める（重ねて並べる）。ボタンと重ならないよう下に余白 */
-.pg-hand5{max-width:440px;padding:0 10px;margin-bottom:16px;--w:calc((100% + (var(--n) - 1)*12px)/var(--n))}
-.pg-hc{flex:0 0 var(--w);max-width:var(--w);margin:0 0 0 -12px}
-.pg-hc:first-child{margin-left:0}
+/* マリガン・手札の見せ方：重ねずに格子で並べる（4枚まで1行、それ以上は2行）。端が切れない */
+.pg-hand5{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;max-width:380px;padding:0 4px;margin:0 auto}
+.pg-hc{transform:none;margin:0;max-width:none}
+.pg-hc .card{width:100%}
 /* 先攻・後攻の紋章（手直し 11-10）：コインが回って決まる */
 .cv-emb .cv-coin{position:relative;width:min(52vw,220px);aspect-ratio:1;perspective:900px;animation:coinin .35s ease-out both}
 .cv-coin-in{position:absolute;inset:0;transform-style:preserve-3d;animation:coinspin 1.45s .1s cubic-bezier(.15,.55,.25,1) both}
@@ -1927,3 +1922,9 @@ html.nofx .card .shine{display:none}
 @keyframes vskull{0%{transform:translate(-50%,-50%) scale(0)}35%{transform:translate(-50%,-50%) scale(1.15)}75%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
 .v-poison{animation:none}
 .v-poison i{bottom:20%}
+
+.cine.handc{background:rgba(6,7,14,.88)}
+.cv-hand-show{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 16px}
+.cv-hand-show b{font-family:var(--f-display);font-weight:800;font-size:22px;color:#ffe7a3;text-shadow:0 0 12px rgba(255,200,90,.5);animation:cvfade .35s both}
+.cv-hand-show small{color:var(--muted);font-size:12px}
+.cv-hand-show .pg-hc{animation:pgdeal .4s calc(.1s + var(--i)*.07s) cubic-bezier(.2,1.2,.4,1) both}

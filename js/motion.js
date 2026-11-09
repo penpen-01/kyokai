@@ -108,10 +108,18 @@ const Motion = {
       </div>`;
     // タップで飛ばしたときだけ、待っている演出をすぐ進める
     w.addEventListener("click", e => { e.stopPropagation(); if (!w.isConnected) return; w.remove(); clearTimeout(this.timer); this.release(); });
-    document.body.appendChild(w);
-    if (typeof Sound !== "undefined") { Sound.play("rare"); setTimeout(() => Sound.play("hit"), this.reduced ? 0 : 120); }
-    setTimeout(() => w.remove(), ms);
-    this.hold(ms);
+    // 絵が読み込めてから出す（読み込み前に出すと、絵が空のまま流れることがある）。待つのは最大0.25秒
+    this.hold(ms + 250);
+    const img = w.querySelector(".ci-pic img");
+    let shown = false;
+    const show = () => {
+      if (shown) return; shown = true;
+      document.body.appendChild(w);
+      if (typeof Sound !== "undefined") { Sound.play("rare"); setTimeout(() => Sound.play("hit"), this.reduced ? 0 : 120); }
+      setTimeout(() => w.remove(), ms);
+      this.hold(ms);
+    };
+    if (img && img.decode) { img.decode().then(show, show); setTimeout(show, 250); } else show();
   },
 
   /* ---------- ドロー：山札から手札へカードが飛ぶ ---------- */

@@ -465,7 +465,7 @@ function cardHTML(card, o = {}) {
   const u = o.unit;
   // o.hidden：まだ持っていないカード。イラストを隠して「？」を出す（名前・数値・効果は見せる）
   const art = o.hidden ? `<span class="glyph">？</span>`
-    : card.art ? `<img src="${esc(card.art)}" alt="" draggable="false" ${typeof CARD_EAGER !== "undefined" && CARD_EAGER ? 'decoding="sync"' : 'loading="lazy" decoding="async"'}>`
+    : card.art ? `<img src="${esc(card.art)}" alt="" draggable="false" ${typeof CARD_EAGER !== "undefined" && CARD_EAGER ? 'decoding="async"' : 'loading="lazy" decoding="async"'}>`
     : `<span class="glyph">${esc(card.glyph || "？")}</span>`;
   let stats;
   if (card.type === "char") {

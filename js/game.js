@@ -1397,7 +1397,7 @@ let renderDeferred = false;
 let lastTurnKey = "";
 let lastBannerKey = "";
 /* 対戦中は描き直すたびに絵が作り直されるので、遅れて出る（一瞬消える）ことがないよう同期で描く */
-let CARD_EAGER = false;
+let CARD_EAGER = false, lastBoardHTML = "";
 const artCache = new Map();
 function preloadArts(ids) {
   ids.forEach(id => { const d = DEF[id]; if (!d || !d.art || artCache.has(d.art)) return;
@@ -1423,7 +1423,10 @@ function render() {
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; }
   const me = S.players[ME];
   const lines = S.log.filter(l => !l.sep).slice(-2);
-  app.innerHTML = `
+  // 描き直しても絵が一瞬消えないように、前の画面の読み込み済みの絵（img）をそのまま使い回す
+  const oldImgs = new Map();
+  app.querySelectorAll("img").forEach(im => { if (im.complete && im.naturalWidth) { const k = im.getAttribute("src"); (oldImgs.get(k) || oldImgs.set(k, []).get(k)).push(im); } });
+  const html = `
     ${pbarHTML(OP)}
     ${fieldHTML(OP)}
     <div class="mid">
@@ -1441,6 +1444,11 @@ function render() {
     }).join("")}</div>
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
+  // 前と同じ画面なら作り直さない（作り直しはスマホでは重い）
+  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); return; }
+  lastBoardHTML = html;
+  app.innerHTML = html;
+  if (oldImgs.size) app.querySelectorAll("img").forEach(im => { const l = oldImgs.get(im.getAttribute("src")); if (l && l.length) { const o = l.pop(); o.className = im.className; im.replaceWith(o); } });
   layoutHand();
   renderSheet();
   Motion.afterRender();
@@ -1480,7 +1488,7 @@ function pregameHTML() {
     const done = S.mull[ME];
     opSt = S.mull[OP] != null ? `<em class="ok">準備完了</em>` : `<em>考え中${dots}</em>`;
     body = `<div class="pg-title sm"><span class="pg-chip ${S.first === ME ? "first" : "second"}">${S.first === ME ? "先攻" : "後攻"}</span><b>最初の手札</b></div>
-      <div class="pg-hand5 ${done == null ? "deal" : ""}" style="--n:${Math.max(me.hand.length, 4)}">${me.hand.map((id, i) => `<div class="pg-hc" style="--i:${i};--r:${(i - (me.hand.length - 1) / 2) * 3}deg;--o:${Math.abs(i - (me.hand.length - 1) / 2) * 4}px">${cardHTML(DEF[id], { static: true, attrs: `data-hand="${i}"` })}</div>`).join("")}</div>
+      <div class="pg-hand5 ${done == null ? "deal" : ""}">${handOrder(me).map((i, k) => `<div class="pg-hc" style="--i:${k}">${cardHTML(DEF[me.hand[i]], { static: true, attrs: `data-hand="${i}"` })}</div>`).join("")}</div>
       ${done == null ? `<div class="pg-btns">
           <button type="button" class="btn primary" data-act="mull" data-v="0" ${wait ? "disabled" : ""}>このまま始める</button>
           <button type="button" class="btn pg-redo" data-act="mull" data-v="1" ${wait ? "disabled" : ""}>${RES_IC.again}引き直す</button>
@@ -1767,14 +1775,11 @@ function startDrag() {
     const ns = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("class", "arrow");
-    // 攻撃の矢印：弧を描く光の帯＋先の照準。狙えるものに重なると照準が赤く締まる
-    svg.innerHTML = `<defs><linearGradient id="arg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".15"/><stop offset=".6" stop-color="#ff9a5a"/><stop offset="1" stop-color="#ff5a4a"/></linearGradient>
-</defs>
-      <path class="ar-glow" d="" fill="none" stroke="url(#arg)" stroke-width="11" stroke-linecap="round" opacity=".3"/>
-      <path class="ar-line" d="" fill="none" stroke="url(#arg)" stroke-width="5" stroke-linecap="round"/>
-      <path class="ar-dash" d="" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 14" opacity=".9"/>
-      <path class="ar-head" d="M-13,-11 L9,0 L-13,11 L-7,0 Z" fill="#ff5a4a" stroke="#ffe0c0" stroke-width="1.5"/>
-      <g class="ar-aim"><circle r="22" fill="none" stroke="#ffe0c0" stroke-width="2" stroke-dasharray="10 7"/><circle r="5" fill="#ff5a4a"/></g>`;
+    // 攻撃の矢印：まっすぐ伸びる線＋先の三角。狙えるものに重なると照準が出る（軽くするため、ぼかしや流れる模様は使わない）
+    svg.innerHTML = `<line class="ar-glow" stroke="#ff7a5a" stroke-width="11" stroke-linecap="round" opacity=".25"/>
+      <line class="ar-line" stroke="#ff6a4a" stroke-width="5" stroke-linecap="round"/>
+      <path class="ar-head" d="M-14,-11 L10,0 L-14,11 L-8,0 Z" fill="#ff5a4a" stroke="#ffe0c0" stroke-width="1.5"/>
+      <g class="ar-aim"><circle r="21" fill="none" stroke="#ff5a4a" stroke-width="3"/><circle r="5" fill="#ff5a4a"/></g>`;
     $("#fx").appendChild(svg);
     drag.svg = svg;
     drag.el.classList.add("sel");
@@ -1797,17 +1802,18 @@ function moveDrag(x, y) {
   }
 }
 
-/* 弧を描く矢印。元から指先へ、少し上にふくらむ曲線 */
+/* まっすぐの矢印。指の動きに合わせた描き直しは1フレームに1回まで */
+let arrowRaf = 0, arrowTo = null;
 function drawArrow(svg, x0, y0, x, y) {
-  const dx = x - x0, dy = y - y0, len = Math.hypot(dx, dy) || 1;
-  const bend = Math.min(80, len * 0.28), nx = -dy / len, ny = dx / len, s = dx >= 0 ? -1 : 1;
-  const cx = (x0 + x) / 2 + nx * bend * s, cy = (y0 + y) / 2 + ny * bend * s;
-  const d = `M${x0},${y0} Q${cx},${cy} ${x},${y}`;
-  svg.querySelectorAll(".ar-glow,.ar-line,.ar-dash").forEach(p => p.setAttribute("d", d));
-  const ang = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
-  svg.querySelector(".ar-head").setAttribute("transform", `translate(${x},${y}) rotate(${ang})`);
-  svg.querySelector(".ar-aim").setAttribute("transform", `translate(${x},${y})`);
-  const gr = svg.querySelector("#arg"); gr.setAttribute("x1", x0); gr.setAttribute("y1", y0); gr.setAttribute("x2", x); gr.setAttribute("y2", y);
+  arrowTo = [svg, x0, y0, x, y];
+  if (arrowRaf) return;
+  arrowRaf = requestAnimationFrame(() => {
+    arrowRaf = 0; const [sv, ax, ay, bx, by] = arrowTo;
+    const ang = Math.atan2(by - ay, bx - ax), ex = bx - Math.cos(ang) * 8, ey = by - Math.sin(ang) * 8;
+    sv.querySelectorAll("line").forEach(l => { l.setAttribute("x1", ax); l.setAttribute("y1", ay); l.setAttribute("x2", ex); l.setAttribute("y2", ey); });
+    sv.querySelector(".ar-head").setAttribute("transform", `translate(${bx},${by}) rotate(${ang * 180 / Math.PI})`);
+    sv.querySelector(".ar-aim").setAttribute("transform", `translate(${bx},${by})`);
+  });
 }
 
 function endDrag() {

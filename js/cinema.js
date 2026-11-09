@@ -30,6 +30,7 @@ const Cinema = {
     const last = S.rps && S.rps.last;
     if (last) add(`rps-${S.rps.round}-${last.hands.join("")}-${last.winner}`, () => this.rps(last));
     if (S.first != null) add("order", () => this.order());
+    if (S.phase === "play" && S.mull && S.mull[ME] != null && S.turnNo <= 2) add("hand", () => this.hand());
     if (S.phase === "play" && S.turnNo && !S.over) add(`turn-${S.turnNo}`, () => this.turn());
     if (!this.playing) this.next();
   },
@@ -133,6 +134,16 @@ const Cinema = {
       setTimeout(() => { Sound.play("hit"); Sound.play(meFirst ? "rare" : "buff"); }, 1450);
     }
     return Motion.reduced ? 1400 : 3300;
+  },
+
+  /* ---------- マリガンのあと：決まった手札を見せる ---------- */
+  hand() {
+    const p = S.players[ME];
+    const ids = handOrder(p).map(i => p.hand[i]).filter(id => DEF[id]);
+    this.layer("handc", `<div class="cv-hand-show"><b>あなたの手札はこれになりました</b>
+      <div class="pg-hand5">${ids.map((id, k) => `<div class="pg-hc" style="--i:${k}">${cardHTML(DEF[id], { static: true })}</div>`).join("")}</div>
+      <small>タップで進む</small></div>`);
+    return Motion.reduced ? 1500 : 2600;
   },
 
   /* ---------- ターンの始め ---------- */
