@@ -9,3 +9,4 @@
 3. 結果の JSON を `python3 tools/sim/rep.py 結果.json` で要約
 
 `harness.js` の `"rule":"open"` は旧ルールから新ルールを試すためのもの。今のゲームはすでに新ルールなので `"current"` でよい。
+- `gate_eval.js`：開放戦デッキの勝率（`node tools/sim/gate_eval.js 100 out.json`）
