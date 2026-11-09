@@ -1,5 +1,5 @@
 {
- "version": 95,
+ "version": 96,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -7162,7 +7162,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-wolf-34a3ee4aa0.webp"
+   "art": "art/f2-wolf-b7781bf523.webp"
   },
   {
    "id": "f2-chorus",
@@ -7303,7 +7303,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-sleepcastle-08c097b4d8.webp"
+   "art": "art/f2-sleepcastle-a841cfb839.webp"
   },
   {
    "id": "f2-curtain",
@@ -7329,7 +7329,7 @@
     "world": "fan",
     "orEmpty": true
    },
-   "art": "art/f2-curtain-39de88a13c.webp"
+   "art": "art/f2-curtain-951d788bce.webp"
   },
   {
    "id": "f2-tamamo",
