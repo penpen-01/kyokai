@@ -1,5 +1,5 @@
 {
- "version": 90,
+ "version": 91,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6178,7 +6178,7 @@
    "cost": 0,
    "glyph": "幻",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "rare",
    "keywords": [],
    "effects": [
     {
