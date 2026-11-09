@@ -36,7 +36,7 @@ const Online = {
 
   /* ---------- 画面 ---------- */
   showLobby(msg) {
-    const name = store.get(NAME_KEY) || "";
+    const name = playerName("");
     openOverlay(`<div class="panel">
       <h2 class="title sm">友達と対戦</h2>
       <p class="lead small">片方が部屋を作り、表示された合言葉をもう片方が入力すると対戦が始まります。</p>
@@ -127,7 +127,7 @@ const Online = {
     const el = $("#onl-name");
     let n = (el ? el.value : store.get(NAME_KEY) || "").trim().slice(0, 10);
     if (!n) n = "プレイヤー";
-    store.set(NAME_KEY, n);
+    setPlayerName(n);
     return n;
   },
 

@@ -67,6 +67,8 @@ const Account = {
       cards: cleanDeckCards(d.cards),
       decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.fmt === "world" && WORLDS[x.world] ? { fmt: "world", world: String(x.world) } : {}), ...(x.key ? { key: String(x.key) } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
       created: d.created || Date.now(),
+      // プレイヤー名（対戦で表示する。10文字まで）
+      ...(typeof d.name === "string" && d.name.trim() ? { name: d.name.trim().slice(0, 10) } : {}),
       // 受け取り済みのシリアルコード（ハッシュ → 受け取った日時）
       // 受け取ったメール（メールのID → 受け取った日時）
       // ログインボーナス：受け取った回数（何日目まで進んだか）と最後に受け取った日

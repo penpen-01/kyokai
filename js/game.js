@@ -161,7 +161,7 @@ function cpuPreGame() {
     setTimeout(() => { if (S === g) rpsPick(1, "gcp"[Math.floor(Math.random() * 3)]); }, 250);
   } else if (S.phase === "choose" && S.rpsWinner === 1) {
     const g = S;
-    setTimeout(() => { if (S === g) chooseOrder(1, true); }, 900);
+    setTimeout(() => { if (S === g) chooseOrder(1, Math.random() < 0.5); }, 900);   // 後攻も強い（境界の欠片）ので、半々で選ぶ
   } else if (S.phase === "mulligan" && S.mull[1] == null) {
     const cheap = S.players[1].hand.filter(id => DEF[id].cost <= 3).length;
     mulligan(1, CPU_LEVEL !== "easy" && cheap < 2);
@@ -989,10 +989,9 @@ function attack(pi, uid, target) {
     }
     if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); destroyUnit(d); }
     steal(a, pi, dRealHit);
-    const aBefore = a.hp;
     const back = hitUnit(a, d.atk);
     if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); destroyUnit(a); }
-    steal(d, opp(pi), Math.min(back, Math.max(0, aBefore)));
+    // 吸収は自分から攻撃したときだけ（反撃では回復しない。オーナー 11-10）
     queueTrig(pi, "attack", a);
     if (before > 0 && d.hp <= 0) queueTrig(pi, "kill", a);
     if (kw(a, "trample") && dealt > before && before > 0) queueTrig(pi, "face", a);
@@ -1978,11 +1977,34 @@ function showStart() {
 }
 
 /* 歯車ボタン：ルール・アカウント・音などの事務的なもの */
+/* プレイヤー名：アカウントに保存（なければこの端末に覚えた友達対戦の名前）。決めていなければ「あなた」 */
+function playerName(fallback = "あなた") {
+  const a = Account.data && Account.data.name;
+  let l = ""; try { l = localStorage.getItem("kyokai-name") || ""; } catch {}
+  return (a || l) ? (a || l).slice(0, 10) : fallback;
+}
+function setPlayerName(n) {
+  n = String(n || "").replace(/\s+/g, " ").trim().slice(0, 10);
+  try { if (n) localStorage.setItem("kyokai-name", n); } catch {}
+  if (Account.data && n) { Account.data.name = n; Account.saveNow(); }
+  return n;
+}
+function showName(msg) {
+  openOverlay(`<div class="panel">
+    <div class="topbar"><button type="button" class="btn sm" data-act="options">← 戻る</button><b>プレイヤー名</b></div>
+    <p class="lead small">対戦で表示される名前です（10文字まで）。友達と対戦するときも、この名前が相手に見えます。</p>
+    <div class="obox"><div class="ofield"><label for="pl-name">名前</label>
+      <input class="otxt" id="pl-name" maxlength="10" placeholder="例：ペンペン" value="${esc(playerName(""))}" autocomplete="nickname"></div>
+      <button type="button" class="btn primary" data-act="nameSave">決定</button>
+      ${msg ? `<p class="callout">${esc(msg)}</p>` : ""}</div>
+  </div>`, "options", true);
+}
 function showOptions() {
   const info = DATA_INFO.updated ? `カードデータ：v${DATA_INFO.version}（${esc(DATA_INFO.updated)} 更新）` : "";
   openOverlay(`<div class="panel">
     <div class="topbar"><button type="button" class="btn sm" data-act="optBack">← 戻る</button><b>オプション</b></div>
     <div class="optlist">
+      <button type="button" class="optrow" data-act="nameEdit"><b>プレイヤー名</b><small>現在：${esc(playerName("（未設定・対戦では「あなた」）"))}</small></button>
       <button type="button" class="optrow" data-act="rules"><b>ルール</b><small>遊び方・カードの能力</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="serial"><b>シリアルコード</b><small>配られたコードでGやカードを受け取る</small></button>`}
       ${Account.status === "none" ? "" : `<button type="button" class="optrow" data-act="icons" data-from="options"><b>アイコン</b><small>対戦で表示される顔を、持っているキャラカードの絵から選ぶ</small></button>`}
@@ -2279,7 +2301,7 @@ function startBattle(spec) {
   CPU_LEVEL = CPU_LEVELS[spec.level] ? spec.level : "normal";
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
-  newGame(["あなた", spec.oppName || `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [spec.mine, { name: spec.opp.name, cards: { ...spec.opp.cards }, ...(spec.opp.icon ? { icon: spec.opp.icon } : {}) }]);
+  newGame([playerName(), spec.oppName || `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [spec.mine, { name: spec.opp.name, cards: { ...spec.opp.cards }, ...(spec.opp.icon ? { icon: spec.opp.icon } : {}) }]);
   S.battle = { kind: spec.kind, level: CPU_LEVEL, ...(spec.reward != null ? { reward: spec.reward } : {}), streak: !!spec.streak, ...(spec.extra || {}) };
   if (spec.practice) { S.practice = true; S.mySample = true; }
   else S.mySample = !!spec.mine.sample;
@@ -2593,6 +2615,8 @@ function handleAct(act, el) {
     case "account": Account.showScreen(); break;
     case "soundPanel": Sound.showPanel(); break;
     case "fxToggle": Fx.toggle(); showOptions(); break;
+    case "nameEdit": showName(); break;
+    case "nameSave": { const n = setPlayerName($("#pl-name") && $("#pl-name").value); showName(n ? `「${n}」にしました` : "名前を入れてください"); break; }
     case "options": showOptions(); break;
     case "optBack": showStart(); break;
     case "sound": Sound.toggle(); Sound.showPanel(); break;
