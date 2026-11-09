@@ -1,5 +1,5 @@
 {
- "version": 86,
+ "version": 87,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6670,7 +6670,8 @@
      "card": "tk-foxfire"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-bakefox-482be281cd.webp"
   },
   {
    "id": "f2-dancer",
@@ -6697,7 +6698,8 @@
    "shrink": {
     "n": 1,
     "world": "fan"
-   }
+   },
+   "art": "art/f2-dancer-bcbffc0176.webp"
   },
   {
    "id": "f2-kamikakushi",
@@ -6721,7 +6723,8 @@
    "shrink": {
     "n": 1,
     "world": "fan"
-   }
+   },
+   "art": "art/f2-kamikakushi-f2b101da33.webp"
   },
   {
    "id": "f2-rebloom",
@@ -6748,7 +6751,8 @@
      "to": "anyRand"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-rebloom-1745c07930.webp"
   },
   {
    "id": "f2-windfairy",
@@ -6777,7 +6781,8 @@
      "to": "self"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-windfairy-3c507264ae.webp"
   },
   {
    "id": "f2-imp",
@@ -6800,7 +6805,8 @@
      "to": "enemyRand"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-imp-bd9100f9ff.webp"
   },
   {
    "id": "f2-mouthwitch",
@@ -6822,7 +6828,8 @@
      "to": "enemy1"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-mouthwitch-8fa8d58c87.webp"
   },
   {
    "id": "f2-cycle",
@@ -6855,7 +6862,8 @@
      "cond": "recycled"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-cycle-b408f62c65.webp"
   },
   {
    "id": "f2-icequeen",
@@ -6883,7 +6891,8 @@
      "n": 5
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-icequeen-bea0b46f11.webp"
   },
   {
    "id": "f2-frogcurse",
@@ -6904,7 +6913,8 @@
      "card": "tk-frog"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-frogcurse-2f412d6d11.webp"
   },
   {
    "id": "f2-candyhouse",
@@ -6930,7 +6940,8 @@
      "who": "self"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-candyhouse-f591c904b4.webp"
   },
   {
    "id": "f2-sapling",
@@ -6954,7 +6965,8 @@
     "stat": true,
     "dmg": false,
     "num": false
-   }
+   },
+   "art": "art/f2-sapling-bd2022f6fa.webp"
   },
   {
    "id": "f2-sake",
@@ -6983,7 +6995,8 @@
     "stat": false,
     "dmg": false,
     "num": true
-   }
+   },
+   "art": "art/f2-sake-1a0ee6edf8.webp"
   },
   {
    "id": "f2-kohaku",
