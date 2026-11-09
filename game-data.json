@@ -1,5 +1,5 @@
 {
- "version": 93,
+ "version": 94,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6324,7 +6324,7 @@
     "n": 1,
     "world": "fan"
    },
-   "art": "art/f2-lantern-75aee71e1e.webp"
+   "art": "art/f2-lantern-7b7d17c627.webp"
   },
   {
    "id": "f2-oni",
@@ -6945,7 +6945,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-candyhouse-f591c904b4.webp"
+   "art": "art/f2-candyhouse-bd30a11ff9.webp"
   },
   {
    "id": "f2-sapling",
@@ -7030,7 +7030,7 @@
     "n": 1,
     "world": "fan"
    },
-   "art": "art/f2-kohaku-440d5f0080.webp"
+   "art": "art/f2-kohaku-3d1564ae91.webp"
   },
   {
    "id": "f2-silentnight",
@@ -7401,7 +7401,7 @@
     }
    ],
    "set": "2-3",
-   "art": "art/f2-walpurgis-f8b79d2420.webp"
+   "art": "art/f2-walpurgis-9c3c24d4f0.webp"
   }
  ]
 }
