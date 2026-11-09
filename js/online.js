@@ -43,7 +43,7 @@ const Online = {
       <div class="obox">
         <div class="ofield">
           <label for="onl-name">あなたの名前</label>
-          <input class="otxt" id="onl-name" maxlength="10" placeholder="例：ペンペン" value="${esc(name)}" autocomplete="nickname">
+          <input class="otxt" id="onl-name" maxlength="10" placeholder="例：見習いプレイヤー" value="${esc(name)}" autocomplete="nickname">
         </div>
       </div>
       <div class="obox">
@@ -126,7 +126,7 @@ const Online = {
   readName() {
     const el = $("#onl-name");
     let n = (el ? el.value : store.get(NAME_KEY) || "").trim().slice(0, 10);
-    if (!n) n = "プレイヤー";
+    if (!n) n = DEFAULT_NAME;
     setPlayerName(n);
     return n;
   },

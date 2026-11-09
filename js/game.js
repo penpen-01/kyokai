@@ -190,7 +190,7 @@ function draw(pi, silent) {
   }
   const id = p.deck.pop();
   if (p.hand.length >= CONFIG.HAND_MAX) {
-    if (!silent) log(`${pname(pi)}の手札があふれ、${cname(id)}は捨て札へ。`);
+    if (!silent) { log(`${pname(pi)}の手札があふれ、${cname(id)}は捨て札へ。`); fx("reveal", id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); }
     return;
   }
   p.hand.push(id);
@@ -280,7 +280,7 @@ function banishUnit(side, u) {
   if (slot < 0) return;
   p.field = p.field.filter(x => x !== u);
   (p.voidU || (p.voidU = [])).push({ u, slot });
-  fx(unitSel(u.uid), "亜空間へ", "heal");
+  fx(unitSel(u.uid), "亜空間へ", "void");
   log(`${cname(u.id)}は亜空間に送られた（次の${pname(side)}のターンに戻る）。`);
 }
 function returnFromVoid(pi) {
@@ -291,6 +291,7 @@ function returnFromVoid(pi) {
   p.field = slots.filter(Boolean).map(x => x.u);
   p.voidU = [];
   log(`${pname(pi)}のキャラが亜空間から戻った。`);
+  back.forEach(u => fx(unitSel(u.uid), "帰還", "voidback"));
   back.forEach(u => queueTrig(pi, "voidBack", u));
 }
 
@@ -427,7 +428,7 @@ function playCard(pi, idx, targetsIn, useGear) {
     const u = p.field.find(x => x.uid === targets.sacrifice);
     if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); onDeath(pi, u); }
   }
-  if (spend) { spendGears(p, spend); log(`歯車を${spend}枚使った。`); }
+  if (spend) { spendGears(p, spend); log(`歯車を${spend}枚使った。`); fx(playerSel(pi), `歯車-${spend}`, "gear"); }
   else if (d.gear === "all") log("使える歯車がなかった。");
   let self = null;
   if (d.type === "char") {
@@ -435,8 +436,9 @@ function playCard(pi, idx, targetsIn, useGear) {
     if (grow && d.grow.stat) { self.atk += grow; self.hp += grow; self.maxHp += grow; }
     // 先にキャラが場に降り立つのを見せてから、登場時効果を発動する
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
+    if (kw(self, "guard")) fx(unitSel(self.uid), "守護", "guard");
   }
-  S.gearSpent = spend; S.bouncedNow = 0;
+  S.gearSpent = spend; S.bouncedNow = 0; S.castWorld = d.world;
   S.dmgBonus = grow && d.grow.dmg ? grow : 0;
   S.numBonus = grow && d.grow.num ? grow : 0;
   try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
@@ -511,6 +513,7 @@ function unitEffect(pi, e, targets, self) {
   const list = unitTargets(pi, e, targets, self);
   if (!list.length) return;
   if (["enemyAll", "ownAll", "all"].includes(e.to)) log(`${e.to === "enemyAll" ? "相手キャラ全体" : e.to === "ownAll" ? "自分のキャラ全体" : "すべてのキャラ"}に効果。`);
+  if (e.act === "dmg") boltFx(pi, self, list.map(u => (u === "face" ? playerSel(opp(pi)) : unitSel(u.uid))));
   list.forEach(u => {
     if (u === "face") {
       if (e.act === "dmg") { log(`${pname(opp(pi))}に${n}ダメージ。`); hitPlayer(opp(pi), n); }
@@ -545,7 +548,7 @@ function unitEffect(pi, e, targets, self) {
         if (t && t.type === "char") { u.id = t.id; u.atk = t.atk; u.hp = t.hp; u.maxHp = t.hp; u.silenced = false; }
         else { u.atk = 1; u.hp = 1; u.maxHp = 1; u.silenced = true; }
         u.kws = []; u.armorPlus = 0; u.frozen = false; u.winIn = null;
-        log(`${before}は${t ? cname(t.id) : "1/1"}に変身した。`); fx(unitSel(u.uid), "変身", "dmg");
+        log(`${before}は${t ? cname(t.id) : "1/1"}に変身した。`); fx(unitSel(u.uid), "変身", "poof");
         break;
       }
       case "copy": {
@@ -571,10 +574,18 @@ function unitEffect(pi, e, targets, self) {
     }
   });
 }
+/* 効果のダメージ：出どころ（キャラ・魔法）から相手へ光の弾を飛ばす。全体のときは同時に飛ばして、最後の1つだけ待つ */
+function boltFx(pi, self, sels) {
+  if (SIM || !sels.length) return;
+  const src = self && sideOf(self) >= 0 ? unitSel(self.uid) : `cast:${pi}`;
+  const w = (self && DEF[self.id] && DEF[self.id].world) || S.castWorld || "myth";
+  sels.forEach((t, i) => fx(src, t, `bolt:${w}${i < sels.length - 1 ? ":m" : ""}`));
+}
 /* 体力を下げる（最大値も下がる。0以下になったら倒れる） */
 function shrinkHp(u, n) { u.maxHp = Math.max(0, u.maxHp - n); u.hp = Math.min(u.hp, u.maxHp); fx(unitSel(u.uid), `体力-${n}`, "dmg"); if (u.hp <= 0) u.destroyed = true; }
-function playerEffect(pi, e) {
+function playerEffect(pi, e, self) {
   const who = e.who === "self" ? [pi] : e.who === "both" ? [pi, opp(pi)] : [opp(pi)], n = e.n;
+  if (e.act === "dmg") boltFx(pi, self, who.map(playerSel));
   who.forEach(q => {
     const p = S.players[q];
     switch (e.act) {
@@ -597,6 +608,7 @@ function addGears(pi, n) {
   }
   p.gears = (p.gears || 0) + n;
   log(`${pname(pi)}は歯車を${n}枚手札に加えた（${p.gears}枚）。`);
+  fx(playerSel(pi), `歯車+${n}`, "gear");
 }
 function spendGears(p, n) {
   p.gears = Math.max(0, (p.gears || 0) - n);
@@ -607,9 +619,10 @@ function discardRandom(q, pi) {
   const p = S.players[q];
   if (!p.hand.length) return;
   const i = Math.floor(Math.random() * p.hand.length);
-  if (p.hand[i] === GEAR_ID) { spendGears(p, 1); log(`${pname(q)}は歯車を1枚捨て${q === pi ? "た" : "させられた"}（残り${p.gears || 0}枚）。`); return; }
+  if (p.hand[i] === GEAR_ID) { spendGears(p, 1); log(`${pname(q)}は歯車を1枚捨て${q === pi ? "た" : "させられた"}（残り${p.gears || 0}枚）。`); fx(playerSel(q), "歯車-1", "gear"); return; }
   const id = handTake(p, i);
   log(`${pname(q)}は${cname(id)}を捨て${q === pi ? "た" : "させられた"}。`);
+  fx("reveal", id, `reveal:${q}:捨て${q === pi ? "た" : "させられた"}カード`);
 }
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
@@ -618,7 +631,7 @@ function effect(pi, e, targets, self) {
   if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気（ダメージ）
   else if (S.numBonus && e.n > 0 && e.act !== "dmg" && !["costDown", "winTimer", "merge", "tutor"].includes(e.kind)) e = { ...e, n: e.n + S.numBonus };   // 妖気（そのほかの数）
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
-  if (e.kind === "player") return playerEffect(pi, e);
+  if (e.kind === "player") return playerEffect(pi, e, self);
   const me = S.players[pi], en = S.players[opp(pi)], n = e.n;
   const enemyT = () => en.field.find(x => x.uid === targets.enemy);
   const ownT = () => me.field.find(x => x.uid === targets.own && x !== self);
@@ -708,11 +721,13 @@ function effect(pi, e, targets, self) {
       const q = opp(pi), h = S.players[q].hand;
       if (!h.length) { log(`${pname(q)}の手札は0枚だった。`); break; }
       log(`${pname(q)}の手札：${h.map(cname).join("・")}`);
+      fx("peek", h.filter(id => id !== GEAR_ID).join(","), `peek:${pi}`);
       const top = Math.max(...h.map(id => (DEF[id] ? DEF[id].cost : 0)));
       const cands = h.map((id, i) => i).filter(i => (DEF[h[i]] ? DEF[h[i]].cost : 0) === top);
       const i = cands[Math.floor(Math.random() * cands.length)];
-      if (h[i] === GEAR_ID) { spendGears(S.players[q], 1); log(`${pname(q)}は歯車を1枚捨てさせられた。`); break; }
+      if (h[i] === GEAR_ID) { spendGears(S.players[q], 1); log(`${pname(q)}は歯車を1枚捨てさせられた。`); fx(playerSel(q), "歯車-1", "gear"); break; }
       const id = handTake(S.players[q], i); log(`${pname(q)}は${cname(id)}を捨てさせられた。`);
+      fx("reveal", id, `reveal:${q}:捨てさせられたカード`);
       break;
     }
     case "winTimer": if (self && self.hp > 0) { self.winIn = n; log(`${cname(self.id)}：あと${n}回、自分のターンの始めをむかえると勝利。`); fx(unitSel(self.uid), `勝利まで${n}`, "trig"); } break;
@@ -740,7 +755,7 @@ function effect(pi, e, targets, self) {
       if (!cands.length) { log("条件に合うカードが山札になかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
       me.deck.splice(pick.i, 1);
-      if (me.hand.length >= CONFIG.HAND_MAX) { log(`手札がいっぱいで、${cname(pick.id)}は捨て札へ。`); break; }
+      if (me.hand.length >= CONFIG.HAND_MAX) { log(`手札がいっぱいで、${cname(pick.id)}は捨て札へ。`); fx("reveal", pick.id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); break; }
       me.hand.push(pick.id);
       log(`${pname(pi)}は山札からカードを1枚手札に加えた。`, { pi, msg: `${pname(pi)}は山札から${cname(pick.id)}を手札に加えた。` });
       break;
@@ -767,7 +782,7 @@ function effect(pi, e, targets, self) {
       if (t && t.type === "char") { u.id = t.id; u.atk = t.atk; u.hp = t.hp; u.maxHp = t.hp; u.silenced = false; }
       else { u.atk = 1; u.hp = 1; u.maxHp = 1; u.silenced = true; }
       u.kws = []; u.armorPlus = 0; u.frozen = false;
-      log(`${before}は${t ? cname(t.id) : "1/1"}に変身した。`); fx(unitSel(u.uid), "変身", "dmg");
+      log(`${before}は${t ? cname(t.id) : "1/1"}に変身した。`); fx(unitSel(u.uid), "変身", "poof");
       break;
     }
     case "swapEnemy": { const u = enemyT(); if (u) swapStats(u); break; }
@@ -825,10 +840,10 @@ function bounce(pi, u, to) {
   // 奪われたキャラは、元の持ち主の手札・山札に戻る（2026-11-04）
   if (u.owner != null) pi = u.owner;
   const p = S.players[pi];
-  fx(unitSel(u.uid), to === "hand" ? "手札へ" : "山札へ", "heal");
+  fx(unitSel(u.uid), to === "hand" ? "手札へ" : "山札へ", `${to === "hand" ? "tohand" : "todeck"}:${pi}`);
   if (DEF[u.id] && DEF[u.id].token) { log(`${cname(u.id)}（トークン）は消えた。`); return; }
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
-  if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); return; }
+  if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); fx("reveal", u.id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); return; }
   p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
   S.bouncedNow = (S.bouncedNow || 0) + 1;   // 「戻せたら」の条件用
   // 場から手札に戻ったとき の効果（対象はランダム。戻す効果が続けて起きすぎないように3回まで）
@@ -843,7 +858,7 @@ function bounce(pi, u, to) {
 function silenceUnit(u) {
   u.winIn = null;
   u.silenced = true; u.kws = []; u.armorPlus = 0;
-  log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "dmg");
+  log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "silence");
 }
 function swapStats(u) {
   const a = u.atk; u.atk = Math.max(0, u.hp); u.hp = a; u.maxHp = Math.max(u.maxHp, a);
@@ -860,7 +875,7 @@ function hitUnit(u, n) {
 }
 function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); }
 function destroyUnit(u) { u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); }
-function freezeUnit(u) { u.frozen = true; u.ready = false; fx(unitSel(u.uid), "凍結", "heal"); }
+function freezeUnit(u) { u.frozen = true; u.ready = false; fx(unitSel(u.uid), "凍結", "freeze"); }
 function debuff(u, n) { const b = u.atk; u.atk = Math.max(0, u.atk - n); fx(unitSel(u.uid), `攻撃-${b - u.atk}`, "dmg"); }
 function buff(u, a, h) {
   u.atk += a; u.hp += h; u.maxHp += h;
@@ -985,12 +1000,13 @@ function attack(pi, uid, target) {
     if (kw(a, "trample") && dealt > before && before > 0) {
       const over = dealt - before;
       log(`貫通！${pname(opp(pi))}に${over}ダメージ。`);
+      fx(playerSel(opp(pi)), "貫通", "pierce");
       hitPlayer(opp(pi), over);
     }
-    if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); destroyUnit(d); }
+    if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); fx(unitSel(d.uid), "毒", "poison"); destroyUnit(d); }
     steal(a, pi, dRealHit);
     const back = hitUnit(a, d.atk);
-    if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); destroyUnit(a); }
+    if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); fx(unitSel(a.uid), "毒", "poison"); destroyUnit(a); }
     // 吸収は自分から攻撃したときだけ（反撃では回復しない。オーナー 11-10）
     queueTrig(pi, "attack", a);
     if (before > 0 && d.hp <= 0) queueTrig(pi, "kill", a);
@@ -1741,8 +1757,14 @@ function startDrag() {
     const ns = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("class", "arrow");
-    svg.innerHTML = `<defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e2675a"/></marker></defs>
-      <line x1="${drag.ox}" y1="${drag.oy}" x2="${drag.ox}" y2="${drag.oy}" stroke="#e2675a" stroke-width="4" stroke-linecap="round" marker-end="url(#ah)"/>`;
+    // 攻撃の矢印：弧を描く光の帯＋先の照準。狙えるものに重なると照準が赤く締まる
+    svg.innerHTML = `<defs><linearGradient id="arg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".15"/><stop offset=".6" stop-color="#ff9a5a"/><stop offset="1" stop-color="#ff5a4a"/></linearGradient>
+        <filter id="arglow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <path class="ar-glow" d="" fill="none" stroke="url(#arg)" stroke-width="11" stroke-linecap="round" opacity=".35" filter="url(#arglow)"/>
+      <path class="ar-line" d="" fill="none" stroke="url(#arg)" stroke-width="5" stroke-linecap="round"/>
+      <path class="ar-dash" d="" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 14" opacity=".9"/>
+      <path class="ar-head" d="M-13,-11 L9,0 L-13,11 L-7,0 Z" fill="#ff5a4a" stroke="#ffe0c0" stroke-width="1.5" filter="url(#arglow)"/>
+      <g class="ar-aim"><circle r="22" fill="none" stroke="#ffe0c0" stroke-width="2" stroke-dasharray="10 7"/><circle r="5" fill="#ff5a4a"/></g>`;
     $("#fx").appendChild(svg);
     drag.svg = svg;
     drag.el.classList.add("sel");
@@ -1754,14 +1776,28 @@ function startDrag() {
 function moveDrag(x, y) {
   if (!drag) return;
   if (drag.ghost) { drag.ghost.style.left = x + "px"; drag.ghost.style.top = y + "px"; }
-  if (drag.svg) { const l = drag.svg.querySelector("line"); l.setAttribute("x2", x); l.setAttribute("y2", y); }
+  if (drag.svg) drawArrow(drag.svg, drag.ox, drag.oy, x, y);
   const el = document.elementFromPoint(x, y);
   const over = el ? drag.zones.find(z => z.contains(el)) : null;
   if (over !== drag.over) {
     if (drag.over) drag.over.classList.remove("over");
     if (over) over.classList.add("over");
     drag.over = over;
+    if (drag.svg) drag.svg.classList.toggle("on", !!over);
   }
+}
+
+/* 弧を描く矢印。元から指先へ、少し上にふくらむ曲線 */
+function drawArrow(svg, x0, y0, x, y) {
+  const dx = x - x0, dy = y - y0, len = Math.hypot(dx, dy) || 1;
+  const bend = Math.min(80, len * 0.28), nx = -dy / len, ny = dx / len, s = dx >= 0 ? -1 : 1;
+  const cx = (x0 + x) / 2 + nx * bend * s, cy = (y0 + y) / 2 + ny * bend * s;
+  const d = `M${x0},${y0} Q${cx},${cy} ${x},${y}`;
+  svg.querySelectorAll(".ar-glow,.ar-line,.ar-dash").forEach(p => p.setAttribute("d", d));
+  const ang = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
+  svg.querySelector(".ar-head").setAttribute("transform", `translate(${x},${y}) rotate(${ang})`);
+  svg.querySelector(".ar-aim").setAttribute("transform", `translate(${x},${y})`);
+  const gr = svg.querySelector("#arg"); gr.setAttribute("x1", x0); gr.setAttribute("y1", y0); gr.setAttribute("x2", x); gr.setAttribute("y2", y);
 }
 
 function endDrag() {
@@ -1825,6 +1861,7 @@ function playFx(sel, text, cls) {
   runFx(sel, text, cls);
 }
 function runFx(sel, text, cls) {
+  if (/^(bolt|freeze|silence|poof|tohand|todeck|void|voidback|pierce|poison|guard|gear|reveal|peek)(:|$)/.test(cls || "")) { Vfx.run(sel, text, cls); return; }
   if (sel === "sfx") { Sound.play(text); return; }
   if (cls === "lunge") { Motion.lunge(sel, text); return; }
   if (sel === "cast") { Motion.cast(text, +cls.slice(4)); return; }
@@ -1839,6 +1876,7 @@ function runFx(sel, text, cls) {
   if (!el) return;
   const r = el.getBoundingClientRect();
   const layer = $("#fx");
+  if (cls === "heal" && /^[+＋]\d+$/.test(text)) Vfx.heal(r);
   if (cls === "dmg") {
     const f = document.createElement("div");
     f.className = "flash";
@@ -1983,8 +2021,9 @@ function showStart() {
 }
 
 /* 歯車ボタン：ルール・アカウント・音などの事務的なもの */
-/* プレイヤー名：アカウントに保存（なければこの端末に覚えた友達対戦の名前）。決めていなければ「あなた」 */
-function playerName(fallback = "あなた") {
+/* プレイヤー名：アカウントに保存（なければこの端末に覚えた友達対戦の名前）。決めていなければ「見習いプレイヤー」 */
+const DEFAULT_NAME = "見習いプレイヤー";
+function playerName(fallback = DEFAULT_NAME) {
   const a = Account.data && Account.data.name;
   let l = ""; try { l = localStorage.getItem("kyokai-name") || ""; } catch {}
   return (a || l) ? (a || l).slice(0, 10) : fallback;
@@ -2000,7 +2039,7 @@ function showName(msg) {
     <div class="topbar"><button type="button" class="btn sm" data-act="options">← 戻る</button><b>プレイヤー名</b></div>
     <p class="lead small">対戦で表示される名前です（10文字まで）。友達と対戦するときも、この名前が相手に見えます。</p>
     <div class="obox"><div class="ofield"><label for="pl-name">名前</label>
-      <input class="otxt" id="pl-name" maxlength="10" placeholder="例：ペンペン" value="${esc(playerName(""))}" autocomplete="nickname"></div>
+      <input class="otxt" id="pl-name" maxlength="10" placeholder="例：見習いプレイヤー" value="${esc(playerName(""))}" autocomplete="nickname"></div>
       <button type="button" class="btn primary" data-act="nameSave">決定</button>
       ${msg ? `<p class="callout">${esc(msg)}</p>` : ""}</div>
   </div>`, "options", true);
@@ -2010,7 +2049,7 @@ function showOptions() {
   openOverlay(`<div class="panel">
     <div class="topbar"><button type="button" class="btn sm" data-act="optBack">← 戻る</button><b>オプション</b></div>
     <div class="optlist">
-      <button type="button" class="optrow" data-act="nameEdit"><b>プレイヤー名</b><small>現在：${esc(playerName("（未設定・対戦では「あなた」）"))}</small></button>
+      <button type="button" class="optrow" data-act="nameEdit"><b>プレイヤー名</b><small>現在：${esc(playerName(`（未設定：${DEFAULT_NAME}）`))}</small></button>
       <button type="button" class="optrow" data-act="rules"><b>ルール</b><small>遊び方・カードの能力</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="serial"><b>シリアルコード</b><small>配られたコードでGやカードを受け取る</small></button>`}
       ${Account.status === "none" ? "" : `<button type="button" class="optrow" data-act="icons" data-from="options"><b>アイコン</b><small>対戦で表示される顔を、持っているキャラカードの絵から選ぶ</small></button>`}
