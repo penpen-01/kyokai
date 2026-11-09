@@ -1,5 +1,5 @@
 {
- "version": 88,
+ "version": 90,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -6188,7 +6188,8 @@
      "to": "enemyRandF"
     }
    ],
-   "token": true
+   "token": true,
+   "art": "art/tk-foxfire-ec0081e6be.webp"
   },
   {
    "id": "tk-leaf",
@@ -6218,7 +6219,8 @@
      "world": "fan"
     }
    ],
-   "token": true
+   "token": true,
+   "art": "art/tk-leaf-e6a18b860d.webp"
   },
   {
    "id": "tk-frog",
@@ -6233,7 +6235,8 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
-   "token": true
+   "token": true,
+   "art": "art/tk-frog-5dce1f52a8.webp"
   },
   {
    "id": "f2-kit",
@@ -7239,7 +7242,8 @@
      "ctype": "spell"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-storyteller-e643d30552.webp"
   },
   {
    "id": "f2-moonwitch",
@@ -7269,7 +7273,8 @@
      "to": "enemyRand"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-moonwitch-c70c3e5b63.webp"
   },
   {
    "id": "f2-sleepcastle",
@@ -7296,7 +7301,8 @@
      "cn": 3
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-sleepcastle-08c097b4d8.webp"
   },
   {
    "id": "f2-curtain",
@@ -7321,7 +7327,8 @@
     "n": 2,
     "world": "fan",
     "orEmpty": true
-   }
+   },
+   "art": "art/f2-curtain-39de88a13c.webp"
   },
   {
    "id": "f2-tamamo",
@@ -7356,7 +7363,8 @@
    "shrink": {
     "n": 1,
     "world": "fan"
-   }
+   },
+   "art": "art/f2-tamamo-ee81d102c4.webp"
   },
   {
    "id": "f2-walpurgis",
@@ -7391,7 +7399,8 @@
      "when": "oppTurnEnd"
     }
    ],
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/f2-walpurgis-f8b79d2420.webp"
   }
  ]
 }
