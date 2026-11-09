@@ -1,5 +1,5 @@
 {
- "version": 80,
+ "version": 81,
  "updated": "2026-11-09",
  "config": {
   "PLAYER_HP": 20,
@@ -23,6 +23,8 @@
   "BOSS_RATE": 5,
   "BOSS_PITY": 20,
   "BOSS_HP": 25,
+  "SAMPLE_ONLINE_DAY": 3,
+  "SAMPLE_CPU": 1,
   "STONE_GET_COMMON": 5,
   "STONE_GET_RARE": 20,
   "STONE_GET_SR": 50,
@@ -260,8 +262,8 @@
    "set": "2-1",
    "gateRule": "world",
    "gateWorld": "mech",
-   "gateLevel": "hard",
-   "gateDeck": "gate-mech"
+   "gateDeck": "gate-mech",
+   "gateLevel": "hard"
   },
   {
    "id": "pack2-2",
@@ -335,8 +337,8 @@
    "set": "2-2",
    "gateRule": "world",
    "gateWorld": "myth",
-   "gateLevel": "hard",
-   "gateDeck": "gate-myth"
+   "gateDeck": "gate-myth",
+   "gateLevel": "hard"
   },
   {
    "id": "pack2-3",
@@ -410,8 +412,8 @@
    "set": "2-3",
    "gateRule": "world",
    "gateWorld": "fan",
-   "gateLevel": "hard",
-   "gateDeck": "gate-fan"
+   "gateDeck": "gate-fan",
+   "gateLevel": "hard"
   }
  ],
  "decks": [
@@ -704,28 +706,26 @@
    "id": "gate-mech",
    "name": "開放戦 機械（仮）",
    "cards": {
-    "m2-gearsmith": 1,
-    "m2-box": 1,
-    "m2-alarm": 2,
-    "m2-shorten": 1,
-    "m2-furnace": 2,
-    "m2-transfer": 1,
-    "m2-patch": 2,
-    "m2-welder": 2,
-    "m2-laser": 1,
-    "m2-net": 2,
-    "m2-capsule": 1,
-    "m2-zenmai": 1,
-    "m2-jumper2": 3,
-    "m2-automaton": 1,
-    "m2-hacker": 1,
-    "n-workbot": 1,
-    "m2-exo": 1,
+    "m2-godgear": 2,
+    "m2-gearsmith": 3,
+    "m2-hive": 1,
+    "m2-walker": 2,
+    "m2-meister": 3,
+    "x-emp": 1,
     "x-executor": 2,
-    "omega": 1,
+    "m2-scrap": 2,
+    "m2-box": 2,
+    "m2-zenmai": 2,
+    "m2-reboot": 1,
+    "m2-automaton": 1,
+    "m2-press": 1,
+    "m2-catapult": 1,
+    "m2-gearknight": 1,
+    "m2-mirage": 1,
+    "m2-copycode": 1,
     "m2-dozer": 1,
-    "sentinel": 1,
-    "n-massprod": 1
+    "m2-jamtower": 1,
+    "m2-crane": 1
    },
    "level": "gate"
   },
@@ -3793,7 +3793,6 @@
    "effects": [],
    "token": true,
    "note": "手札で重なる（何枚あっても手札1枠）。これだけでは使えず、「歯車を使う」カードの材料になる。",
-   "artNote": "真鍮色の大小の歯車がいくつも噛み合って重なった塊。中心で青い光がかすかに脈打つ。黒い背景に浮かぶ",
    "art": "art/tk-gear-422fd75d3a.webp"
   },
   {
@@ -3812,7 +3811,6 @@
    ],
    "effects": [],
    "token": true,
-   "artNote": "鋭いくさび形の小型強襲艇。機首に二連の機関砲、赤い推進炎を引いて急降下する",
    "art": "art/tk-raider-3891c1844a.webp"
   },
   {
@@ -3835,7 +3833,6 @@
     }
    ],
    "set": "2-1",
-   "artNote": "革のエプロンにゴーグルの少年職人。作業台で歯車をやすりで削る。工房の窓から朝の光",
    "art": "art/m2-gearsmith-688a8824a8.webp"
   },
   {
@@ -3856,7 +3853,6 @@
     }
    ],
    "set": "2-1",
-   "artNote": "ふたが開いた古い木箱から、ネジ・歯車・バネがあふれ出ている。真上からの構図",
    "art": "art/m2-box-2aad5cd8a5.webp"
   },
   {
@@ -3874,13 +3870,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
-     "to": "enemyF",
-     "n": 1
+     "to": "enemyF"
     }
    ],
    "set": "2-1",
-   "artNote": "溶接マスクをかぶった兵士が、溶接トーチから長い火花の筋を相手に向けて吹きつける",
    "art": "art/m2-welder-031db56bc8.webp"
   },
   {
@@ -3896,13 +3891,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "dmg",
-     "to": "enemyF",
-     "n": 3
+     "to": "enemyF"
     }
    ],
    "set": "2-1",
-   "artNote": "ビルの屋上に据えた長い銃身のレーザー砲。一本の赤い光線が夜の街を横切る",
    "art": "art/m2-laser-b5c438bc5b.webp"
   },
   {
@@ -3918,19 +3912,18 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
-     "to": "enemy1",
-     "n": 1
+     "to": "enemy1"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
-     "to": "enemy1",
-     "n": 1
+     "to": "enemy1"
     }
    ],
    "set": "2-1",
-   "artNote": "砲弾が空中で開き、青白い電気の走る網になって獣にかぶさる瞬間",
    "art": "art/m2-net-6e37f2dce3.webp"
   },
   {
@@ -3950,14 +3943,13 @@
    "effects": [
     {
      "kind": "player",
-     "act": "draw",
-     "who": "self",
      "n": 1,
-     "when": "death"
+     "when": "death",
+     "act": "draw",
+     "who": "self"
     }
    ],
    "set": "2-1",
-   "artNote": "赤い回転灯とサイレンのついた鉄の柱。赤い光が通路の壁を照らす",
    "art": "art/m2-alarm-a2273b0b02.webp"
   },
   {
@@ -3974,18 +3966,18 @@
     {
      "kind": "costDown",
      "n": 1,
+     "dur": "turn",
      "world": "mech",
      "ctype": "char"
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "set": "2-1",
-   "artNote": "工場のベルトコンベアが猛スピードで流れ、壁の時計の針がぐるぐる回る",
    "art": "art/m2-shorten-ecc484e556.webp"
   },
   {
@@ -4001,9 +3993,9 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "destroy",
-     "to": "own1",
-     "n": 0
+     "to": "own1"
     },
     {
      "kind": "tokenHand",
@@ -4012,13 +4004,12 @@
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "set": "2-1",
-   "artNote": "赤く燃える溶鉱炉に古い機械が落ちていき、出口から光る歯車が転がり出る",
    "art": "art/m2-furnace-49901bdb32.webp"
   },
   {
@@ -4036,14 +4027,13 @@
    "effects": [
     {
      "kind": "player",
-     "act": "draw",
-     "who": "self",
      "n": 2,
-     "when": "voidBack"
+     "when": "voidBack",
+     "act": "draw",
+     "who": "self"
     }
    ],
    "set": "2-1",
-   "artNote": "人ひとり入れる卵形のカプセル。青い光の輪に包まれ、半分だけ空間から消えかけている",
    "art": "art/m2-capsule-6f500c0333.webp"
   },
   {
@@ -4061,15 +4051,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "both",
      "to": "self",
-     "n": 2,
      "cond": "gearPaid"
     }
    ],
    "set": "2-1",
    "gear": 2,
-   "artNote": "背中に大きなぜんまいのねじ巻きが刺さった、ブリキの兵隊。ねじがぎりぎりと回り、銃剣を構えて行進する",
    "art": "art/m2-zenmai-2cfd64a68b.webp"
   },
   {
@@ -4088,7 +4077,6 @@
    ],
    "effects": [],
    "set": "2-1",
-   "artNote": "基地の通路をふさぐ分厚い鉄のシャッター。黄色と黒の警告ライン、のぞき窓に赤い光",
    "art": "art/m2-shutter-59df1e44fe.webp"
   },
   {
@@ -4112,7 +4100,6 @@
     }
    ],
    "set": "2-1",
-   "artNote": "双発ローターの大型輸送ヘリが、ワイヤーで小型の戦車を吊って飛ぶ",
    "art": "art/m2-heli-3f82edb42f.webp"
   },
   {
@@ -4131,7 +4118,6 @@
    ],
    "effects": [],
    "set": "2-1",
-   "artNote": "煙突から黒煙を噴き上げる蒸気機関車が、線路を外れて正面から突っ込んでくる。前面に鉄の衝角",
    "art": "art/m2-locomotive-32d5001059.webp"
   },
   {
@@ -4150,12 +4136,11 @@
     {
      "kind": "tokenHand",
      "n": 2,
-     "card": "tk-gear",
-     "when": "death"
+     "when": "death",
+     "card": "tk-gear"
     }
    ],
    "set": "2-1",
-   "artNote": "荷台にがらくたを山積みにした六輪の回収車。マジックハンドで鉄くずをつかむ",
    "art": "art/m2-scrap-b9a8f78ccc.webp"
   },
   {
@@ -4173,22 +4158,21 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "dmg",
      "to": "enemy1",
-     "n": 3,
      "cond": "gearNone"
     },
     {
      "kind": "unit",
+     "n": 5,
      "act": "dmg",
      "to": "enemy1",
-     "n": 5,
      "cond": "gearPaid"
     }
    ],
    "set": "2-1",
    "gear": 2,
-   "artNote": "大小の歯車が組み合わさって回るウインチを背負ったクレーン車。鉄球は巨大な歯車を何枚も溶接して丸めたもので、歯車の歯がとげのように突き出ている。その歯車の鉄球が、幻想の世界の妖精の見張り塔（木と蔓でできた塔）を打ち砕く瞬間。木片と葉っぱが飛び散る。夕方の森のはずれ",
    "art": "art/m2-crane-ba58805be9.webp"
   },
   {
@@ -4206,13 +4190,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "dmg",
-     "to": "enemyF",
-     "n": 3
+     "to": "enemyF"
     }
    ],
    "set": "2-1",
-   "artNote": "キャタピラの車体に太い迫撃砲を載せた自走砲。砲口から煙と炎",
    "art": "art/m2-mortar-08ae4c7747.webp"
   },
   {
@@ -4231,7 +4214,6 @@
    ],
    "effects": [],
    "set": "2-1",
-   "artNote": "前面に巨大なドリルをつけた掘削車が、岩壁を突き破って飛び出してくる",
    "art": "art/m2-drill-e7052da965.webp"
   },
   {
@@ -4251,7 +4233,6 @@
    ],
    "effects": [],
    "set": "2-1",
-   "artNote": "黄色と黒の警告色の装甲をまとった、二足でも戦車でもない巨大な重機兵器。前面に刃の付いた分厚い排土板（ブレード）を盾のように構え、背中に排気筒が並んで黒煙を噴く。キャタピラの脚で瓦礫の山を押し崩しながら前進し、排土板が神話の石像（白い大理石の神殿の戦士像）をまとめて押し倒す瞬間。ふつうのブルドーザーには見えないSFの兵器として、低い位置からあおりで大きく見せる。夕暮れの崩れた神殿の跡",
    "art": "art/m2-dozer-693a08a298.webp"
   },
   {
@@ -4267,19 +4248,18 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "banish",
-     "to": "own1",
-     "n": 0
+     "to": "own1"
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "set": "2-1",
-   "artNote": "兵士の足元に青い転送円が開き、体が光の粒になって消えていく",
    "art": "art/m2-transfer-9ad836e2b4.webp"
   },
   {
@@ -4297,14 +4277,13 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "dmg",
-     "to": "enemyRand",
      "n": 3,
-     "when": "voidBack"
+     "when": "voidBack",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "set": "2-1",
-   "artNote": "空間の裂け目から飛び出しながら、腕のブレードを振りかぶるジェットパックの兵士",
    "art": "art/m2-jumper2-8282ccfa13.webp"
   },
   {
@@ -4323,14 +4302,13 @@
     {
      "kind": "tokenHand",
      "n": 1,
-     "card": "tk-gear",
      "when": "cardPlay",
      "pw": "mech",
-     "pt": "spell"
+     "pt": "spell",
+     "card": "tk-gear"
     }
    ],
    "set": "2-1",
-   "artNote": "ぜんまい仕掛けの人形（オートマタ）の背中を開けて、細い工具で調整する女性技師",
    "art": "art/m2-automaton-12a4c2bcf1.webp"
   },
   {
@@ -4348,13 +4326,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
-     "to": "enemy1",
-     "n": 1
+     "to": "enemy1"
     }
    ],
    "set": "2-1",
-   "artNote": "フードをかぶった若い女性のハッカー。目元に緑に光るゴーグル、首と腕から何本ものケーブルが背中の携帯端末につながる。片手を前に突き出し、指先から緑のデータの線が伸びて、向かってくる幻想の世界の騎士（銀の鎧の騎士）の全身にまとわりつき、騎士が緑のコードに縛られて動きを止めている。もう片方の手で宙に浮かぶホログラムのキーボードを打つ。夜の路地裏、ネオンの看板の光",
    "art": "art/m2-hacker-48cee3d15e.webp"
   },
   {
@@ -4370,20 +4347,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "grant",
      "to": "own1",
-     "n": 2,
      "kw": "armor"
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "set": "2-1",
-   "artNote": "整備ハンガーで、戦車に分厚い追加装甲が両側からはめこまれる",
    "art": "art/m2-armorswap-a82ed7261f.webp"
   },
   {
@@ -4399,19 +4375,18 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 0,
      "act": "unfreeze",
-     "to": "own1",
-     "n": 0
+     "to": "own1"
     },
     {
      "kind": "unit",
+     "n": 3,
      "act": "heal",
-     "to": "own1",
-     "n": 3
+     "to": "own1"
     }
    ],
    "set": "2-1",
-   "artNote": "凍りついた機械の胸に緑の光のパッチが貼られ、氷がはじけ飛ぶ",
    "art": "art/m2-patch-24ac45c7f5.webp"
   },
   {
@@ -4432,12 +4407,11 @@
     {
      "kind": "tokenHand",
      "n": 1,
-     "card": "tk-gear",
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "card": "tk-gear"
     }
    ],
    "set": "2-1",
-   "artNote": "巨大なプレス機がガシャンと下りるたびに、光る歯車が1枚ずつ吐き出される",
    "art": "art/m2-press-24defa13e7.webp"
   },
   {
@@ -4455,23 +4429,22 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "both",
      "to": "self",
-     "n": 3,
      "cond": "gearPaid"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "self",
-     "n": 0,
      "kw": "guard",
      "cond": "gearPaid"
     }
    ],
    "set": "2-1",
    "gear": 3,
-   "artNote": "無数の歯車が組み合わさってできた騎士。胸に大きな歯車の盾、関節から蒸気。片膝から立ち上がる",
    "art": "art/m2-gearknight-22e6f9c9fa.webp"
   },
   {
@@ -4487,14 +4460,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "enemyAll",
-     "n": 0,
      "kw": "doom"
     }
    ],
    "set": "2-1",
-   "artNote": "敵の機械の群れの表面に、いっせいに赤いカウントダウンの数字が浮かぶ。内部から光がもれ出している",
    "art": "art/m2-selfdestruct-5420614d29.webp"
   },
   {
@@ -4512,14 +4484,13 @@
    "effects": [
     {
      "kind": "player",
-     "act": "dmg",
-     "who": "opp",
      "n": 2,
-     "when": "attack"
+     "when": "attack",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
    "set": "2-1",
-   "artNote": "荷台にミサイルを4本積んだ装甲車。1本が白煙を引いて発射される",
    "art": "art/m2-missile-322ec9b9d7.webp"
   },
   {
@@ -4535,22 +4506,21 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "dmg",
      "to": "enemyF",
-     "n": 2,
      "cond": "gearNone"
     },
     {
      "kind": "unit",
+     "n": 5,
      "act": "dmg",
      "to": "enemyF",
-     "n": 5,
      "cond": "gearPaid"
     }
    ],
    "set": "2-1",
    "gear": 3,
-   "artNote": "木と鉄でできた巨大な投石機。歯車がきしみ、腕の先に赤熱した鉄の塊を載せて振りかぶる",
    "art": "art/m2-catapult-cb2477e76e.webp"
   },
   {
@@ -4570,13 +4540,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "silence",
-     "to": "enemy1",
-     "n": 0
+     "to": "enemy1"
     }
    ],
    "set": "2-1",
-   "artNote": "アンテナが何本も立つ鉄塔。周りの空気が電波でゆがんで見える",
    "art": "art/m2-jamtower-3e5147ea04.webp"
   },
   {
@@ -4596,7 +4565,6 @@
    "effects": [],
    "armor": 1,
    "set": "2-1",
-   "artNote": "六本の脚で岩場を登る重戦車。脚の装甲板に傷が刻まれている",
    "art": "art/m2-walker-c46a8e7241.webp"
   },
   {
@@ -4612,13 +4580,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "unfreeze",
-     "to": "ownAll",
-     "n": 2
+     "to": "ownAll"
     }
    ],
    "set": "2-1",
-   "artNote": "真っ暗な巨大格納庫で、非常電源が入った瞬間。凍りついて止まっていた何体もの巨大な戦闘ロボットの目と胸の炉心が、一斉に赤く灯る。全身にまとわりついていた氷と霜が衝撃で砕け散り、手前の一番大きな指揮官機が拳を握って一歩踏み出す。天井の非常灯が赤い光の筋を落とし、足元から白い蒸気が噴き上がる。主役は手前の指揮官機（顔は画面の上半分）。反撃が始まる、胸の熱くなる場面",
    "art": "art/m2-reboot-df75f9f66a.webp"
   },
   {
@@ -4634,13 +4601,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "copy",
-     "to": "own1",
-     "n": 0
+     "to": "own1"
     }
    ],
    "set": "2-1",
-   "artNote": "青いホログラムの設計図から、機械がもう1体まるごと印刷されるように現れる",
    "art": "art/m2-copycode-bcf272f744.webp"
   },
   {
@@ -4663,7 +4629,6 @@
     }
    ],
    "set": "2-1",
-   "artNote": "片目にモノクル、白いひげの老職人。腰の工具ベルトと、背中に背負った大きな歯車のかご",
    "art": "art/m2-meister-f7bea85da0.webp"
   },
   {
@@ -4679,20 +4644,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "both",
-     "to": "own1",
-     "n": 3
+     "to": "own1"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 1,
      "kw": "armor"
     }
    ],
    "set": "2-1",
-   "artNote": "兵士が巨大な外骨格スーツに乗り込み、両腕の拳を打ち合わせる",
    "art": "art/m2-exo-6ba1628479.webp"
   },
   {
@@ -4710,15 +4674,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "grant",
      "to": "ownAll",
-     "n": 2,
      "kw": "armor",
      "world": "mech"
     }
    ],
    "set": "2-1",
-   "artNote": "分厚い装甲板に覆われた司令塔。頭頂のレーダーが回り、周りの戦車に青い盾の光が広がる",
    "art": "art/m2-tower-81a48183e3.webp"
   },
   {
@@ -4736,14 +4699,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
+     "when": "voidBack",
      "act": "destroy",
-     "to": "enemyRand",
-     "n": 0,
-     "when": "voidBack"
+     "to": "enemyRand"
     }
    ],
    "set": "2-1",
-   "artNote": "空間の裂け目から斜めに飛び出し、大剣を振り下ろす黒い装甲の剣士",
    "art": "art/m2-jumper-e1304adfb9.webp"
   },
   {
@@ -4761,15 +4723,14 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "dmg",
-     "to": "enemyRand",
      "n": 1,
      "when": "cardPlay",
-     "pw": "mech"
+     "pw": "mech",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "set": "2-1",
-   "artNote": "翼に何枚ものレーダー板をつけた電子戦機。敵に向かって紫の電波の波を放つ",
    "art": "art/m2-ew-9cbd264413.webp"
   },
   {
@@ -4786,18 +4747,17 @@
     {
      "kind": "costDown",
      "n": 1,
-     "world": "mech",
-     "dur": "game"
+     "dur": "game",
+     "world": "mech"
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "set": "2-1",
-   "artNote": "机に広げた大きな設計図の上に、同じ戦車の小さな模型がずらりと並ぶ",
    "art": "art/m2-massplan-6729c3774c.webp"
   },
   {
@@ -4821,7 +4781,6 @@
     }
    ],
    "set": "2-1",
-   "artNote": "廃墟の空に浮かぶ、黒い巨大な文字盤の時計。針は骨のように白く、文字盤の中心に赤い一つ目。縁から錆びた歯車と鎖が触手のように垂れ下がる。禍々しく静か",
    "art": "art/m2-clock-41d6ca9db8.webp"
   },
   {
@@ -4839,13 +4798,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "copy",
-     "to": "enemy1",
-     "n": 0
+     "to": "enemy1"
     }
    ],
    "set": "2-1",
-   "artNote": "全身が鏡のように磨かれた銀色の、細身で背の高い機械人形。顔はなめらかな鏡の仮面で、胸の中心に六角形の青い光のレンズ。向かいに立つ神話の世界の、炎の翼を持つ天使の戦士が、機械人形の体の鏡面に映り込み、その映り込みから青い光でできたもう一人の天使が抜け出してきて、機械人形の横に並び立つ。割れた鏡の破片が宙を舞う。左右対称に近い、決めポーズの構図。暗い背景に青と金の光",
    "art": "art/m2-mirage-dfb910d1db.webp"
   },
   {
@@ -4861,13 +4819,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 8,
      "act": "dmg",
-     "to": "enemyF",
-     "n": 8
+     "to": "enemyF"
     }
    ],
    "set": "2-1",
-   "artNote": "山ほどの砲身から、太い紫の光線が地平線の向こうまで一直線に伸びる",
    "art": "art/m2-particle-86d1930d83.webp"
   },
   {
@@ -4893,12 +4850,11 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-raider",
-     "when": "turnStart"
+     "when": "turnStart",
+     "card": "tk-raider"
     }
    ],
    "set": "2-1",
-   "artNote": "空に浮かぶ蜂の巣のような巨大母艦。腹のハッチが開き、鋭い強襲艇が次々と急降下していく",
    "art": "art/m2-hive-e4709eb9f4.webp"
   },
   {
@@ -4918,21 +4874,20 @@
    "effects": [
     {
      "kind": "player",
+     "n": 4,
      "act": "dmg",
-     "who": "opp",
-     "n": 4
+     "who": "opp"
     },
     {
      "kind": "player",
-     "act": "dmg",
-     "who": "opp",
      "n": 8,
-     "when": "turnStart"
+     "when": "turnStart",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
    "armor": 2,
    "set": "2-1",
-   "artNote": "山脈と同じ高さの超巨大砲台。砲口の奥で赤い光が渦を巻き、足元の街が小さく見える",
    "art": "art/m2-disaster-a179dcefc8.webp"
   },
   {
@@ -4953,15 +4908,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "both",
      "to": "self",
-     "n": 1,
      "per": "gear"
     }
    ],
    "set": "2-1",
    "gear": "all",
-   "artNote": "金と黒の巨大な合体ロボ。背中に光輪のような巨大歯車が回る。雲を突き抜けて立ち、地上を見下ろす",
    "art": "art/m2-godgear-8700fd9925.webp"
   },
   {
@@ -4980,7 +4934,6 @@
    ],
    "effects": [],
    "token": true,
-   "artNote": "赤い鱗の子どもの竜。大型犬ほどの大きさで、小さな翼を広げ、口の端から火の粉をこぼしながら飛びかかる。岩山の上",
    "art": "art/tk-wyrmling-3b1a47a811.webp"
   },
   {
@@ -4999,7 +4952,6 @@
    ],
    "effects": [],
    "token": true,
-   "artNote": "白い翼と小さな丸盾を持つ、少年の姿の見習いの天使兵。体を淡い光の膜が包む。雲の上の白い回廊",
    "art": "art/tk-angel-1ce7701986.webp"
   },
   {
@@ -5018,7 +4970,6 @@
    ],
    "effects": [],
    "token": true,
-   "artNote": "金のたてがみの白い天馬が、翼を大きく広げて夕焼けの空を駆ける。乗り手はいない",
    "art": "art/tk-pegasus-815a42fff4.webp"
   },
   {
@@ -5037,7 +4988,6 @@
    ],
    "effects": [],
    "token": true,
-   "artNote": "卵の殻を突き破って飛び出した、まだ若い赤銅色の竜。翼を半分広げ、殻のかけらが宙に舞う。溶岩の洞窟",
    "art": "art/tk-youngdragon-f6215817a9.webp"
   },
   {
@@ -5057,7 +5007,6 @@
    ],
    "effects": [],
    "token": true,
-   "artNote": "巣を崩して目覚めた、山のように大きな黒い古竜。長い首をもたげ、目と喉の奥が溶岩のように光る。火山の火口",
    "art": "art/tk-elderdragon-99e066a58b.webp"
   },
   {
@@ -5077,14 +5026,13 @@
    "effects": [
     {
      "kind": "player",
-     "act": "dmg",
-     "who": "self",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "dmg",
+     "who": "self"
     }
    ],
    "set": "2-2",
-   "artNote": "白い服に小さな翼の見習いの天使の少女。両手で小さな光の玉を抱え、少し不安そうに前を見る。雲の切れ間から光が差す神殿の屋根の上",
    "art": "art/y2-angel-bc1c4d2a22.webp"
   },
   {
@@ -5102,20 +5050,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
+     "when": "turnStart",
      "act": "destroy",
-     "to": "self",
-     "n": 0,
-     "when": "turnStart"
+     "to": "self"
     },
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-youngdragon",
-     "when": "turnStart"
+     "when": "turnStart",
+     "card": "tk-youngdragon"
     }
    ],
    "set": "2-2",
-   "artNote": "溶岩の割れ目に置かれた、赤と金の模様の大きな竜の卵。殻にひびが入り、中から赤い光と小さな爪がのぞく",
    "art": "art/y2-egg-012c1109fa.webp"
   },
   {
@@ -5134,7 +5081,6 @@
    ],
    "effects": [],
    "set": "2-2",
-   "artNote": "小型の竜にまたがった若い騎兵が、長い槍を突き出して突撃する。相手は幻想の世界の小鬼の群れ。草原",
    "art": "art/y2-dragoon-43645c7420.webp"
   },
   {
@@ -5152,13 +5098,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
-     "to": "enemyF",
-     "n": 1
+     "to": "enemyF"
     }
    ],
    "set": "2-2",
-   "artNote": "岩の上で胸をふくらませ、小さな炎を吹き出す子どもの竜。炎の先で機械の世界の小型ドローンが焦げて落ちる",
    "art": "art/y2-whelp-fdd4d8d9e7.webp"
   },
   {
@@ -5181,7 +5126,6 @@
     }
    ],
    "set": "2-2",
-   "artNote": "剣聖の弟子と同じ流派の、入門したばかりの少年。紺色の中華風の道衣（剣聖の弟子と同じ色と模様。添付の参考画像1）に白い帯、木の直剣を握る。踏み込んで、稽古用の木の人形を真っ二つにする。白い大理石の神殿の中庭、朝日",
    "art": "art/y2-disciple-2862f32398.webp"
   },
   {
@@ -5197,16 +5141,15 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 0,
      "kw": "twice",
      "turn": true,
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "剣聖の弟子（添付の参考画像1の人物。黒髪を高い位置で一つに結んだ若い女性、紺色に銀の刺繍の中華風の道衣と白い帯、両手に細い直剣を1本ずつ）が、両手の2本の剣で続けざまに斬る瞬間。一太刀目の光の軌跡が残ったまま、二太刀目を振り抜く。斬られるのは幻想の世界の鎧をまとったトロール。白い大理石の神殿の中庭",
    "art": "art/y2-second-0c20729683.webp"
   },
   {
@@ -5228,7 +5171,6 @@
     }
    ],
    "set": "2-2",
-   "artNote": "夜空の星座の光が一筋の道になって地上へ伸び、その先で道に迷った若い戦士が顔を上げる",
    "art": "art/y2-gale-5e525d629c.webp"
   },
   {
@@ -5244,15 +5186,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 0,
      "kw": "shield",
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "空から舞い降りた白い光の羽衣が、傷ついた兵士の肩をふわりと包む。羽根が光の粒になって舞う",
    "art": "art/y2-feather-105e4a1aff.webp"
   },
   {
@@ -5268,14 +5209,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "atk",
      "to": "ownAll",
-     "n": 1,
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "崖の上で天に向かって吠える赤い竜。咆哮の衝撃波で雲が割れ、下の兵士たちが武器を掲げる",
    "art": "art/y2-roar-ac1cb50b8f.webp"
   },
   {
@@ -5295,14 +5235,13 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "hp",
-     "to": "self",
      "n": 1,
-     "when": "healed"
+     "when": "healed",
+     "act": "hp",
+     "to": "self"
     }
    ],
    "set": "2-2",
-   "artNote": "光でできた大きな円盾を構える若い女性の兵。盾に機械の世界の砲弾が当たって砕ける。神殿の階段",
    "art": "art/y2-lightshield-66bec7c612.webp"
   },
   {
@@ -5318,19 +5257,18 @@
    "effects": [
     {
      "kind": "player",
+     "n": 3,
      "act": "heal",
-     "who": "self",
-     "n": 3
+     "who": "self"
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "set": "2-2",
-   "artNote": "ひざまずいて手を組む天使の背中。翼から光がこぼれ、足元の焼けた大地に花が咲き戻っていく",
    "art": "art/y2-prayer-51e228157b.webp"
   },
   {
@@ -5349,7 +5287,6 @@
    ],
    "effects": [],
    "set": "2-2",
-   "artNote": "白い大理石の門の前に立つ、背の高い翼の門番。長い槍を斜めに構え、兜の奥の目が金色に光る。夜明け",
    "art": "art/y2-gatekeeper-6b3b5f8e1f.webp"
   },
   {
@@ -5368,7 +5305,6 @@
    ],
    "effects": [],
    "set": "2-2",
-   "artNote": "緑の鱗の翼竜が急降下し、後ろ足の爪で幻想の世界の巨大な蜘蛛をつかむ。深い谷",
    "art": "art/y2-wyvern-1705b36f76.webp"
   },
   {
@@ -5386,13 +5322,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "dmg",
-     "to": "enemyRand",
-     "n": 2
+     "to": "enemyRand"
     }
    ],
    "set": "2-2",
-   "artNote": "雲の上に立つ女性の射手が、光の弓を引き絞る。矢の先が地上の機械の砲台を狙う",
    "art": "art/y2-archer-094999197b.webp"
   },
   {
@@ -5410,13 +5345,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "atk",
-     "to": "own1",
-     "n": 2
+     "to": "own1"
     }
    ],
    "set": "2-2",
-   "artNote": "戦場の簡易の鍛冶場で、たくましい鍛冶師が真っ赤な剣を打つ。火花が飛び、後ろで兵士が待つ",
    "art": "art/y2-smith-fadb043079.webp"
   },
   {
@@ -5437,7 +5371,6 @@
     }
    ],
    "set": "2-2",
-   "artNote": "雲の中から、白い翼の小さな天使の兵たちが一列に並んで降りてくる。先頭がラッパを吹く",
    "art": "art/y2-squad-ce6fb53ffc.webp"
   },
   {
@@ -5456,7 +5389,6 @@
    ],
    "effects": [],
    "set": "2-2",
-   "artNote": "卵の並ぶ巣の前でとぐろを巻き、首をもたげて威嚇する灰色の大きな竜。火山の洞窟",
    "art": "art/y2-nestguard-36099e1e29.webp"
   },
   {
@@ -5475,7 +5407,6 @@
    ],
    "effects": [],
    "set": "2-2",
-   "artNote": "赤い鱗の大きな飛竜が、炎を引いて城壁の上を低く飛び抜ける。城壁の兵士が伏せる",
    "art": "art/y2-redwing-81ff2fafe2.webp"
   },
   {
@@ -5493,21 +5424,20 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "heal",
-     "to": "ownAll",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "heal",
+     "to": "ownAll"
     },
     {
      "kind": "player",
-     "act": "heal",
-     "who": "self",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "heal",
+     "who": "self"
     }
    ],
    "set": "2-2",
-   "artNote": "柔らかな金の光をまとった天使が、両手を広げて傷ついた兵士たちを癒す。野営地の夜、たき火",
    "art": "art/y2-healer-082943cda6.webp"
   },
   {
@@ -5527,14 +5457,13 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "atk",
-     "to": "self",
      "n": 1,
-     "when": "healed"
+     "when": "healed",
+     "act": "atk",
+     "to": "self"
     }
    ],
    "set": "2-2",
-   "artNote": "大きな白い翼で背後の子どもたちを包むように守る、銀の鎧の天使。正面から幻想の魔獣が迫る",
    "art": "art/y2-guardian-cb10a3d8a1.webp"
   },
   {
@@ -5557,7 +5486,6 @@
     }
    ],
    "set": "2-2",
-   "artNote": "赤いスカーフの少女が、肩に乗った子竜の頭をなでる。足元にも子竜がじゃれつく。山の竜舎",
    "art": "art/y2-rider-e982cee4d8.webp"
   },
   {
@@ -5573,22 +5501,21 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "atk",
      "to": "own1",
-     "n": 2,
      "world": "myth"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 0,
      "kw": "trample",
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "剣聖ヴァルトール（添付の参考画像3の人物。銀の長髪と白いひげの老剣聖、白銀の軽鎧にぼろぼろの青いマント、長い直剣）が、腰の鞘から長い直剣を一息に抜き放つ一瞬。刃の光が一直線に走り、目の前の機械の巨兵の装甲ごと、その後ろの城壁まで斬り裂いている。マントが風にひるがえる。夜の戦場",
    "art": "art/y2-iai-ee0ce72f06.webp"
   },
   {
@@ -5604,20 +5531,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "hp",
-     "to": "own1",
-     "n": 3
+     "to": "own1"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 1,
      "kw": "armor"
     }
    ],
    "set": "2-2",
-   "artNote": "竜の鱗を何枚も重ねて作った赤い大盾。盾が炎の息を受け止め、両側に炎が流れる",
    "art": "art/y2-scale-bd5eadd197.webp"
   },
   {
@@ -5637,13 +5563,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "dmg",
-     "to": "enemy1",
-     "n": 2
+     "to": "enemy1"
     }
    ],
    "set": "2-2",
-   "artNote": "稲妻をまとった青い竜が、雷雲の中から現れて口から雷を吐く。地上の幻想の世界の巨木が裂ける",
    "art": "art/y2-thunderdrake-7150a2e9bf.webp"
   },
   {
@@ -5659,23 +5584,22 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 0,
      "kw": "pierce",
      "turn": true,
      "world": "myth"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "atk",
      "to": "own1",
-     "n": 1,
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "剣聖の高弟シズク（添付した参考画像の人物。短い銀灰色の髪、えんじ色と白の衣に銀の胸当て、幅の広い片刃の長い剣）が、大きな盾を構えた機械の重装兵の頭上を宙返りで飛び越え、空中で体をひねって、背後の敵の指揮官へ剣を切り返す瞬間。剣の軌跡が燕の形の光になって舞う。夕暮れの神殿の回廊。黒髪・紺色の服の人物は描かない",
    "art": "art/y2-tsubame-ffbea22658.webp"
   },
   {
@@ -5691,14 +5615,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "hp",
      "to": "ownAll",
-     "n": 2,
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "空中の大天使がラッパを吹き鳴らし、地上の兵士たち全員の体に光の膜が広がる",
    "art": "art/y2-call-abfe591df8.webp"
   },
   {
@@ -5714,28 +5637,27 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
-     "to": "enemyAll",
-     "n": 1
+     "to": "enemyAll"
     },
     {
      "kind": "player",
+     "n": 2,
      "act": "dmg",
-     "who": "opp",
-     "n": 2
+     "who": "opp"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
      "to": "enemyAll",
-     "n": 1,
      "cond": "worldGE",
      "cn": 2,
      "cworld": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "上空の竜が地面をなめるように炎を吐き、機械の世界の小型ドローンの群れが炎に包まれる",
    "art": "art/y2-breath-178ad5fb7f.webp"
   },
   {
@@ -5754,7 +5676,6 @@
    ],
    "effects": [],
    "set": "2-2",
-   "artNote": "2回攻撃を持つ竜のキャラクター。 場面：首が2本、頭が2つある中くらいの大きさの竜。片方の頭は赤い鱗で口から炎、もう片方の頭は青い鱗で口から冷気を吐き、2つの頭が左右から同時に、幻想の世界の木の巨人（枝と蔓でできた体）に噛みつこうとしている。胴体は一つで、鱗は首の付け根で赤から青へ変わる。翼を大きく広げ、後ろ足で岩場に立つ。 構図：竜が画面の主役。2つの頭がはっきり見えるように、少し斜め前から。夕方の荒れた岩山。人物は描かない。",
    "art": "art/y2-twinblade-4797d24c96.webp"
   },
   {
@@ -5774,15 +5695,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "ownAll",
-     "n": 0,
      "kw": "rush",
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "翼の兜をかぶった戦乙女の長が、剣を天に掲げて号令をかける。後ろに並ぶ戦乙女たちが一斉に飛び立つ",
    "art": "art/y2-valkyrie-dba2f324cc.webp"
   },
   {
@@ -5801,7 +5721,6 @@
    ],
    "effects": [],
    "set": "2-2",
-   "artNote": "頭上に光の輪を浮かべた天使が、光の剣で幻想の世界の影の魔物を斬る。斬られた影が光に溶ける",
    "art": "art/y2-halo-e673d4c9a5.webp"
   },
   {
@@ -5817,22 +5736,21 @@
    "effects": [
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     },
     {
      "kind": "player",
+     "n": 2,
      "act": "draw",
      "who": "self",
-     "n": 2,
      "cond": "worldGE",
      "cn": 2,
      "cworld": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "洞窟の奥に積み上がった金貨と宝石の山。その上で眠る竜の尾だけが見える",
    "art": "art/y2-hoard-411df1abf8.webp"
   },
   {
@@ -5857,7 +5775,6 @@
     }
    ],
    "set": "2-2",
-   "artNote": "剣聖ヴァルトールの一番弟子の、30歳くらいの背の高い女性の剣士。短く切りそろえた銀灰色の髪、左目の下に小さな傷、鋭い琥珀色の目。深い赤（えんじ色）と白の、古代ギリシャ風の長い衣に、銀の胸当てと肩当て。腰に赤い帯。武器は、刃の幅が広い片刃の長い剣を1本、片手で肩にかつぐ。足元に斬られた機械兵の残骸。月夜の白い大理石の神殿の屋根の上。黒髪・紺色の服・細い直剣にはしない（ほかのカードの人物と見分けるため）。この人物はほかのカードにも出てくるので、顔・髪・服・剣の形がはっきり分かるように描く",
    "art": "art/y2-shizuku-b57724c1b9.webp"
   },
   {
@@ -5877,15 +5794,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "ownAll",
-     "n": 0,
      "kw": "shield",
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "六枚の白い翼を広げた天使長が、巨大な光の盾を地上に向けて掲げる。光の盾が兵士たちの上に広がる。雲の上の神殿",
    "art": "art/y2-archangel-483aa85a3d.webp"
   },
   {
@@ -5906,14 +5822,13 @@
    "effects": [
     {
      "kind": "player",
-     "act": "dmg",
-     "who": "opp",
      "n": 2,
-     "when": "kill"
+     "when": "kill",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
    "set": "2-2",
-   "artNote": "全身が燃える溶岩でできたような紅蓮の竜。噛み砕いた機械の巨兵の残骸を足で踏みつけ、炎を吐く",
    "art": "art/y2-crimson-1ecd8d17db.webp"
   },
   {
@@ -5933,15 +5848,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
+     "when": "attack",
      "act": "atk",
      "to": "ownAll",
-     "n": 1,
-     "world": "myth",
-     "when": "attack"
+     "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "白銀の鎧の騎士が、青い竜にまたがって雲を突き抜け、槍を前に突き出す。後ろに竜騎兵の編隊",
    "art": "art/y2-dragonknight-70c5c2de93.webp"
   },
   {
@@ -5957,23 +5871,22 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "atk",
      "to": "ownAll",
-     "n": 1,
      "world": "myth"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "ownAll",
-     "n": 0,
      "kw": "pierce",
      "turn": true,
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "丘の上の英雄が巨大な角笛を吹き鳴らし、背後の軍勢が守りの壁を飛び越えて駆け出す。地平線に敵の機械の軍勢",
    "art": "art/y2-horn-5c9e44cdce.webp"
   },
   {
@@ -5989,15 +5902,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 0,
      "kw": "haste",
      "world": "myth"
     }
    ],
    "set": "2-2",
-   "artNote": "速攻を与える魔法のカード。 場面：神話の戦士（金の兜に赤いマント、槍を持つ若い男）の背中に、まばゆい金色の光でできた巨大な天馬の幻が重なり、その光の翼が戦士の背から大きく広がる。戦士は地面を蹴った瞬間で、足元の石畳が砕け、体は光の筋を引いて画面の奥へ一直線に突進している。背景の景色は速さで横に流れてぶれ、戦士の進む先には機械の砲台の列が小さく見える。 構図：低い位置から見上げるあおり、斜めの構図で、動きの速さが一目で分かるように。光の天馬は半分透けた幻として、戦士より大きく描く。天使には見えないようにする（人物に羽は生やさない。翼は天馬の幻のもの）。",
    "art": "art/y2-spring-121c781241.webp"
   },
   {
@@ -6017,20 +5929,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
+     "when": "turnStart",
      "act": "destroy",
-     "to": "self",
-     "n": 0,
-     "when": "turnStart"
+     "to": "self"
     },
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-elderdragon",
-     "when": "turnStart"
+     "when": "turnStart",
+     "card": "tk-elderdragon"
     }
    ],
    "set": "2-2",
-   "artNote": "火山の火口近くの岩棚に作られた巨大な竜の巣。中央の黒い卵に大きなひびが入り、溶岩のような光がもれる",
    "art": "art/y2-nest-a629d3e44e.webp"
   },
   {
@@ -6051,7 +5962,6 @@
     }
    ],
    "set": "2-2",
-   "artNote": "夕焼けの空を、金のたてがみの白い天馬の群れが一斉に駆け降りてくる。先頭の天馬がいななく",
    "art": "art/y2-pegasi-ef815bbc26.webp"
   },
   {
@@ -6071,20 +5981,19 @@
    "effects": [
     {
      "kind": "player",
+     "n": 2,
      "act": "heal",
-     "who": "self",
-     "n": 2
+     "who": "self"
     },
     {
      "kind": "unit",
-     "act": "dmg",
-     "to": "enemyRand",
      "n": 3,
-     "when": "healed"
+     "when": "healed",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "set": "2-2",
-   "artNote": "ウルトラレアのキャラクター。ふつうの天使とは違う、神々しく巨大な存在として描く。 人物：顔の上半分を金の仮面で覆った、背の高い光の大天使。体は白金の鎧で、鎧の継ぎ目から光がもれる。背中から八枚の翼が円を描くように広がり、翼の羽一枚一枚が光の刃になっていて、全体で巨大な光輪のように見える。両手を下に向けて広げ、足元の味方の兵士たちに金色の癒しの光を降らせている。同時に、翼の光の刃が何本も地平線の遠くへ飛んでいく。 構図：大天使が画面の中心で、画面いっぱいに大きく、正面から見上げる。左右対称に近い荘厳な構図。敵は遠くに小さく見えるだけにする（大きく描かない）。夜明けの雲の上、背後から強い逆光。",
    "art": "art/y2-lightwing-68c902eb38.webp"
   },
   {
@@ -6104,10 +6013,10 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "dmg",
-     "to": "enemyRand",
      "n": 2,
-     "when": "attack"
+     "when": "attack",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
    "pay": {
@@ -6115,7 +6024,6 @@
     "n": 3
    },
    "set": "2-2",
-   "artNote": "嵐の雲そのもののような灰色の古竜。翼から竜巻が生まれ、幻想の世界の森を根こそぎ巻き上げる",
    "art": "art/y2-stormdrake-704e61c6cd.webp"
   },
   {
@@ -6131,20 +6039,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "both",
      "to": "ownAll",
-     "n": 2,
      "world": "myth"
     },
     {
      "kind": "player",
+     "n": 2,
      "act": "draw",
-     "who": "self",
-     "n": 2
+     "who": "self"
     }
    ],
    "set": "2-2",
-   "artNote": "天上の大広間で、神々と英雄たちが杯を掲げる。杯から金の光があふれ、戦士たちの体に力がみなぎる",
    "art": "art/y2-feast-868d482271.webp"
   },
   {
@@ -6169,7 +6076,6 @@
     }
    ],
    "set": "2-2",
-   "artNote": "黒い竜にまたがった王が、炎の剣を掲げる。左右に子竜を従え、背後で城が燃える",
    "art": "art/y2-dragonking-96caa949f0.webp"
   },
   {
@@ -6194,25 +6100,24 @@
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "self",
-     "n": 1,
      "kw": "twice",
      "cond": "maxEGE",
      "cn": 8
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "self",
-     "n": 1,
      "kw": "shield",
      "cond": "maxEGE",
      "cn": 10
     }
    ],
    "set": "2-2",
-   "artNote": "銀の長髪と白いひげの老剣聖。古代の神殿の騎士のような白銀の軽鎧に、ぼろぼろの青いマント。両手で一本の長い直剣を静かに構え、剣身に古い文字が光る。周りに斬り伏せられた機械の巨兵と幻想の魔獣。崩れた白い大理石の神殿の柱と、雲の切れ間からの月光。静かだが圧倒的。この人物はほかのカードにも出てくるので、顔・髪・鎧・マント・剣の形がはっきり分かるように描く",
    "art": "art/y2-kensei-56a58d9cae.webp"
   },
   {
@@ -6232,20 +6137,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "silence",
-     "to": "enemyAll",
-     "n": 0
+     "to": "enemyAll"
     },
     {
      "kind": "player",
-     "act": "dmg",
-     "who": "opp",
      "n": 3,
-     "when": "attack"
+     "when": "attack",
+     "act": "dmg",
+     "who": "opp"
     }
    ],
    "set": "2-2",
-   "artNote": "レジェンドのキャラクター。今の絵の雰囲気（紫の雲、黒い竜、赤く光る体の筋、地上の小さな敵の影）は残す。 場面：空を覆うほど巨大な黒い竜が、太陽に食らいついている瞬間。太陽の半分はすでに竜の口の中に入り、上下の牙が太陽にはっきり食い込んでいる。噛まれた太陽の縁は欠けて、牙のすき間から金色の光と炎が噴き出す。日食のように空が暗くなり、太陽の光の輪（コロナ）が竜の頭の後ろで大きく広がる。 見やすさ：竜の体の輪郭は、太陽の光で金色の縁取り（逆光のふち）をつけて、暗い背景からはっきり浮かび上がらせる。体の赤い光の筋も明るく。空は真っ黒にせず、深い紫と赤い夕焼け色のグラデーション。 地上：画面の下の端に、竜の影に入って光が消えていく天使と機械の兵の小さなシルエット。 構図：下から見上げる大きなあおり。竜の頭と太陽が画面の上半分の主役。竜の体は画面からはみ出すほど大きく。",
    "art": "art/y2-worldeater-a4c8a510ff.webp"
   },
   {
@@ -6261,13 +6165,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
-     "to": "enemyRandF",
-     "n": 1
+     "to": "enemyRandF"
     }
    ],
-   "token": true,
-   "artNote": "夜の闇に浮かぶ、青白い炎の玉。中にうっすら狐の顔の形が見える。ふわふわと揺れている。背景は暗い竹林"
+   "token": true
   },
   {
    "id": "tk-leaf",
@@ -6282,23 +6185,22 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "grant",
      "to": "own1",
-     "n": 0,
      "kw": "pierce",
      "turn": true,
      "world": "fan"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "atk",
      "to": "own1",
-     "n": 1,
      "world": "fan"
     }
    ],
-   "token": true,
-   "artNote": "狐が頭に乗せて化けるための、一枚の緑の木の葉。葉のまわりで白い煙がぽんと立つ"
+   "token": true
   },
   {
    "id": "tk-frog",
@@ -6313,8 +6215,7 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
-   "token": true,
-   "artNote": "魔女の呪いでカエルにされた、小さな王冠をかぶった緑のカエル。困った顔で蓮の葉の上に座っている"
+   "token": true
   },
   {
    "id": "f2-kit",
@@ -6335,8 +6236,7 @@
      "card": "tk-foxfire"
     }
    ],
-   "set": "2-3",
-   "artNote": "ふさふさの尻尾の子狐が、前足の上に小さな青い狐火を浮かべて遊んでいる。夜の竹やぶ"
+   "set": "2-3"
   },
   {
    "id": "f2-susuki",
@@ -6351,12 +6251,11 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
+   "set": "2-3",
    "shrink": {
     "n": 1,
     "world": "fan"
-   },
-   "set": "2-3",
-   "artNote": "月夜のすすきの原で、大きな赤茶色の狐が振り返る。すすきの穂の間に小さな狐火がいくつも灯る"
+   }
   },
   {
    "id": "f2-tanuki",
@@ -6377,8 +6276,7 @@
      "card": "tk-leaf"
     }
    ],
-   "set": "2-3",
-   "artNote": "頭に葉っぱを乗せた丸っこい狸が、ぽんと煙を立てて、お地蔵さんの姿に化けかけている（下半分はまだ狸）"
+   "set": "2-3"
   },
   {
    "id": "f2-lantern",
@@ -6397,12 +6295,11 @@
      "card": "tk-foxfire"
     }
    ],
+   "set": "2-3",
    "shrink": {
     "n": 1,
     "world": "fan"
-   },
-   "set": "2-3",
-   "artNote": "狐の顔が描かれた古い紙の提灯が、ひとりでに浮かんで夜道を照らす。提灯の口から狐火がこぼれる"
+   }
   },
   {
    "id": "f2-oni",
@@ -6417,13 +6314,14 @@
    "rarity": "common",
    "keywords": [],
    "effects": [],
+   "set": "2-3",
    "grow": {
     "n": 1,
     "world": "fan",
-    "stat": true
-   },
-   "set": "2-3",
-   "artNote": "頭に小さな角が一本の、いがぐり頭の小鬼。自分より大きな金棒を引きずりながら、得意げに胸を張る"
+    "stat": true,
+    "dmg": false,
+    "num": false
+   }
   },
   {
    "id": "f2-pebble",
@@ -6438,18 +6336,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "dmg",
-     "to": "enemy1",
-     "n": 3
+     "to": "enemy1"
     }
    ],
+   "set": "2-3",
    "grow": {
     "n": 1,
     "world": "fan",
-    "dmg": true
-   },
-   "set": "2-3",
-   "artNote": "森の木霊（白くて小さな丸い精）たちが、いっせいに小石を投げつける。小石が光の尾を引く"
+    "stat": false,
+    "dmg": true,
+    "num": false
+   }
   },
   {
    "id": "f2-moonwalk",
@@ -6464,14 +6363,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "bounce",
      "to": "own1",
-     "n": 0,
      "world": "fan"
     }
    ],
-   "set": "2-3",
-   "artNote": "満月の下、妖精が森の動物たちを連れて、光る花の咲く小道を散歩する"
+   "set": "2-3"
   },
   {
    "id": "f2-squirrel",
@@ -6488,14 +6386,13 @@
    "effects": [
     {
      "kind": "player",
-     "act": "draw",
-     "who": "self",
      "n": 1,
-     "when": "back"
+     "when": "back",
+     "act": "draw",
+     "who": "self"
     }
    ],
-   "set": "2-3",
-   "artNote": "ほっぺをどんぐりでぱんぱんにしたリスが、木のうろの家に駆け込む"
+   "set": "2-3"
   },
   {
    "id": "f2-homeward",
@@ -6512,20 +6409,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "bounce",
      "to": "own1",
-     "n": 0,
      "world": "fan"
     },
     {
      "kind": "player",
+     "n": 2,
      "act": "heal",
-     "who": "self",
-     "n": 2
+     "who": "self"
     }
    ],
-   "set": "2-3",
-   "artNote": "ランタンを持った小さな妖精が、迷子の子うさぎの手を引いて、光る小道を家へ帰っていく"
+   "set": "2-3"
   },
   {
    "id": "f2-herbgirl",
@@ -6542,13 +6438,12 @@
    "effects": [
     {
      "kind": "player",
+     "n": 2,
      "act": "heal",
-     "who": "self",
-     "n": 2
+     "who": "self"
     }
    ],
-   "set": "2-3",
-   "artNote": "かごいっぱいに薬草をつんだ、三つ編みの村の娘。森の小川のほとりでしゃがんで、光る草をつむ"
+   "set": "2-3"
   },
   {
    "id": "f2-sleepgrass",
@@ -6563,13 +6458,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
-     "to": "enemy1",
-     "n": 1
+     "to": "enemy1"
     }
    ],
-   "set": "2-3",
-   "artNote": "青紫の小さな花から、きらきらした眠りの粉が舞い、神話の世界の大きな獅子がこっくりと眠り込む"
+   "set": "2-3"
   },
   {
    "id": "f2-broom",
@@ -6586,13 +6480,12 @@
    "effects": [
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
-   "set": "2-3",
-   "artNote": "箒にまたがった少女の魔女が、手紙の束を抱えて月夜の町の屋根の上を飛ぶ"
+   "set": "2-3"
   },
   {
    "id": "f2-bell",
@@ -6607,13 +6500,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "silence",
-     "to": "enemyRand",
-     "n": 0
+     "to": "enemyRand"
     }
    ],
-   "set": "2-3",
-   "artNote": "小さな銀の鈴が澄んだ音を立て、音の波紋に触れた神話の兵士の剣から光が消える"
+   "set": "2-3"
   },
   {
    "id": "f2-thorn",
@@ -6628,21 +6520,20 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "dmg",
-     "to": "enemy1",
-     "n": 2
+     "to": "enemy1"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
      "to": "enemy1",
-     "n": 1,
      "cond": "playedGE",
      "cn": 1
     }
    ],
-   "set": "2-3",
-   "artNote": "地面から一気に伸びた紫の茨が、機械の兵の足に巻きつく"
+   "set": "2-3"
   },
   {
    "id": "f2-blackcat",
@@ -6659,8 +6550,7 @@
     "stealth"
    ],
    "effects": [],
-   "set": "2-3",
-   "artNote": "魔女の使い魔の黒猫が、塀の上から金色の目で見下ろす。首に小さな鈴。夜の路地"
+   "set": "2-3"
   },
   {
    "id": "f2-crystal",
@@ -6678,8 +6568,7 @@
      "n": 1
     }
    ],
-   "set": "2-3",
-   "artNote": "紫の布をかけた机の上の水晶玉に、相手の手札のカードがぼんやり映る。のぞき込む魔女の目"
+   "set": "2-3"
   },
   {
    "id": "f2-serpent",
@@ -6696,8 +6585,7 @@
     "rush"
    ],
    "effects": [],
-   "set": "2-3",
-   "artNote": "濃い霧の中から、白い大蛇が大口を開けて飛びかかる。金色の目が光る"
+   "set": "2-3"
   },
   {
    "id": "f2-ringfairy",
@@ -6714,15 +6602,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
      "act": "both",
      "to": "self",
-     "n": 2,
      "cond": "playedGE",
      "cn": 2
     }
    ],
-   "set": "2-3",
-   "artNote": "きのこの輪の上で、小さな妖精たちが手をつないで輪になって踊る。真ん中の妖精がひときわ明るく光る"
+   "set": "2-3"
   },
   {
    "id": "f2-bakefox",
@@ -6748,8 +6635,7 @@
      "card": "tk-foxfire"
     }
    ],
-   "set": "2-3",
-   "artNote": "着物姿の娘に化けた狐。足元の影だけが狐の形で、片手に木の葉、片手に狐火"
+   "set": "2-3"
   },
   {
    "id": "f2-dancer",
@@ -6772,12 +6658,11 @@
      "card": "tk-foxfire"
     }
    ],
+   "set": "2-3",
    "shrink": {
     "n": 1,
     "world": "fan"
-   },
-   "set": "2-3",
-   "artNote": "狐の面をつけた舞い手が、扇を広げて舞台から飛び降り、目の前の敵に斬りかかる。夜祭りの舞台"
+   }
   },
   {
    "id": "f2-kamikakushi",
@@ -6792,17 +6677,16 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "bounce",
-     "to": "enemy1",
-     "n": 0
+     "to": "enemy1"
     }
    ],
+   "set": "2-3",
    "shrink": {
     "n": 1,
     "world": "fan"
-   },
-   "set": "2-3",
-   "artNote": "夕暮れの鳥居の向こうに、神話の世界の兵士が狐火に導かれて消えていく。鳥居の上に狐の影"
+   }
   },
   {
    "id": "f2-rebloom",
@@ -6817,20 +6701,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "bounce",
      "to": "own1",
-     "n": 0,
      "world": "fan"
     },
     {
      "kind": "unit",
+     "n": 2,
      "act": "dmg",
-     "to": "anyRand",
-     "n": 2
+     "to": "anyRand"
     }
    ],
-   "set": "2-3",
-   "artNote": "枯れかけた花が光の粒になって種に戻り、はじけた花びらが刃になって四方へ飛ぶ"
+   "set": "2-3"
   },
   {
    "id": "f2-windfairy",
@@ -6847,20 +6730,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
-     "to": "enemyRand",
-     "n": 1
+     "to": "enemyRand"
     },
     {
      "kind": "unit",
+     "n": 1,
+     "when": "turnEnd",
      "act": "bounce",
-     "to": "self",
-     "n": 0,
-     "when": "turnEnd"
+     "to": "self"
     }
    ],
-   "set": "2-3",
-   "artNote": "緑の風に乗って飛ぶ、木の葉の羽の妖精。くるりと宙返りして、元来た森へ帰っていく"
+   "set": "2-3"
   },
   {
    "id": "f2-imp",
@@ -6877,14 +6759,13 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "dmg",
-     "to": "enemyRand",
      "n": 2,
-     "when": "back"
+     "when": "back",
+     "act": "dmg",
+     "to": "enemyRand"
     }
    ],
-   "set": "2-3",
-   "artNote": "とんがり耳の小鬼が、にやにや笑いながら木の上から栗のいがを投げる"
+   "set": "2-3"
   },
   {
    "id": "f2-mouthwitch",
@@ -6901,13 +6782,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "silence",
-     "to": "enemy1",
-     "n": 0
+     "to": "enemy1"
     }
    ],
-   "set": "2-3",
-   "artNote": "唇に人差し指を当てた、銀の髪の魔女。指先から出た紫の糸が、機械の兵の口と目を縫いとめる"
+   "set": "2-3"
   },
   {
    "id": "f2-cycle",
@@ -6927,21 +6807,20 @@
     },
     {
      "kind": "player",
+     "n": 3,
      "act": "heal",
      "who": "self",
-     "n": 3,
      "cond": "recycled"
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "draw",
      "who": "self",
-     "n": 1,
      "cond": "recycled"
     }
    ],
-   "set": "2-3",
-   "artNote": "落ち葉が土に還り、そこから新しい芽が光りながら顔を出す。森の小さな生き物たちが見守る"
+   "set": "2-3"
   },
   {
    "id": "f2-icequeen",
@@ -6960,17 +6839,16 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
-     "to": "enemy1",
-     "n": 1
+     "to": "enemy1"
     },
     {
      "kind": "wakeTimer",
      "n": 5
     }
    ],
-   "set": "2-3",
-   "artNote": "巨大な白い花のつぼみの中で、膝を抱えて眠る大きな魔女。まわりの空気が凍って霜の花が咲き、近づいた敵の兵士まで眠り込んでいる。つぼみが少しだけ開きかけている"
+   "set": "2-3"
   },
   {
    "id": "f2-frogcurse",
@@ -6985,14 +6863,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "transform",
      "to": "enemy1",
-     "n": 0,
      "card": "tk-frog"
     }
    ],
-   "set": "2-3",
-   "artNote": "魔女の杖から緑の光がほとばしり、神話の世界の鎧の騎士が、ぽんっとカエルに変わる瞬間。兜だけが地面に落ちる"
+   "set": "2-3"
   },
   {
    "id": "f2-candyhouse",
@@ -7012,14 +6889,13 @@
    "effects": [
     {
      "kind": "player",
-     "act": "draw",
-     "who": "self",
      "n": 2,
-     "when": "death"
+     "when": "death",
+     "act": "draw",
+     "who": "self"
     }
    ],
-   "set": "2-3",
-   "artNote": "森の中のクッキーとキャンディでできた小さな家。屋根の上から魔女の黒猫がのぞく"
+   "set": "2-3"
   },
   {
    "id": "f2-sapling",
@@ -7036,13 +6912,14 @@
     "guard"
    ],
    "effects": [],
+   "set": "2-3",
    "grow": {
     "n": 1,
     "world": "fan",
-    "stat": true
-   },
-   "set": "2-3",
-   "artNote": "苔むした森の中、光を浴びてぐんぐん伸びる若木の精。幹に優しい顔、枝を腕のように広げて仲間をかばう"
+    "stat": true,
+    "dmg": false,
+    "num": false
+   }
   },
   {
    "id": "f2-sake",
@@ -7057,20 +6934,21 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "atk",
      "to": "own1",
-     "n": 1,
      "world": "fan",
      "turn": true
     }
    ],
+   "set": "2-3",
    "grow": {
     "n": 1,
     "world": "fan",
+    "stat": false,
+    "dmg": false,
     "num": true
-   },
-   "set": "2-3",
-   "artNote": "朱塗りの杯になみなみと注がれた、金色に光る狐の祝い酒。杯を掲げる狐の手"
+   }
   },
   {
    "id": "f2-kohaku",
@@ -7089,18 +6967,17 @@
    "effects": [
     {
      "kind": "unit",
-     "act": "dmg",
-     "to": "enemyRandF",
      "n": 2,
-     "when": "attack"
+     "when": "attack",
+     "act": "dmg",
+     "to": "enemyRandF"
     }
    ],
+   "set": "2-3",
    "shrink": {
     "n": 1,
     "world": "fan"
-   },
-   "set": "2-3",
-   "artNote": "白い着物に赤い帯、狐の耳と三本の尾を持つ姫。扇を広げると、まわりに狐火が三つ浮かぶ。夜の朱塗りの鳥居"
+   }
   },
   {
    "id": "f2-silentnight",
@@ -7115,19 +6992,18 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "silence",
-     "to": "all",
-     "n": 0
+     "to": "all"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
-     "to": "enemyAll",
-     "n": 1
+     "to": "enemyAll"
     }
    ],
-   "set": "2-3",
-   "artNote": "満月の夜、森全体が青い静けさに包まれ、敵も味方も、天使の光も機械の目の光も、すべてふっと消えて眠りにつく"
+   "set": "2-3"
   },
   {
    "id": "f2-mirror",
@@ -7142,14 +7018,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "copy",
      "to": "own1",
-     "n": 0,
      "world": "fan"
     }
    ],
-   "set": "2-3",
-   "artNote": "古い姿見の鏡の中から、映っていた妖精がもう一人そっくりそのまま抜け出してくる"
+   "set": "2-3"
   },
   {
    "id": "f2-nightmare",
@@ -7168,14 +7043,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
+     "when": "back",
      "act": "bounce",
-     "to": "enemyRand",
-     "n": 0,
-     "when": "back"
+     "to": "enemyRand"
     }
    ],
-   "set": "2-3",
-   "artNote": "月の影から現れた、羊の角と蝙蝠の羽の夢魔の少女。眠る兵士の枕元で、夢の泡をふっと吹く"
+   "set": "2-3"
   },
   {
    "id": "f2-karla",
@@ -7192,14 +7066,13 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "transform",
      "to": "enemyRand",
-     "n": 0,
      "card": "tk-frog"
     }
    ],
-   "set": "2-3",
-   "artNote": "黒い森の奥、ねじれた杖を持つ長い黒髪の魔女。足元に何匹ものカエルが並び、魔女は不敵に笑う"
+   "set": "2-3"
   },
   {
    "id": "f2-wolf",
@@ -7218,21 +7091,20 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "bounce",
      "to": "own1",
-     "n": 0,
      "world": "fan"
     },
     {
      "kind": "unit",
+     "n": 2,
      "act": "atk",
      "to": "self",
-     "n": 2,
      "cond": "bounced"
     }
    ],
-   "set": "2-3",
-   "artNote": "銀の毛並みの大きな狼が遠吠えすると、森の仲間たちが光になって森の奥へ帰り、狼の体に力がみなぎる"
+   "set": "2-3"
   },
   {
    "id": "f2-chorus",
@@ -7247,22 +7119,21 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "both",
      "to": "ownAll",
-     "n": 1,
      "world": "fan"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
      "to": "enemyAll",
-     "n": 1,
      "cond": "playedGE",
      "cn": 3
     }
    ],
-   "set": "2-3",
-   "artNote": "満月の森で、何十もの妖精が輪になって歌う。歌声が光の波になって森じゅうに広がる"
+   "set": "2-3"
   },
   {
    "id": "f2-wisp",
@@ -7277,18 +7148,19 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 3,
      "act": "dmg",
-     "to": "enemyAll",
-     "n": 3
+     "to": "enemyAll"
     }
    ],
+   "set": "2-3",
    "grow": {
     "n": 1,
     "world": "fan",
-    "dmg": true
-   },
-   "set": "2-3",
-   "artNote": "青白い鬼火が何十も集まって一つの巨大な炎の玉になり、敵の陣地の真ん中へ落ちて広がる"
+    "stat": false,
+    "dmg": true,
+    "num": false
+   }
   },
   {
    "id": "f2-storyteller",
@@ -7306,13 +7178,12 @@
     {
      "kind": "tutor",
      "n": 10,
+     "when": "turnEnd",
      "world": "fan",
-     "ctype": "spell",
-     "when": "turnEnd"
+     "ctype": "spell"
     }
    ],
-   "set": "2-3",
-   "artNote": "ランプの灯る天幕の中、語り部の女性が本を開くと、ページから物語の竜や妖精や魔女が光になって飛び出す"
+   "set": "2-3"
   },
   {
    "id": "f2-moonwitch",
@@ -7329,21 +7200,20 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "transform",
      "to": "anyRand",
-     "n": 0,
      "card": "tk-youngdragon"
     },
     {
      "kind": "unit",
-     "act": "freeze",
-     "to": "enemyRand",
      "n": 1,
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "act": "freeze",
+     "to": "enemyRand"
     }
    ],
-   "set": "2-3",
-   "artNote": "満月を背に、大釜の上に浮かぶ銀髪の大魔女。釜の煙の中に別の世界への裂け目が開き、敵の兵士が赤銅色の若い竜の姿に変わっていく"
+   "set": "2-3"
   },
   {
    "id": "f2-sleepcastle",
@@ -7363,15 +7233,14 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "freeze",
      "to": "enemyAll",
-     "n": 1,
      "cond": "playedGE",
      "cn": 3
     }
    ],
-   "set": "2-3",
-   "artNote": "茨に覆われた古城の塔の上、眠る姫のまわりから茨が一斉に伸び、攻め寄せた機械と神話の兵をすべて絡め取る"
+   "set": "2-3"
   },
   {
    "id": "f2-curtain",
@@ -7386,18 +7255,17 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "bounce",
-     "to": "enemyAll",
-     "n": 0
+     "to": "enemyAll"
     }
    ],
+   "set": "2-3",
    "req": {
     "n": 2,
     "world": "fan",
     "orEmpty": true
-   },
-   "set": "2-3",
-   "artNote": "巨大な絵本のページが閉じていき、ページの上にいた敵の軍勢が、物語ごと本の中に吸い込まれていく。夜の森の舞台"
+   }
   },
   {
    "id": "f2-tamamo",
@@ -7416,24 +7284,23 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "dmg",
      "to": "enemyAll",
-     "n": 1,
      "per": "played"
     },
     {
      "kind": "tokenHand",
      "n": 1,
-     "card": "tk-foxfire",
-     "when": "turnEnd"
+     "when": "turnEnd",
+     "card": "tk-foxfire"
     }
    ],
+   "set": "2-3",
    "shrink": {
     "n": 1,
     "world": "fan"
-   },
-   "set": "2-3",
-   "artNote": "白い毛並みに九本の尾を広げた巨大な妖狐。九本の尾の先すべてに狐火が燃え、夜空を覆う。足元に朱塗りの神社"
+   }
   },
   {
    "id": "f2-walpurgis",
@@ -7450,16 +7317,16 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 1,
      "act": "transform",
      "to": "enemyRand",
-     "n": 0,
      "card": "tk-frog"
     },
     {
      "kind": "unit",
+     "n": 1,
      "act": "transform",
      "to": "enemyRand",
-     "n": 0,
      "card": "tk-frog"
     },
     {
@@ -7468,8 +7335,7 @@
      "when": "oppTurnEnd"
     }
    ],
-   "set": "2-3",
-   "artNote": "満月の夜、山頂の大夜会。巨大な魔法陣の中心に立つ大魔女が両手を広げ、無数の魔女たちが箒で空を舞う。大魔女の髪は紫の炎のように揺れる"
+   "set": "2-3"
   }
  ]
 }
