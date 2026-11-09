@@ -30,7 +30,6 @@ const Cinema = {
     const last = S.rps && S.rps.last;
     if (last) add(`rps-${S.rps.round}-${last.hands.join("")}-${last.winner}`, () => this.rps(last));
     if (S.first != null) add("order", () => this.order());
-    if (S.phase === "play" && S.mull && S.mull[ME] != null && S.turnNo <= 2) add("hand", () => this.hand());
     if (S.phase === "play" && S.turnNo && !S.over) add(`turn-${S.turnNo}`, () => this.turn());
     if (!this.playing) this.next();
   },

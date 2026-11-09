@@ -1928,3 +1928,12 @@ html.nofx .card .shine{display:none}
 .cv-hand-show b{font-family:var(--f-display);font-weight:800;font-size:22px;color:#ffe7a3;text-shadow:0 0 12px rgba(255,200,90,.5);animation:cvfade .35s both}
 .cv-hand-show small{color:var(--muted);font-size:12px}
 .cv-hand-show .pg-hc{animation:pgdeal .4s calc(.1s + var(--i)*.07s) cubic-bezier(.2,1.2,.4,1) both}
+/* 最初の手札（js/mull.js）：対戦の画面の上に、手札を大きく並べる */
+.mullp{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:0 16px;background:rgba(6,7,14,.72)}
+.mullp.in{animation:fade-in .3s ease-out}
+.mullp.out{background:transparent;transition:background .3s}
+.mullp.out .pg-btns,.mullp.out .pg-hint,.mullp.out .pg-title{opacity:0;transition:opacity .2s}
+.mullp-in{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.mullp.in .pg-hc{animation:mullup .4s calc(var(--i)*.05s) cubic-bezier(.2,1.2,.4,1) both}
+@keyframes mullup{from{opacity:0;transform:translateY(40vh) scale(.6)}to{opacity:1;transform:none}}
+@keyframes fade-in{from{opacity:0}}

@@ -1259,6 +1259,7 @@ async function cpuTurn() {
   busy = true; render();
   await sleep(300);
   if (typeof Cinema !== "undefined") await Cinema.idle();   // 「相手のターン」の表示が終わってから動く
+  while (typeof Mull !== "undefined" && Mull.busy) await sleep(80);   // 手札を配り直している間は待つ
   await sleep(CPU_DELAY * 0.6);
   if (S !== g) return;
   for (let guard = 0; guard < 30 && !S.over; guard++) {
@@ -1318,7 +1319,7 @@ function pbarHTML(pi) {
     ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i>手札 ${p.hand.length}</i><i>山札 ${p.deck.length}</i></span>`
     : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i></span>`;
   const hp = Math.max(0, p.hp);
-  return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.turn === pi && !S.over ? "active" : ""}">
+  return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.phase === "play" && S.turn === pi && !S.over ? "active" : ""}">
     <div class="pl-left">${left}</div>
     <button type="button" class="avatar ${tgt ? "tgt" : ""} ${S.over && resultShown && S.winner !== "draw" && S.winner !== pi ? "fin-broken" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
       <span class="halo" aria-hidden="true"></span>
@@ -1326,7 +1327,7 @@ function pbarHTML(pi) {
       <span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
     <div class="pl-right">
-      <div class="pname"><b>${esc(p.name)}</b>${S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
+      <div class="pname"><b>${esc(p.name)}</b>${S.phase === "play" && S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
       <div class="energy" aria-label="エナジー ${p.e}/${p.maxE}"><span class="pips">${pips}</span><span class="etext">${p.e}<small>/${p.maxE}</small></span></div>
     </div></div>`;
 }
@@ -1385,6 +1386,7 @@ function fieldHTML(pi) {
 function endButtonHTML() {
   if (S.over && resultShown) return `<button type="button" class="endbtn" data-act="showResult"><span>結果<br>画面へ</span></button>`;
   if (S.over) return `<button type="button" class="endbtn" disabled><span>決着</span></button>`;
+  if (S.phase !== "play") return `<button type="button" class="endbtn" disabled><span>準備中</span></button>`;
   if (S.turn !== ME) {
     const label = MODE === "cpu" ? "CPU<br>行動中" : "相手の<br>ターン";
     return `<button type="button" class="endbtn" disabled aria-label="${label.replace("<br>", "")}"><span>${label}</span></button>`;
@@ -1418,7 +1420,8 @@ function render() {
   if (typeof Cinema !== "undefined") Cinema.watch();   // 試合開始・じゃんけん・先攻後攻・ターンの始めの大きな演出
   app.classList.add("battle");                       // 対戦前（じゃんけんなど）も同じ舞台を敷く
   app.classList.toggle("pre", S.phase !== "play");    // 対戦前は暗めに
-  if (S.phase !== "play") { app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
+  // じゃんけん・先攻後攻は専用の画面。マリガンからは対戦の画面の上で行う（手札を配る演出：js/mull.js）
+  if (S.phase === "rps" || S.phase === "choose") { Mull.close(); app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
   const tk = `${S.gid}-${S.turnNo}`;
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; }
   const me = S.players[ME];
@@ -1445,13 +1448,14 @@ function render() {
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   // 前と同じ画面なら作り直さない（作り直しはスマホでは重い）
-  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); return; }
+  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); Mull.after(); return; }
   lastBoardHTML = html;
   app.innerHTML = html;
   if (oldImgs.size) app.querySelectorAll("img").forEach(im => { const l = oldImgs.get(im.getAttribute("src")); if (l && l.length) { const o = l.pop(); o.className = im.className; im.replaceWith(o); } });
   layoutHand();
   renderSheet();
   Motion.afterRender();
+  Mull.after();
 }
 
 /* ---------- 対戦前の画面（じゃんけん・先攻後攻・マリガン） ---------- */
@@ -1513,8 +1517,11 @@ function doChoose(first) {
   chooseOrder(ME, first);
 }
 function doMull(redraw) {
-  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "mull", redraw });
-  mulligan(ME, redraw);
+  const go = () => {
+    if (MODE === "online" && Online.role === "guest") return Online.send({ t: "mull", redraw });
+    mulligan(ME, redraw);
+  };
+  Mull.choose(redraw, go);
 }
 
 /* 手札が多いときはカードを重ねて、全部が手札の幅に収まるようにする */
@@ -2285,6 +2292,7 @@ function toTitle() {
   S = null; busy = false; ui = { sel: null, mode: null };
   Motion.reset();
   Finale.reset();
+  Mull.close();
   CARD_EAGER = false;
   if (typeof Cinema !== "undefined") Cinema.reset();
   clearTimeout(resultTimer);
