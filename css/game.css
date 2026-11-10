@@ -688,14 +688,16 @@ body{
 @keyframes spglow{from{opacity:.12;transform:scale(.95)}to{opacity:.38;transform:scale(1.05)}}
 /* 降るカード：縦に落ちながら、カード自体は縦の軸でくるくる回る（裏面も見える） */
 .sp-rain{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.sp-fall{position:absolute;top:0;left:var(--x);width:calc(118px * var(--s));perspective:700px;opacity:var(--o);filter:blur(var(--b));
-  animation:spfall var(--d) linear var(--dl) infinite;will-change:transform}
-.sp-fall.l0{filter:blur(var(--b)) brightness(.55) saturate(.8)}
-.sp-fall.l1{filter:brightness(.8)}
-.sp-fall.l2{filter:drop-shadow(0 10px 18px rgba(0,0,0,.7))}
+/* なめらかに動くよう、ぼかし・影（filter）は使わない。奥のカードは暗い膜をかぶせて沈める（filter は毎フレーム描き直しになり、スマホでカクつく） */
+.sp-fall{position:absolute;top:0;left:var(--x);width:calc(118px * var(--s));perspective:700px;opacity:var(--o);
+  animation:spfall var(--d) linear var(--dl) infinite;will-change:transform;backface-visibility:hidden}
+.sp-fall.l0 .sp-spin::after,.sp-fall.l1 .sp-spin::after{content:"";position:absolute;inset:0;border-radius:7px;pointer-events:none;transform:translateZ(1px)}
+.sp-fall.l0 .sp-spin::after{background:rgba(7,8,15,.5)}
+.sp-fall.l1 .sp-spin::after{background:rgba(7,8,15,.22)}
+.sp-face .card *,.sp-face .card::before,.sp-face .card::after,.sp-face .card *::before,.sp-face .card *::after{animation:none!important}
 @keyframes spfall{
-  from{transform:translate(-50%,-130%) rotate(var(--r))}
-  to{transform:translate(-50%,calc(100vh + 30px)) rotate(calc(var(--r) * -1))}
+  from{transform:translate3d(-50%,-130%,0) rotate(var(--r))}
+  to{transform:translate3d(-50%,calc(100vh + 30px),0) rotate(calc(var(--r) * -1))}
 }
 .sp-spin{position:relative;transform-style:preserve-3d;animation:spspin var(--spin) linear infinite var(--dir,normal)}
 @keyframes spspin{from{transform:rotateY(0) rotateX(8deg)}to{transform:rotateY(360deg) rotateX(8deg)}}

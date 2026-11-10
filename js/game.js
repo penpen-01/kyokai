@@ -1966,12 +1966,18 @@ const RULES_HTML = () => `
     </ul>
   </div>`;
 
+/* 同じ画面を描き直すとき（カードを押して詳しく見る・枚数を変える など）は、スクロールの位置をそのままにする。
+   別の画面に移るときだけ一番上へ */
+let overlayKey = "";
 function openOverlay(html, from, solid) {
   const o = $("#overlay");
+  const t = /class="topbar"[\s\S]*?<b>([^<]*)<\/b>/.exec(html), key = `${from || ""}|${t ? t[1] : html.slice(0, 60)}`;
+  const keep = !o.hidden && key === overlayKey ? o.scrollTop : 0;
+  overlayKey = key;
   o.className = "overlay" + (solid ? " solid" : "");
   o.innerHTML = html;
   o.hidden = false;
-  o.scrollTop = 0;
+  o.scrollTop = keep;
   if (from) overlayFrom = from;
 }
 function goBack() {

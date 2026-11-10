@@ -364,7 +364,8 @@ const Online = {
     MODE = "online"; setPerspective(1);
     this.pending = false;
     clearTimeout(this.pendingTimer);
-    if (isNewGame) { Motion.reset(); ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; }
+    if (isNewGame || (S && S.gid !== this.lastGid)) { Motion.reset(); Finale.reset(); Mull.close(); ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; lastBoardHTML = ""; }   // 前の対戦の「負けで灰色」を残さない
+    this.lastGid = S.gid;
     render();
     if (S.over && !wasOver) scheduleResult();
   },
