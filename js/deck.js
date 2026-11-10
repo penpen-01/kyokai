@@ -393,36 +393,73 @@ const Decks = {
     const max = Math.max(1, ...curve);
     return `<div class="dcm" aria-label="コストの分布">${curve.map((k, i) => `<span><i style="height:${Math.round(k / max * 100)}%"></i><b>${i === 8 ? "8+" : i}</b></span>`).join("")}<em>キャラ${chars}・魔法${total - chars}</em></div>`;
   },
-  filterCount() { const f = this.filter; return ["type", "cost", "rarity"].filter(k => f[k] !== "all").length + (f.owned ? 1 : 0) + (f.world !== "all" && !this.isWorld(this.editing) ? 1 : 0); },
+  filterCount() { const f = this.filter; return ["type", "cost", "rarity"].filter(k => f[k] !== "all").length + (f.owned ? 1 : 0) + (f.world !== "all" && !this.isWorld(this.editing) ? 1 : 0) + (f.q.trim() ? 1 : 0); },
+  /* 今の絞り込みを短い言葉で（上のバーに1行で出す） */
+  filterWords() {
+    const f = this.filter, w = [];
+    if (f.q.trim()) w.push(`「${f.q.trim()}」`);
+    if (f.type !== "all") w.push(TYPES[f.type]);
+    if (f.world !== "all" && !this.isWorld(this.editing)) w.push(WORLDS[f.world]);
+    if (f.cost !== "all") w.push(`コスト${COST_BANDS[f.cost]}`);
+    if (f.rarity !== "all") w.push(RARITY_SHORT[f.rarity]);
+    if (f.owned) w.push("所持のみ");
+    return w;
+  },
+  filterBtnHTML() {
+    const fc = this.filterCount();
+    return `<button type="button" class="dfbtn ${fc ? "on" : ""} ${this.showFilters ? "open" : ""}" data-act="deckFilters" aria-expanded="${!!this.showFilters}" aria-label="絞り込み">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>絞り込み</span>${fc ? `<b>${fc}</b>` : ""}</button>`;
+  },
+  filterStateHTML() {
+    const w = this.filterWords();
+    return `<div class="dfstate" ${w.length ? "" : "hidden"}><span>絞り込み中：${esc(w.join("・"))}</span><button type="button" class="linkbtn" data-act="deckFilterReset">解除</button></div>`;
+  },
+  /* 絞り込みの小さな窓（上のバーの下に開く。押した条件はすぐ下の一覧に反映） */
+  filterPopHTML() {
+    const ed = this.editing, f = this.filter, unb = this.unbound(ed), n = this.poolCards().length;
+    const seg = (key, val, label) => `<button type="button" data-act="deckFilter" data-k="${key}" data-v="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
+    return `<input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索（例：守護）" value="${esc(f.q)}" autocomplete="off">
+      <div class="dfp-row"><span>種類</span><div class="seg">${seg("type", "all", "すべて")}${seg("type", "char", "キャラ")}${seg("type", "spell", "魔法")}</div></div>
+      ${this.isWorld(ed) ? "" : `<div class="dfp-row"><span>世界</span><div class="seg">${seg("world", "all", "すべて")}${Object.entries(WORLDS).map(([k, v]) => seg("world", k, v)).join("")}</div></div>`}
+      <div class="dfp-row"><span>コスト</span><div class="seg">${Object.entries(COST_BANDS).map(([k, v]) => seg("cost", k, k === "all" ? "すべて" : v)).join("")}</div></div>
+      <div class="dfp-row"><span>レア</span><div class="seg">${seg("rarity", "all", "すべて")}${Object.keys(RARITY).map(k => seg("rarity", k, RARITY_SHORT[k])).join("")}</div></div>
+      ${unb ? "" : `<label class="ownchk"><input type="checkbox" id="deck-owned" ${f.owned ? "checked" : ""}> 持っているカードだけ</label>`}
+      <div class="dfp-foot">
+        <button type="button" class="btn sm" data-act="deckFilterReset" ${this.filterCount() ? "" : "disabled"}>解除</button>
+        <button type="button" class="btn sm primary" data-act="deckFilters"><span class="dfp-n">${n}</span>種を見る</button>
+      </div>`;
+  },
+  /* 絞り込みを変えたら、一覧と上のバーの表示だけ差し替える（窓は開いたまま） */
+  applyFilter(keepPop) {
+    const o = $("#overlay"), pool = $("#deck-pool");
+    if (!pool) return this.renderEdit();
+    pool.innerHTML = this.poolHTML();
+    const b = o.querySelector(".dfbtn"); if (b) b.outerHTML = this.filterBtnHTML();
+    const st = o.querySelector(".dfstate"); if (st) st.outerHTML = this.filterStateHTML();
+    const pop = o.querySelector(".dfpop");
+    if (pop && !keepPop) pop.innerHTML = this.filterPopHTML();
+    const pn = o.querySelector(".dfp-n"); if (pn) pn.textContent = this.poolCards().length;
+    o.scrollTop = 0;
+  },
   editHTML() {
     const ed = this.editing;
     const n = deckCount(ed), pr = this.problems(ed);
-    const f = this.filter, unb = this.unbound(ed), fc = this.filterCount();
-    const seg = (key, val, label) => `<button type="button" data-act="deckFilter" data-k="${key}" data-v="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
     return `<div class="panel wide dedit dedit2">
       <div class="dtop">
         <div class="dtop-row">
           <button type="button" class="dname-btn" data-act="deckRename" aria-label="デッキの名前を変える">${esc(ed.name)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+          ${this.filterBtnHTML()}
           <span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span>
         </div>
         <div class="dmini-row" id="deck-in">${this.miniHTML(ed)}</div>
         <div class="dtop-foot">${this.curveMini(ed.cards)}<p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(ed) : "このデッキで対戦できます"}</p></div>
+        ${this.filterStateHTML()}
+        ${this.showFilters ? `<div class="dfpop" role="dialog" aria-label="絞り込み">${this.filterPopHTML()}</div>` : ""}
       </div>
+      ${this.showFilters ? `<div class="dfpop-bg" data-act="deckFilters"></div>` : ""}
       ${ed.free ? `<p class="hint">サンプルデッキ：持っていないカードも入れられます（ベータ限定）。</p>` : ""}
       ${this.isWorld(ed) ? `<p class="hint">限定構築（${WORLDS[ed.world]}）：${WORLDS[ed.world]}のカードだけを出しています。</p>` : ""}
       <div class="dwant">${this.wantHTML(ed, true)}</div>
-      <div class="dtools">
-        <input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索" value="${esc(f.q)}" autocomplete="off">
-        <button type="button" class="btn dfbtn ${fc ? "on" : ""}" data-act="deckFilters" aria-expanded="${!!this.showFilters}">絞り込み${fc ? `<b>${fc}</b>` : ""}</button>
-      </div>
-      ${this.showFilters ? `<div class="dfilters">
-        <div class="seg">${seg("type", "all", "すべて")}${seg("type", "char", "キャラ")}${seg("type", "spell", "魔法")}</div>
-        ${this.isWorld(ed) ? "" : `<div class="seg">${seg("world", "all", "全世界")}${Object.entries(WORLDS).map(([k, v]) => seg("world", k, v)).join("")}</div>`}
-        <div class="seg">${Object.entries(COST_BANDS).map(([k, v]) => seg("cost", k, v)).join("")}</div>
-        <div class="seg">${seg("rarity", "all", "全レア")}${Object.keys(RARITY).map(k => seg("rarity", k, RARITY_SHORT[k])).join("")}</div>
-        ${unb ? "" : `<label class="ownchk"><input type="checkbox" id="deck-owned" ${f.owned ? "checked" : ""}> 持っているカードだけ</label>`}
-        ${fc ? `<button type="button" class="linkbtn" data-act="deckFilterReset">絞り込みを解除</button>` : ""}
-      </div>` : ""}
       <p class="hint dpool-hint">タップで1枚入れる・長押しで詳しく見る</p>
       <div class="dgrid pool" id="deck-pool">${this.poolHTML()}</div>
 
@@ -438,8 +475,8 @@ const Decks = {
              <button type="button" class="btn danger" data-act="deckDelYes">削除する</button>
              <button type="button" class="btn" data-act="deckDelNo">やめる</button>`
           : `${ed.isNew ? "" : `<button type="button" class="btn danger" data-act="deckDel">削除</button>`}
-             <button type="button" class="btn" data-act="deckCancel">保存せずに戻る</button>
-             <button type="button" class="btn primary" data-act="deckSave" ${this.saveProblems(ed).length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? (this.missing(ed) ? `保存（未所持${this.missing(ed)}枚）` : "保存") : n < CONFIG.DECK_SIZE ? `未完成のまま保存（あと${CONFIG.DECK_SIZE - n}枚）` : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
+             <button type="button" class="btn" data-act="deckCancel">保存せず戻る</button>
+             <button type="button" class="btn primary" data-act="deckSave" ${this.saveProblems(ed).length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? (this.missing(ed) ? `保存（未所持${this.missing(ed)}枚）` : "保存") : n < CONFIG.DECK_SIZE ? `未完成で保存（あと${CONFIG.DECK_SIZE - n}枚）` : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
       </div>
     </div>`;
   },
@@ -615,10 +652,10 @@ const Decks = {
         this.rerender(); toast("代表カードにしました"); return true;
       }
       case "deckDetailClose": this.detail = null; Shop.tradeAsk = null; this.rerender(); return true;
-      case "deckFilter": this.filter[el.dataset.k] = el.dataset.v; this.renderEdit(); return true;
+      case "deckFilter": this.filter[el.dataset.k] = el.dataset.v; this.applyFilter(); return true;
       case "deckTab": this.editTab = el.dataset.v; this.renderEdit(); return true;
       case "deckFilters": this.showFilters = !this.showFilters; this.renderEdit(); return true;
-      case "deckFilterReset": Object.assign(this.filter, { type: "all", cost: "all", rarity: "all", owned: false, ...(this.isWorld(ed) ? {} : { world: "all" }) }); this.renderEdit(); return true;
+      case "deckFilterReset": Object.assign(this.filter, { q: "", type: "all", cost: "all", rarity: "all", owned: false, ...(this.isWorld(ed) ? {} : { world: "all" }) }); this.applyFilter(); return true;
       case "deckRename": this.renaming = true; this.renderEdit(); setTimeout(() => { const i = $("#deck-name"); if (i) { i.focus(); i.select(); } }, 30); return true;
       case "deckRenameYes": { const v = ($("#deck-name") ? $("#deck-name").value : "").trim().slice(0, 16); if (v) { ed.name = v; ed.named = true; } this.renaming = false; this.renderEdit(); return true; }
       case "deckRenameNo": this.renaming = false; this.renderEdit(); return true;
@@ -663,11 +700,11 @@ document.addEventListener("input", e => {
   if (e.target.id === "deck-name" && Decks.editing && !Decks.renaming) Decks.editing.name = e.target.value;
   if (e.target.id === "deck-q" && Decks.editing) {
     Decks.filter.q = e.target.value;
-    const pool = $("#deck-pool"); if (pool) pool.innerHTML = Decks.poolHTML();
+    Decks.applyFilter(true);   // 入力中の欄は作り直さない
   }
 });
 document.addEventListener("change", e => {
-  if (e.target.id === "deck-owned" && Decks.editing) { Decks.filter.owned = e.target.checked; Decks.renderEdit(); }
+  if (e.target.id === "deck-owned" && Decks.editing) { Decks.filter.owned = e.target.checked; Decks.applyFilter(); }
 });
 
 /* カードの長押しで詳細を開く（デッキ編成・パック開封の画面） */

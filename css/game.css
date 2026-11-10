@@ -1977,10 +1977,30 @@ html.nofx .card .shine{display:none}
 .dcm i{display:block;width:8px;min-height:1px;border-radius:2px 2px 0 0;background:linear-gradient(#ffe7a3,#c8963c)}
 .dcm b{font-size:8px;color:var(--muted);line-height:1;margin-top:2px;font-weight:600}
 .dcm em{font-style:normal;font-size:11px;color:var(--muted);margin-left:6px;align-self:center;white-space:nowrap}
-.dtools{display:flex;gap:8px;align-items:center;margin-top:4px}
-.dtools .dsearch{flex:1;min-width:0}
-.dfbtn{flex:none;display:inline-flex;align-items:center;gap:6px}
+.dfbtn{all:unset;box-sizing:border-box;cursor:pointer;flex:none;display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 10px;border-radius:10px;
+  border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:13px;font-weight:700;color:var(--fg)}
+.dfbtn svg{width:16px;height:16px}
 .dfbtn b{min-width:18px;height:18px;border-radius:9px;background:var(--gold);color:#1a1408;font-size:11px;line-height:18px;text-align:center}
-.dfbtn.on{border-color:var(--gold)}
-.dedit2 .dfilters{padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.dfbtn.on{border-color:var(--gold);color:#ffe7a3}
+.dfbtn.open{background:rgba(233,200,115,.16);border-color:var(--gold)}
+.dfbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.dfstate{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:#ffe7a3;min-width:0}
+.dfstate span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dfstate .linkbtn{font-size:12px;flex:none}
+/* 絞り込みの小窓：上のバーのすぐ下に開く */
+.dfpop{position:absolute;left:10px;right:10px;top:calc(100% + 6px);z-index:6;display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:14px;
+  background:#151a33;border:1px solid rgba(233,200,115,.45);box-shadow:0 16px 40px rgba(0,0,0,.65);max-height:62vh;overflow-y:auto;animation:dfp-in .16s ease-out both}
+@keyframes dfp-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.dfpop-bg{position:fixed;inset:0;z-index:4;background:rgba(0,0,0,.45)}
+.dfp-row{display:flex;flex-direction:column;gap:4px}
+.dfp-row>span{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.05em}
+.dfp-row .seg{flex-wrap:wrap}
+.dfp-foot{display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:-12px;margin:0 -12px -12px;padding:10px 12px;background:#151a33;border-top:1px solid rgba(255,255,255,.08)}
+.dfp-foot .primary{flex:1}
+@media (prefers-reduced-motion:reduce){.dfpop{animation:none}}
+/* 下のバーを細く（カードを広く見せる） */
+.dedit2 .dedit-bar{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));gap:6px}
+.dedit2 .dedit-bar .btn{min-height:0;padding:8px 12px;font-size:13px;border-radius:9px}
+.dedit2 .dedit-bar .btn.primary{flex:1;max-width:260px}
 .dpool-hint{margin:2px 0 0;font-size:12px}
+.dedit.dedit2{padding-bottom:56px}
