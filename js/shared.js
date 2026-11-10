@@ -400,7 +400,7 @@ function effectsText(card, list, auto) {
     if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
     if (e.per === "played") t = `このターン、このカードより先に使ったカード1枚につき、${t}`;
     if (e.cond && CONDS[e.cond]) t = `${condText(e, isChar)}、${t}`;
-    if (k > 1) t = e.kind === "unit" && e.act === "dmg" && e.to === "enemyRand" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回）。`;
+    if (k > 1) t = e.kind === "unit" && e.act === "dmg" && e.to === "enemyRand" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回${e.kind === "unit" && e.act !== "dmg" && e.to === "enemyRand" ? "。同じキャラは2回選ばれない" : ""}）。`;
     out.push(t);
     i += k - 1;
   }

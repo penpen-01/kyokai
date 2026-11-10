@@ -465,7 +465,8 @@ function addUnit(pi, id) {
 }
 
 function runEffects(pi, d, targets, self) {
-  playEffects(d).forEach(e => effect(pi, e, targets, self));
+  const prev = S.randUsed; S.randUsed = new Set();
+  try { playEffects(d).forEach(e => effect(pi, e, targets, self)); } finally { S.randUsed = prev; }
 }
 
 /* 効果の条件を満たしているか */
@@ -500,7 +501,13 @@ function unitTargets(pi, e, targets, self) {
     case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self && wf(x)); return u ? [u] : []; }
     case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }
     case "enemyF": { if (targets.enemyF === "face") return ["face"]; const u = en.field.find(x => x.uid === targets.enemyF); return u ? [u] : []; }
-    case "enemyRand": return rnd(en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)));
+    case "enemyRand": {
+      // 1枚のカードで「ランダムな相手キャラ」を何回か選ぶとき、ダメージ以外（変身・凍結など）は同じキャラを2回選ばない
+      const used = e.act !== "dmg" && S.randUsed;
+      let pool = en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x));
+      if (used) { const rest = pool.filter(x => !used.has(x.uid)); if (rest.length) pool = rest; else if (used.size) pool = []; }
+      const r = rnd(pool); if (used && r[0]) used.add(r[0].uid); return r;
+    }
     case "enemyRandF": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)), "face"]);
     case "anyRand": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x)), ...me.field.filter(x => x.hp > 0 && x !== self)].filter(wf));
     case "ownRand": return rnd(me.field.filter(x => x.hp > 0 && x !== self && wf(x)));
@@ -927,7 +934,8 @@ function fireTrig(t) {
   log(`${cname(u.id)}の効果（${t.when === "cardPlay" ? cardPlayHead(list[0]) : WHENS[t.when].label}）。`);
   fx(unitSel(u.uid), WHENS[t.when].label, "trig");
   const auto = autoTargets(t.pi, u);
-  list.forEach(e => effect(t.pi, e, auto, u));
+  const prev = S.randUsed; S.randUsed = new Set();
+  try { list.forEach(e => effect(t.pi, e, auto, u)); } finally { S.randUsed = prev; }
 }
 /* キャラが場から消えたとき（倒れた・代償で破壊された） */
 function onDeath(pi, u) {
