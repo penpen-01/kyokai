@@ -134,26 +134,43 @@ Sound.diag = function () {
     `音量の設定：${this.on ? "オン" : "オフ"}`
   ];
 };
+/* 音の設定：「効果音」「BGM」「曲を聞く」「鳴らないとき」の4つに分ける */
 Sound.showPanel = function () {
+  const sw = (act, on, label, sub) => `<div class="snd-row"><span>${label}${sub ? `<small>${sub}</small>` : ""}</span>
+    <button type="button" class="snd-sw ${on ? "on" : ""}" role="switch" aria-checked="${on}" aria-label="${label}" data-act="${act}"><i></i></button></div>`;
+  const B = typeof BgmSet !== "undefined";
+  const pick = (label, act, cur, opts) => `<div class="bgm-pick"><span>${label}</span><div role="group" aria-label="${label}">${opts.map(([v, l]) => `<button type="button" data-act="${act}" data-v="${v}" aria-pressed="${cur === v}">${l}</button>`).join("")}</div></div>`;
+  const groups = [["place", "場所の曲"], ["battle", "対戦の曲"], ["boss", "ボスの曲"]];
+  const short = n => n.replace(/^対戦\d/, "").replace(/[「」]/g, "");
   openOverlay(`<div class="panel snd-panel">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>音の設定</b></div>
-    <button type="button" class="btn ${this.on ? "primary" : ""}" data-act="sound">${this.on ? "音：オン（押すとオフ）" : "音：オフ（押すとオン）"}</button>
-    <button type="button" class="btn" data-act="soundTest">テスト音を鳴らす</button>
-    ${typeof BgmSet !== "undefined" ? `<h3 class="sec">BGM</h3>
-    <button type="button" class="btn ${BgmSet.on ? "primary" : ""}" data-act="bgmToggle">${BgmSet.on ? "BGM：オン（押すとオフ）" : "BGM：オフ（押すとオン）"}</button>
-    <label class="bgm-vol"><span>BGMの音量</span><input type="range" id="bgm-vol" min="0" max="1" step="0.05" value="${Bgm.volume}"></label>
-    <div class="bgm-pick"><span>対戦の曲</span><div role="group" aria-label="対戦の曲">${[...BgmSet.BATTLES.map(id => [id, Bgm.TRACKS[id].name.replace(/^対戦\d/, "").replace(/[「」]/g, "")]), ["random", "おまかせ"]].map(([v, l]) => `<button type="button" data-act="bgmBattle" data-v="${v}" aria-pressed="${BgmSet.battle === v}">${l}</button>`).join("")}</div></div>
-    <div class="bgm-pick"><span>ホームの曲</span><div role="group" aria-label="ホームの曲">${[["home", "ホーム"], ["title", "起動画面"]].map(([v, l]) => `<button type="button" data-act="bgmHome" data-v="${v}" aria-pressed="${BgmSet.home === v}">${l}</button>`).join("")}</div></div>
-    <p class="lead small">「おまかせ」は対戦ごとに3曲から選びます。効果音を「オフ」にすると、BGMも止まります。</p>
-    <h3 class="sec">曲を聞く</h3>
-    <div class="bgm-list">${Object.entries(Bgm.TRACKS).map(([id, t]) => `<button type="button" data-act="bgmPreview" data-v="${id}" aria-pressed="${BgmSet.preview === id}"><i aria-hidden="true">${BgmSet.preview === id ? "■" : "▶"}</i>${esc(t.name)}</button>`).join("")}</div>
-    <p class="lead small">この画面を閉じると、いつもの曲に戻ります。</p>` : ""}
-    ${navigator.audioSession ? `<button type="button" class="btn" data-act="soundLoud">マナーモード中も鳴らす：${this.loud ? "オン" : "オフ"}</button>
-    <p class="lead small">オンにすると、マナーモード中でも音が出ますが、iPhoneのロック画面やコントロールセンターに「再生中」の表示が出ます。</p>` : ""}
-    <ul class="diag">${this.diag().map(x => `<li>${esc(x)}</li>`).join("")}</ul>
-    <p class="lead small">テスト音が聞こえないときは、本体の音量ボタンで音量を上げて、もう一度押してください。それでも鳴らないときは、この画面のスクリーンショットを送ってください。</p>
+    <section class="snd-card">
+      <h3>効果音</h3>
+      ${sw("sound", this.on, "効果音", this.on ? "" : "オフにすると BGM も止まります")}
+      <div class="snd-row"><span>テスト音</span><button type="button" class="btn sm" data-act="soundTest">鳴らす</button></div>
+      ${navigator.audioSession ? sw("soundLoud", this.loud, "マナーモード中も鳴らす", "オンにすると、ロック画面に「再生中」と出ます") : ""}
+    </section>
+    ${B ? `<section class="snd-card">
+      <h3>BGM</h3>
+      ${sw("bgmToggle", BgmSet.on, "BGM")}
+      <label class="snd-row bgm-vol"><span>音量</span><input type="range" id="bgm-vol" min="0" max="1" step="0.05" value="${Bgm.volume}"></label>
+      ${pick("ホームの曲", "bgmHome", BgmSet.home, [["home", "ホーム"], ["title", "起動画面"]])}
+      ${pick("対戦の曲", "bgmBattle", BgmSet.battle, [...BgmSet.BATTLES.map(id => [id, short(Bgm.TRACKS[id].name)]), ["random", "おまかせ"]])}
+      <p class="snd-note">「おまかせ」は対戦ごとに3曲から選びます。</p>
+    </section>
+    <details class="snd-card" id="snd-list" ${this.listOpen ? "open" : ""}>
+      <summary>曲を聞く<small>${Object.keys(Bgm.TRACKS).length}曲</small></summary>
+      ${groups.map(([g, gl]) => `<h4>${gl}</h4><div class="bgm-list">${Object.entries(Bgm.TRACKS).filter(([, t]) => t.group === g).map(([id, t]) => `<button type="button" data-act="bgmPreview" data-v="${id}" aria-pressed="${BgmSet.preview === id}"><i aria-hidden="true">${BgmSet.preview === id ? "■" : "▶"}</i>${esc(t.name)}</button>`).join("")}</div>`).join("")}
+      <p class="snd-note">この画面を閉じると、いつもの曲に戻ります。</p>
+    </details>` : ""}
+    <details class="snd-card">
+      <summary>音が鳴らないとき</summary>
+      <ul class="diag">${this.diag().map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <p class="snd-note">テスト音が聞こえないときは、本体の音量ボタンで音量を上げて、もう一度押してください。それでも鳴らないときは、この画面のスクリーンショットを送ってください。</p>
+    </details>
   </div>`, null, true);
 };
+document.addEventListener("toggle", e => { if (e.target && e.target.id === "snd-list") Sound.listOpen = e.target.open; }, true);
 
 /* アプリを閉じた・裏に回したときは音を止める（ロック画面に再生表示が残らないように） */
 document.addEventListener("visibilitychange", () => {

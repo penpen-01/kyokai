@@ -2153,3 +2153,26 @@ html.nofx .card .shine{display:none}
 .bgm-list button[aria-pressed="true"]{border-color:var(--gold);background:rgba(233,200,115,.12)}
 .bgm-list button[aria-pressed="true"] i{background:var(--gold);color:#1a1408}
 .bgm-list button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+/* 音の設定 */
+.snd-panel{gap:12px}
+.snd-card{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.snd-card h3{margin:0;font-size:13px;letter-spacing:.08em;color:var(--gold)}
+.snd-card h4{margin:6px 0 0;font-size:12px;color:var(--muted);font-weight:700}
+.snd-card summary{cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;list-style:none}
+.snd-card summary::-webkit-details-marker{display:none}
+.snd-card summary::before{content:"›";display:inline-block;transition:transform .2s;color:var(--muted);font-size:18px;line-height:1}
+.snd-card[open] summary::before{transform:rotate(90deg)}
+.snd-card summary small{color:var(--muted);font-weight:400;font-size:12px}
+.snd-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px}
+.snd-row>span{display:flex;flex-direction:column;font-size:15px}
+.snd-row>span small{font-size:11px;color:var(--muted)}
+.snd-row.bgm-vol input{flex:1;max-width:60%}
+.snd-sw{all:unset;box-sizing:border-box;cursor:pointer;flex:none;width:50px;height:30px;border-radius:15px;background:#3a3f5c;position:relative;transition:background .2s}
+.snd-sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .2s}
+.snd-sw.on{background:linear-gradient(180deg,#ffe08a,#c9962f)}
+.snd-sw.on i{transform:translateX(20px)}
+.snd-sw:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.snd-note{margin:0;font-size:12px;color:var(--muted)}
+.snd-card .diag{margin:0}
+@media (prefers-reduced-motion:reduce){.snd-sw,.snd-sw i,.snd-card summary::before{transition:none}}
+.snd-card .bgm-list button{padding:7px 10px;font-size:13px}

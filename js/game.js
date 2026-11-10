@@ -2727,7 +2727,7 @@ function handleAct(act, el) {
     case "bgmToggle": BgmSet.toggle(); Sound.showPanel(); break;
     case "bgmBattle": BgmSet.setBattle(el.dataset.v); Sound.showPanel(); break;
     case "bgmHome": BgmSet.setHome(el.dataset.v); Sound.showPanel(); break;
-    case "bgmPreview": BgmSet.preview = BgmSet.preview === el.dataset.v ? null : el.dataset.v; Sound.unlock(); BgmSet.tick(); Sound.showPanel(); break;
+    case "bgmPreview": BgmSet.preview = BgmSet.preview === el.dataset.v ? null : el.dataset.v; Sound.listOpen = true; Sound.unlock(); BgmSet.tick(); Sound.showPanel(); break;
     default:
       if (Splash.handleAct(act, el)) return;
       if (Account.handleAct(act, el)) return;

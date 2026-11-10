@@ -16,7 +16,7 @@ const Bgm = (() => {
      drums.bars：k=大太鼓 s=小太鼓 h=シンバル t=小さい太鼓 T=大きい和太鼓 c=長いシンバル */
   const PADS = { soft: { vol: .045, type: "triangle" }, str: { vol: .04, type: "sawtooth", cut: 1300, att: .5 }, dark: { vol: .055, type: "sawtooth", cut: 700, att: 1.2 } };
   const TRACKS = {
-    title: { name: "起動画面「境界の召喚士」", bpm: 132, sections: [
+    title: { name: "起動画面「境界の召喚士」", group: "place", bpm: 132, sections: [
       { name: "幻想の序", chords: C("E3,G3,B3 C3,E3,G3,B3 D3,F#3,A3 B2,D#3,F#3"), pad: PADS.dark, bass: { vol: .12, pat: "r...............", long: true },
         arp: { vol: .04, pat: [0, 2, 1, 3, 2, 1, 0, 2], step: 2, oct: 2, inst: "bell" }, lead: { vol: .05, inst: "bell", bars: ["B5:0:8 G5:8:8", "E6:0:16", "D6:0:8 A5:8:8", "B5:0:16"] } },
       { name: "神話の疾走", chords: C("E3,G3,B3 C3,E3,G3 G3,B3,D4 D3,F#3,A3 E3,G3,B3 C3,E3,G3 D3,F#3,A3 B2,D#3,F#3"), pad: PADS.str, bass: { vol: .15, pat: "r.r.o.r.r.r.o.r." },
@@ -39,7 +39,7 @@ const Bgm = (() => {
           "E6:0:6 D6:6:2 C6:8:8", "D6:0:6 C6:6:2 A5:8:8", "B5:0:4 E6:4:4 G6:8:8", "E6:0:16"] },
         drums: { vol: .5, bars: ["T.k.s.k.T.k.s.k.", "T.k.s.k.T.k.s.k.", "T.k.s.k.T.k.s.k.", "T...T...TtTtTTTc"] } }
     ] },
-    home: { name: "ホーム", bpm: 78, sections: [
+    home: { name: "ホーム", group: "place", bpm: 78, sections: [
       { name: "静かな広間", chords: C("A3,C4,E4 F3,A3,C4 C4,E4,G4 G3,B3,D4 A3,C4,E4 F3,A3,C4 G3,B3,D4 E3,G#3,B3"), pad: PADS.soft, bass: { vol: .16, pat: "r.......5......." },
         arp: { vol: .05, pat: [0, 1, 2, 1, 0, 1, 2, 3], step: 2, oct: 1, inst: "box" }, lead: { vol: .07, inst: "flute", bars: [
           "E5:0:6 D5:6:2 C5:8:4 B4:12:4", "A4:0:8 C5:8:4 F5:12:4", "E5:0:6 G5:6:2 E5:8:4 D5:12:4", "D5:0:12 B4:12:4",
@@ -53,7 +53,7 @@ const Bgm = (() => {
         arp: { vol: .045, pat: [0, 1, 2, 3, 2, 1], step: 1, oct: 2, inst: "harp" }, lead: { vol: .075, inst: "brass", bars: ["A5:0:12 E5:12:4", "F5:0:8 A5:8:8", "B5:0:8 D6:8:8", "E6:0:12 B5:12:4"] },
         drums: { vol: .45, bars: ["T.....T.s...T...", "T.....T.s...T.t.", "T.....T.s...T...", "T...T...TtTtTTTc"] } }
     ] },
-    battle1: { name: "対戦1「境界の戦い」", bpm: 116, sections: [
+    battle1: { name: "対戦1「境界の戦い」", group: "battle", bpm: 116, sections: [
       { name: "A", chords: C("D3,F3,A3 Bb2,D3,F3 C3,E3,G3 A2,C3,E3 D3,F3,A3 Bb2,D3,F3 G2,Bb2,D3 A2,C#3,E3"), pad: PADS.str, bass: { vol: .17, pat: "r..r..r.o..r..r." },
         arp: { vol: .04, pat: [0, 1, 2, 3, 2, 1], step: 1, oct: 2, inst: "harp" }, lead: { vol: .065, inst: "flute", bars: [
           "A4:0:4 D5:4:4 F5:8:6 E5:14:2", "D5:0:4 F5:4:4 Bb5:8:8", "G5:0:4 E5:4:4 C5:8:6 D5:14:2", "E5:0:12 C5:12:4",
@@ -65,7 +65,7 @@ const Bgm = (() => {
           "C6:0:4 A5:4:2 C6:6:2 F6:8:8", "E6:0:6 D6:6:2 C6:8:8", "Bb5:0:4 D6:4:4 F6:8:8", "E6:0:8 C#6:8:4 A5:12:4"] },
         drums: { vol: .5, bars: ["T.k.s.k.T.k.s.k.", "T.k.s.k.T.k.s.t.", "T.k.s.k.T.k.s.k.", "T...T...TtTtTTTc"] } }
     ] },
-    battle2: { name: "対戦2「月下の決闘」", bpm: 150, steps: 12, sections: [
+    battle2: { name: "対戦2「月下の決闘」", group: "battle", bpm: 150, steps: 12, sections: [
       { name: "A", chords: C("E3,G3,B3 C3,E3,G3 D3,F#3,A3 B2,D#3,F#3 E3,G3,B3 C3,E3,G3 A2,C3,E3 B2,D#3,F#3"), pad: PADS.dark, bass: { vol: .17, pat: "r.....5.....", type: "sine" },
         arp: { vol: .045, pat: [0, 1, 2, 3, 2, 1], step: 2, oct: 2, inst: "harp" }, lead: { vol: .06, inst: "flute", bars: [
           "B4:0:2 E5:2:2 G5:4:2 B5:6:4 A5:10:2", "G5:0:6 E5:6:6", "F#5:0:2 A5:2:2 D6:4:2 C6:6:4 A5:10:2", "B5:0:12",
@@ -76,7 +76,7 @@ const Bgm = (() => {
           "E6:0:6 C6:6:6", "B5:0:6 G5:6:6", "C6:0:2 D6:2:2 E6:4:2 G6:6:6", "F#6:0:12", "A5:0:6 C6:6:6", "B5:0:4 E6:4:2 G6:6:6", "E6:0:4 D6:4:2 C6:6:6", "D#6:0:6 B5:6:6"] },
         drums: { vol: .45, bars: ["T..k..s..k..", "T..k..s..t.t", "T..k..s..k..", "T..T..TtTtTc"] } }
     ] },
-    battle3: { name: "対戦3「天剣の誓い」", bpm: 124, sections: [
+    battle3: { name: "対戦3「天剣の誓い」", group: "battle", bpm: 124, sections: [
       { name: "A", chords: C("A2,C3,E3 F2,A2,C3 C3,E3,G3 G2,B2,D3 A2,C3,E3 F2,A2,C3 E2,G#2,B2 E2,G#2,B2"), pad: PADS.str, bass: { vol: .18, pat: "r...r.r.o...r.r.", type: "saw" },
         arp: { vol: .035, pat: [0, 1, 2, 1], step: 2, oct: 2, inst: "harp" }, lead: { vol: .065, inst: "brass", bars: [
           "E5:0:3 E5:3:1 A5:4:4 C6:8:4 B5:12:4", "A5:0:8 F5:8:4 A5:12:4", "G5:0:3 G5:3:1 C6:4:4 E6:8:4 D6:12:4", "D6:0:12 B5:12:4",
@@ -88,18 +88,57 @@ const Bgm = (() => {
           "F6:0:4 E6:4:4 C6:8:8", "D6:0:4 B5:4:4 G5:8:4 B5:12:4", "E6:0:8 D6:8:4 B5:12:4", "G#5:0:16"] },
         drums: { vol: .45, bars: ["T...k...T.k.s...", "T...k...T.k.s.t."] } }
     ] },
-    shop: { name: "ショップ", bpm: 104, swing: .12, sections: [
+    prep: { name: "対戦の準備「決闘の前」", group: "battle", bpm: 96, sections: [
+      { name: "A", chords: C("D3,F3,A3 D3,F3,A3 Bb2,D3,F3 A2,C#3,E3 D3,F3,A3 D3,F3,A3 G2,Bb2,D3 A2,C#3,E3"), pad: PADS.dark, bass: { vol: .14, pat: "r...r...r...r..." },
+        arp: { vol: .035, pat: [0, 1, 2, 1], step: 2, oct: 1, inst: "harp" }, lead: { vol: .05, inst: "flute", bars: ["A5:0:16", "", "Bb5:0:8 A5:8:8", "E5:0:16", "D6:0:12 C6:12:4", "A5:0:16", "G5:0:8 Bb5:8:8", "C#6:0:16"] },
+        drums: { vol: .4, bars: ["T.......t.......", "T.......t...t..."] } }
+    ] },
+    win: { name: "勝利", group: "battle", bpm: 120, loopFrom: 1, sections: [
+      { name: "ファンファーレ", chords: C("C3,E3,G3 F3,A3,C4 G3,B3,D4 C3,E3,G3"), pad: PADS.str, bass: { vol: .16, pat: "r...o...r...o..." },
+        lead: { vol: .075, inst: "brass", bars: ["G4:0:2 C5:2:2 E5:4:2 G5:6:6 E5:12:2 G5:14:2", "A5:0:8 F5:8:4 A5:12:4", "B5:0:4 D6:4:4 B5:8:2 G5:10:2 D6:12:4", "C6:0:16"] },
+        drums: { vol: .45, bars: ["T...s...T...s...", "T...s...T...s...", "T...s...T...s...", "T...........TTTc"] } },
+      { name: "余韻", chords: C("F3,A3,C4 C3,E3,G3 G3,B3,D4 A3,C4,E4 F3,A3,C4 C3,E3,G3 D3,F3,A3 G3,B3,D4"), pad: PADS.soft, bass: { vol: .13, pat: "r.......5......." },
+        arp: { vol: .04, pat: [0, 1, 2, 1], step: 2, oct: 1, inst: "harp" }, lead: { vol: .06, inst: "box", bars: ["A5:0:8 G5:8:8", "E5:0:8 G5:8:8", "D5:0:4 G5:4:4 B5:8:8", "C6:0:8 A5:8:8", "F5:0:4 A5:4:4 C6:8:8", "G5:0:8 E5:8:8", "F5:0:8 A5:8:8", "G5:0:16"] } }
+    ] },
+    lose: { name: "敗北", group: "battle", bpm: 66, loopFrom: 1, sections: [
+      { name: "沈む", chords: C("A2,C3,E3 E2,G#2,B2"), pad: PADS.soft, bass: { vol: .12, pat: "r...............", long: true },
+        lead: { vol: .065, inst: "flute", bars: ["E5:0:4 D5:4:4 C5:8:4 B4:12:4", "A4:0:8 G#4:8:8"] } },
+      { name: "静けさ", chords: C("A2,C3,E3 F2,A2,C3 D3,F3,A3 E3,G#3,B3"), pad: PADS.soft, bass: { vol: .11, pat: "r...............", long: true },
+        arp: { vol: .03, pat: [0, 2, 1, 2], step: 4, oct: 1, inst: "box" }, lead: { vol: .045, inst: "box", bars: ["C6:0:8 B5:8:8", "A5:0:16", "F5:0:8 A5:8:8", "G#5:0:16"] } }
+    ] },
+    warning: { name: "ボス乱入「境界干渉」", group: "boss", bpm: 132, sections: [
+      { name: "A", chords: C("E2,Bb2,E3 E2,Bb2,E3"), pad: PADS.dark, bass: { vol: .2, pat: "r.r.r.r.r.r.r.r.", type: "saw" },
+        lead: { vol: .05, inst: "square", bars: ["E5:0:4 Bb5:4:4 E5:8:4 Bb5:12:4", "E5:0:4 Bb5:4:4 E5:8:4 Bb5:12:4"] },
+        drums: { vol: .55, bars: ["T...T...T...T...", "T...T...T.T.TTTT"] } }
+    ] },
+    bossprep: { name: "ボス戦の準備「虚ろの気配」", group: "boss", bpm: 84, sections: [
+      { name: "A", chords: C("E2,B2,E3,G3 F2,C3,F3,A3 E2,B2,E3,G3 D#2,F#2,A2,C3"), pad: PADS.dark, bass: { vol: .15, pat: "r...............", long: true, type: "saw" },
+        arp: { vol: .035, pat: [0, 3, 2, 1], step: 4, oct: 2, inst: "bell" }, lead: { vol: .045, inst: "bell", bars: ["B5:0:16", "C6:0:16", "B5:0:8 G5:8:8", "A5:0:8 F#5:8:8"] },
+        drums: { vol: .5, bars: ["T.T.............", "T.T.........t..."] } }
+    ] },
+    boss: { name: "ボス戦「虚ろなる境界王」", group: "boss", bpm: 144, sections: [
+      { name: "A", chords: C("E2,B2,E3 F2,C3,F3 E2,B2,E3 F2,C3,F3 G2,D3,G3 F2,C3,F3 E2,B2,E3 D#2,F#2,A2"), pad: PADS.dark, bass: { vol: .2, pat: "r.r.o.r.r.r.o.r.", type: "saw" },
+        arp: { vol: .03, pat: [0, 1, 2, 1], step: 1, oct: 2, inst: "pluck" }, lead: { vol: .065, inst: "brass", bars: [
+          "E5:0:2 F5:2:2 G5:4:4 F5:8:2 E5:10:2 B4:12:4", "C5:0:4 A4:4:4 F5:8:8", "E5:0:2 F5:2:2 G5:4:4 B5:8:4 A5:12:4", "A5:0:12 F5:12:4",
+          "G5:0:4 B5:4:4 D6:8:8", "C6:0:6 A5:6:2 F5:8:8", "E5:0:4 G5:4:4 B5:8:8", "A5:0:4 F#5:4:4 D#5:8:8"] },
+        drums: { vol: .55, bars: ["T.k.s.k.T.k.s.k.", "T.k.s.k.T.k.s.kk"] } },
+      { name: "B", chords: C("A2,C3,E3 F2,A2,C3 G2,B2,D3 E2,G2,B2 A2,C3,E3 F2,A2,C3 D#2,F#2,A2 E2,G#2,B2"), pad: PADS.str, bass: { vol: .2, pat: "r.r.r.r.o.o.r.r.", type: "saw" },
+        arp: { vol: .035, pat: [0, 1, 2, 3], step: 1, oct: 2, inst: "harp" }, lead: { vol: .06, inst: "flute", bars: [
+          "E6:0:8 C6:8:8", "A5:0:8 F5:8:8", "B5:0:6 D6:6:2 G6:8:8", "E6:0:16", "A6:0:4 G6:4:4 E6:8:8", "F6:0:4 E6:4:4 C6:8:8", "D#6:0:8 F#6:8:8", "G#6:0:16"] },
+        drums: { vol: .55, bars: ["T...T.s.T...T.s.", "T...T.s.T.T.TTTc"] } }
+    ] },
+    shop: { name: "ショップ", group: "place", bpm: 104, swing: .12, sections: [
       { name: "A", chords: C("F3,A3,C4 D3,F3,A3 Bb2,D3,F3 C3,E3,G3 F3,A3,C4 D3,F3,A3 G3,Bb3,D4 C3,E3,G3"), pad: { vol: .03, type: "triangle" }, bass: { vol: .15, pat: "r...5...o...5...", short: true },
         arp: { vol: .05, pat: [0, 2, 1, 2], step: 2, oct: 1, inst: "pizz" }, lead: { vol: .065, inst: "box", bars: [
           "C5:0:2 F5:2:2 A5:4:4 G5:8:2 F5:10:2 C5:12:4", "D5:0:4 F5:4:2 A5:6:2 G5:8:8", "F5:0:2 D5:2:2 Bb4:4:4 C5:8:2 D5:10:2 F5:12:4", "E5:0:4 G5:4:4 C6:8:4 Bb5:12:4",
           "C5:0:2 F5:2:2 A5:4:4 G5:8:2 F5:10:2 C5:12:4", "D5:0:2 E5:2:2 F5:4:4 A5:8:8", "G5:0:2 F5:2:2 D5:4:4 Bb4:8:4 D5:12:4", "C5:0:4 E5:4:4 F5:8:8"] },
         drums: { vol: .22, bars: ["k...h.h.k...h.hh"] } }
     ] },
-    pack: { name: "パック", bpm: 72, sections: [
+    pack: { name: "パック", group: "place", bpm: 72, sections: [
       { name: "A", chords: C("E3,G3,B3 C3,E3,G3,B3 A2,C3,E3 B2,D#3,F#3"), pad: PADS.dark, bass: { vol: .12, pat: "r...............", long: true },
         arp: { vol: .04, pat: [0, 2, 1, 3, 2, 1], step: 2, oct: 2, inst: "bell" }, lead: { vol: .05, inst: "bell", bars: ["B5:0:8 G5:8:8", "E5:0:12", "A5:0:4 C6:4:4 B5:8:8", "F#5:0:16"] } }
     ] },
-    deck: { name: "デッキ編成", bpm: 66, sections: [
+    deck: { name: "デッキ編成", group: "place", bpm: 66, sections: [
       { name: "A", chords: C("F3,A3,C4,E4 E3,G3,B3,D4 D3,F3,A3,C4 C3,E3,G3,B3 F3,A3,C4,E4 E3,G3,B3,D4 D3,F3,A3,C4 G3,B3,D4,F4"), pad: { vol: .045, type: "triangle", att: 1.5 }, bass: { vol: .11, pat: "r...............", long: true },
         arp: { vol: .03, pat: [0, 2, 1, 3], step: 4, oct: 1, inst: "box" }, lead: { vol: .045, inst: "box", bars: [
           "A5:0:8 G5:8:8", "", "F5:0:8 E5:8:8", "", "C6:0:8 B5:8:8", "", "A5:0:8 F5:8:4 D5:12:4", "G5:0:16"] } }
@@ -204,7 +243,7 @@ const Bgm = (() => {
       if (S.lead && cur.mel[cur.sec]) { const m = cur.mel[cur.sec][bar % cur.mel[cur.sec].length] || []; m.forEach(x => { if (x.at === s && x.f) voice(S.lead.inst, x.f, t, sp * x.len * .95, S.lead.vol, bus); }); }
       if (S.drums) { const pat = S.drums.bars[bar % S.drums.bars.length], k = pat[s]; if (k && k !== ".") drum(k, t, S.drums.vol); }
       cur.next += sp;
-      if (++cur.step >= N) { cur.step = 0; if (++cur.bar >= S.chords.length) { cur.bar = 0; cur.sec = (cur.sec + 1) % T.sections.length; if (!cur.sec) cur.loops++; } }
+      if (++cur.step >= N) { cur.step = 0; if (++cur.bar >= S.chords.length) { cur.bar = 0; cur.sec++; if (cur.sec >= T.sections.length) { cur.sec = T.loopFrom || 0; cur.loops++; } } }
     }
   }
 
@@ -256,13 +295,20 @@ const BgmSet = {
     if (this.preview && document.querySelector("#overlay:not([hidden]) .snd-panel")) return this.preview;   // 音の設定で曲を聞いているとき
     this.preview = null;
     if (typeof Splash !== "undefined" && Splash.shown) return "title";
+    if (document.querySelector(".bossin")) return "warning";
     const o = document.getElementById("overlay"), vis = o && !o.hidden;
     const has = sel => vis && !!o.querySelector(sel);
     if (has(".shop")) return "shop";
     if (has(".pkshop, .openstage, .rs, .ms-grid")) return "pack";
     if (has(".dedit, .cl-tools")) return "deck";
     const home = has(".panel.home");
-    if (!home && typeof S !== "undefined" && S) return this.battleTrack();   // じゃんけんから結果の画面まで（タイトルに戻ると S は消える）
+    if (document.querySelector(".bossin")) return "warning";
+    if (!home && typeof S !== "undefined" && S) {   // じゃんけんから結果の画面まで（タイトルに戻ると S は消える）
+      const boss = S.battle && S.battle.kind === "boss";
+      if (S.over) return typeof myResult === "function" && myResult() === "win" ? "win" : "lose";
+      if (["rps", "choose", "mulligan"].includes(S.phase)) return boss ? "bossprep" : "prep";
+      return boss ? "boss" : this.battleTrack();
+    }
     return Bgm.TRACKS[this.home] ? this.home : "home";
   },
   tick() {
