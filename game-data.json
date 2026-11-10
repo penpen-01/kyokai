@@ -1,5 +1,5 @@
 {
- "version": 106,
+ "version": 107,
  "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
@@ -5297,7 +5297,7 @@
    "name": "天の羽衣",
    "world": "myth",
    "type": "spell",
-   "cost": 2,
+   "cost": 1,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
