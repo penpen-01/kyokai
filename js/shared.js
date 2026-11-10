@@ -605,7 +605,8 @@ function normalizeData(data) {
     ...(normSet(x.set) ? { gateRule: GATE_RULES[x.gateRule] ? x.gateRule : "world" } : {}),
     ...(WORLDS[x.gateWorld] ? { gateWorld: x.gateWorld } : {}),
     ...(x.gateDeck ? { gateDeck: String(x.gateDeck) } : {}),
-    ...(["easy", "normal", "hard"].includes(x.gateLevel) ? { gateLevel: x.gateLevel } : {})
+    ...(["easy", "normal", "hard"].includes(x.gateLevel) ? { gateLevel: x.gateLevel } : {}),
+    ...(typeof x.art === "string" && x.art ? { art: x.art } : {})   // パックの表の絵（ui/…）
   }));
   config.SAMPLE_DECKS = config.SAMPLE_DECKS !== false;
   config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";
