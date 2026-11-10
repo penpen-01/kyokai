@@ -7,6 +7,27 @@
    ・レートはすべて CONFIG（カード工房の「報酬・CPU・シーズン」）で変えられる
    ========================================================= */
 
+/* 売り場の一覧。ready:false はまだ無い売り場（?shopsoon を付けたときだけ「準備中」で並ぶ） */
+const SHOP_CATS = [
+  { id: "trade", ready: true }, { id: "dis", ready: true }, { id: "ticket", ready: true },
+  { id: "slot", ready: false, ic: "slot", name: "デッキ枠", sub: "作れるデッキの数を増やす" },
+  { id: "skin", ready: false, ic: "skin", name: "カードのスキン", sub: "好きなカードの絵を変える" },
+  { id: "icon", ready: false, ic: "icon", name: "アイコン", sub: "プレイヤーの顔を変える" },
+  { id: "sleeve", ready: false, ic: "sleeve", name: "スリーブ", sub: "カードの裏の模様" },
+  { id: "field", ready: false, ic: "field", name: "バトル場", sub: "対戦の舞台を変える" },
+  { id: "limited", ready: false, ic: "star", name: "期間限定", sub: "いまだけの交換" }
+];
+const SHOP_IC = {
+  trade: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="9" height="13" rx="1.5"/><rect x="12" y="6" width="9" height="13" rx="1.5" transform="rotate(8 16.5 12.5)"/><path d="M7.5 9.5l1.5 2-1.5 2-1.5-2z"/></svg>',
+  dis: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l6 7-6 11-6-11z"/><path d="M6 10h12M3 6l2 1M21 6l-2 1M4 15l2-1M20 15l-2-1"/></svg>',
+  ticket: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4z"/><path d="M15 7v10" stroke-dasharray="2 2"/></svg>',
+  slot: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="10" height="14" rx="1.5"/><path d="M18 9v8M14 13h8"/></svg>',
+  skin: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 15l3-4 2 2.5 1.5-1.5L17 15z"/><circle cx="10" cy="8" r="1.5"/></svg>',
+  icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.2-2.4 3.2-3.5 5.5-3.5s4.3 1.1 5.5 3.5"/></svg>',
+  sleeve: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="6" width="8" height="12" rx="1"/><path d="M12 9l2 3-2 3-2-3z"/></svg>',
+  field: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 19V9l3-3 3 3v10M13 19v-6l4-3 4 3v6"/></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z"/></svg>'
+};
 const STONE_KEY = { common: "COMMON", rare: "RARE", sr: "SR", ur: "UR", legend: "LEGEND" };
 
 const Shop = {
@@ -69,14 +90,14 @@ const Shop = {
     const c = DEF[id];
     if (!this.usable() || !c) return;
     const cost = this.costRate(c.rarity);
-    if (Account.owned(id) >= this.cap()) return this.show(`${c.name}はもう${this.cap()}枚持っています。`);
-    if (Account.stones < cost) return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`);
+    if (Account.owned(id) >= this.cap()) return this.showTrade(`${c.name}はもう${this.cap()}枚持っています。`);
+    if (Account.stones < cost) return this.showTrade(`魔石が足りません（あと${cost - Account.stones}個）。`);
     Account.data.stones -= cost;
     Account.data.cards[id] = (Account.data.cards[id] || 0) + 1;
     Account.saveNow();
     Sound.play(RARITY_ORDER.indexOf(c.rarity) >= 2 ? "rare" : "flip", RARITY_ORDER.indexOf(c.rarity));
     this.detailId = null;
-    this.show(`${c.name}を手に入れました（所持${Account.owned(id)}枚）。`);
+    this.showTrade(`${c.name}を手に入れました（所持${Account.owned(id)}枚）。`);
   },
 
   /* ---------- カード一覧・デッキ編成の詳細から交換する ----------
@@ -125,26 +146,62 @@ const Shop = {
       : `<p class="onl-msg">アカウントを読み込めていません。通信状態を確認して、開き直してください。</p>`;
   },
 
-  /* ショップの入口：カードとの交換が主役。分解とパック券は上の2つのボタンから */
+  /* ---------- ショップの入口 ----------
+     上に「今日のおすすめ」、その下に売り場のタイル。売り場が増えたら SHOP_CATS に足すだけで並ぶ */
+  feature() {
+    const cap = this.cap(), pool = this.pool();
+    const pick = rs => pool.filter(c => rs.includes(c.rarity) && Account.owned(c.id) < cap);
+    const list = pick(["legend", "ur"]).length ? pick(["legend", "ur"]) : pick(["sr", "ur", "legend"]);
+    if (!list.length) return null;
+    const day = localDate(new Date()); let h = 0; for (const ch of day) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return list[h % list.length];   // 日ごとに変わる（その日は同じカード）
+  },
   show(msg) {
-    this.view = "main";
+    this.view = "hub";
+    this.msg = msg === undefined ? this.msg : msg;
+    const sur = this.surplus();
+    const surN = sur.reduce((a, x) => a + x.n, 0), surS = sur.reduce((a, x) => a + x.stones, 0);
+    const tc = this.ticketCost(), f = this.feature(), use = this.usable();
+    const soon = /[?&]shopsoon\b/.test(location.search);
+    const fut = SHOP_CATS.filter(x => !x.ready);
+    openOverlay(`<div class="panel wide shop shophub">
+      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
+      ${this.noteHTML()}
+      ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
+      ${f ? `<button type="button" class="sh-hero r-${f.rarity}" data-act="shopFeature" data-id="${esc(f.id)}" ${f.art ? `style="--art:url('${esc(f.art)}')"` : ""}>
+        <span class="sh-hero-bg" ${f.art ? `style="background-image:url('${esc(f.art)}')"` : ""}></span>
+        <span class="sh-hero-in"><small>今日のおすすめ</small><b>${esc(f.name)}</b>
+          <span class="sh-hero-meta"><i class="rtag r-${f.rarity}">${RARITY_SHORT[f.rarity]}</i>${curIcon("stone")}${this.costRate(f.rarity)}${Account.owned(f.id) ? ` ・ 所持${Account.owned(f.id)}枚` : " ・ 未所持"}</span>
+          <span class="sh-hero-go">見る ›</span></span>
+      </button>` : ""}
+      <div class="sh-cats">
+        <button type="button" class="sh-cat wide c-trade" data-act="shopTrade" ${use ? "" : "disabled"}>
+          <span class="sh-ic">${SHOP_IC.trade}</span><b>カードと交換</b><small>好きなカードを魔石で1枚ずつ</small><span class="go" aria-hidden="true">›</span></button>
+        <button type="button" class="sh-cat c-dis" data-act="shopDis" ${use ? "" : "disabled"}>
+          <span class="sh-ic">${SHOP_IC.dis}</span><b>分解</b><small>${surN ? `ダブり${surN}枚 ・ 最大+${surS}` : "ダブりはありません"}</small>${surN ? `<i class="sh-badge">${surN}</i>` : ""}</button>
+        <div class="sh-cat c-ticket">
+          <span class="sh-ic">${SHOP_IC.ticket}</span><b>パック券</b><small>魔石${tc}で1枚 ・ 所持${Account.tickets}枚</small>
+          <button type="button" class="btn sm primary" data-act="shopTicket" ${use && Account.stones >= tc ? "" : "disabled"}>交換する</button></div>
+        ${soon ? fut.map(x => `<div class="sh-cat soon"><span class="sh-ic">${SHOP_IC[x.ic] || SHOP_IC.star}</span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("") : ""}
+      </div>
+      <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
+      ${this.detailHTML()}
+    </div>`, "start", true);
+  },
+
+  /* カードと交換の売り場 */
+  showTrade(msg) {
+    this.view = "trade";
     this.msg = msg === undefined ? this.msg : msg;
     const sur = this.surplus();
     const surN = sur.reduce((a, x) => a + x.n, 0), surS = sur.reduce((a, x) => a + x.stones, 0);
     const cap = this.cap(), tc = this.ticketCost();
     const list = this.pool().filter(c => (this.rar === "all" || c.rarity === this.rar) && (!this.onlyNeed || Account.owned(c.id) < cap));
     openOverlay(`<div class="panel wide shop">
-      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>カードと交換</b>${stoneTag(Account.stones)}</div>
       ${this.noteHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
-      <div class="shopacts">
-        <button type="button" class="shopact" data-act="shopDis" ${this.usable() ? "" : "disabled"}>
-          <b>分解する</b><small>${surN ? `ダブり${surN}枚 ・ 最大 +${surS}` : "ダブりはありません"}</small><span class="go" aria-hidden="true">›</span></button>
-        <button type="button" class="shopact" data-act="shopTicket" ${this.usable() && Account.stones >= tc ? "" : "disabled"}>
-          <b>パック券と交換</b><small>魔石${tc} ・ 所持${Account.tickets}枚</small></button>
-      </div>
       <section class="shopsec">
-        <h3>カードと交換</h3>
         <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.costRate(r)}</span>`).join("")}</p>
         <div class="shopfilter">
           ${["all", ...RARITY_ORDER].map(r => `<button type="button" class="chip ${this.rar === r ? "on" : ""}" data-act="shopRar" data-v="${r}">${r === "all" ? "すべて" : RARITY_SHORT[r]}</button>`).join("")}
@@ -155,9 +212,7 @@ const Shop = {
           return `<button type="button" class="dtile ${own >= cap ? "unowned" : ""}" data-act="shopDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">
             ${cardHTML(c, { static: true, cls: own <= 0 ? "dim" : "" })}<span class="dbadge ${Account.stones >= cost && own < cap ? "in" : ""}">${cost}</span></button>`;
         }).join("") : `<p class="hint">条件に合うカードはありません。</p>`}</div>
-        <p class="hint">パック券1枚で、どのパックでもGを使わずに1パック開けられます（パックの画面で使います）。</p>
       </section>
-      <button type="button" class="btn" data-act="back">戻る</button>
       ${this.detailHTML()}
     </div>`, "start", true);
   },
@@ -234,7 +289,9 @@ const Shop = {
   handleAct(act, el) {
     switch (act) {
       case "shop": this.msg = null; this.detailId = null; this.show(); return true;
-      case "shopMain": this.msg = null; this.show(); return true;
+      case "shopMain": this.msg = null; this.detailId = null; this.show(); return true;
+      case "shopTrade": this.msg = null; this.detailId = null; this.showTrade(); return true;
+      case "shopFeature": this.msg = null; this.rar = "all"; this.detailId = el.dataset.id; this.showTrade(); return true;
       case "shopDis": this.msg = null; this.sel = {}; this.showDismantle(); return true;
       case "shopPick": {
         const id = el.dataset.id, x = this.surplus().find(y => y.c.id === id);
@@ -259,10 +316,10 @@ const Shop = {
       case "shopAskNo": this.ask = null; this.showDismantle(); return true;
       case "shopAskYes": { const a = this.ask; this.ask = null; if (a) this.dismantle(a.all ? null : this.sel); return true; }
       case "shopTicket": this.buyTicket(); return true;
-      case "shopRar": this.rar = el.dataset.v; this.show(); return true;
-      case "shopNeed": this.onlyNeed = !!el.checked; this.show(); return true;
-      case "shopDetail": this.detailId = el.dataset.id; this.show(); return true;
-      case "shopDetailClose": this.detailId = null; this.show(); return true;
+      case "shopRar": this.rar = el.dataset.v; this.showTrade(); return true;
+      case "shopNeed": this.onlyNeed = !!el.checked; this.showTrade(); return true;
+      case "shopDetail": this.detailId = el.dataset.id; this.showTrade(); return true;
+      case "shopDetailClose": this.detailId = null; if (this.view === "hub") this.show(); else this.showTrade(); return true;
       case "shopBuy": this.buy(el.dataset.id); return true;
       case "tradeAsk": this.tradeAsk = el.dataset.id; this.tradeRedraw(); return true;
       case "tradeNo": this.tradeAsk = null; this.tradeRedraw(); return true;

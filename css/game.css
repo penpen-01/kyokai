@@ -2086,3 +2086,46 @@ html.nofx .card .shine{display:none}
 .ms-grid.n4 .ms-row{grid-template-columns:18px repeat(4,minmax(0,1fr))}
 .ms-grid.n3 .ms-row{grid-template-columns:18px repeat(3,minmax(0,1fr))}
 @media (min-width:600px){ .ms-grid.n4{width:calc(18px + (100% - 18px) * .8);margin:0 auto} }
+
+/* ---------- ショップの入口（2026-11-11）：おすすめ＋売り場のタイル。背景は灯りのともる市場の夜 ---------- */
+.overlay:has(.shophub){background:
+  radial-gradient(120% 60% at 50% -10%,rgba(255,176,80,.22),transparent 60%),
+  radial-gradient(60% 40% at 0% 30%,rgba(120,90,200,.16),transparent 70%),
+  radial-gradient(60% 40% at 100% 60%,rgba(60,140,200,.14),transparent 70%),
+  linear-gradient(#141022,#0b0d1a 60%)}
+.shophub{gap:14px}
+.shophub .topbar{background:transparent;border-bottom-color:rgba(255,200,120,.18)}
+.sh-hero{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:block;min-height:170px;border-radius:16px;overflow:hidden;
+  border:1px solid rgba(255,214,140,.55);box-shadow:0 12px 30px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.06)}
+.sh-hero-bg{position:absolute;inset:0;background:#221a30 70% 25%/cover no-repeat;transform:scale(1.05);transition:transform .6s}
+.sh-hero:hover .sh-hero-bg{transform:scale(1.1)}
+.sh-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,8,20,.92) 0%,rgba(10,8,20,.7) 45%,rgba(10,8,20,.05) 85%)}
+.sh-hero-in{position:relative;z-index:1;display:flex;flex-direction:column;gap:6px;padding:18px;max-width:64%}
+.sh-hero-in small{font-size:11px;font-weight:800;letter-spacing:.14em;color:#ffcf7a}
+.sh-hero-in b{font-family:var(--f-display);font-size:22px;line-height:1.25;font-weight:800;color:#fff6dc;text-shadow:0 2px 8px #000}
+.sh-hero-meta{display:flex;align-items:center;gap:6px;font-size:13px;color:#e6e0f5;flex-wrap:wrap}
+.sh-hero-meta .rtag{position:static}
+.sh-hero-go{margin-top:4px;align-self:flex-start;font-size:13px;font-weight:800;color:#1a1408;background:linear-gradient(180deg,#ffe8a8,#d8a84c);border-radius:99px;padding:5px 14px}
+.sh-hero.r-legend{border-color:#ff9bd0}
+.sh-hero:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.sh-cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:640px){ .sh-cats{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.sh-cat{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:4px;padding:14px;min-height:118px;border-radius:14px;
+  background:linear-gradient(160deg,var(--c1,#262c52),var(--c2,#161a33));border:1px solid rgba(255,255,255,.1);box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.sh-cat.wide{grid-column:1/-1;min-height:96px;padding-right:40px}
+.sh-cat b{font-size:16px;font-weight:800;color:#fff}
+.sh-cat small{font-size:12px;color:rgba(235,230,250,.78);line-height:1.45}
+.sh-cat .go{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:26px;color:rgba(255,255,255,.6)}
+.sh-cat .btn{margin-top:auto;align-self:flex-start}
+.sh-cat:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sh-cat[disabled]{opacity:.5;cursor:default}
+.sh-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,.1);margin-bottom:4px}
+.sh-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round;stroke-linecap:round}
+.c-trade{--c1:#5a3f8c;--c2:#25183f;color:#e7d6ff}
+.c-dis{--c1:#225a6e;--c2:#122633;color:#bff0ff}
+.c-ticket{--c1:#7a5420;--c2:#2e1f0c;color:#ffe2a6;cursor:default}
+.sh-badge{position:absolute;right:10px;top:10px;min-width:22px;height:22px;border-radius:11px;background:var(--danger);color:#fff;font-size:12px;font-weight:800;font-style:normal;line-height:22px;text-align:center;padding:0 6px}
+.sh-cat.soon{cursor:default;--c1:#2a2e44;--c2:#181a28;color:#9aa0c0;border-style:dashed}
+.sh-soon{position:absolute;right:10px;top:10px;font-style:normal;font-size:10px;font-weight:700;color:#cfd3ea;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:1px 6px}
+.sh-foot{margin:0}
+@media (prefers-reduced-motion:reduce){.sh-hero-bg{transition:none}}
