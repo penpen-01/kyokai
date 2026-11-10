@@ -2141,3 +2141,9 @@ html.nofx .card .shine{display:none}
 .overlay:has(.shop) .topbar,.overlay:has(.pkshop) .topbar,.overlay:has(.rs) .topbar,.overlay:has(.ms-grid) .topbar,.overlay:has(.cl-tools) .topbar{
   background:rgba(10,11,24,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .dedit2 .dtop{background:rgba(12,14,28,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.bgm-vol{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)} .bgm-vol input{flex:1}
+.bgm-pick{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.bgm-pick>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.bgm-pick button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--fg);font-size:14px;font-weight:700}
+.bgm-pick button[aria-pressed="true"]{background:linear-gradient(180deg,#ffe8a8,#d8a84c);color:#1a1408;border-color:#ffe8a8}
+.bgm-pick button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
