@@ -1,5 +1,5 @@
 {
- "version": 102,
+ "version": 103,
  "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
@@ -17,6 +17,7 @@
   "REWARD_EASY": 100,
   "REWARD_NORMAL": 200,
   "REWARD_HARD": 300,
+  "REWARD_EX": 450,
   "REWARD_ONLINE": 150,
   "STREAK_STEP": 10,
   "STREAK_MAX": 50,
@@ -38,8 +39,7 @@
   "STONE_TICKET": 300,
   "SEASON": "beta",
   "STARTER_DECK": "starter",
-  "SAMPLE_DECKS": true,
-  "REWARD_EX": 450
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {
@@ -918,6 +918,14 @@
    "cards": {},
    "until": "2026-11-06",
    "created": "2026-11-05"
+  },
+  {
+   "h": "0a9884b648e9360a3c07503795ce86526a106f5242850b4398c6f10033d0057f",
+   "label": "コイン配布",
+   "gold": 20000,
+   "cards": {},
+   "until": "",
+   "created": "2026-11-10"
   }
  ],
  "news": [],
@@ -959,6 +967,7 @@
    "tickets": 1
   }
  ],
+ "picks": [],
  "cards": [
   {
    "id": "squire",
