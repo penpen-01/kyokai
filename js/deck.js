@@ -447,7 +447,7 @@ const Decks = {
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
-          <p class="dm-text">${esc(cardText(c))}</p>
+          <p class="dm-text">${cardTextHTML(c)}</p>
           <span class="pmeta">${unb ? "" : `所持 ${this.owned(c.id)}枚 ・ `}1デッキに${cardLimit(c, CONFIG, ed)}枚まで</span>
           ${editable ? `<div class="dm-step">
             <button type="button" class="btn" data-act="deckDec" data-id="${esc(c.id)}" ${k ? "" : "disabled"}>−</button>

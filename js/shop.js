@@ -222,7 +222,7 @@ const Shop = {
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
-          <p class="dm-text">${esc(cardText(c))}</p>
+          <p class="dm-text">${cardTextHTML(c)}</p>
           <span class="pmeta">所持 ${own}枚 ・ 魔石 ${Account.stones}</span>
           <button type="button" class="btn primary" data-act="shopBuy" data-id="${esc(c.id)}" ${ok ? "" : "disabled"}>${label}</button>
           <button type="button" class="btn" data-act="shopDetailClose">閉じる</button>

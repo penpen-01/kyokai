@@ -447,6 +447,44 @@ function cardText(card) {
   const l = cardTextLines(card);
   return l.length ? l.join("\n") : "特殊能力なし。";
 }
+/* 画面に出す説明文（HTML）。出てくるトークンの名前は青い文字にして、タップでトークンの絵と効果を見られる */
+function cardTextHTML(card) {
+  let h = esc(cardText(card));
+  const ids = new Set();
+  (card.effects || []).forEach(e => { const t = e && e.card && cardRef(e.card); if (t && t.token && t.id !== card.id) ids.add(t.id); });
+  ids.forEach(id => { const n = esc(cardRef(id).name); h = h.split(`「${n}」`).join(`「<button type="button" class="tklink" data-tk="${esc(id)}">${n}</button>」`); });
+  return h;
+}
+/* トークンの絵と効果を、いま開いている画面の上に重ねて出す */
+const TokenPop = {
+  show(id) {
+    const c = cardRef(id);
+    if (!c) return;
+    this.close();
+    const el = document.createElement("div");
+    el.id = "tkpop"; el.className = "dmodal tkpop";
+    el.innerHTML = `<div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}">
+        <div class="dmodal-card">${cardHTML(c, { static: true })}</div>
+        <div class="dmodal-body">
+          <span class="tk-tag">トークン</span>
+          <b class="dm-name">${esc(c.name)}</b>
+          <span class="pmeta">${WORLDS[c.world] || ""} ・ ${TYPES[c.type] || ""} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
+          <p class="dm-text">${cardTextHTML(c)}</p>
+          <span class="pmeta">カードの効果で出てきます。デッキには入れられません。</span>
+          <button type="button" class="btn" data-tkclose>閉じる</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    if (typeof Sound !== "undefined") Sound.play("click");
+  },
+  close() { const o = document.getElementById("tkpop"); if (o) o.remove(); }
+};
+if (typeof document !== "undefined") document.addEventListener("click", e => {
+  const t = e.target.closest && e.target.closest(".tklink");
+  if (t) { e.stopPropagation(); e.preventDefault(); TokenPop.show(t.dataset.tk); return; }
+  const pop = e.target.closest && e.target.closest("#tkpop");
+  if (pop) { e.stopPropagation(); e.preventDefault(); if (e.target === pop || e.target.closest("[data-tkclose]")) TokenPop.close(); }
+}, true);
 
 /* カードの見た目。unit を渡すと場のキャラの現在値を表示する */
 /* プレイヤーアイコン：キャラカードの絵を丸く切り抜く。顔が上の方にない絵だけ、切り抜く位置を個別に決める */

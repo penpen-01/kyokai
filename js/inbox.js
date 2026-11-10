@@ -102,7 +102,7 @@ const Inbox = {
       ${msg ? `<p class="callout">${esc(msg)}</p>` : ""}
       <p class="lead small">好きなカードを1枚選んで、交換してください。カードを押すと、下に効果が出ます。</p>
       <div class="pick-grid">${pool.map(c => `<div role="button" tabindex="0" class="pick-tile ${this.pickSel === c.id ? "on" : ""}" data-act="pickSel" data-id="${esc(c.id)}" data-p="${esc(pid)}" aria-pressed="${this.pickSel === c.id}">${cardHTML(c)}<small>持っている：${Account.owned(c.id)}枚</small></div>`).join("")}</div>
-      <div class="pick-bar">${sel ? `<div class="pick-info"><b>${esc(sel.name)}</b><small>${esc(RARITY[sel.rarity])}・${sel.cost}コスト${sel.type === "char" ? `・${sel.atk}/${sel.hp}` : "・魔法"}・${WORLDS[sel.world] || ""}</small><p>${esc(cardText(sel)).replace(/\n/g, "<br>")}</p></div><button type="button" class="btn primary" data-act="pickGo" data-id="${esc(sel.id)}" data-p="${esc(pid)}">このカードと交換する</button>`
+      <div class="pick-bar">${sel ? `<div class="pick-info"><b>${esc(sel.name)}</b><small>${esc(RARITY[sel.rarity])}・${sel.cost}コスト${sel.type === "char" ? `・${sel.atk}/${sel.hp}` : "・魔法"}・${WORLDS[sel.world] || ""}</small><p>${cardTextHTML(sel).replace(/\n/g, "<br>")}</p></div><button type="button" class="btn primary" data-act="pickGo" data-id="${esc(sel.id)}" data-p="${esc(pid)}">このカードと交換する</button>`
         : `<span class="hint">カードを選んでください（あとで交換することもできます。メールの画面から使えます）</span>`}</div>
     </div>`, "start", true);
   },

@@ -305,7 +305,7 @@ const Packs = {
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
-          <p class="dm-text">${esc(cardText(c))}</p>
+          <p class="dm-text">${cardTextHTML(c)}</p>
           <span class="pmeta">所持 ${Account.owned(c.id)}枚 ・ 1デッキに${cardLimit(c, CONFIG)}枚まで</span>
           <button type="button" class="btn" data-act="packDetailClose">閉じる</button>
         </div>

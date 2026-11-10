@@ -1564,7 +1564,7 @@ function detailHTML(id, unit, owner) {
       <div class="sh-name">${esc(d.name)}</div>
       <div class="sh-meta">${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}</div>
       ${statLine}
-      ${unit && unit.silenced ? `<p class="sh-text">沈黙：効果と能力をすべて失っています。</p>` : `<p class="sh-text">${esc(cardText(d))}</p>`}
+      ${unit && unit.silenced ? `<p class="sh-text">沈黙：効果と能力をすべて失っています。</p>` : `<p class="sh-text">${cardTextHTML(d)}</p>`}
       ${unit && !unit.silenced && ((unit.kws || []).length || unit.armorPlus) ? `<p class="sh-text">与えられた能力：${[...(unit.kws || []).filter(k => KEYWORDS[k]).map(k => `${KEYWORDS[k].label}（${KEYWORDS[k].text}）`), ...(unit.armorPlus ? [`装甲+${unit.armorPlus}`] : [])].join("／")}</p>` : ""}`;
 }
 
@@ -2147,7 +2147,7 @@ function showCardList() {
         <div class="cbody">
           <div class="chead"><span class="cname">${esc(c.name)}</span><span class="ccount">${ownTxt(c)}</span></div>
           <div class="cmeta">${WORLDS[c.world]} ・ ${RARITY[c.rarity]} ・ コスト${c.cost}${c.type === "char" ? ` ・ 攻撃${c.atk} ／ 体力${c.hp}` : ""}</div>
-          <div class="ctext">${esc(cardText(c))}</div>
+          <div class="ctext">${cardTextHTML(c)}</div>
         </div>
       </div>`).join("")}</div>`;
   const d = CL.detail && DEF[CL.detail];
@@ -2168,7 +2168,7 @@ function showCardList() {
       <div class="dmodal-card">${cardHTML(d, { static: true, hidden: hide(d) })}</div>
       <div class="dmodal-body"><b class="dm-name">${esc(d.name)}</b>
         <span class="pmeta">${RARITY[d.rarity]} ・ ${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}${d.type === "char" ? ` ・ ${d.atk}/${d.hp}` : ""}</span>
-        <p class="dm-text">${esc(cardText(d))}</p>
+        <p class="dm-text">${cardTextHTML(d)}</p>
         <span class="pmeta">${Account.status === "free" ? "" : `所持 ${Account.owned(d.id)}枚 ・ `}1デッキに${cardLimit(d, CONFIG)}枚まで</span>
         ${d.boss ? `<span class="boss-only">ボス限定：隠しボスを倒すと手に入る</span>` : ""}
         ${typeof Shop !== "undefined" && !S ? Shop.tradeHTML(d) : ""}
