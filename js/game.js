@@ -495,7 +495,8 @@ function unitTargets(pi, e, targets, self) {
   const wf = u => !e.world || (DEF[u.id] && DEF[u.id].world === e.world);
   const rnd = a => a.length ? [a[Math.floor(Math.random() * a.length)]] : [];
   switch (e.to) {
-    case "enemy1": { const u = en.field.find(x => x.uid === targets.enemy && wf(x)); return u ? [u] : []; }
+    // 同じカードに「相手キャラか相手プレイヤー」の効果もあると、選んだ対象は enemyF に入る（歯車式カタパルトなど）
+    case "enemy1": { const t = targets.enemy != null ? targets.enemy : targets.enemyF; const u = en.field.find(x => x.uid === t && wf(x)); return u ? [u] : []; }
     case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self && wf(x)); return u ? [u] : []; }
     case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }
     case "enemyF": { if (targets.enemyF === "face") return ["face"]; const u = en.field.find(x => x.uid === targets.enemyF); return u ? [u] : []; }
