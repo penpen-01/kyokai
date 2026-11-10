@@ -2129,3 +2129,15 @@ html.nofx .card .shine{display:none}
 .sh-soon{position:absolute;right:10px;top:10px;font-style:normal;font-size:10px;font-weight:700;color:#cfd3ea;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:1px 6px}
 .sh-foot{margin:0}
 @media (prefers-reduced-motion:reduce){.sh-hero-bg{transition:none}}
+
+/* ---------- 画面ごとの背景（Gemini の絵）。上に重なる文字が読めるよう、暗い幕を1枚かける ---------- */
+.overlay:has(.shop),.overlay:has(.pkshop),.overlay:has(.rs),.overlay:has(.ms-grid),.overlay:has(.dedit),.overlay:has(.cl-tools){
+  background:linear-gradient(rgba(8,9,20,var(--scrim1,.45)),rgba(8,9,20,var(--scrim2,.7))),var(--bgimg) center/cover no-repeat,#0b0d1a}
+.overlay:has(.shop){--bgimg:url("../ui/bg-shop.webp");--scrim1:.35;--scrim2:.55}
+.overlay:has(.pkshop),.overlay:has(.rs),.overlay:has(.ms-grid){--bgimg:url("../ui/bg-pack.webp");--scrim1:.3;--scrim2:.55}
+.overlay:has(.openstage){background:linear-gradient(rgba(8,9,20,.35),rgba(8,9,20,.6)),url("../ui/bg-pack.webp") center/cover no-repeat,#07080f}
+.overlay:has(.dedit),.overlay:has(.cl-tools){--bgimg:url("../ui/bg-deck.webp");--scrim1:.5;--scrim2:.65}
+/* 背景が見えるよう、上のバーは半透明に */
+.overlay:has(.shop) .topbar,.overlay:has(.pkshop) .topbar,.overlay:has(.rs) .topbar,.overlay:has(.ms-grid) .topbar,.overlay:has(.cl-tools) .topbar{
+  background:rgba(10,11,24,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.dedit2 .dtop{background:rgba(12,14,28,.9);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
