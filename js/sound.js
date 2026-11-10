@@ -135,7 +135,7 @@ Sound.diag = function () {
   ];
 };
 Sound.showPanel = function () {
-  openOverlay(`<div class="panel">
+  openOverlay(`<div class="panel snd-panel">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>音の設定</b></div>
     <button type="button" class="btn ${this.on ? "primary" : ""}" data-act="sound">${this.on ? "音：オン（押すとオフ）" : "音：オフ（押すとオン）"}</button>
     <button type="button" class="btn" data-act="soundTest">テスト音を鳴らす</button>
@@ -143,7 +143,11 @@ Sound.showPanel = function () {
     <button type="button" class="btn ${BgmSet.on ? "primary" : ""}" data-act="bgmToggle">${BgmSet.on ? "BGM：オン（押すとオフ）" : "BGM：オフ（押すとオン）"}</button>
     <label class="bgm-vol"><span>BGMの音量</span><input type="range" id="bgm-vol" min="0" max="1" step="0.05" value="${Bgm.volume}"></label>
     <div class="bgm-pick"><span>対戦の曲</span><div role="group" aria-label="対戦の曲">${[...BgmSet.BATTLES.map(id => [id, Bgm.TRACKS[id].name.replace(/^対戦\d/, "").replace(/[「」]/g, "")]), ["random", "おまかせ"]].map(([v, l]) => `<button type="button" data-act="bgmBattle" data-v="${v}" aria-pressed="${BgmSet.battle === v}">${l}</button>`).join("")}</div></div>
-    <p class="lead small">「おまかせ」は対戦ごとに3曲から選びます。効果音を「オフ」にすると、BGMも止まります。</p>` : ""}
+    <div class="bgm-pick"><span>ホームの曲</span><div role="group" aria-label="ホームの曲">${[["home", "ホーム"], ["title", "起動画面"]].map(([v, l]) => `<button type="button" data-act="bgmHome" data-v="${v}" aria-pressed="${BgmSet.home === v}">${l}</button>`).join("")}</div></div>
+    <p class="lead small">「おまかせ」は対戦ごとに3曲から選びます。効果音を「オフ」にすると、BGMも止まります。</p>
+    <h3 class="sec">曲を聞く</h3>
+    <div class="bgm-list">${Object.entries(Bgm.TRACKS).map(([id, t]) => `<button type="button" data-act="bgmPreview" data-v="${id}" aria-pressed="${BgmSet.preview === id}"><i aria-hidden="true">${BgmSet.preview === id ? "■" : "▶"}</i>${esc(t.name)}</button>`).join("")}</div>
+    <p class="lead small">この画面を閉じると、いつもの曲に戻ります。</p>` : ""}
     ${navigator.audioSession ? `<button type="button" class="btn" data-act="soundLoud">マナーモード中も鳴らす：${this.loud ? "オン" : "オフ"}</button>
     <p class="lead small">オンにすると、マナーモード中でも音が出ますが、iPhoneのロック画面やコントロールセンターに「再生中」の表示が出ます。</p>` : ""}
     <ul class="diag">${this.diag().map(x => `<li>${esc(x)}</li>`).join("")}</ul>

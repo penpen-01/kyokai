@@ -2147,3 +2147,9 @@ html.nofx .card .shine{display:none}
 .bgm-pick button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--fg);font-size:14px;font-weight:700}
 .bgm-pick button[aria-pressed="true"]{background:linear-gradient(180deg,#ffe8a8,#d8a84c);color:#1a1408;border-color:#ffe8a8}
 .bgm-pick button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.bgm-list{display:flex;flex-direction:column;gap:6px}
+.bgm-list button{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:14px;color:var(--fg)}
+.bgm-list button i{font-style:normal;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:11px}
+.bgm-list button[aria-pressed="true"]{border-color:var(--gold);background:rgba(233,200,115,.12)}
+.bgm-list button[aria-pressed="true"] i{background:var(--gold);color:#1a1408}
+.bgm-list button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}

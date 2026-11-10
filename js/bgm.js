@@ -233,7 +233,7 @@ const Bgm = (() => {
 
 /* =========================================================
    画面に合わせて曲を選ぶ（0.4秒ごとに今の画面を見て決める）
-   起動画面 → 「起動画面」の曲。タップして始めたあとも、ひと回り終わるまではホームでそのまま流す
+   起動画面 → 「起動画面」の曲（ブラウザの決まりで、画面に触れるまでは鳴らせない。聞きたい人は音の設定の「曲を聞く」で）
    ショップ・パック・デッキ編成（カード一覧も）→ それぞれの曲。対戦中 → 選んだ対戦の曲。それ以外 → ホーム
    ========================================================= */
 const BgmSet = {
@@ -243,6 +243,9 @@ const BgmSet = {
   battle: (() => { try { return localStorage.getItem("kyokai-bgm-battle") || "battle1"; } catch { return "battle1"; } })(),
   pickedBattle: null,
   toggle() { this.on = !this.on; try { localStorage.setItem(this.KEY, this.on ? "on" : "off"); } catch {} if (!this.on) Bgm.stop(.4); },
+  home: (() => { try { return localStorage.getItem("kyokai-bgm-home") || "home"; } catch { return "home"; } })(),
+  preview: null,
+  setHome(v) { this.home = v; try { localStorage.setItem("kyokai-bgm-home", v); } catch {} },
   setBattle(v) { this.battle = v; this.pickedBattle = null; try { localStorage.setItem(this.BKEY, v); } catch {} },
   battleTrack() {
     if (this.battle !== "random") return Bgm.TRACKS[this.battle] ? this.battle : "battle1";
@@ -250,6 +253,8 @@ const BgmSet = {
     return this.pickedBattle;
   },
   want() {
+    if (this.preview && document.querySelector("#overlay:not([hidden]) .snd-panel")) return this.preview;   // 音の設定で曲を聞いているとき
+    this.preview = null;
     if (typeof Splash !== "undefined" && Splash.shown) return "title";
     const o = document.getElementById("overlay"), vis = o && !o.hidden;
     const has = sel => vis && !!o.querySelector(sel);
@@ -258,8 +263,7 @@ const BgmSet = {
     if (has(".dedit, .cl-tools")) return "deck";
     const home = has(".panel.home");
     if (!home && typeof S !== "undefined" && S) return this.battleTrack();   // じゃんけんから結果の画面まで（タイトルに戻ると S は消える）
-    if (Bgm.current === "title" && Bgm.loops === 0) return "title";   // 起動画面の曲は、ひと回りするまで続ける
-    return "home";
+    return Bgm.TRACKS[this.home] ? this.home : "home";
   },
   tick() {
     if (!this.on || (typeof Sound !== "undefined" && !Sound.on) || document.hidden) { if (Bgm.current) Bgm.stop(.4); return; }
