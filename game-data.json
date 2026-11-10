@@ -1,5 +1,5 @@
 {
- "version": 109,
+ "version": 110,
  "updated": "2026-11-11",
  "config": {
   "PLAYER_HP": 20,
@@ -28,8 +28,8 @@
   "SAMPLE_CPU": 1,
   "STONE_GET_COMMON": 5,
   "STONE_GET_RARE": 30,
-  "STONE_GET_SR": 150,
-  "STONE_GET_UR": 600,
+  "STONE_GET_SR": 100,
+  "STONE_GET_UR": 400,
   "STONE_GET_LEGEND": 1200,
   "STONE_COST_COMMON": 40,
   "STONE_COST_RARE": 100,
@@ -1336,7 +1336,7 @@
    "type": "char",
    "cost": 8,
    "atk": 8,
-   "hp": 8,
+   "hp": 7,
    "glyph": "龍",
    "limit": 3,
    "rarity": "legend",
@@ -1405,6 +1405,12 @@
      "n": 1,
      "act": "draw",
      "who": "self"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 1
     }
    ],
    "art": "art/stargaze-7803ce5b14.webp"
@@ -1444,7 +1450,9 @@
      "kind": "player",
      "n": 5,
      "act": "heal",
-     "who": "self"
+     "who": "self",
+     "cond": "hpLE",
+     "cn": 10
     }
    ],
    "art": "art/spring-13a9b88052.webp"
@@ -1781,7 +1789,7 @@
    "effects": [
     {
      "kind": "player",
-     "n": 3,
+     "n": 2,
      "act": "heal",
      "who": "self"
     }
@@ -1869,7 +1877,7 @@
    "world": "myth",
    "type": "char",
    "cost": 4,
-   "atk": 2,
+   "atk": 1,
    "hp": 4,
    "glyph": "託",
    "limit": 3,
@@ -2103,7 +2111,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 4,
+     "n": 5,
      "act": "dmg",
      "to": "enemyAll"
     }
@@ -2192,7 +2200,7 @@
    "world": "fan",
    "type": "char",
    "cost": 4,
-   "atk": 2,
+   "atk": 3,
    "hp": 4,
    "glyph": "氷",
    "limit": 3,
@@ -2233,7 +2241,7 @@
    "type": "char",
    "cost": 4,
    "atk": 6,
-   "hp": 5,
+   "hp": 6,
    "glyph": "淵",
    "limit": 3,
    "rarity": "sr",
@@ -2565,12 +2573,12 @@
    "effects": [
     {
      "kind": "tokenField",
-     "n": 2,
+     "n": 3,
      "card": "tk-drone"
     },
     {
      "kind": "tokenField",
-     "n": 1,
+     "n": 3,
      "when": "turnStart",
      "card": "tk-drone"
     }
@@ -2712,7 +2720,7 @@
    "name": "位相転移ゲート",
    "world": "mech",
    "type": "spell",
-   "cost": 7,
+   "cost": 5,
    "glyph": "位",
    "limit": 3,
    "rarity": "ur",
@@ -3088,8 +3096,8 @@
    "world": "mech",
    "type": "char",
    "cost": 2,
-   "atk": 0,
-   "hp": 5,
+   "atk": 2,
+   "hp": 2,
    "glyph": "自",
    "limit": 3,
    "rarity": "common",
@@ -3099,7 +3107,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 1,
+     "n": 2,
      "when": "turnEnd",
      "act": "dmg",
      "to": "enemyRand"
@@ -3529,7 +3537,7 @@
    "type": "char",
    "cost": 4,
    "atk": 6,
-   "hp": 6,
+   "hp": 7,
    "glyph": "試",
    "limit": 3,
    "rarity": "sr",
@@ -3546,8 +3554,8 @@
    "world": "fan",
    "type": "char",
    "cost": 6,
-   "atk": 5,
-   "hp": 5,
+   "atk": 6,
+   "hp": 6,
    "glyph": "千",
    "limit": 3,
    "rarity": "ur",
@@ -3666,7 +3674,7 @@
    "world": "myth",
    "type": "char",
    "cost": 8,
-   "atk": 6,
+   "atk": 7,
    "hp": 7,
    "glyph": "審",
    "limit": 3,
@@ -3678,7 +3686,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 1,
+     "n": 2,
      "when": "attack",
      "act": "dmg",
      "to": "enemyAll"
@@ -3703,8 +3711,8 @@
    "effects": [
     {
      "kind": "player",
-     "n": 1,
-     "when": "turnEnd",
+     "n": 3,
+     "when": "oppTurnEnd",
      "act": "dmg",
      "who": "opp"
     }
@@ -3772,8 +3780,8 @@
    "world": "mech",
    "type": "char",
    "cost": 4,
-   "atk": 0,
-   "hp": 7,
+   "atk": 1,
+   "hp": 4,
    "glyph": "砲",
    "limit": 3,
    "rarity": "rare",
@@ -3783,8 +3791,8 @@
    "effects": [
     {
      "kind": "player",
-     "n": 2,
-     "when": "turnStart",
+     "n": 4,
+     "when": "oppTurnEnd",
      "act": "dmg",
      "who": "opp"
     }
@@ -3796,7 +3804,7 @@
    "name": "封鎖のコード",
    "world": "mech",
    "type": "spell",
-   "cost": 4,
+   "cost": 3,
    "glyph": "封",
    "limit": 3,
    "rarity": "rare",
@@ -4016,7 +4024,7 @@
    "effects": [
     {
      "kind": "tokenHand",
-     "n": 1,
+     "n": 2,
      "card": "tk-gear"
     }
    ],
@@ -4323,7 +4331,7 @@
    "effects": [
     {
      "kind": "tokenHand",
-     "n": 2,
+     "n": 3,
      "when": "death",
      "card": "tk-gear"
     }
@@ -4812,7 +4820,7 @@
    "effects": [
     {
      "kind": "tokenHand",
-     "n": 3,
+     "n": 4,
      "card": "tk-gear"
     }
    ],
