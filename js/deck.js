@@ -363,7 +363,7 @@ const Decks = {
     if (!cur || this.detail || cur.querySelector(".dmodal")) return this.renderEdit();
     const tmp = document.createElement("div"); tmp.innerHTML = this.editHTML();
     const nu = tmp.querySelector(".dedit");
-    [".dedit-top .dcount", ".dprob", ".dsum", ".dtabs", ".deckpane", ".dedit-bar"].forEach(sel => {
+    [".dtop", ".dwant", ".dedit-bar"].forEach(sel => {
       const a = cur.querySelector(sel), b = nu.querySelector(sel);
       if (a && b) a.replaceWith(b);
     });
@@ -375,45 +375,62 @@ const Decks = {
       if (a && b && a.innerHTML !== b.innerHTML) a.innerHTML = b.innerHTML;
     });
   },
+  /* 上に固定する「デッキの中身」：小さなカードを横に並べる（タップで1枚抜く・長押しで詳しく） */
+  miniHTML(ed) {
+    const list = this.sorted(ed.cards), unb = this.unbound(ed);
+    if (!list.length) return `<p class="dmini-empty">下のカードをタップすると、ここに入ります</p>`;
+    return list.map(({ c, n, id }) => {
+      if (!c) return `<button type="button" class="dmini missing" data-act="deckDec" data-id="${esc(id)}" aria-label="今は使えないカード"><span class="dm-c">？</span><span class="dm-n">×${n}</span></button>`;
+      const hid = this.hideArt(c, ed), short = !unb && n > this.owned(id);
+      return `<button type="button" class="dmini r-${esc(c.rarity)} ${short ? "short" : ""}" data-act="deckTapDec" data-id="${esc(id)}" aria-label="${esc(c.name)} ${n}枚（タップで1枚抜く）"
+        ${c.art && !hid ? `style="background-image:url('${esc(c.art)}')"` : ""}><span class="dm-c">${c.cost}</span><span class="dm-nm">${esc(c.name)}</span><span class="dm-n">×${n}</span></button>`;
+    }).join("");
+  },
+  /* コストの棒グラフ（小さく1行） */
+  curveMini(cards) {
+    const curve = Array(9).fill(0); let chars = 0, total = 0;
+    this.sorted(cards).forEach(({ c, n }) => { if (c) { curve[Math.min(8, c.cost)] += n; if (c.type === "char") chars += n; } total += n; });
+    const max = Math.max(1, ...curve);
+    return `<div class="dcm" aria-label="コストの分布">${curve.map((k, i) => `<span><i style="height:${Math.round(k / max * 100)}%"></i><b>${i === 8 ? "8+" : i}</b></span>`).join("")}<em>キャラ${chars}・魔法${total - chars}</em></div>`;
+  },
+  filterCount() { const f = this.filter; return ["type", "cost", "rarity"].filter(k => f[k] !== "all").length + (f.owned ? 1 : 0) + (f.world !== "all" && !this.isWorld(this.editing) ? 1 : 0); },
   editHTML() {
     const ed = this.editing;
     const n = deckCount(ed), pr = this.problems(ed);
-    const f = this.filter, unb = this.unbound(ed);
+    const f = this.filter, unb = this.unbound(ed), fc = this.filterCount();
     const seg = (key, val, label) => `<button type="button" data-act="deckFilter" data-k="${key}" data-v="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
-    return `<div class="panel wide dedit">
-      <div class="dedit-top">
-        <input class="otxt dname" id="deck-name" maxlength="16" value="${esc(ed.name)}" aria-label="デッキの名前">
-        <span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span>
+    return `<div class="panel wide dedit dedit2">
+      <div class="dtop">
+        <div class="dtop-row">
+          <button type="button" class="dname-btn" data-act="deckRename" aria-label="デッキの名前を変える">${esc(ed.name)}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+          <span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span>
+        </div>
+        <div class="dmini-row" id="deck-in">${this.miniHTML(ed)}</div>
+        <div class="dtop-foot">${this.curveMini(ed.cards)}<p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(ed) : "このデッキで対戦できます"}</p></div>
       </div>
       ${ed.free ? `<p class="hint">サンプルデッキ：持っていないカードも入れられます（ベータ限定）。</p>` : ""}
-      ${this.isWorld(ed) ? `<p class="hint">限定構築（${WORLDS[ed.world]}）：${WORLDS[ed.world]}のカードだけで組むデッキです。世界限定戦で使えます。</p>` : ""}
-      <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(ed) : "このデッキで対戦できます"}</p>
-      ${this.curveHTML(ed.cards)}
-      <div class="seg dtabs" role="tablist">
-        <button type="button" role="tab" data-act="deckTab" data-v="pool" aria-pressed="${this.editTab !== "deck"}">カードを選ぶ</button>
-        <button type="button" role="tab" data-act="deckTab" data-v="deck" aria-pressed="${this.editTab === "deck"}">デッキの中身 <b>${n}</b>${this.wantCount(ed) ? `<small>＋未所持${this.wantCount(ed)}</small>` : ""}</button>
+      ${this.isWorld(ed) ? `<p class="hint">限定構築（${WORLDS[ed.world]}）：${WORLDS[ed.world]}のカードだけを出しています。</p>` : ""}
+      <div class="dwant">${this.wantHTML(ed, true)}</div>
+      <div class="dtools">
+        <input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索" value="${esc(f.q)}" autocomplete="off">
+        <button type="button" class="btn dfbtn ${fc ? "on" : ""}" data-act="deckFilters" aria-expanded="${!!this.showFilters}">絞り込み${fc ? `<b>${fc}</b>` : ""}</button>
       </div>
-      <div class="dedit-cols tab-${this.editTab === "deck" ? "deck" : "pool"}">
-      <section class="dpane deckpane">
-        <h3 class="sec">デッキの中身 <small class="hint">タップで1枚減らす・長押しで詳細</small></h3>
-        <div id="deck-in">${n ? this.stripsHTML(ed.cards, "deckTapDec", ed) : `<p class="hint">「カードを選ぶ」でカードをタップすると、ここに入ります。</p>`}</div>
-        ${this.wantHTML(ed, true)}
-      </section>
-      <section class="dpane poolpane">
-      <h3 class="sec">カードを選ぶ <small class="hint">タップで1枚入れる・長押しで詳細</small></h3>
-      <div class="dfilters">
-        <input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索（例：守護、ドロー）" value="${esc(f.q)}" autocomplete="off">
+      ${this.showFilters ? `<div class="dfilters">
         <div class="seg">${seg("type", "all", "すべて")}${seg("type", "char", "キャラ")}${seg("type", "spell", "魔法")}</div>
-        ${this.isWorld(ed) ? `<p class="hint">限定構築（${WORLDS[ed.world]}）：${WORLDS[ed.world]}のカードだけを出しています</p>` : `<div class="seg">${seg("world", "all", "全世界")}${Object.entries(WORLDS).map(([k, v]) => seg("world", k, v)).join("")}</div>`}
+        ${this.isWorld(ed) ? "" : `<div class="seg">${seg("world", "all", "全世界")}${Object.entries(WORLDS).map(([k, v]) => seg("world", k, v)).join("")}</div>`}
         <div class="seg">${Object.entries(COST_BANDS).map(([k, v]) => seg("cost", k, v)).join("")}</div>
         <div class="seg">${seg("rarity", "all", "全レア")}${Object.keys(RARITY).map(k => seg("rarity", k, RARITY_SHORT[k])).join("")}</div>
         ${unb ? "" : `<label class="ownchk"><input type="checkbox" id="deck-owned" ${f.owned ? "checked" : ""}> 持っているカードだけ</label>`}
-      </div>
+        ${fc ? `<button type="button" class="linkbtn" data-act="deckFilterReset">絞り込みを解除</button>` : ""}
+      </div>` : ""}
+      <p class="hint dpool-hint">タップで1枚入れる・長押しで詳しく見る</p>
       <div class="dgrid pool" id="deck-pool">${this.poolHTML()}</div>
-      </section>
-      </div>
 
       ${this.detailHTML(true)}
+      ${this.renaming ? `<div class="dmodal" data-act="deckRenameNo"><div class="dmodal-in confirmbox" role="dialog" aria-label="デッキの名前" data-act="noop">
+          <b>デッキの名前</b><input class="otxt" id="deck-name" maxlength="16" value="${esc(ed.name)}" autocomplete="off">
+          <div class="pre-btns"><button type="button" class="btn primary" data-act="deckRenameYes">決定</button><button type="button" class="btn" data-act="deckRenameNo">やめる</button></div>
+        </div></div>` : ""}
 
       <div class="dedit-bar">
         ${ed.confirmDel
@@ -425,6 +442,14 @@ const Decks = {
              <button type="button" class="btn primary" data-act="deckSave" ${this.saveProblems(ed).length ? "disabled" : ""}>${n === CONFIG.DECK_SIZE ? (this.missing(ed) ? `保存（未所持${this.missing(ed)}枚）` : "保存") : n < CONFIG.DECK_SIZE ? `未完成のまま保存（あと${CONFIG.DECK_SIZE - n}枚）` : `保存（${CONFIG.DECK_SIZE}枚にすると押せます）`}</button>`}
       </div>
     </div>`;
+  },
+  /* 名前を決めていない新しいデッキは、多い世界と代表カードから名前を付ける（例：機械デッキ・ゴッドギア） */
+  autoName(ed) {
+    const w = {}; this.sorted(ed.cards).forEach(({ c, n }) => { if (c) w[c.world] = (w[c.world] || 0) + n; });
+    const top = Object.entries(w).sort((a, b) => b[1] - a[1])[0];
+    const k = this.keyCard({ cards: ed.cards, key: ed.key });
+    const base = top ? `${WORLDS[top[0]]}デッキ` : "デッキ";
+    return (k ? `${base}・${k.name}` : base).slice(0, 16);
   },
 
   /* 代表カード（デッキ一覧の絵）にするボタン：自分のデッキに入っている、絵のあるカードだけ */
@@ -466,6 +491,7 @@ const Decks = {
   /* 詳細を開いたときに画面に並んでいたカードの順番（左右の矢印で使う） */
   snapIds(from) {
     const sel = from && from.closest(".dgrid") ? "#overlay #deck-pool [data-id]"
+      : from && from.closest(".dmini-row") ? "#overlay .dmini-row [data-id]"
       : from && from.closest(".dstrips") ? "#overlay .dstrips [data-id]" : "#overlay .dstrips [data-id], #overlay #deck-pool [data-id]";
     this.detailIds = [...document.querySelectorAll(sel)].map(x => x.dataset.id).filter((v, k, a) => v && DEF[v] && a.indexOf(v) === k);
   },
@@ -493,6 +519,8 @@ const Decks = {
       const el = document.querySelector(sel);
       if (el) { el.classList.add("pulse"); setTimeout(() => el.classList.remove("pulse"), 500); }
     });
+    const m = document.querySelector(`#deck-in [data-id="${CSS.escape(id)}"]`);   // 上の列で、入れたカードが見えるように横に送る
+    if (m) m.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" });
   },
 
   handleAct(act, el) {
@@ -589,13 +617,18 @@ const Decks = {
       case "deckDetailClose": this.detail = null; Shop.tradeAsk = null; this.rerender(); return true;
       case "deckFilter": this.filter[el.dataset.k] = el.dataset.v; this.renderEdit(); return true;
       case "deckTab": this.editTab = el.dataset.v; this.renderEdit(); return true;
+      case "deckFilters": this.showFilters = !this.showFilters; this.renderEdit(); return true;
+      case "deckFilterReset": Object.assign(this.filter, { type: "all", cost: "all", rarity: "all", owned: false, ...(this.isWorld(ed) ? {} : { world: "all" }) }); this.renderEdit(); return true;
+      case "deckRename": this.renaming = true; this.renderEdit(); setTimeout(() => { const i = $("#deck-name"); if (i) { i.focus(); i.select(); } }, 30); return true;
+      case "deckRenameYes": { const v = ($("#deck-name") ? $("#deck-name").value : "").trim().slice(0, 16); if (v) { ed.name = v; ed.named = true; } this.renaming = false; this.renderEdit(); return true; }
+      case "deckRenameNo": this.renaming = false; this.renderEdit(); return true;
       case "deckTapAdd": this.inc(id, true); return true;
       case "deckTapDec": this.dec(id); return true;
       case "deckInc": this.inc(id, false); return true;
       case "deckDec": this.dec(id); return true;
       case "deckSave": {
-        const nameEl = $("#deck-name");
-        ed.name = (nameEl ? nameEl.value : ed.name).trim().slice(0, 16) || "デッキ";
+        if (ed.isNew && !ed.named && (["新しいデッキ", "サンプルデッキ"].includes(ed.name) || /の限定デッキ$/.test(ed.name)) && deckCount(ed)) ed.name = (this.isWorld(ed) ? "限定・" : "") + this.autoName(ed);
+        ed.name = (ed.name || "").trim().slice(0, 16) || "デッキ";
         const pr = this.saveProblems(ed);
         if (pr.length) { toast(pr[0]); return true; }
         const list = this.mine().filter(d => d.id !== ed.id);
@@ -627,7 +660,7 @@ const Decks = {
 
 /* 名前・検索・所持のみの切り替え */
 document.addEventListener("input", e => {
-  if (e.target.id === "deck-name" && Decks.editing) Decks.editing.name = e.target.value;
+  if (e.target.id === "deck-name" && Decks.editing && !Decks.renaming) Decks.editing.name = e.target.value;
   if (e.target.id === "deck-q" && Decks.editing) {
     Decks.filter.q = e.target.value;
     const pool = $("#deck-pool"); if (pool) pool.innerHTML = Decks.poolHTML();
@@ -644,7 +677,7 @@ document.addEventListener("change", e => {
   // 長押しで詳細を開いたあと、指を離したときの「タップ」で閉じたり1枚追加されたりしないようにする
   document.addEventListener("pointerup", () => { if (fired) { fired = false; blockClick(); } }, true);
   document.addEventListener("pointerdown", e => {
-    const tile = e.target.closest("#overlay .dtile[data-id], #overlay .dstrip[data-id], #overlay .oslot.up[data-id]");
+    const tile = e.target.closest("#overlay .dtile[data-id], #overlay .dstrip[data-id], #overlay .dmini[data-id], #overlay .oslot.up[data-id]");
     if (!tile) return;
     sx = e.clientX; sy = e.clientY;
     clear();
