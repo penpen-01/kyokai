@@ -2176,3 +2176,25 @@ html.nofx .card .shine{display:none}
 .snd-card .diag{margin:0}
 @media (prefers-reduced-motion:reduce){.snd-sw,.snd-sw i,.snd-card summary::before{transition:none}}
 .snd-card .bgm-list button{padding:7px 10px;font-size:13px}
+/* ---- 中央の段：墓地（相手・自分）。前のログの代わり ---- */
+.graves{flex:1;min-width:0;display:flex;gap:8px;justify-content:center}
+.grave{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:7px;padding:4px 10px 4px 4px;border-radius:10px;
+  background:rgba(10,12,22,.72);border:1px solid rgba(214,178,98,.18);min-width:0}
+.grave:focus-visible{outline:2px solid var(--fg)}
+.gv-top{flex:none;width:30px;height:42px;border-radius:3px;background:#2a2238 center 25%/cover no-repeat;filter:grayscale(.65) brightness(.8);box-shadow:0 0 0 1px rgba(255,255,255,.15),2px 2px 0 rgba(0,0,0,.5)}
+.gv-top.empty{background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18);filter:none}
+.gv-l{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.gv-l small{font-size:10px;color:var(--muted);white-space:nowrap}
+.gv-l b{font-size:15px;font-variant-numeric:tabular-nums}
+.grave.op .gv-l small{color:#e9a0a0}
+/* 墓地の画面 */
+.gv-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gv-tabs button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:9px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:700;font-size:14px}
+.gv-tabs button[aria-selected="true"]{background:linear-gradient(180deg,#ffe8a8,#d8a84c);color:#1a1408;border-color:#ffe8a8}
+.gv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+.gv-card{all:unset;cursor:pointer;display:block}
+.gv-card .card{width:100%}
+.gv-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+/* ログの中のカード名 */
+.cdlink{display:inline;font:inherit;line-height:inherit;color:#ffe2a0;background:none;border:0;padding:0;margin:0;cursor:pointer;text-decoration:underline dotted rgba(255,226,160,.6);text-underline-offset:3px}
+.cdlink:hover,.cdlink:focus-visible{color:#fff3cf;outline:none}

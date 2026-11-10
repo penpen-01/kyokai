@@ -441,6 +441,7 @@ function cardTextLines(card) {
     if (eff) lines.push(eff);
   }
   if (card.note) lines.push(card.note);
+  else if (card.id === "tk-gear") lines.push("手札にためておける。「歯車」を持つカードを出すときに使う（これだけでは使えない）。");
   return lines;
 }
 function cardText(card) {
@@ -466,11 +467,11 @@ const TokenPop = {
     el.innerHTML = `<div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}">
         <div class="dmodal-card">${cardHTML(c, { static: true })}</div>
         <div class="dmodal-body">
-          <span class="tk-tag">トークン</span>
+          ${c.token ? `<span class="tk-tag">トークン</span>` : ""}
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${WORLDS[c.world] || ""} ・ ${TYPES[c.type] || ""} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
           <p class="dm-text">${cardTextHTML(c)}</p>
-          <span class="pmeta">カードの効果で出てきます。デッキには入れられません。</span>
+          ${c.token ? `<span class="pmeta">カードの効果で出てきます。デッキには入れられません。</span>` : `<span class="pmeta">${RARITY[c.rarity] || ""}</span>`}
           <button type="button" class="btn" data-tkclose>閉じる</button>
         </div>
       </div>`;
@@ -480,7 +481,7 @@ const TokenPop = {
   close() { const o = document.getElementById("tkpop"); if (o) o.remove(); }
 };
 if (typeof document !== "undefined") document.addEventListener("click", e => {
-  const t = e.target.closest && e.target.closest(".tklink");
+  const t = e.target.closest && e.target.closest(".tklink, .cdlink");
   if (t) { e.stopPropagation(); e.preventDefault(); TokenPop.show(t.dataset.tk); return; }
   const pop = e.target.closest && e.target.closest("#tkpop");
   if (pop) { e.stopPropagation(); e.preventDefault(); if (e.target === pop || e.target.closest("[data-tkclose]")) TokenPop.close(); }

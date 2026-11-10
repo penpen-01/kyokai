@@ -380,7 +380,7 @@ function canPlay(pi, idx) {
   if (d.type === "spell" && d.effects.some(e => e.kind === "banishOwn") && d.effects.every(e => e.kind === "banishOwn") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
   if (d.type === "spell" && d.effects.length && d.effects.every(e => e.kind === "merge") && !d.effects.some(e => p.field.filter(u => u.id === e.card).length >= e.n)) return { ok: false, reason: "合体に必要なキャラがそろっていません" };
   // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
-  const enemyOnly = e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0);
+  const enemyOnly = e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0);
   if (d.type === "spell" && d.effects.length && d.effects.every(enemyOnly) && !S.players[opp(pi)].field.length)
     return { ok: false, reason: "相手の場にキャラがいません" };
   // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
@@ -444,7 +444,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   S.dmgBonus = grow && d.grow.dmg ? grow : 0;
   S.numBonus = grow && d.grow.num ? grow : 0;
   try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
-  if (d.type === "spell") trigUnits(pi, "spell");
+  if (d.type === "spell") { trigUnits(pi, "spell"); (p.used || (p.used = [])).push(id); p.lastG = id; }   // 使った魔法（墓地の画面で見せる）
   trigUnits(pi, "cardPlay", self, { card: id });
   // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
   p.hand.forEach((hid, i) => { const h = DEF[hid], k = h && h.shrink;
@@ -684,7 +684,10 @@ function effect(pi, e, targets, self) {
     case "heal": me.hp += n; log(`${pname(pi)}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); trigUnits(pi, "healed"); break;
     case "buffSelfAtk": if (self && self.hp > 0) buff(self, n, 0); break;
     case "buffSelfBoth": if (self && self.hp > 0) buff(self, n, n); break;
-    case "readySelf": if (self && self.hp > 0 && me.field.includes(self) && !self.ready) { self.ready = true; log(`${cname(self.id)}はもう一度攻撃できる。`); fx(unitSel(self.uid), "もう一度", "heal"); } break;
+    case "readySelf": if (self && self.hp > 0 && me.field.includes(self)) {
+      // 2回攻撃でまだ攻撃が残っているときは、回数を1つ戻す（もう一度攻撃できる効果が無駄にならないように）
+      if (self.ready) { if (!kw(self, "twice") || !self.swings) break; self.swings--; } else self.ready = true;
+      log(`${cname(self.id)}はもう一度攻撃できる。`); fx(unitSel(self.uid), "もう一度", "heal"); } break;
     case "healUnits": me.field.forEach(u => { const h = Math.min(n, u.maxHp - u.hp); if (h > 0) { u.hp += h; fx(unitSel(u.uid), "+" + h, "heal"); } }); break;
     case "ramp": {
       const before = me.maxE;
@@ -895,7 +898,9 @@ function buff(u, a, h) {
 const hasTrig = (u, when) => !!(u && !u.silenced && DEF[u.id] && DEF[u.id].effects.some(e => whenOf(e) === when));
 function queueTrig(pi, when, u, extra) {
   if (!hasTrig(u, when)) return;
-  (S.q || (S.q = [])).push({ pi, when, uid: u.uid, snap: when === "death" ? JSON.parse(JSON.stringify(u)) : null, ...(extra || {}) });
+  // 倒されたとき・攻撃したとき（反撃で相打ちになっても発動する）は、その時の姿を写しておく
+  const keep = when === "death" || when === "attack" || when === "kill" || when === "face";
+  (S.q || (S.q = [])).push({ pi, when, uid: u.uid, snap: keep ? JSON.parse(JSON.stringify(u)) : null, ...(extra || {}) });
 }
 /* pi の場のキャラ全員（except 以外）に、そのタイミングの発動を積む */
 function trigUnits(pi, when, except, extra) {
@@ -911,7 +916,8 @@ function autoTargets(pi, self) {
 }
 function fireTrig(t) {
   const p = S.players[t.pi];
-  const u = t.snap || p.field.find(x => x.uid === t.uid);
+  const live = p.field.find(x => x.uid === t.uid);
+  const u = t.when === "death" ? t.snap : (live || t.snap);   // 生きていれば場のキャラ（自分を強くする効果など）、倒れていれば写し
   if (!u || u.silenced || !DEF[u.id]) return;
   if (t.when === "survive" && u.hp <= 0) return;
   const cd = t.card && DEF[t.card];
@@ -925,7 +931,7 @@ function fireTrig(t) {
 /* キャラが場から消えたとき（倒れた・代償で破壊された） */
 function onDeath(pi, u) {
   const p = S.players[u.owner != null ? u.owner : pi];   // 奪われたキャラは元の持ち主の墓地へ
-  (p.grave || (p.grave = [])).push(u.id);   // この対戦で破壊された自分のキャラ（復活の効果で使う）
+  (p.grave || (p.grave = [])).push(u.id); p.lastG = u.id;   // この対戦で破壊された自分のキャラ（復活の効果で使う）
   queueTrig(pi, "death", u);
   trigUnits(pi, "allyDeath", u);
 }
@@ -1425,7 +1431,6 @@ function render() {
   const tk = `${S.gid}-${S.turnNo}`;
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; }
   const me = S.players[ME];
-  const lines = S.log.filter(l => !l.sep).slice(-2);
   // 描き直しても絵が一瞬消えないように、前の画面の読み込み済みの絵（img）をそのまま使い回す
   const oldImgs = new Map();
   app.querySelectorAll("img").forEach(im => { if (im.complete && im.naturalWidth) { const k = im.getAttribute("src"); (oldImgs.get(k) || oldImgs.set(k, []).get(k)).push(im); } });
@@ -1434,7 +1439,7 @@ function render() {
     ${fieldHTML(OP)}
     <div class="mid">
       <div class="pile" aria-label="自分の山札 ${me.deck.length}枚"><span class="pback"></span><b>${me.deck.length}</b></div>
-      <button type="button" class="log" data-act="log" aria-label="プレイログを開く">${lines.map((l, i) => `<div class="${i < lines.length - 1 ? "old" : ""}">${logText(l)}</div>`).join("")}</button>
+      <div class="graves">${graveBtnHTML(OP)}${graveBtnHTML(ME)}</div>
       ${endButtonHTML()}
     </div>
     ${fieldHTML(ME)}
@@ -2177,11 +2182,45 @@ function showCardList() {
   if (keep) o.scrollTop = y;
 }
 
+/* 墓地：倒されたキャラ（grave）と使った魔法（used）。中央の段に、いちばん上の1枚と枚数を出す */
+const graveOf = pi => { const p = S.players[pi]; return { chars: p.grave || [], spells: p.used || [] }; };
+function graveBtnHTML(pi) {
+  const g = graveOf(pi), all = [...g.chars, ...g.spells], n = all.length;
+  const top = n ? DEF[S.players[pi].lastG || g.chars[g.chars.length - 1] || g.spells[g.spells.length - 1]] : null;
+  return `<button type="button" class="grave ${pi === OP ? "op" : "me"}" data-act="grave" data-p="${pi}" aria-label="${pi === OP ? "相手" : "自分"}の墓地 ${n}枚">
+    <span class="gv-top ${n ? "" : "empty"}" ${top && top.art ? `style="background-image:url('${esc(top.art)}')"` : ""}></span>
+    <span class="gv-l"><small>${pi === OP ? "相手" : "自分"}の墓地</small><b>${n}</b></span></button>`;
+}
+let GRAVE_TAB = null;
+function showGrave(pi) {
+  if (!S) return;
+  if (pi != null) GRAVE_TAB = pi;
+  const t = GRAVE_TAB == null ? OP : GRAVE_TAB, g = graveOf(t);
+  const cell = id => DEF[id] ? `<button type="button" class="gv-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}">${cardHTML(DEF[id], { static: true })}</button>` : "";
+  const sec = (label, ids, none) => `<h3 class="sec">${label}<small class="hint">${ids.length}枚</small></h3>${ids.length ? `<div class="gv-grid">${ids.slice().reverse().map(cell).join("")}</div>` : `<p class="hint">${none}</p>`}`;
+  openOverlay(`<div class="panel wide gvp">
+    <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>墓地</b></div>
+    <div class="gv-tabs" role="tablist">${[OP, ME].map(x => `<button type="button" role="tab" data-act="grave" data-p="${x}" aria-selected="${x === t}">${x === OP ? "相手" : "自分"}（${graveOf(x).chars.length + graveOf(x).spells.length}）</button>`).join("")}</div>
+    ${sec("倒されたキャラ", g.chars, "まだいません")}
+    ${sec("使った魔法", g.spells, "まだありません")}
+    <p class="hint">新しい順に並んでいます。カードを押すと効果を見られます。</p>
+  </div>`, "game");
+}
+/* ログの文の中のカード名を、押すと効果を見られる文字にする */
+let LOG_NAMES = null;
+function logLink(html) {
+  if (!LOG_NAMES) {
+    const m = new Map(); CARDS.forEach(c => { const n = esc(c.name); if (n.length >= 2 && !m.has(n)) m.set(n, c.id); });
+    const keys = [...m.keys()].sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    LOG_NAMES = { m, re: keys.length ? new RegExp(keys.join("|"), "g") : null };
+  }
+  return LOG_NAMES.re ? html.replace(LOG_NAMES.re, n => `<button type="button" class="cdlink" data-tk="${esc(LOG_NAMES.m.get(n))}">${n}</button>`) : html;
+}
 function showLog() {
   if (!S) return;
   const rows = S.log.map(l => l.sep
     ? `<div class="sep">${l.msg}</div>`
-    : `<div class="${l.who === OP ? "cpu" : ""}">${logText(l)}</div>`).join("");
+    : `<div class="${l.who === OP ? "cpu" : ""}">${logLink(logText(l))}</div>`).join("");
   openOverlay(`<div class="panel wide">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>プレイログ</b></div>
     <div class="loglist" id="loglist">${rows}</div>
@@ -2716,6 +2755,7 @@ function handleAct(act, el) {
     }
     case "account": Account.showScreen(); break;
     case "soundPanel": Sound.showPanel(); break;
+    case "grave": showGrave(+el.dataset.p); break;
     case "fxToggle": Fx.toggle(); showOptions(); break;
     case "nameEdit": showName(); break;
     case "nameSave": { const n = setPlayerName($("#pl-name") && $("#pl-name").value); showName(n ? `「${n}」にしました` : "名前を入れてください"); break; }
