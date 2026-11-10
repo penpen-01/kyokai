@@ -1,0 +1,116 @@
+diff --git a/js/game.js b/js/game.js
+index 41364ed..ff7c723 100644
+--- a/js/game.js
++++ b/js/game.js
+@@ -165,11 +165,32 @@ function cpuPreGame() {
+     const g = S;
+     setTimeout(() => { if (S === g) chooseOrder(1, Math.random() < 0.5); }, 900);   // 後攻も強い（境界の欠片）ので、半々で選ぶ
+   } else if (S.phase === "mulligan" && S.mull[1] == null) {
+-    const cheap = S.players[1].hand.filter(id => DEF[id].cost <= 3).length;
+-    mulligan(1, CPU_LEVEL !== "easy" && cheap < 2);
++    mulligan(1, CPU_LEVEL !== "easy" && cpuWantsMull(1));
+   }
+ }
+ 
++/* CPU の引き直し：3コスト以下が2枚未満なら引き直す。上級・超級は、7コスト以上が3枚以上あるときも引き直す */
++function cpuWantsMull(pi) {
++  const h = S.players[pi].hand.map(id => DEF[id]).filter(Boolean);
++  const cheap = h.filter(d => d.cost <= 3).length, big = h.filter(d => d.cost >= 7).length;
++  const tune = typeof CPU_TUNE === "undefined" || !CPU_TUNE || CPU_TUNE[pi] !== false;
++  return cheap < 2 || (tune && ["hard", "ex"].includes(CPU_LEVEL) && big >= 3);
++}
++/* デッキの型（CPU の盤面評価で使う）。相手を止めるカードが多いデッキは「守り」：自分の体力と相手の場を重く見る */
++const DECK_STYLE = new Map();
++/* 守りの型の重み（試験で調整した値） */
++const CTRL_K = { hp: 1.3, enHp: 1.2, enField: 1.35, reach: 1.0 };
++function deckStyle(deck) {
++  if (!deck || !deck.cards) return "normal";
++  const key = (deck.id || deck.name || "") + ":" + Object.keys(deck.cards).length + ":" + Object.values(deck.cards).join("");
++  if (DECK_STYLE.has(key)) return DECK_STYLE.get(key);
++  let n = 0, stop = 0;
++  for (const [id, k] of Object.entries(deck.cards)) { const d = DEF[id]; if (!d) continue; n += k;
++    if (d.effects.some(e => e.kind === "peekDiscard" || (e.kind === "unit" && sideOfTo(e.to) === "enemy" && (HOLD_ACTS.includes(e.act) || (e.act === "atk" && e.n < 0))))) stop += k; }
++  const st = n && stop / n >= 0.35 ? "control" : "normal";
++  DECK_STYLE.set(key, st); return st;
++}
++
+ /* priv を付けると、その番号のプレイヤーにだけ pmsg が見える（引いたカード名など） */
+ function log(msg, priv) {
+   const e = { msg, who: S.turn };
+@@ -1175,8 +1196,10 @@ function evaluate(st, pi) {
+   if (en.hp <= 0 && me.hp > 0) return 100000;
+   if (me.hp <= 0) return -100000;
+   let s = 0;
+-  s += me.hp * 1.0 - en.hp * 1.6;
+-  s += me.field.reduce((a, u) => a + unitValue(u), 0) - en.field.reduce((a, u) => a + unitValue(u), 0) * 1.1;
++  const tune = typeof CPU_TUNE === "undefined" || !CPU_TUNE || CPU_TUNE[pi] !== false;
++  const ctrl = tune && ["hard", "ex"].includes(CPU_LEVEL) && st.decks && deckStyle(st.decks[pi]) === "control";
++  s += me.hp * (ctrl ? CTRL_K.hp : 1.0) - en.hp * (ctrl ? CTRL_K.enHp : 1.6);
++  s += me.field.reduce((a, u) => a + unitValue(u), 0) - en.field.reduce((a, u) => a + unitValue(u), 0) * (ctrl ? CTRL_K.enField : 1.1);
+   // 亜空間のキャラは、相手に倒されずに戻ってくる（少しだけ割り引いて数える）
+   s += voidOf(me).reduce((a, v) => a + unitValue(v.u) * 0.9, 0) - voidOf(en).reduce((a, v) => a + unitValue(v.u), 0) * 1.0;
+   s += Math.min(me.hand.length, 7) * 0.7 - en.hand.length * 0.35;
+@@ -1187,7 +1210,7 @@ function evaluate(st, pi) {
+   const myGuard = me.field.some(u => kw(u, "guard") && !hidden(u));
+   const reach = en.field.reduce((a, u) => a + ((!myGuard || kw(u, "pierce")) && !u.frozen && !kw(u, "noattack") ? u.atk * (kw(u, "twice") ? 2 : 1) : 0), 0);
+   if (reach >= me.hp) s -= 60;
+-  else s -= reach * 0.4;
++  else s -= reach * (ctrl ? CTRL_K.reach : 0.4);
+   // 自分の次のターンに届くダメージ（とどめを狙う）
+   const enGuard = en.field.some(u => kw(u, "guard") && !hidden(u));
+   const myReach = me.field.reduce((a, u) => a + ((!enGuard || kw(u, "pierce")) && !kw(u, "noattack") ? u.atk * (kw(u, "twice") ? 2 : 1) : 0), 0);
+@@ -1221,8 +1244,32 @@ function applyAction(pi, a) {
+   return a.t === "play" ? playCard(pi, a.idx, a.targets, !!a.gear) : attack(pi, a.uid, a.target);
+ }
+ 
++/* 取っておく判断（上級・超級）：変身・手札に戻す・凍結などの「1体を止める」カードを、弱い相手に使ってしまわない。
++   カードのコストに見合う相手（おおよそ コスト×1.8+2 点の価値の6〜7割）でなければ、使う手の点数を下げる。
++   相手の攻撃で負けそうなときは取っておかない */
++const HOLD_ACTS = ["transform", "bounce", "destroy", "freeze", "silence", "shuffle", "steal"];
++function holdPenalty(pi, a) {
++  if (a.t !== "play") return 0;
++  const d = DEF[a.id]; if (!d) return 0;
++  const rem = playEffects(d).some(e => e.kind === "unit" && (e.to === "enemy1" || e.to === "enemyF") && (HOLD_ACTS.includes(e.act) || (e.act === "atk" && e.n < 0) || (e.act === "dmg" && e.n >= 5)));
++  if (!rem) return 0;
++  const tid = a.targets && (a.targets.enemy != null ? a.targets.enemy : a.targets.enemyF);
++  const u = tid && tid !== "face" ? findUnit(tid) : null; if (!u) return 0;
++  const me = S.players[pi], en = S.players[opp(pi)];
++  const reach = en.field.reduce((s, x) => s + (!x.frozen && !kw(x, "noattack") ? x.atk * (kw(x, "twice") ? 2 : 1) : 0), 0);
++  if (reach >= me.hp * 0.6) return 0;
++  const want = (d.cost * 1.8 + 2) * 0.65, got = unitValue(u);
++  let pen = Math.max(0, want - got) * (d.type === "spell" ? 0.5 : 0.25);
++  // 手札に戻す・山札に戻すは、相手がまた出せる。盤面から消えた分の点数のうち、出し直しの手間（コスト分）を超える分は割り引く
++  if (playEffects(d).some(e => e.kind === "unit" && (e.act === "bounce" || e.act === "shuffle") && (e.to === "enemy1" || e.to === "enemyF"))) {
++    const t = DEF[u.id], back = t && !t.token ? Math.max(0, got - t.cost * 0.9) * 0.7 : 0;
++    pen += back;
++  }
++  return pen;
++}
+ function cpuChoose(pi) {
+   const acts = legalActions(pi);
++  const tune = typeof CPU_TUNE === "undefined" || !CPU_TUNE || CPU_TUNE[pi] !== false;   // 試験用：false の側は前の考え方
+   if (!acts.length) return null;
+   // 初級：手の良し悪しはざっくり見るが、得になる手の上位3つからでたらめに選ぶ（2026-11-02：前の「完全にでたらめ」は弱すぎた）
+   const easy = CPU_LEVEL === "easy";
+@@ -1253,7 +1300,7 @@ function cpuChoose(pi) {
+     }
+     // 盤面の点数に表れない得（山札から選んで手札に加える＝手札の質が上がる）
+     const bonus = a.t === "play" && DEF[a.id] ? playEffects(DEF[a.id]).filter(e => e.kind === "tutor").length * 0.9 : 0;
+-    return { a, v: sum / tries + bonus };
++    return { a, v: sum / tries + bonus - (hard && tune ? holdPenalty(pi, a) : 0) };
+   }).sort((x, y) => y.v - x.v);
+   if (easy) {
+     const ok = scored.filter(x => x.v > base + 0.05).slice(0, 3);
+diff --git a/tools/sim/harness.js b/tools/sim/harness.js
+index e831685..eb8e49a 100644
+--- a/tools/sim/harness.js
++++ b/tools/sim/harness.js
+@@ -27,7 +27,7 @@ window.SimDev = {  // ゲーム側の js/simlab.js の SimLab と名前がぶつ
+       rpsWinner: null, first: Math.random() < 0.5 ? 0 : 1, mull: [true, true], decks: [da, db], turn: 0, turnNo: 0, over: false, winner: null, log: [], uidN: 0, seq: 0 };
+     const played = [[], []];
+     for (let i = 0; i < CONFIG.START_HAND; i++) { draw(0, true); draw(1, true); }
+-    for (const pi of [0, 1]) { const p = S.players[pi]; if (p.hand.filter(id => DEF[id].cost <= 3).length < 2) { p.deck.push(...p.hand); p.hand = []; shuffle(p.deck); for (let i = 0; i < CONFIG.START_HAND; i++) draw(pi, true); } }
++    for (const pi of [0, 1]) { const p = S.players[pi]; if (typeof cpuWantsMull === "function" ? cpuWantsMull(pi) : p.hand.filter(id => DEF[id].cost <= 3).length < 2) { p.deck.push(...p.hand); p.hand = []; shuffle(p.deck); for (let i = 0; i < CONFIG.START_HAND; i++) draw(pi, true); } }
+     // 後攻の補正（設定があれば）
+     if (CONFIG.SECOND_BONUS) for (let i = 0; i < CONFIG.SECOND_BONUS; i++) draw(1 - S.first, true);
+     for (let i = 0; i < (CONFIG.SECOND_COIN || 0); i++) S.players[1 - S.first].hand.push("coin");
