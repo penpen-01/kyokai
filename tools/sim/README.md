@@ -10,3 +10,4 @@
 
 `harness.js` の `"rule":"open"` は旧ルールから新ルールを試すためのもの。今のゲームはすでに新ルールなので `"current"` でよい。
 - `gate_eval.js`：開放戦デッキの勝率（`node tools/sim/gate_eval.js 100 out.json`）
+- `rr.js`：上級・開放戦・超級デッキの総当たり（`node tools/sim/rr.js 100 out.json`。13デッキ×100試合で約10分）
