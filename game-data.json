@@ -1,5 +1,5 @@
 {
- "version": 110,
+ "version": 111,
  "updated": "2026-11-11",
  "config": {
   "PLAYER_HP": 20,
@@ -1408,9 +1408,9 @@
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "heal",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "art": "art/stargaze-7803ce5b14.webp"
