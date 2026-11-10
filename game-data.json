@@ -1,5 +1,5 @@
 {
- "version": 104,
+ "version": 105,
  "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
@@ -340,7 +340,8 @@
    "gateRule": "world",
    "gateWorld": "myth",
    "gateDeck": "gate-myth",
-   "gateLevel": "hard"
+   "gateLevel": "hard",
+   "art": "ui/pack2-2.webp"
   },
   {
    "id": "pack2-3",
@@ -415,7 +416,8 @@
    "gateRule": "world",
    "gateWorld": "fan",
    "gateDeck": "gate-fan",
-   "gateLevel": "hard"
+   "gateLevel": "hard",
+   "art": "ui/pack2-3.webp"
   }
  ],
  "decks": [
