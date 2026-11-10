@@ -324,7 +324,7 @@ const Packs = {
       : `<button type="button" class="btn primary" data-act="packOpen10" data-id="${esc(L.pack.id)}" ${Account.gold >= L.pack.price * 10 ? "" : "disabled"}>もう10パック（${L.pack.price * 10}G）</button>`;
     openOverlay(`<div class="panel wide">
       <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>10パックの結果</b>${goldTag(Account.gold)}</div>
-      <div class="ms-grid">${L.rows.map((row, i) => `<div class="ms-row"><span class="ms-no">${i + 1}</span>${row.map(cell).join("")}</div>`).join("")}</div>
+      <div class="ms-grid n${L.pack.size}">${L.rows.map((row, i) => `<div class="ms-row"><span class="ms-no">${i + 1}</span>${row.map(cell).join("")}</div>`).join("")}</div>
       <div class="ms-sum ${play ? "hidden-until" : ""}">
         <div class="ms-counts">${RARITY_ORDER.map(r => `<span class="r-${r}"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}</span>`).join("")}<span class="ms-new">NEW ${newN}</span></div>
         ${best.length ? `<div class="ms-best"><small>SR以上</small><div>${best.map(x => `<button type="button" class="ms-b r-${DEF[x.id].rarity}" data-act="packDetail" data-id="${esc(x.id)}">${esc(DEF[x.id].name)}</button>`).join("")}</div></div>` : ""}
