@@ -1,5 +1,5 @@
 {
- "version": 103,
+ "version": 104,
  "updated": "2026-11-10",
  "config": {
   "PLAYER_HP": 20,
@@ -264,7 +264,8 @@
    "gateRule": "world",
    "gateWorld": "mech",
    "gateDeck": "gate-mech",
-   "gateLevel": "hard"
+   "gateLevel": "hard",
+   "art": "ui/pack2-1.webp"
   },
   {
    "id": "pack2-2",
