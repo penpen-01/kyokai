@@ -46,11 +46,13 @@ const Decks = {
     return Account.setDecks(list);
   },
   /* 作れるデッキの数の上限。いっぱいなら知らせて true を返す（新しく作るときだけ使う） */
+  /* 作れる数：基本の数＋ショップで増やした枠（サンプルは増えない） */
+  max(kind) { return (CONFIG.DECK_MAX || 10) + (kind === "sample" ? 0 : Account.deckSlots || 0); },
   full(kind) {
     kind = kind === true ? "sample" : kind || "mine";
-    const n = this.mine().filter(d => this.kindOf(d) === kind).length;
-    if (n < (CONFIG.DECK_MAX || 10)) return false;
-    toast(`${{ sample: "サンプルデッキ", world: "限定構築のデッキ" }[kind] || "デッキ"}は${CONFIG.DECK_MAX}個までです。いらないデッキを消してから作ってください`);
+    const n = this.mine().filter(d => this.kindOf(d) === kind).length, max = this.max(kind);
+    if (n < max) return false;
+    toast(`${{ sample: "サンプルデッキ", world: "限定構築のデッキ" }[kind] || "デッキ"}は${max}個までです。いらないデッキを消すか、ショップでデッキ枠を増やしてください`);
     return true;
   },
   /* 保存できない理由。30枚に足りないのは「未完成」として保存できる（対戦には使えない） */
@@ -206,8 +208,8 @@ const Decks = {
       ${this.topbar("デッキ編成", "deckBack")}
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
       ${true ? `<div class="seg wide dl-tabs" role="tablist">
-        ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => this.kindOf(d) === "mine").length}/${CONFIG.DECK_MAX}`)}
-        ${tabBtn("world", "限定構築", `${all.filter(d => this.kindOf(d) === "world").length}/${CONFIG.DECK_MAX}`)}
+        ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => this.kindOf(d) === "mine").length}/${this.max("mine")}`)}
+        ${tabBtn("world", "限定構築", `${all.filter(d => this.kindOf(d) === "world").length}/${this.max("world")}`)}
         ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
@@ -363,10 +365,12 @@ const Decks = {
     if (!cur || this.detail || cur.querySelector(".dmodal")) return this.renderEdit();
     const tmp = document.createElement("div"); tmp.innerHTML = this.editHTML();
     const nu = tmp.querySelector(".dedit");
+    const row = cur.querySelector(".dmini-row"), sx = row ? row.scrollLeft : 0;   // 上の列の横の位置は、描き直しても戻さない
     [".dtop", ".dwant", ".dedit-bar"].forEach(sel => {
       const a = cur.querySelector(sel), b = nu.querySelector(sel);
       if (a && b) a.replaceWith(b);
     });
+    const row2 = cur.querySelector(".dmini-row"); if (row2) row2.scrollLeft = sx;
     nu.querySelectorAll("#deck-pool .dtile[data-id]").forEach(nt => {
       const ot = cur.querySelector(`#deck-pool .dtile[data-id="${CSS.escape(nt.dataset.id)}"]`);
       if (!ot) return;

@@ -2198,3 +2198,4 @@ html.nofx .card .shine{display:none}
 /* ログの中のカード名 */
 .cdlink{display:inline;font:inherit;line-height:inherit;color:#ffe2a0;background:none;border:0;padding:0;margin:0;cursor:pointer;text-decoration:underline dotted rgba(255,226,160,.6);text-underline-offset:3px}
 .cdlink:hover,.cdlink:focus-visible{color:#fff3cf;outline:none}
+.c-slot{--c1:#3d5a2a;--c2:#18240f;color:#d4f5b8;cursor:default}

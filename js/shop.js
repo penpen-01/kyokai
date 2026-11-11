@@ -10,7 +10,7 @@
 /* 売り場の一覧。ready:false はまだ無い売り場（?shopsoon を付けたときだけ「準備中」で並ぶ） */
 const SHOP_CATS = [
   { id: "trade", ready: true }, { id: "dis", ready: true }, { id: "ticket", ready: true },
-  { id: "slot", ready: false, ic: "slot", name: "デッキ枠", sub: "作れるデッキの数を増やす" },
+  { id: "slot", ready: true },
   { id: "skin", ready: false, ic: "skin", name: "カードのスキン", sub: "好きなカードの絵を変える" },
   { id: "icon", ready: false, ic: "icon", name: "アイコン", sub: "プレイヤーの顔を変える" },
   { id: "sleeve", ready: false, ic: "sleeve", name: "スリーブ", sub: "カードの裏の模様" },
@@ -86,6 +86,18 @@ const Shop = {
     this.show(`パック券を1枚手に入れました（所持${Account.tickets}枚）。パックの画面で使えます。`);
   },
 
+  /* デッキ枠を1つ増やす（マイデッキ・限定構築の上限がそれぞれ1つ増える） */
+  buySlot() {
+    if (!this.usable()) return;
+    const cost = CONFIG.DECK_SLOT_COST ?? 1500;
+    if (Account.deckSlots >= (CONFIG.DECK_SLOT_MAX ?? 10)) return this.show("デッキ枠はもう増やせません。");
+    if (Account.stones < cost) return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`);
+    Account.data.stones -= cost;
+    Account.data.deckSlots = Account.deckSlots + 1;
+    Account.saveNow();
+    Sound.play("click");
+    this.show(`デッキ枠が1つ増えました（マイデッキ・限定構築とも ${Decks.max("mine")}個まで）。`);
+  },
   buy(id) {
     const c = DEF[id];
     if (!this.usable() || !c) return;
@@ -162,6 +174,7 @@ const Shop = {
     const sur = this.surplus();
     const surN = sur.reduce((a, x) => a + x.n, 0), surS = sur.reduce((a, x) => a + x.stones, 0);
     const tc = this.ticketCost(), f = this.feature(), use = this.usable();
+    const slotCost = CONFIG.DECK_SLOT_COST ?? 1500, slotLeft = (CONFIG.DECK_SLOT_MAX ?? 10) - Account.deckSlots;
     const soon = /[?&]shopsoon\b/.test(location.search);
     const fut = SHOP_CATS.filter(x => !x.ready);
     openOverlay(`<div class="panel wide shop shophub">
@@ -182,6 +195,9 @@ const Shop = {
         <div class="sh-cat c-ticket">
           <span class="sh-ic">${SHOP_IC.ticket}</span><b>パック券</b><small>魔石${tc}で1枚 ・ 所持${Account.tickets}枚</small>
           <button type="button" class="btn sm primary" data-act="shopTicket" ${use && Account.stones >= tc ? "" : "disabled"}>交換する</button></div>
+        <div class="sh-cat c-slot">
+          <span class="sh-ic">${SHOP_IC.slot}</span><b>デッキ枠</b><small>${slotLeft > 0 ? `魔石${slotCost}で1つ増やす（マイデッキ・限定構築とも）・今 ${Decks.max("mine")}個` : `もう増やせません（${Decks.max("mine")}個）`}</small>
+          <button type="button" class="btn sm primary" data-act="shopSlot" ${use && slotLeft > 0 && Account.stones >= slotCost ? "" : "disabled"}>増やす</button></div>
         ${soon ? fut.map(x => `<div class="sh-cat soon"><span class="sh-ic">${SHOP_IC[x.ic] || SHOP_IC.star}</span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("") : ""}
       </div>
       <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
@@ -316,6 +332,7 @@ const Shop = {
       case "shopAskNo": this.ask = null; this.showDismantle(); return true;
       case "shopAskYes": { const a = this.ask; this.ask = null; if (a) this.dismantle(a.all ? null : this.sel); return true; }
       case "shopTicket": this.buyTicket(); return true;
+      case "shopSlot": this.buySlot(); return true;
       case "shopRar": this.rar = el.dataset.v; this.showTrade(); return true;
       case "shopNeed": this.onlyNeed = !!el.checked; this.showTrade(); return true;
       case "shopDetail": this.detailId = el.dataset.id; this.showTrade(); return true;

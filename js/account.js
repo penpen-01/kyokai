@@ -34,6 +34,7 @@ const Account = {
   get stones() { return this.data ? this.data.stones || 0 : 0; },
   get tickets() { return this.data ? this.data.tickets || 0 : 0; },
   get srTickets() { return this.data ? this.data.srTickets || 0 : 0; },
+  get deckSlots() { return this.data ? this.data.deckSlots || 0 : 0; },
   usable() { return this.status === "ready" || this.status === "offline" || this.status === "free"; },
 
   async init() {
@@ -83,6 +84,8 @@ const Account = {
       tickets: Math.max(0, Math.floor(+d.tickets || 0)),
       // SR以上確定パック券（隠しボスの報酬）
       srTickets: Math.max(0, Math.floor(+d.srTickets || 0)),
+      // ショップで増やしたデッキ枠（マイデッキ・限定構築それぞれ +1）
+      deckSlots: Math.max(0, Math.min(50, Math.floor(+d.deckSlots || 0))),
       // 選択券（選択券のID → 枚数）。メールで受け取り、好きなカード1枚と交換する
       picks: Object.fromEntries(Object.entries(d.picks || {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && +v > 0).map(([k, v]) => [k, Math.floor(+v)])),
       opened: Array.isArray(d.opened) ? d.opened.filter(k => !!normSet(k)) : [],   // 開放した弾（「2-1」など。パック開放戦に勝つと増える）

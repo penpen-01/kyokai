@@ -77,8 +77,8 @@ const Notice = {
       </div>` : `<p class="hint">告知することはまだありません。</p>`}
       <div class="cpudeck">
         <div class="frow"><label class="small" for="nt-title" style="min-width:70px">題名</label><input class="txt" id="nt-title" maxlength="40" value="${esc(d.title)}" style="flex:1;min-width:160px"></div>
-        <div class="frow"><label class="small" for="nt-body" style="min-width:70px">本文</label><textarea class="txt" id="nt-body" rows="8" maxlength="1000" style="flex:1;min-width:200px">${esc(d.body)}</textarea></div>
-        <div class="frow"><button type="button" class="btn sm" data-act="ntCompose">本文を作り直す</button><span class="hint">メールの本文は1000文字まで（今 ${d.body.length}文字）</span></div>
+        <div class="frow"><label class="small" for="nt-body" style="min-width:70px">本文</label><textarea class="txt" id="nt-body" rows="8" maxlength="4000" style="flex:1;min-width:200px">${esc(d.body)}</textarea></div>
+        <div class="frow"><button type="button" class="btn sm" data-act="ntCompose">本文を作り直す</button><span class="hint">メールの本文は4000文字まで（今 ${d.body.length}文字）</span></div>
         <div class="frow"><span class="small">お詫び</span>
           <label class="small" for="nt-gold">G</label><input class="txt" id="nt-gold" type="number" min="0" step="10" value="${d.gold}" style="max-width:100px">
           <label class="small" for="nt-stones">魔石</label><input class="txt" id="nt-stones" type="number" min="0" step="10" value="${d.stones}" style="max-width:100px">
@@ -93,7 +93,7 @@ const Notice = {
   render() { const el = $("#notice-box"); if (el) el.innerHTML = this.html(); },
   read() {
     const v = id => { const el = $("#" + id); return el ? el.value : ""; }, d = this.draft;
-    d.title = v("nt-title").slice(0, 40); d.body = v("nt-body").slice(0, 1000);
+    d.title = v("nt-title").slice(0, 40); d.body = v("nt-body").slice(0, 4000);
     d.gold = Math.max(0, Math.floor(+v("nt-gold") || 0)); d.stones = Math.max(0, Math.floor(+v("nt-stones") || 0)); d.tickets = Math.max(0, Math.floor(+v("nt-tickets") || 0));
   },
   /* 告知したので、控えを今の状態にする */

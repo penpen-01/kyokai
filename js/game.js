@@ -769,7 +769,7 @@ function effect(pi, e, targets, self) {
       break;
     }
     case "tutor": {
-      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => { const c = DEF[x.id]; return c && c.cost <= n && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype); });
+      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => { const c = DEF[x.id]; return c && inCost(c, n, e) && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype); });
       if (!cands.length) { log("条件に合うカードが山札になかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
       me.deck.splice(pick.i, 1);
@@ -808,7 +808,7 @@ function effect(pi, e, targets, self) {
     case "revive": {
       if (fieldFull(me)) { log("場に空いている場所がなく、復活できなかった。"); break; }
       const g = me.grave || [];
-      const cands = g.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && !DEF[x.id].token && DEF[x.id].cost <= n);
+      const cands = g.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && !DEF[x.id].token && inCost(DEF[x.id], n, e));
       if (!cands.length) { log("復活できるキャラがいなかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
       g.splice(pick.i, 1);
@@ -819,7 +819,7 @@ function effect(pi, e, targets, self) {
     case "discount": me.discount = (me.discount || 0) + n; log(`${pname(pi)}の次のカードのコストが${n}下がる。`); break;
     case "summon": {
       if (fieldFull(me)) { log("場に空いている場所がなく、キャラを出せなかった。"); break; }
-      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && DEF[x.id].cost <= n);
+      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && inCost(DEF[x.id], n, e));
       if (!cands.length) { log("条件に合うキャラが山札にいなかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
       me.deck.splice(pick.i, 1);
@@ -1315,7 +1315,9 @@ function doEnd() {
 function playerIcon(pi) {
   const p = S.players[pi];
   if (p.icon && DEF[p.icon] && DEF[p.icon].art) return p.icon;
-  const deck = (S.decks && S.decks[pi] && S.decks[pi].cards) || {};
+  const dk = S.decks && S.decks[pi];
+  if (dk && dk.key && DEF[dk.key] && DEF[dk.key].art) return dk.key;   // デッキの代表カード
+  const deck = (dk && dk.cards) || {};
   const cands = Object.keys(deck).map(id => DEF[id]).filter(d => d && d.type === "char" && d.art);
   cands.sort((x, y) => RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity) || y.cost - x.cost);
   return cands[0] ? cands[0].id : null;
@@ -2424,7 +2426,7 @@ function startPractice() {
   const d = Decks.mine().find(x => x.id === PRACTICE.deck) || PRESETS.find(x => x.id === PRACTICE.deck);
   if (!d) return showPractice();
   // 練習：報酬・連勝の対象外（サンプルデッキと同じ扱い）
-  startBattle({ kind: "practice", level: PRACTICE.level, mine, opp: d, oppName: `練習CPU（${(CPU_LEVELS[PRACTICE.level] || CPU_LEVELS.normal).label}）`, practice: true, streak: false });
+  startBattle({ kind: "practice", level: PRACTICE.level, mine, opp: d, oppName: `${d.name}（練習）`, practice: true, streak: false });
 }
 
 function startCpuGame(level) {
@@ -2443,7 +2445,7 @@ function startCpuGame(level) {
      kind    … "cpu" | "world" | "practice"（あとで "unlock"（パック開放戦）・"boss"・"tutorial" を足す）
      level   … CPU の強さ（easy / normal / hard）
      mine    … 自分のデッキ（Decks.readyDeck の形）、opp … 相手のデッキ { name, cards }
-     oppName … 相手の名前（省略すると「CPU（強さ）」）
+     oppName … 相手の名前（省略するとデッキの名前）
      reward  … 勝ったときの G（省略すると強さごとの報酬）、streak … 連勝に数えるか
      practice… 報酬・連勝なしの練習
      setup(S)… 対戦を作った直後に呼ぶ（体力を変える・最初から場に出すなど、ボスやチュートリアル用） */
@@ -2451,7 +2453,8 @@ function startBattle(spec) {
   CPU_LEVEL = CPU_LEVELS[spec.level] ? spec.level : "normal";
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
-  newGame([playerName(), spec.oppName || `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [spec.mine, { name: spec.opp.name, cards: { ...spec.opp.cards }, ...(spec.opp.icon ? { icon: spec.opp.icon } : {}) }]);
+  // 相手の名前はデッキの名前（オーナー 11-12）。代表カード（key）は始まりの演出と相手の顔に使う
+  newGame([playerName(), spec.oppName || spec.opp.name || `CPU（${CPU_LEVELS[CPU_LEVEL].label}）`], [spec.mine, { name: spec.opp.name, cards: { ...spec.opp.cards }, ...(spec.opp.icon ? { icon: spec.opp.icon } : {}), ...(spec.opp.key ? { key: spec.opp.key } : {}) }]);
   S.battle = { kind: spec.kind, level: CPU_LEVEL, ...(spec.reward != null ? { reward: spec.reward } : {}), streak: !!spec.streak, ...(spec.extra || {}) };
   if (spec.practice) { S.practice = true; S.mySample = true; }
   else S.mySample = !!spec.mine.sample;
@@ -2649,7 +2652,7 @@ function startGateGame() {
   const icon = Account.icon();
   const lv = p.gateLevel || "hard";
   startBattle({ kind: "gate", level: lv, mine: { name: d.name, cards: { ...d.cards }, ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}) }, opp,
-    oppName: "開放戦の番人", streak: false, extra: { pack: p.id, key: p.set } });
+    streak: false, extra: { pack: p.id, key: p.set } });
 }
 /* 開放戦に勝ったら、そのパックの弾を開く（結果画面で1回だけ呼ばれる） */
 function gateReward() {
@@ -2711,7 +2714,7 @@ function startWorldGame(level) {
   const lv = CPU_LEVELS[level] ? level : "normal";
   const opp = worldOpponent(lv);
   if (!opp) return showWorldSelect();
-  startBattle({ kind: "world", level: lv, mine, opp, oppName: `CPU（${CPU_LEVELS[lv].label}・${WORLDS[deckWorld(opp)]}）`, streak: false });
+  startBattle({ kind: "world", level: lv, mine, opp, oppName: opp.name, streak: false });
 }
 
 /* ---------- 入力（タップ操作） ---------- */

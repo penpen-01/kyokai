@@ -374,6 +374,7 @@ function effOptsHTML(e, i) {
     if (o.includes("kw")) out.push(sel("kw", "能力", [["", "選んでください"], ...Object.entries(KEYWORDS).map(([k, v]) => [k, v.label]), ["armor", "装甲（数値）"]], e.kw || ""));
     if (o.includes("world")) out.push(sel("world", "世界", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
     if (o.includes("ctype")) out.push(sel("ctype", "種類", [["", "すべて"], ...Object.entries(TYPES)], e.ctype || ""));
+    if (o.includes("cmin")) out.push(sel("cmin", "コストの下限（数値が上限。10以上で上限なし）", [["", "なし（上限だけ）"], ...Array.from({ length: 10 }, (_, k) => [String(k + 1), `${k + 1}以上`])], e.cmin ? String(e.cmin) : ""));
     if (o.includes("dur")) out.push(sel("dur", "期間", [["turn", "このターンだけ"], ["game", "この対戦中ずっと"]], e.dur || "turn"));
   }
   return out.length ? `<div class="eff-opts">${out.join("")}</div>` : "";

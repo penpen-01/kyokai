@@ -59,6 +59,10 @@ const tokName = e => { const c = e && e.card && cardRef(e.card); return c ? c.na
 /* 「名前」（攻撃/体力） */
 const tokDesc = e => { const c = e && e.card && cardRef(e.card); return `「${tokName(e)}」${c && c.type === "char" ? `（${c.atk}/${c.hp}）` : ""}`; };
 const worldNo = e => (e && WORLDS[e.world] ? WORLDS[e.world] + "の" : "");
+/* コストの範囲（n＝上限。10以上なら上限なし。cmin＝下限）："コスト3以下の" "コスト3以上の" "コスト3〜5の" */
+const costRange = (n, e, keepHi) => { const lo = e && +e.cmin > 0 ? +e.cmin : 0, hi = n >= 10 && !keepHi ? 0 : n;
+  return lo && hi ? (lo >= hi ? `コスト${hi}の` : `コスト${lo}〜${hi}の`) : lo ? `コスト${lo}以上の` : hi ? `コスト${hi}以下の` : ""; };
+const inCost = (c, n, e) => c.cost <= (n >= 10 ? 99 : n) && c.cost >= (e && +e.cmin > 0 ? +e.cmin : 0);
 const ctypeName = e => (e && e.ctype === "char" ? "キャラ" : e && e.ctype === "spell" ? "魔法" : "カード");
 const kwName = e => (!e ? "能力" : e.kw === "armor" ? `装甲${e.n}` : KEYWORDS[e.kw] ? KEYWORDS[e.kw].label : "（能力未設定）");
 const effNoN = (def, e) => (typeof def.noN === "function" ? def.noN(e) : !!def.noN);
@@ -97,7 +101,7 @@ const EFFECTS = {
   ramp:        { group: "エナジー", label: "エナジー最大値を増やす",      text: n => `エナジーの最大値を${n}増やす（上限まで）。` },
   energyNow:   { group: "エナジー", label: "このターンのエナジーを増やす", text: n => `このターンだけ、エナジーを${n}得る。` },
   discount:    { group: "エナジー", label: "次に使うカードのコストを下げる", text: n => `次に使うカード1枚のコストを${n}下げる。` },
-  summon:      { group: "召喚",   label: "山札からキャラを無料で出す",    text: n => `山札からコスト${n}以下のキャラをランダムに1体、コストを払わずに出す。` },
+  summon:      { group: "召喚",   label: "山札からキャラを無料で出す",    text: (n, e) => `山札から${costRange(n, e, true)}キャラをランダムに1体、コストを払わずに出す。`, opts: ["cmin"] },
   buffSelfAtk: { legacy: true, group: "このキャラ", label: "このキャラの攻撃力を上げる", text: n => `このキャラの攻撃力を+${n}する。`, self: true },
   buffSelfBoth:{ legacy: true, group: "このキャラ", label: "このキャラを+N/+N",          text: n => `このキャラを+${n}/+${n}する。`, self: true },
   readySelf:   { group: "このキャラ", label: "このキャラはもう一度攻撃できる", text: () => "このキャラは、このターンもう一度攻撃できる。", self: true, noN: true },
@@ -106,7 +110,7 @@ const EFFECTS = {
   grantAll:    { legacy: true, group: "能力",   label: "自分のキャラ全体に能力を与える", text: (n, e) => `自分の${worldNo(e)}キャラ全体に「${kwName(e)}」を与える。`, opts: ["kw", "world"], noN: e => !e || e.kw !== "armor" },
   tokenField:  { group: "トークン", label: "トークンを場に出す",         text: (n, e) => `${tokDesc(e)}を${n}体出す。`, opts: ["token"], tokenType: "char" },
   tokenHand:   { group: "トークン", label: "トークンを手札に加える",     text: (n, e) => `${tokDesc(e)}を${n}枚手札に加える。`, opts: ["token"] },
-  tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札から${n >= 10 ? "" : `コスト${n}以下の`}${worldNo(e)}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype"], min: 0 },
+  tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札から${costRange(n, e)}${worldNo(e)}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype", "cmin"], min: 0 },
   bounceEnemy: { legacy: true, group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
   shuffleEnemy:{ legacy: true, group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
   transform:   { legacy: true, group: "除去",   label: "相手キャラを変身させる",       text: (n, e) => e && e.card ? `相手キャラ1体を${tokDesc(e)}に変身させる。` : "相手キャラ1体を、効果も能力もない1/1に変身させる。", target: "enemyUnit", noN: true, opts: ["token"], tokenType: "char", tokenOptional: true },
@@ -117,7 +121,7 @@ const EFFECTS = {
   swapEnemy:   { legacy: true, group: "妨害",   label: "相手キャラの攻撃力と体力を入れ替える", text: () => "相手キャラ1体の攻撃力と体力を入れ替える。", target: "enemyUnit", noN: true },
   swapOwn:     { legacy: true, group: "強化",   label: "自分のキャラの攻撃力と体力を入れ替える", text: () => "自分のキャラ1体の攻撃力と体力を入れ替える。", target: "ownUnit", noN: true },
   bounceOwn:   { legacy: true, group: "強化",   label: "自分のキャラを手札に戻す",     text: () => "自分のキャラ1体を手札に戻す（トークンは消える）。", target: "ownUnit", noN: true },
-  revive:      { group: "召喚",   label: "破壊された自分のキャラを復活させる", text: n => `この対戦で破壊された自分のコスト${n}以下のキャラをランダムに1体、場に出す（登場時効果は発動しない）。` },
+  revive:      { group: "召喚",   label: "破壊された自分のキャラを復活させる", text: (n, e) => `この対戦で破壊された自分の${costRange(n, e, true)}キャラをランダムに1体、場に出す（登場時効果は発動しない）。`, opts: ["cmin"] },
   banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true }
 };
 
@@ -273,7 +277,7 @@ const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
 const playEffects = card => (card.effects || []).filter(e => whenOf(e) === "play");
 
 const DEFAULT_CONFIG = {
-  PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10,
+  PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10, DECK_SLOT_COST: 1500, DECK_SLOT_MAX: 10,
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_EX: 450, REWARD_ONLINE: 80,
   STREAK_STEP: 10, STREAK_MAX: 50,
@@ -302,6 +306,8 @@ const CONFIG_INFO = {
   DECK_SIZE:  { label: "デッキの枚数",               min: 10, max: 60 },
   COPY_MAX:   { label: "同じカードを入れられる上限", min: 1, max: 10 },
   DECK_MAX:   { label: "作れるデッキの数（通常・サンプルそれぞれ）", min: 1, max: 50, group: "eco" },
+  DECK_SLOT_COST: { label: "デッキ枠を1つ増やす魔石", min: 0, max: 100000, group: "eco" },
+  DECK_SLOT_MAX:  { label: "ショップで増やせるデッキ枠の数", min: 0, max: 50, group: "eco" },
   STARTING_GOLD: { label: "始めたときに配るG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_EASY:   { label: "CPU初級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_NORMAL: { label: "CPU中級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
@@ -583,6 +589,7 @@ function normEffect(e, type) {
   if (o.includes("kw") && (KEYWORDS[e.kw] || e.kw === "armor")) out.kw = e.kw;
   if (o.includes("world") && WORLDS[e.world]) out.world = e.world;
   if (o.includes("ctype") && TYPES[e.ctype]) out.ctype = e.ctype;
+  if (o.includes("cmin") && +e.cmin > 0) out.cmin = Math.max(1, Math.min(10, Math.round(+e.cmin)));
   if (e.per === "gear" || e.per === "played") out.per = e.per;   // 使った歯車／先に使ったカード 1枚ごとに n 倍
   if (e.turn && e.act === "atk") out.turn = true;   // 攻撃力アップ（このターンだけ）
   if (CONDS[e.cond]) {
@@ -629,6 +636,7 @@ function normalizeData(data) {
   })).filter(c => c.id);
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
+    ...(typeof x.key === "string" && x.key ? { key: x.key } : {}),   // 代表カード（対戦の始まりの演出・相手の顔に使う）
     level: ["easy", "normal", "hard", "ex", "boss", "test", "gate"].includes(x.level) ? x.level : "normal"   // ex = 超級（第2弾をすべて開放すると出る）、test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用、gate = パック開放戦の相手（ふだんのCPU戦では使わない）
   }));
   const packs = (Array.isArray(d.packs) ? d.packs : []).filter(x => x && x.id).map(x => ({
@@ -659,14 +667,14 @@ function normalizeData(data) {
   }));
   // お知らせ（アップデート内容など）と、メール（全員に届く。Gや魔石、パック券、カードを付けられる）
   const date = v => (/^\d{4}-\d{2}-\d{2}$/.test(v || "") ? v : "");
-  const news = (Array.isArray(d.news) ? d.news : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), title: String(x.title || "お知らせ").slice(0, 40), body: String(x.body || "").slice(0, 2000) }));
+  const news = (Array.isArray(d.news) ? d.news : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), title: String(x.title || "お知らせ").slice(0, 40), body: String(x.body || "").slice(0, 4000) }));
   // 選択券：受け取ると、決められたレア度・弾のカードから好きな1枚を選べる。特別なものなので、作るたびに名前を変える（例：リリース記念レジェンド選択券）
   const picks = (Array.isArray(d.picks) ? d.picks : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id)).map(x => ({ id: String(x.id), name: String(x.name || "カード選択券").slice(0, 30),
     rarity: (Array.isArray(x.rarity) ? x.rarity : [x.rarity]).filter(r => RARITY[r]), sets: (Array.isArray(x.sets) ? x.sets : []).map(s => String(s) === "1" ? "1" : normSet(s)).filter(Boolean) }));
   const pickIds = new Set(picks.map(p => p.id));
   const cleanPicks = o => Object.fromEntries(Object.entries(o || {}).filter(([k, v]) => pickIds.has(k) && +v > 0).map(([k, v]) => [k, Math.min(9, Math.floor(+v))]));
   // メールの宛先 to：all＝全員（これから始める人にも届く）／before＝送った日までに始めた人だけ（お詫び・告知）／new＝送った日から後に始めた人（歓迎メール。期限なしで、ずっと届く）
-  const mail = (Array.isArray(d.mail) ? d.mail : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), until: date(x.until), title: String(x.title || "運営からのメール").slice(0, 40), body: String(x.body || "").slice(0, 1000),
+  const mail = (Array.isArray(d.mail) ? d.mail : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), until: date(x.until), title: String(x.title || "運営からのメール").slice(0, 40), body: String(x.body || "").slice(0, 4000),
     to: ["all", "before", "new"].includes(x.to) ? x.to : "all",
     gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards), picks: cleanPicks(x.picks) }));
   // ログインボーナス（7日で1周。休んでも進んだ分は消えない）

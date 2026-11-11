@@ -90,8 +90,11 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    el.innerHTML = `
-      <h2>報酬・CPU・シーズン</h2>
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["season", "シーズン（リセット）"]];
+    const sub = this.ecoSub || "money";
+    const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
+    const S = {};
+    S.money = `
       <div class="fgroup">
         <span class="gl">G（ゴールド）</span>
         <div class="cfg">
@@ -102,6 +105,14 @@ const Admin = {
         </div>
         <p class="hint">負けたときは0Gです。「始めたときに配るG」は、新しく始めた人にだけ配られます。</p>
       </div>
+      <div class="fgroup">
+        <span class="gl">ログインボーナス</span>
+        <p class="hint">1日1回、ホームを開いたときにもらえます。上から順に1日ずつ進み、最後まで行ったら最初に戻ります。休んでも進んだ分は消えません。</p>
+        <table class="lbtbl"><tr><th>日</th><th>G</th><th>魔石</th><th>パック券</th></tr>
+          ${(DATA.login || []).map((x, i) => `<tr><td>${i + 1}日目</td>${["gold", "stones", "tickets"].map(k => `<td><input class="txt" type="number" min="0" step="${k === "tickets" ? 1 : 10}" value="${x[k] || 0}" data-login="${i}" data-k="${k}" style="width:90px" aria-label="${i + 1}日目の${k}"></td>`).join("")}</tr>`).join("")}
+        </table>
+      </div>`;
+    S.cpu = `
       <div class="fgroup">
         <span class="gl">サンプルデッキ（ベータ用）</span>
         <label class="check" style="max-width:560px"><input type="checkbox" data-admin="sample" ${cfg.SAMPLE_DECKS ? "checked" : ""}><span><b>全カードで組める「サンプルデッキ」を許可する</b><span>オンの間は、遊ぶ人が持っていないカードも使ってデッキを組めます（カードの調整用）。オフにすると、サンプルデッキは対戦に使えなくなります（所持カード・Gには影響しません）。</span></span></label>
@@ -127,6 +138,11 @@ const Admin = {
               </select>
               ${isStarter ? `<span class="tagS">スターター</span>` : ""}
             </div>
+            <div class="frow"><label class="small" for="dk-key-${esc(d.id)}">代表カード</label>
+              <select class="txt" id="dk-key-${esc(d.id)}" data-admin="deck-key" data-id="${esc(d.id)}" style="flex:1;min-width:160px">
+                <option value="">おまかせ（いちばんレアで重いキャラ）</option>
+                ${Object.keys(d.cards).map(id => cards[id]).filter(c => c && c.type === "char").sort((a, b) => b.cost - a.cost).map(c => `<option value="${esc(c.id)}" ${d.key === c.id ? "selected" : ""}>${esc(c.name)}（${RARITY[c.rarity] || ""}・${c.cost}）</option>`).join("")}
+              </select></div>
             <span class="${pr.length ? "bad" : "ok"} small">${deckCount(d)}枚${pr.length ? " ・ " + esc(pr[0]) : ""}</span>
             <details><summary>中身を見る</summary><p class="hint">${Object.entries(d.cards).map(([id, n]) => `${esc(cards[id] ? cards[id].name : "（不明）")}×${n}`).join("、")}</p></details>
             <div class="frow">
@@ -148,17 +164,21 @@ const Admin = {
             <span class="warn">${esc(this.importMsg)}</span>
           </div>
         </div>
+      </div>`;
+    S.mail = `
+      <div class="fgroup ecoguide">
+        <span class="gl">どれを使う？</span>
+        <ul class="hint">
+          <li><b>カードの調整を知らせたい</b> → ①「お知らせの下書き」。変わったカードが自動で並ぶので、確かめて「メールにする」→ 上の「公開する」</li>
+          <li><b>文だけのお知らせ・G やカードを配るメール</b> → ②「お知らせ・メールを書く」</li>
+          <li><b>決まった人にだけ配りたい</b>（友達に教えるコード） → ③「シリアルコード」</li>
+        </ul>
+        <p class="hint">どれも、上の「公開する」を押すまでゲームには届きません。</p>
       </div>
-      <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
-      <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
       <div class="fgroup" id="notice-box">${Notice.html()}</div>
-      <div class="fgroup">
-        <span class="gl">ログインボーナス</span>
-        <p class="hint">1日1回、ホームを開いたときにもらえます。上から順に1日ずつ進み、最後まで行ったら最初に戻ります。休んでも進んだ分は消えません。</p>
-        <table class="lbtbl"><tr><th>日</th><th>G</th><th>魔石</th><th>パック券</th></tr>
-          ${(DATA.login || []).map((x, i) => `<tr><td>${i + 1}日目</td>${["gold", "stones", "tickets"].map(k => `<td><input class="txt" type="number" min="0" step="${k === "tickets" ? 1 : 10}" value="${x[k] || 0}" data-login="${i}" data-k="${k}" style="width:90px" aria-label="${i + 1}日目の${k}"></td>`).join("")}</tr>`).join("")}
-        </table>
-      </div>
+      <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
+      <div class="fgroup" id="serial-box">${this.serialHTML()}</div>`;
+    S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
         <p class="hint">シーズン名を変えて書き出し・アップロードすると、<b>全員の所持カード・G・デッキがリセット</b>され、新規スタートになります（前のシーズンのデータはFirebaseに残ります）。正式公開のときに使います。</p>
@@ -170,6 +190,7 @@ const Admin = {
         </div>
         <p class="hint">今のシーズン：<b>${esc(cfg.SEASON)}</b>（半角英数字と - _ のみ）</p>
       </div>`;
+    el.innerHTML = `<h2>報酬・CPU・シーズン</h2>${nav}${S[sub]}`;
   },
 
   /* ---------- シリアルコード ---------- */
@@ -189,7 +210,7 @@ const Admin = {
     const today = localDate();
     const sd = this.sd;
     return `
-      <span class="gl">シリアルコード（G・カードの配布）</span>
+      <span class="gl">③ シリアルコード（G・カードの配布）</span>
       <p class="hint">作ったコードを友達に教えると、ゲームの「オプション → シリアルコード」で入力して受け取れます。<b>1つのアカウントにつき1回まで</b>。公開しないとゲームでは使えません。公開されるデータにはコードそのものは入りません（暗号化した形だけ）。<b>コードはこのブラウザにだけ控えられる</b>ので、作ったらすぐコピーしてください。</p>
       <div class="cpudeck">
         <div class="frow">
@@ -237,7 +258,7 @@ const Admin = {
   pk: { name: "", rarity: "legend", sets: ["1"] },
   readIb() {
     const v = id => { const el = $("#" + id); return el ? el.value : ""; };
-    const b = this.ib; b.title = v("ib-title").slice(0, 40); b.body = v("ib-body").slice(0, 2000);
+    const b = this.ib; b.title = v("ib-title").slice(0, 40); b.body = v("ib-body").slice(0, 4000);
     if (b.kind === "mail") { b.gold = Math.max(0, Math.floor(+v("ib-gold") || 0)); b.stones = Math.max(0, Math.floor(+v("ib-stones") || 0)); b.tickets = Math.max(0, Math.floor(+v("ib-tickets") || 0)); b.until = v("ib-until"); b.to = v("ib-to") || "before"; }
   },
   inboxHTML() {
@@ -251,12 +272,12 @@ const Admin = {
           : `<button type="button" class="btn sm danger" data-act="ibDel" data-k="${kind}" data-id="${esc(m.id)}">削除</button>`}</div>
         ${kind === "mail" ? `<span class="small">宛先：${esc(MAIL_TO[m.to || "all"])} ・ ${gift(m) ? `付けたもの：${esc(gift(m))}` : "付けたものなし"}${m.until && m.to !== "new" ? ` ・ ${esc(m.until)}まで` : ""}</span>` : ""}
         <span class="hint" style="white-space:pre-wrap">${esc(m.body.slice(0, 120))}${m.body.length > 120 ? "…" : ""}</span></div>`;
-    return `<span class="gl">お知らせ・メール</span>
+    return `<span class="gl">② お知らせ・メールを書く</span>
       <p class="hint">ゲームのホーム右上に届きます。<b>お知らせ</b>はアップデート内容など読むだけのもの。<b>メール</b>は宛先を選べ、G・魔石・パック券・カード・選択券を付けると1アカウント1回だけ受け取れます。公開するとゲームに届きます。</p>
       <div class="cpudeck">
         <div class="seg"><button type="button" data-act="ibKind" data-v="news" aria-pressed="${b.kind === "news"}">お知らせ</button><button type="button" data-act="ibKind" data-v="mail" aria-pressed="${b.kind === "mail"}">メール</button></div>
         <div class="frow"><label class="small" for="ib-title" style="min-width:70px">題名</label><input class="txt" id="ib-title" maxlength="40" value="${esc(b.title)}" placeholder="${b.kind === "news" ? "例：ver.1.2 アップデート" : "例：ベータ参加のお礼"}" style="flex:1;min-width:160px"></div>
-        <div class="frow"><label class="small" for="ib-body" style="min-width:70px">本文</label><textarea class="txt" id="ib-body" rows="5" maxlength="2000" style="flex:1;min-width:200px" placeholder="改行もそのまま表示されます">${esc(b.body)}</textarea></div>
+        <div class="frow"><label class="small" for="ib-body" style="min-width:70px">本文</label><textarea class="txt" id="ib-body" rows="5" maxlength="4000" style="flex:1;min-width:200px" placeholder="改行もそのまま表示されます">${esc(b.body)}</textarea></div>
         ${b.kind === "mail" ? `<div class="frow"><label class="small" for="ib-to" style="min-width:70px">宛先</label>
             <select class="txt" id="ib-to" style="flex:1;min-width:200px">${Object.entries(MAIL_TO).map(([k, t]) => `<option value="${k}" ${b.to === k ? "selected" : ""}>${esc(t)}</option>`).join("")}</select></div>
           <p class="hint">お詫び・告知は「送った日までに始めた人だけ」。歓迎のプレゼントは「送った日から後に始めた人」（期限は付かず、ずっと届く）。</p>
@@ -365,6 +386,7 @@ const Admin = {
         copyText(deckToCode(d)).then(ok => { this.importMsg = ok ? "コピーしました" : "コピーできませんでした"; this.renderEco(); });
         return true;
       }
+      case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
       case "cpuAdd": {
         const d = codeToDeck($("#cpu-code").value);
         if (!d) { this.importMsg = "デッキコードを読み取れませんでした"; this.renderEco(); return true; }
@@ -436,6 +458,7 @@ document.addEventListener("change", e => {
   if (k === "pk-gdeck") { const p = Admin.pack(); if (t.value) p.gateDeck = t.value; else delete p.gateDeck; Admin.touch(Admin.renderPacks); }
   if (k === "starter") { DATA.config.STARTER_DECK = t.value; Admin.touch(Admin.renderEco); }
   if (k === "sample") { DATA.config.SAMPLE_DECKS = t.checked; Admin.touch(Admin.renderEco); }
+  if (k === "deck-key") { const d = DATA.decks.find(x => x.id === t.dataset.id); if (d) { if (t.value) d.key = t.value; else delete d.key; Admin.touch(); } }
   if (k === "deck-level") { const d = DATA.decks.find(x => x.id === t.dataset.id); if (d) { d.level = t.value; Admin.touch(); } }
 });
 
