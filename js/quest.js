@@ -14,12 +14,16 @@ const Quest = {
   ok() { return Account.status === "ready" || Account.status === "offline"; },
   st() {
     const d = Account.data; if (!d) return null;
-    const q = d.q || (d.q = {});
-    q.d = q.d || {}; q.b = q.b || { p: {}, got: [] }; q.l = q.l || { p: {}, got: [] };
-    q.b.p = q.b.p || {}; q.b.got = q.b.got || []; q.l.p = q.l.p || {}; q.l.got = q.l.got || [];
+    // サーバー（Realtime Database）は空の {} や [] を保存しないので、読み込んだあとは欠けていることがある。毎回そろえる
+    const q = (d.q && typeof d.q === "object") ? d.q : (d.q = {});
+    const arr = v => Array.isArray(v) ? v : (v && typeof v === "object" ? Object.values(v) : []);
+    const obj = v => (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
+    q.d = obj(q.d); q.b = obj(q.b); q.l = obj(q.l);
+    [q.d, q.b, q.l].forEach(x => { x.p = obj(x.p); x.got = arr(x.got); });
+    q.d.ids = arr(q.d.ids);
     // 日付が変わったら、デイリーを引き直す
     const today = localDate(new Date());
-    if (q.d.date !== today) q.d = { date: today, ids: this.draw(today), p: {}, got: [] };
+    if (q.d.date !== today || !q.d.ids.length) q.d = { date: today, ids: this.draw(today), p: {}, got: [] };
     return q;
   },
   /* その日の3つ：アカウントのコードと日付から決める（同じ日なら何度開いても同じ） */
@@ -49,6 +53,9 @@ const Quest = {
 
   /* 何かをしたら呼ぶ。type は QUEST_TYPES のキー。info.lv は CPU の強さ */
   add(type, n = 1, info = {}) {
+    try { this.addIn(type, n, info); } catch (e) { console.error(e); }   // クエストで失敗しても、元の操作は止めない
+  },
+  addIn(type, n, info) {
     if (!this.ok() || !Account.data || !(n > 0)) return;
     let changed = false;
     this.lists().forEach(([k, L]) => L.forEach(x => {

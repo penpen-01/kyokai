@@ -1,7 +1,7 @@
 /* オフラインでも遊べるようにするためのサービスワーカー。
    通信できるときは常に最新を取りに行き（ネットワーク優先）、
    通信できないときだけ保存しておいた内容を使う。 */
-const CACHE = "kyokai-v186";
+const CACHE = "kyokai-v187";
 const SHELL = [
   "./", "index.html", "game-data.json",
   "css/base.css", "css/game.css", "js/shared.js", "js/net.js", "js/sound.js", "js/bgm.js", "js/game.js", "js/motion.js", "js/finale.js", "js/vfx.js", "js/mull.js", "js/cinema.js", "js/account.js", "js/pack.js", "js/shop.js", "js/quest.js", "js/showcase.js", "js/deck.js", "js/feedback.js", "js/serial.js", "js/inbox.js", "js/splash.js", "js/online.js", "js/simlab.js",

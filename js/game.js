@@ -2047,7 +2047,7 @@ function showStart() {
         <button type="button" class="iconbtn" data-act="inboxNews" aria-label="お知らせ">${HOME_ICON.bell}${Inbox.newsBadge()}</button>
         <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
       </div>
-      ${goldOK ? Quest.boardHTML() : ""}
+      ${goldOK ? questBoardSafe() : ""}
     </div>
     <div class="homemain">
       ${Showcase.html()}
@@ -2297,11 +2297,14 @@ function streakHTML(r, res) {
   return r.prev >= 2 ? `<p class="streak lost">${r.prev}連勝で途切れました</p>` : "";
 }
 
+/* クエストの掲示板。ここで失敗してもホームは必ず出す */
+function questBoardSafe() { try { return typeof Quest !== "undefined" ? Quest.boardHTML() : ""; } catch (e) { console.error(e); return ""; } }
+
 function showResult(res) {
   if (!res) return;
   const online = MODE === "online";
   const r = giveReward(res), g = r.g;
-  if (typeof Quest !== "undefined") Quest.onGame(res, r.sample);
+  try { if (typeof Quest !== "undefined") Quest.onGame(res, r.sample); } catch (e) { console.error(e); }
   const en = { win: "VICTORY", lose: "DEFEAT", draw: "DRAW" }[res], ja = { win: "勝利", lose: "敗北", draw: "引き分け" }[res];
   const B = S && S.battle;
   const notes = [
@@ -2793,7 +2796,7 @@ function handleAct(act, el) {
       if (Feedback.handleAct(act, el)) return;
       if (Serial.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
-      if (Quest.handleAct(act, el)) return;
+      if (typeof Quest !== "undefined" && Quest.handleAct(act, el)) return;
       if (Shop.handleAct(act, el)) return;
       if (Inbox.handleAct(act, el)) return;
       if (Showcase.handleAct(act, el)) return;
