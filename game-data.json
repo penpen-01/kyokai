@@ -1,5 +1,5 @@
 {
- "version": 117,
+ "version": 118,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -4056,7 +4056,8 @@
    "effects": [],
    "token": true,
    "note": "手札にいくつでもためておける（何枚あっても手札1枠）。これだけでは使えず、「歯車」を使うカードを出すときの材料になる。",
-   "art": "art/tk-gear-422fd75d3a.webp"
+   "art": "art/tk-gear-422fd75d3a.webp",
+   "set": "2-1"
   },
   {
    "id": "tk-raider",
@@ -4074,7 +4075,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-raider-3891c1844a.webp"
+   "art": "art/tk-raider-3891c1844a.webp",
+   "set": "2-1"
   },
   {
    "id": "m2-gearsmith",
@@ -5206,7 +5208,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-wyrmling-3b1a47a811.webp"
+   "art": "art/tk-wyrmling-3b1a47a811.webp",
+   "set": "2-2"
   },
   {
    "id": "tk-angel",
@@ -5224,7 +5227,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-angel-1ce7701986.webp"
+   "art": "art/tk-angel-1ce7701986.webp",
+   "set": "2-2"
   },
   {
    "id": "tk-pegasus",
@@ -5242,7 +5246,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-pegasus-815a42fff4.webp"
+   "art": "art/tk-pegasus-815a42fff4.webp",
+   "set": "2-2"
   },
   {
    "id": "tk-youngdragon",
@@ -5260,7 +5265,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-youngdragon-f6215817a9.webp"
+   "art": "art/tk-youngdragon-f6215817a9.webp",
+   "set": "2-2"
   },
   {
    "id": "tk-elderdragon",
@@ -5279,7 +5285,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-elderdragon-99e066a58b.webp"
+   "art": "art/tk-elderdragon-99e066a58b.webp",
+   "set": "2-2"
   },
   {
    "id": "y2-angel",
@@ -6445,7 +6452,8 @@
     }
    ],
    "token": true,
-   "art": "art/tk-foxfire-6c140255e3.webp"
+   "art": "art/tk-foxfire-6c140255e3.webp",
+   "set": "2-3"
   },
   {
    "id": "tk-leaf",
@@ -6476,7 +6484,8 @@
     }
    ],
    "token": true,
-   "art": "art/tk-leaf-e6a18b860d.webp"
+   "art": "art/tk-leaf-e6a18b860d.webp",
+   "set": "2-3"
   },
   {
    "id": "tk-frog",
@@ -6492,7 +6501,8 @@
    "keywords": [],
    "effects": [],
    "token": true,
-   "art": "art/tk-frog-5dce1f52a8.webp"
+   "art": "art/tk-frog-5dce1f52a8.webp",
+   "set": "2-3"
   },
   {
    "id": "f2-kit",

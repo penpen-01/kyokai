@@ -138,11 +138,18 @@ function renderSummary() {
     </div>`;
 }
 
-function renderList() {
-  const list = DATA.cards
+let search = "";   // 一覧の検索（名前か効果の文）
+/* 一覧に並ぶカード（絞り込み・検索・並べ替えのあと）。「前へ／次へ」もこの順に動く */
+function listCards() {
+  const q = search.trim();
+  return DATA.cards
     .filter(c => filter === "all" || (filter === "token" ? c.token : c.type === filter && !c.token))
     .filter(inSet)
+    .filter(c => !q || c.name.includes(q) || cardText(c).includes(q))
     .slice().sort((a, b) => a.cost - b.cost || (a.type > b.type ? 1 : a.type < b.type ? -1 : 0) || a.name.localeCompare(b.name, "ja"));
+}
+function renderList() {
+  const list = listCards();
   $("#list").innerHTML = list.length ? list.map(c => `
     <li class="row ${c.id === curId ? "cur" : ""} ${c.limit ? "" : "out"} w-${c.world}" data-pick="${esc(c.id)}">
       ${cardHTML(c, { static: true })}
@@ -150,11 +157,7 @@ function renderList() {
         <span class="row-name">${esc(c.name)}</span>
         <span class="row-meta"><span class="setb s${String(c.set || "1").split("-")[0]}">${setName(c.set)}</span> コスト${c.cost} ・ <span class="w">${WORLDS[c.world]}</span> ・ ${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}${c.token ? " ・ トークン" : c.limit ? "" : " ・ 使用不可"}</span>
       </div>
-      <div class="stepper limit" aria-label="${esc(c.name)}の投入上限">
-        <button type="button" data-limit="-1" data-id="${esc(c.id)}" aria-label="上限を1減らす">−</button>
-        <input type="text" inputmode="numeric" value="${c.limit}" data-limit-in="${esc(c.id)}" id="cp-${esc(c.id)}" aria-label="投入上限">
-        <button type="button" data-limit="1" data-id="${esc(c.id)}" aria-label="上限を1増やす">＋</button>
-      </div>
+      ${c.limit !== 3 && !c.token ? `<span class="row-lim ${c.limit ? "" : "out"}">${c.limit ? `上限${c.limit}枚` : "使用不可"}</span>` : ""}
     </li>`).join("") : `<li class="hint" style="padding:12px">カードがありません。「新しいカード」から作れます。</li>`;
 }
 
@@ -186,7 +189,7 @@ function renderEditor() {
   if (!c) { el.innerHTML = `<div class="empty-ed">左の一覧からカードを選ぶか、「新しいカード」を作ってください。</div>`; return; }
   const isChar = c.type === "char";
   el.innerHTML = `
-    <button type="button" class="m-back" data-act="mBack">← カード一覧に戻る</button>
+    ${edNavHTML()}
     <div class="ed">
       <div class="ed-preview" id="edPreview"></div>
       <div class="ed-form">
@@ -495,11 +498,39 @@ function mobileEdit(on) {
   document.body.classList.toggle("m-edit", on);
   window.scrollTo(0, on ? 0 : listScrollY);
 }
-function select(id) {
+function select(id, keepScroll) {
   curId = id; confirmDelete = false;
   renderList(); renderEditor();
-  if (isNarrow()) mobileEdit(true);
+  if (isNarrow()) { if (keepScroll) window.scrollTo(0, 0); else mobileEdit(true); }
+  else {
+    window.scrollTo(0, 0);   // PC：左の一覧はその場に残り、右の編集は上から
+    const L = $("#list"), r = L && L.querySelector(`[data-pick="${CSS.escape(id)}"]`);   // 一覧の中だけ動かして、選んだカードを見える位置に
+    if (r) { const top = r.offsetTop - L.offsetTop; if (top < L.scrollTop || top + r.offsetHeight > L.scrollTop + L.clientHeight) L.scrollTop = top - L.clientHeight / 2; }
+  }
 }
+/* 編集の上の段：一覧に戻る・前へ・次へ（PC は ← → キーでも動く） */
+function edNavHTML() {
+  const L = listCards(), i = L.findIndex(c => c.id === curId);
+  return `<div class="ed-nav">
+    <button type="button" class="m-back" data-act="mBack">← 一覧</button>
+    <button type="button" class="btn sm" data-act="edPrev" ${i > 0 ? "" : "disabled"} aria-label="前のカード">◀ 前へ</button>
+    <span class="ed-pos">${i >= 0 ? `${i + 1} / ${L.length}` : "一覧の外"}</span>
+    <button type="button" class="btn sm" data-act="edNext" ${i >= 0 && i < L.length - 1 ? "" : "disabled"} aria-label="次のカード">次へ ▶</button>
+  </div>`;
+}
+function edStep(d) {
+  const L = listCards(), i = L.findIndex(c => c.id === curId);
+  const n = L[i < 0 ? 0 : i + d]; if (n && n.id !== curId) select(n.id, true);
+}
+document.addEventListener("keydown", e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  const tag = (e.target && e.target.tagName) || "";
+  if (/INPUT|TEXTAREA|SELECT/.test(tag) || (e.target && e.target.isContentEditable)) return;   // 入力中は動かさない
+  if (!$("#tab-cards") || $("#tab-cards").hidden) return;
+  if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); edStep(1); }
+  else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); edStep(-1); }
+});
+document.addEventListener("input", e => { if (e.target && e.target.id === "cardSearch") { search = e.target.value; renderList(); } });
 
 /* ---------- イベント ---------- */
 document.addEventListener("click", e => {
@@ -655,6 +686,8 @@ function act(name, el) {
   switch (name) {
     case "more": toggleMore($("#more").hidden); break;
     case "mBack": mobileEdit(false); break;
+    case "edPrev": edStep(-1); break;
+    case "edNext": edStep(1); break;
     case "new": {
       const card = normalizeData({ cards: [{ id: newId(), name: "新しいカード", world: "fan", type: "char", cost: 2, atk: 2, hp: 2, glyph: "新", limit: 3, set: setFilter === "all" ? "1" : setFilter }] }).cards[0];   // 絞っている弾のカードとして作る
       DATA.cards.push(card);

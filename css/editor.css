@@ -320,3 +320,10 @@ select.txt{appearance:auto;-webkit-appearance:auto}
   .wd-filters input{max-width:none !important;width:100%}
 }
 @media (max-width:820px){ #tab-decks:has(.wd-wrap.has) > h2, #tab-decks:has(.wd-wrap.has) > .hint{display:none} }
+/* 編集の上の段：一覧・前へ・次へ（スクロールしても上に残る） */
+.ed-nav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:8px 0;margin:-4px 0 8px;background:var(--bg);border-bottom:1px solid var(--line)}
+.ed-nav .ed-pos{flex:1;text-align:center;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ed-nav .m-back{width:auto;flex:none;margin:0;padding:8px 12px;font-size:14px}
+.row-lim{flex:none;font-size:11px;color:var(--gold);border:1px solid currentColor;border-radius:6px;padding:1px 6px;align-self:center}
+.row-lim.out{color:var(--muted)}
+@media (min-width:821px){ .ed-nav{top:calc(env(safe-area-inset-top,0px) + 104px)} }
