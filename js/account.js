@@ -221,7 +221,6 @@ const Account = {
       <p class="lead">スターターデッキ一式と、パック${Math.max(1, Math.floor(CONFIG.STARTING_GOLD / ((PACKS[0] && PACKS[0].price) || 100)))}個分のG（${CONFIG.STARTING_GOLD}G）を配りました。CPUや友達に勝つとGがもらえ、Gでパックを開けられます。</p>
       ${this.codeBoxHTML()}
       <p class="lead small">このコードは、機種変更やブラウザのデータが消えたときに、カードを取り戻すための鍵です。<b>スクリーンショットかメモで必ず控えてください。</b>他の人には教えないでください。</p>
-      <p class="lead small">ベータ版のデータは、正式公開のときにリセットされます。</p>
       <button type="button" class="btn primary" data-act="welcomeOk">控えました</button>
     </div>`, "start", true);
   },

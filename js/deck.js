@@ -208,6 +208,7 @@ const Decks = {
     const samp = this.sampleOK() && !this.free();
     if (this.listTab === "sample" && !samp) this.listTab = "mine";
     if (this.listTab === "cpu" && !this.free()) this.listTab = "mine";
+    if (this.listTab === "world" && !WORLD_MODE_OPEN) this.listTab = "mine";
     const tab = this.listTab;
     const list = tab === "cpu" ? PRESETS : all.filter(d => this.kindOf(d) === tab);
     const tabBtn = (v, label, n) => `<button type="button" role="tab" data-act="deckListTab" data-v="${v}" aria-pressed="${tab === v}">${label}${n != null ? ` <small>${n}</small>` : ""}</button>`;
@@ -217,13 +218,13 @@ const Decks = {
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
       ${true ? `<div class="seg wide dl-tabs" role="tablist">
         ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => this.kindOf(d) === "mine").length}/${this.max("mine")}`)}
-        ${tabBtn("world", "限定構築", `${all.filter(d => this.kindOf(d) === "world").length}/${this.max("world")}`)}
+        ${WORLD_MODE_OPEN ? tabBtn("world", "限定構築", `${all.filter(d => this.kindOf(d) === "world").length}/${this.max("world")}`) : ""}
         ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
-      ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）${CONFIG.SAMPLE_CPU ? "。ベータの間は CPU戦でも使えます（Gと連勝・隠しボスはなし）" : "だけです。CPU戦・世界限定戦では使えません"}。</p>` : ""}
+      ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）${CONFIG.SAMPLE_CPU ? "。CPU戦でも使えます（Gと連勝・隠しボスはなし）" : "だけです。CPU戦では使えません"}。</p>` : ""}
       <p class="hint dl-hint">${tab === "world" ? "世界限定戦で使うデッキです。1つの世界を決めて、その世界のカードだけで30枚を組みます。"
-        : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです（ベータ限定）。勝ってもGはもらえません。"
+        : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです。勝ってもGはもらえません。"
         : tab === "cpu" ? "CPU が使っているデッキです。"
         : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っていないカードも入れて保存できます（そろうまで対戦には使えません）。"}`}
         ${tab !== "cpu" && list.length > 1 ? "<br>デッキを長押しすると、順番を並び替えられます。" : ""}</p>
@@ -469,7 +470,7 @@ const Decks = {
         ${this.showFilters ? `<div class="dfpop" role="dialog" aria-label="絞り込み">${this.filterPopHTML()}</div>` : ""}
       </div>
       ${this.showFilters ? `<div class="dfpop-bg" data-act="deckFilters"></div>` : ""}
-      ${ed.free ? `<p class="hint">サンプルデッキ：持っていないカードも入れられます（ベータ限定）。</p>` : ""}
+      ${ed.free ? `<p class="hint">サンプルデッキ：持っていないカードも入れられます。</p>` : ""}
       ${this.isWorld(ed) ? `<p class="hint">限定構築（${WORLDS[ed.world]}）：${WORLDS[ed.world]}のカードだけを出しています。</p>` : ""}
       <div class="dwant">${this.wantHTML(ed, true)}</div>
       <p class="hint dpool-hint">タップで1枚入れる・長押しで詳しく見る</p>

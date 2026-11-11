@@ -2111,7 +2111,6 @@ function showOptions() {
       <button type="button" class="optrow" data-act="fxToggle" aria-pressed="${Fx.on}"><b>カードの光の動き</b><small>現在：${Fx.on ? "オン" : "オフ（UR・レジェンドの光を止めて軽くする）"}</small></button>
     </div>
     <p class="datainfo">${info}</p>
-    <p class="datainfo">ベータ版のカードやGは、正式公開のときにリセットされます。</p>
   </div>`, "options", true);
 }
 
@@ -2391,7 +2390,7 @@ function showCpuSelect() {
       <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck.name)}</b></span>
       <button type="button" class="btn sm" data-act="decks">変更</button>
     </div>
-    ${deck.free && Decks.sampleOK() && CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝や隠しボスにも数えません（ベータの間だけ CPU戦でも使えます）。</p>` : ""}
+    ${deck.free && Decks.sampleOK() && CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝や隠しボスにも数えません（CPU戦でも使えます）。</p>` : ""}
     ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキは CPU戦で使えません</b>サンプルデッキが使えるのは、練習対戦と友達との対戦だけです。「変更」から、自分のカードで組んだデッキを選んでください。</p>` : ""}
     <div class="lvls ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "lvls-off" : ""}">${cpuLevels(true).map(([k, v]) => `
       <button type="button" class="lvl lvl-${k}" data-act="cpuLevel" data-v="${k}" ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "disabled" : ""}>
@@ -2573,9 +2572,9 @@ function showSolo() {
     ${Decks.topbar("一人で対戦", "back")}
     <div class="lvls">
       ${tile("start", "CPU戦", "初級・中級・上級の CPU と戦う。勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
-      ${tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" })}
+      ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
       ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
-      ${tile("noop", "チュートリアル", "遊び方を、実際に対戦しながら覚える", { off: true, tag: "準備中", cls: "m-off" })}
+      ${TUTORIAL_OPEN ? tile("noop", "チュートリアル", "遊び方を、実際に対戦しながら覚える", { off: true, tag: "準備中", cls: "m-off" }) : ""}
       ${(() => { const g = gatePacks(), all = gatePacks(true);
         return tile("gate", "パック開放戦", "パックごとに決められたルールのもとで勝つと、新しいパックが開く",
           { off: !g.length, tag: !all.length ? "第2弾から" : !g.length ? "すべて開放ずみ" : `あと${g.length}つ`, cls: g.length ? "m-gate" : "m-off", art: g.length ? gateArt(g[0]) : "" }); })()}
@@ -2676,7 +2675,8 @@ function gateReward() {
 
 /* ---------- 世界限定戦：30枚すべて同じ世界のデッキ同士で戦う ----------
    CPU 用の世界限定デッキをオーナーが作るまでは、入口を閉じておく（中身はできている） */
-const WORLD_MODE_OPEN = false;
+const WORLD_MODE_OPEN = false;   // 世界限定戦（と、デッキ編成の「限定構築」）。できるまで画面に出さない
+const TUTORIAL_OPEN = false;     // チュートリアル。できるまで画面に出さない
 const WORLDB = { deck: null };
 function worldDecks() {
   return Decks.mine().filter(d => Decks.isWorld(d) && !Decks.problems(d).length);

@@ -759,7 +759,7 @@ function deckCount(deck) { return Object.values(deck.cards || {}).reduce((s, n) 
 function deckProblems(deck, cardsById, config, owned) {
   const probs = [];
   if (deck.free) {
-    if (!config.SAMPLE_DECKS) probs.push("サンプルデッキは今は使えません（ベータ期間が終わりました）");
+    if (!config.SAMPLE_DECKS) probs.push("サンプルデッキは今は使えません");
     owned = null; // サンプルデッキは所持数を問わない
   }
   const total = deckCount(deck);

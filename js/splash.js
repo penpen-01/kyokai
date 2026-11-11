@@ -74,7 +74,7 @@ const Splash = {
         <p class="sp-sub">神話 ・ 幻想 ・ 機械</p>
         <p class="sp-tap" id="sp-tap">${this.ready ? "タップしてスタート" : "読み込み中…"}</p>
       </div>
-      <p class="sp-foot">ベータ版${DATA_INFO.updated ? ` ・ カードデータ ${esc(DATA_INFO.updated)}` : ""}</p>
+      ${DATA_INFO.updated ? `<p class="sp-foot">カードデータ ${esc(DATA_INFO.updated)}</p>` : ""}
     </div>`;
     o.hidden = false;
     o.scrollTop = 0;
