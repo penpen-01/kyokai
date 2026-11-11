@@ -1,5 +1,5 @@
 {
- "version": 116,
+ "version": 117,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -992,6 +992,28 @@
     "omega": 2,
     "turret": 3,
     "x-emp": 3
+   },
+   "level": "test"
+  },
+  {
+   "id": "dkmwcbu1pgsn",
+   "name": "バーン！（複製）",
+   "cards": {
+    "m-hammer": 2,
+    "m-ragnarok": 2,
+    "m2-catapult": 2,
+    "m2-disaster": 1,
+    "m2-furnace": 2,
+    "m2-laser": 3,
+    "m2-missile": 2,
+    "m2-particle": 1,
+    "m2-selfdestruct": 1,
+    "omega": 1,
+    "turret": 3,
+    "x-cannon": 2,
+    "x-emp": 3,
+    "x-factory": 2,
+    "x-tochka": 3
    },
    "level": "test"
   }
