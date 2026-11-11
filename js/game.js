@@ -307,7 +307,7 @@ const shielded = u => kw(u, "shield") && !u.shieldUsed;
 /* 相手が対象に選べるか（隠密・呪文耐性は選べない） */
 const canTarget = u => !hidden(u) && !kw(u, "elusive");
 /* ランダムな1体に選ばれるか（隠密は選ばれない。呪文耐性は選ばれる） */
-const canRandom = u => !hidden(u);
+const canRandom = u => true;   // ランダムに選ぶ効果（自分で選ばない効果）は隠密にも当たる（オーナー 11-12）。全体への効果も同じ
 /* 対象を選ぶ役割で、選べるキャラ */
 /* カード d の効果が、その役割の対象を世界で絞っているか（「自分の神話のキャラ1体」など） */
 function roleWorld(d, role) {
