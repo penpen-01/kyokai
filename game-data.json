@@ -1,5 +1,5 @@
 {
- "version": 115,
+ "version": 116,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -733,8 +733,8 @@
     "m2-jamtower": 1,
     "m2-crane": 1
    },
-   "level": "gate",
-   "key": "m2-godgear"
+   "key": "m2-godgear",
+   "level": "gate"
   },
   {
    "id": "gate-myth",
@@ -767,8 +767,8 @@
     "y2-horn": 1,
     "y2-pegasi": 1
    },
-   "level": "gate",
-   "key": "y2-kensei"
+   "key": "y2-kensei",
+   "level": "gate"
   },
   {
    "id": "gate-fan",
@@ -798,8 +798,8 @@
     "f2-wisp": 1,
     "f2-nightmare": 1
    },
-   "level": "gate",
-   "key": "f2-tamamo"
+   "key": "f2-tamamo",
+   "level": "gate"
   },
   {
    "id": "dkmwb24mm5dx",
@@ -826,8 +826,8 @@
     "y2-lightwing": 1,
     "y2-worldeater": 1
    },
-   "level": "ex",
-   "key": "f2-storyteller"
+   "key": "f2-storyteller",
+   "level": "ex"
   },
   {
    "id": "dkmwb260qtzu",
@@ -855,8 +855,8 @@
     "n-timewitch": 1,
     "spring": 1
    },
-   "level": "ex",
-   "key": "f2-walpurgis"
+   "key": "f2-walpurgis",
+   "level": "ex"
   },
   {
    "id": "dkmwb26i9ion",
@@ -886,8 +886,8 @@
     "y2-worldeater": 1,
     "y2-wyvern": 2
    },
-   "level": "ex",
-   "key": "y2-worldeater"
+   "key": "y2-worldeater",
+   "level": "ex"
   },
   {
    "id": "dkmwb26xuw39",
@@ -917,8 +917,8 @@
     "f2-wolf": 1,
     "x-reboot": 1
    },
-   "level": "ex",
-   "key": "f2-tamamo"
+   "key": "f2-tamamo",
+   "level": "ex"
   },
   {
    "id": "dkmwb27adgml",
@@ -946,8 +946,8 @@
     "y2-valkyrie": 1,
     "y2-worldeater": 1
    },
-   "level": "ex",
-   "key": "y2-kensei"
+   "key": "y2-kensei",
+   "level": "ex"
   },
   {
    "id": "dkmwb27le9am",
@@ -972,8 +972,28 @@
     "x-emp": 1,
     "x-executor": 2
    },
-   "level": "ex",
-   "key": "m2-godgear"
+   "key": "m2-godgear",
+   "level": "ex"
+  },
+  {
+   "id": "dkmwcbct7v74",
+   "name": "バーン！",
+   "cards": {
+    "m-hammer": 2,
+    "m-ragnarok": 2,
+    "m2-catapult": 3,
+    "m2-clock": 1,
+    "m2-disaster": 2,
+    "m2-furnace": 3,
+    "m2-laser": 3,
+    "m2-missile": 3,
+    "m2-particle": 2,
+    "m2-selfdestruct": 1,
+    "omega": 2,
+    "turret": 3,
+    "x-emp": 3
+   },
+   "level": "test"
   }
  ],
  "serials": [
