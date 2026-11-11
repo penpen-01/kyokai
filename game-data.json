@@ -1,5 +1,5 @@
 {
- "version": 118,
+ "version": 119,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -814,17 +814,17 @@
     "f2-karla": 1,
     "f2-moonwitch": 1,
     "f2-sleepcastle": 1,
-    "f2-storyteller": 2,
-    "f2-walpurgis": 2,
+    "f2-storyteller": 3,
+    "f2-walpurgis": 1,
     "m2-clock": 1,
     "m2-hive": 1,
     "n-fairyqueen": 1,
-    "omega": 1,
     "priestess": 3,
     "x-executor": 1,
     "x-overcharge": 3,
     "y2-lightwing": 1,
-    "y2-worldeater": 1
+    "y2-worldeater": 1,
+    "m2-disaster": 1
    },
    "key": "f2-storyteller",
    "level": "ex"
@@ -903,19 +903,18 @@
     "f2-imp": 1,
     "f2-kamikakushi": 1,
     "f2-kit": 2,
-    "f2-kohaku": 1,
-    "f2-moonwalk": 2,
+    "f2-kohaku": 2,
+    "f2-moonwalk": 3,
     "f2-nightmare": 1,
-    "f2-rebloom": 2,
+    "f2-rebloom": 1,
     "f2-sake": 1,
     "f2-sapling": 1,
     "f2-silentnight": 1,
-    "f2-sleepcastle": 1,
     "f2-tamamo": 3,
     "f2-tanuki": 2,
     "f2-wisp": 1,
     "f2-wolf": 1,
-    "x-reboot": 1
+    "quantum": 1
    },
    "key": "f2-tamamo",
    "level": "ex"
@@ -953,7 +952,6 @@
    "id": "dkmwb27le9am",
    "name": "機神始動",
    "cards": {
-    "endragon": 1,
     "m-hammer": 1,
     "m2-automaton": 1,
     "m2-box": 3,
@@ -970,7 +968,8 @@
     "m2-transfer": 1,
     "m2-zenmai": 2,
     "x-emp": 1,
-    "x-executor": 2
+    "x-executor": 1,
+    "f-spring": 2
    },
    "key": "m2-godgear",
    "level": "ex"
@@ -1206,7 +1205,7 @@
    "effects": [
     {
      "kind": "player",
-     "n": 3,
+     "n": 2,
      "act": "dmg",
      "who": "opp"
     }
@@ -2847,12 +2846,12 @@
    "name": "英霊",
    "world": "myth",
    "type": "char",
-   "cost": 2,
-   "atk": 2,
+   "cost": 3,
+   "atk": 3,
    "hp": 2,
    "glyph": "英",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "rare",
    "keywords": [],
    "effects": [],
    "token": true,
@@ -2886,7 +2885,7 @@
    "type": "char",
    "cost": 1,
    "atk": 1,
-   "hp": 1,
+   "hp": 2,
    "glyph": "花",
    "limit": 3,
    "rarity": "common",
@@ -3848,7 +3847,7 @@
    "type": "char",
    "cost": 4,
    "atk": 0,
-   "hp": 4,
+   "hp": 6,
    "glyph": "砲",
    "limit": 3,
    "rarity": "rare",
@@ -4055,9 +4054,9 @@
    "keywords": [],
    "effects": [],
    "token": true,
+   "set": "2-1",
    "note": "手札にいくつでもためておける（何枚あっても手札1枠）。これだけでは使えず、「歯車」を使うカードを出すときの材料になる。",
-   "art": "art/tk-gear-422fd75d3a.webp",
-   "set": "2-1"
+   "art": "art/tk-gear-422fd75d3a.webp"
   },
   {
    "id": "tk-raider",
@@ -4075,8 +4074,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-raider-3891c1844a.webp",
-   "set": "2-1"
+   "set": "2-1",
+   "art": "art/tk-raider-3891c1844a.webp"
   },
   {
    "id": "m2-gearsmith",
@@ -4644,10 +4643,10 @@
      "to": "own1"
     },
     {
-     "kind": "unit",
-     "n": 3,
+     "kind": "player",
      "act": "heal",
-     "to": "own1"
+     "who": "self",
+     "n": 1
     }
    ],
    "set": "2-1",
@@ -4748,7 +4747,7 @@
    "effects": [
     {
      "kind": "player",
-     "n": 2,
+     "n": 3,
      "when": "attack",
      "act": "dmg",
      "who": "opp"
@@ -4777,7 +4776,7 @@
     },
     {
      "kind": "unit",
-     "n": 6,
+     "n": 5,
      "act": "dmg",
      "to": "enemyF",
      "cond": "gearPaid"
@@ -5208,8 +5207,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-wyrmling-3b1a47a811.webp",
-   "set": "2-2"
+   "set": "2-2",
+   "art": "art/tk-wyrmling-3b1a47a811.webp"
   },
   {
    "id": "tk-angel",
@@ -5227,8 +5226,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-angel-1ce7701986.webp",
-   "set": "2-2"
+   "set": "2-2",
+   "art": "art/tk-angel-1ce7701986.webp"
   },
   {
    "id": "tk-pegasus",
@@ -5246,8 +5245,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-pegasus-815a42fff4.webp",
-   "set": "2-2"
+   "set": "2-2",
+   "art": "art/tk-pegasus-815a42fff4.webp"
   },
   {
    "id": "tk-youngdragon",
@@ -5265,8 +5264,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-youngdragon-f6215817a9.webp",
-   "set": "2-2"
+   "set": "2-2",
+   "art": "art/tk-youngdragon-f6215817a9.webp"
   },
   {
    "id": "tk-elderdragon",
@@ -5285,8 +5284,8 @@
    ],
    "effects": [],
    "token": true,
-   "art": "art/tk-elderdragon-99e066a58b.webp",
-   "set": "2-2"
+   "set": "2-2",
+   "art": "art/tk-elderdragon-99e066a58b.webp"
   },
   {
    "id": "y2-angel",
@@ -5491,7 +5490,9 @@
      "n": 1,
      "act": "atk",
      "to": "ownAll",
-     "world": "myth"
+     "world": "myth",
+     "cond": "worldGE",
+     "cn": 2
     }
    ],
    "set": "2-2",
@@ -5536,14 +5537,8 @@
    "effects": [
     {
      "kind": "player",
-     "n": 3,
+     "n": 5,
      "act": "heal",
-     "who": "self"
-    },
-    {
-     "kind": "player",
-     "n": 1,
-     "act": "draw",
      "who": "self"
     }
    ],
@@ -5592,8 +5587,8 @@
    "world": "myth",
    "type": "char",
    "cost": 3,
-   "atk": 2,
-   "hp": 3,
+   "atk": 3,
+   "hp": 2,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
@@ -5645,7 +5640,7 @@
    "effects": [
     {
      "kind": "tokenField",
-     "n": 2,
+     "n": 3,
      "card": "tk-angel"
     }
    ],
@@ -5752,7 +5747,7 @@
    "type": "char",
    "cost": 3,
    "atk": 2,
-   "hp": 3,
+   "hp": 2,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -5810,7 +5805,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 3,
+     "n": 2,
      "act": "hp",
      "to": "own1"
     },
@@ -5896,8 +5891,7 @@
      "kind": "unit",
      "n": 2,
      "act": "hp",
-     "to": "ownAll",
-     "world": "myth"
+     "to": "ownAll"
     }
    ],
    "set": "2-2",
@@ -5940,7 +5934,7 @@
    "type": "char",
    "cost": 4,
    "atk": 3,
-   "hp": 3,
+   "hp": 2,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -6091,7 +6085,7 @@
    "type": "char",
    "cost": 6,
    "atk": 6,
-   "hp": 3,
+   "hp": 2,
    "glyph": "神",
    "limit": 3,
    "rarity": "sr",
@@ -6452,8 +6446,8 @@
     }
    ],
    "token": true,
-   "art": "art/tk-foxfire-6c140255e3.webp",
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/tk-foxfire-6c140255e3.webp"
   },
   {
    "id": "tk-leaf",
@@ -6484,8 +6478,8 @@
     }
    ],
    "token": true,
-   "art": "art/tk-leaf-e6a18b860d.webp",
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/tk-leaf-e6a18b860d.webp"
   },
   {
    "id": "tk-frog",
@@ -6501,8 +6495,8 @@
    "keywords": [],
    "effects": [],
    "token": true,
-   "art": "art/tk-frog-5dce1f52a8.webp",
-   "set": "2-3"
+   "set": "2-3",
+   "art": "art/tk-frog-5dce1f52a8.webp"
   },
   {
    "id": "f2-kit",
@@ -6680,7 +6674,7 @@
    "effects": [
     {
      "kind": "player",
-     "n": 1,
+     "n": 2,
      "when": "back",
      "act": "draw",
      "who": "self"
@@ -6791,7 +6785,7 @@
    "name": "静けさの鈴",
    "world": "fan",
    "type": "spell",
-   "cost": 2,
+   "cost": 1,
    "glyph": "幻",
    "limit": 3,
    "rarity": "common",
@@ -7001,7 +6995,7 @@
    "name": "還り咲き",
    "world": "fan",
    "type": "spell",
-   "cost": 1,
+   "cost": 2,
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
@@ -7011,12 +7005,11 @@
      "kind": "unit",
      "n": 1,
      "act": "bounce",
-     "to": "own1",
-     "world": "fan"
+     "to": "own1"
     },
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
      "act": "dmg",
      "to": "anyRand"
     }
@@ -7069,7 +7062,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
      "when": "back",
      "act": "dmg",
      "to": "enemyRand"
@@ -7289,7 +7282,7 @@
     },
     {
      "kind": "tokenHand",
-     "n": 1,
+     "n": 2,
      "card": "tk-foxfire"
     }
    ],
@@ -7496,7 +7489,7 @@
    "world": "fan",
    "type": "char",
    "cost": 6,
-   "atk": 4,
+   "atk": 2,
    "hp": 5,
    "glyph": "幻",
    "limit": 3,
@@ -7506,7 +7499,8 @@
     {
      "kind": "summon",
      "n": 10,
-     "when": "turnStart"
+     "when": "turnStart",
+     "cmin": "6"
     }
    ],
    "set": "2-3",
