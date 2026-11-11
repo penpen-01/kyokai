@@ -1,5 +1,5 @@
 {
- "version": 114,
+ "version": 115,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -733,7 +733,8 @@
     "m2-jamtower": 1,
     "m2-crane": 1
    },
-   "level": "gate"
+   "level": "gate",
+   "key": "m2-godgear"
   },
   {
    "id": "gate-myth",
@@ -766,7 +767,8 @@
     "y2-horn": 1,
     "y2-pegasi": 1
    },
-   "level": "gate"
+   "level": "gate",
+   "key": "y2-kensei"
   },
   {
    "id": "gate-fan",
@@ -796,7 +798,8 @@
     "f2-wisp": 1,
     "f2-nightmare": 1
    },
-   "level": "gate"
+   "level": "gate",
+   "key": "f2-tamamo"
   },
   {
    "id": "dkmwb24mm5dx",
@@ -823,7 +826,8 @@
     "y2-lightwing": 1,
     "y2-worldeater": 1
    },
-   "level": "ex"
+   "level": "ex",
+   "key": "f2-storyteller"
   },
   {
    "id": "dkmwb260qtzu",
@@ -851,7 +855,8 @@
     "n-timewitch": 1,
     "spring": 1
    },
-   "level": "ex"
+   "level": "ex",
+   "key": "f2-walpurgis"
   },
   {
    "id": "dkmwb26i9ion",
@@ -881,7 +886,8 @@
     "y2-worldeater": 1,
     "y2-wyvern": 2
    },
-   "level": "ex"
+   "level": "ex",
+   "key": "y2-worldeater"
   },
   {
    "id": "dkmwb26xuw39",
@@ -911,7 +917,8 @@
     "f2-wolf": 1,
     "x-reboot": 1
    },
-   "level": "ex"
+   "level": "ex",
+   "key": "f2-tamamo"
   },
   {
    "id": "dkmwb27adgml",
@@ -939,7 +946,8 @@
     "y2-valkyrie": 1,
     "y2-worldeater": 1
    },
-   "level": "ex"
+   "level": "ex",
+   "key": "y2-kensei"
   },
   {
    "id": "dkmwb27le9am",
@@ -964,7 +972,8 @@
     "x-emp": 1,
     "x-executor": 2
    },
-   "level": "ex"
+   "level": "ex",
+   "key": "m2-godgear"
   }
  ],
  "serials": [
