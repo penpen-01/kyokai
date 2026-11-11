@@ -50,13 +50,13 @@ async function loadCardData() {
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
-  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || [];
+  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner;
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 let SERIALS = []; // シリアルコード（ハッシュ）
-let NEWS = [], MAIL = [], LOGIN = [], PICKS = [], QUESTS = [];   // QUESTS：期間限定クエスト（js/quest.js）   // お知らせ・メール（js/inbox.js）
+let NEWS = [], MAIL = [], LOGIN = [], PICKS = [], QUESTS = [], QUEST_DAILY = null, QUEST_BEGIN = null;   // QUESTS：期間限定クエスト（js/quest.js）   // お知らせ・メール（js/inbox.js）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
 /* デッキ（{id: 枚数}）を、シャッフルした山札（idの並び）にする */
@@ -2047,9 +2047,9 @@ function showStart() {
         <button type="button" class="iconbtn" data-act="inboxNews" aria-label="お知らせ">${HOME_ICON.bell}${Inbox.newsBadge()}</button>
         <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
       </div>
+      ${goldOK ? Quest.boardHTML() : ""}
     </div>
     <div class="homemain">
-      ${goldOK ? Quest.boardHTML() : ""}
       ${Showcase.html()}
       ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
       ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}

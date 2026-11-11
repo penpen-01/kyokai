@@ -2,12 +2,14 @@
    クエスト（ホームの掲示板から見る）
    ・デイリー：毎日、DAILY_POOL から3つ（人ごと・日ごとに決まる。日付が変わると入れ替わる）
    ・期間限定：工房で作る（DATA.quests）。期間中だけ出る
-   ・初心者歓迎：BEGINNER を順に。全部終わると、贈り物のデッキ（level "gift"）から1つ選んで受け取れる
+   ・初心者歓迎：this.begin() を順に。全部終わると、贈り物のデッキ（level "gift"）から1つ選んで受け取れる
    進み具合は Account.data.q に保存：{ d:{date, ids, p, got}, b:{p, got, gift}, l:{p, got} }
    対戦中のことは S.stats（game.js の stat()）に数えておき、決着したときにまとめて足す
    ========================================================= */
 const Quest = {
   tab: "daily",
+  pool() { return (typeof QUEST_DAILY !== "undefined" && QUEST_DAILY && QUEST_DAILY.length) ? QUEST_DAILY : DAILY_POOL; },
+  begin() { return (typeof QUEST_BEGIN !== "undefined" && QUEST_BEGIN && QUEST_BEGIN.length) ? QUEST_BEGIN : BEGINNER; },
 
   ok() { return Account.status === "ready" || Account.status === "offline"; },
   st() {
@@ -23,18 +25,18 @@ const Quest = {
   /* その日の3つ：アカウントのコードと日付から決める（同じ日なら何度開いても同じ） */
   draw(day) {
     let h = 2166136261; for (const ch of (Account.code || "") + day) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
-    const pool = DAILY_POOL.slice(), out = [];
-    while (out.length < 3 && pool.length) { h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; out.push(pool.splice(h % pool.length, 1)[0].id); }
+    const pool = this.pool().slice(), out = [], want = CONFIG.DAILY_N || 3;
+    while (out.length < want && pool.length) { h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0; out.push(pool.splice(h % pool.length, 1)[0].id); }
     return out;
   },
-  daily() { const q = this.st(); return q ? q.d.ids.map(id => DAILY_POOL.find(x => x.id === id)).filter(Boolean) : []; },
+  daily() { const q = this.st(); return q ? q.d.ids.map(id => this.pool().find(x => x.id === id)).filter(Boolean) : []; },
   limited() { const t = localDate(new Date()); return (typeof QUESTS !== "undefined" ? QUESTS : []).filter(x => (!x.from || x.from <= t) && (!x.until || t <= x.until)); },
-  beginnerDone() { const q = this.st(); return !!q && BEGINNER.every(x => q.b.got.includes(x.id)); },
+  beginnerDone() { const q = this.st(); return !!q && this.begin().every(x => q.b.got.includes(x.id)); },
   showBeginner() { const q = this.st(); return !!q && !q.b.gift; },
 
   /* どの入れ物の進み具合か */
   box(kind) { const q = this.st(); return kind === "d" ? q.d : kind === "b" ? q.b : q.l; },
-  lists() { return [["d", this.daily()], ["l", this.limited()], ...(this.showBeginner() ? [["b", BEGINNER]] : [])]; },
+  lists() { return [["d", this.daily()], ["l", this.limited()], ...(this.showBeginner() ? [["b", this.begin()]] : [])]; },
   prog(kind, x) { return Math.min(x.n, this.box(kind).p[x.id] || 0); },
   done(kind, x) { return this.prog(kind, x) >= x.n; },
   got(kind, x) { return this.box(kind).got.includes(x.id); },
@@ -72,7 +74,7 @@ const Quest = {
   },
 
   claim(kind, id) {
-    const L = kind === "d" ? this.daily() : kind === "b" ? BEGINNER : this.limited();
+    const L = kind === "d" ? this.daily() : kind === "b" ? this.begin() : this.limited();
     const x = L.find(q => q.id === id);
     if (!x || !this.done(kind, x) || this.got(kind, x)) return;
     this.box(kind).got.push(x.id);
@@ -132,7 +134,7 @@ const Quest = {
     if (this.tab === "limited" && !L.length) this.tab = "daily";
     if (this.tab === "beginner" && !B) this.tab = "daily";
     const tabs = [["daily", "デイリー"], ...(L.length ? [["limited", "期間限定"]] : []), ...(B ? [["beginner", "初心者歓迎"]] : [])];
-    const badge = k => { const list = k === "daily" ? [["d", this.daily()]] : k === "limited" ? [["l", L]] : [["b", BEGINNER]];
+    const badge = k => { const list = k === "daily" ? [["d", this.daily()]] : k === "limited" ? [["l", L]] : [["b", this.begin()]];
       let n = 0; list.forEach(([kk, LL]) => LL.forEach(x => { if (this.done(kk, x) && !this.got(kk, x)) n++; })); if (k === "beginner" && this.beginnerDone()) n++; return n ? `<span class="navbadge">${n}</span>` : ""; };
     let body = "";
     if (this.tab === "daily") body = `<p class="hint">毎日3つ、新しいクエストが届きます（日付が変わると入れ替わります。受け取っていない報酬も消えます）。</p><ul class="qlist">${this.daily().map(x => this.rowHTML("d", x)).join("")}</ul>`;
@@ -140,14 +142,14 @@ const Quest = {
     else {
       const all = this.beginnerDone(), gifts = this.gifts();
       body = `<p class="hint">はじめての人へ。全部クリアすると、3つの世界のデッキから好きな1つ（レジェンド入り・30枚）がもらえます。</p>
-        <ul class="qlist">${BEGINNER.map(x => this.rowHTML("b", x)).join("")}</ul>
+        <ul class="qlist">${this.begin().map(x => this.rowHTML("b", x)).join("")}</ul>
         <div class="q-gift ${all ? "ready" : ""}">
           <h3>全部クリアの贈り物：デッキを1つ選ぶ</h3>
           <div class="q-gifts">${gifts.map(d => `<button type="button" class="q-gd ${this.giftPick === d.id ? "sel" : ""}" data-act="questGiftPick" data-id="${esc(d.id)}" ${all ? "" : "disabled"} aria-pressed="${this.giftPick === d.id}">
             ${d.key && DEF[d.key] ? cardHTML(DEF[d.key], { static: true }) : ""}<b>${esc(d.name)}</b><small>${WORLDS[deckWorld(d)] || ""}・${deckCount(d)}枚</small></button>`).join("")}</div>
           ${all ? (this.giftPick ? `<div class="q-giftlist">${Decks.sorted(gifts.find(d => d.id === this.giftPick).cards).map(({ c, n }) => c ? `<span class="r-${c.rarity}">${c.cost} ${esc(c.name)}×${n}</span>` : "").join("")}</div>
             <button type="button" class="btn primary" data-act="questGift" data-id="${esc(this.giftPick)}">「${esc(gifts.find(d => d.id === this.giftPick).name)}」に決める</button>` : `<p class="hint">押すと中身が見られます。決めたら変えられません。</p>`)
-            : `<p class="hint">あと${BEGINNER.filter(x => !this.got("b", x)).length}つ（報酬を受け取るとクリア）</p>`}
+            : `<p class="hint">あと${this.begin().filter(x => !this.got("b", x)).length}つ（報酬を受け取るとクリア）</p>`}
         </div>`;
     }
     openOverlay(`<div class="panel qpanel">

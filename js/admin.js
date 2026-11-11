@@ -172,14 +172,14 @@ const Admin = {
           <li><b>カードの調整を知らせたい</b> → ①「お知らせの下書き」。変わったカードが自動で並ぶので、確かめて「メールにする」→ 上の「公開する」</li>
           <li><b>文だけのお知らせ・G やカードを配るメール</b> → ②「お知らせ・メールを書く」</li>
           <li><b>決まった人にだけ配りたい</b>（友達に教えるコード） → ③「シリアルコード」</li>
-          <li><b>期間限定のクエストを出したい</b> → ④「期間限定クエスト」（デイリーと初心者歓迎は自動）</li>
+          <li><b>クエストを変えたい・期間限定を出したい</b> → 上の「クエスト」タブ</li>
         </ul>
         <p class="hint">どれも、上の「公開する」を押すまでゲームには届きません。</p>
       </div>
       <div class="fgroup" id="notice-box">${Notice.html()}</div>
       <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
       <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
-      <div class="fgroup" id="quest-box">${this.questHTML()}</div>`;
+      <div class="fgroup"><span class="gl">④ クエスト</span><p class="hint">デイリー・初心者歓迎・期間限定は、上の「クエスト」タブで作ります。</p><button type="button" class="btn sm" data-tab="quests">クエストタブを開く</button></div>`;
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -204,7 +204,64 @@ const Admin = {
     this.sd.gold = Math.max(0, Math.floor(+v("sd-gold") || 0));
     this.sd.until = v("sd-until");
   },
-  /* ---------- 期間限定クエスト ---------- */
+  /* ---------- クエストタブ：デイリーの候補・初心者歓迎・期間限定 ----------
+     どれも「内容（type）・CPUの強さ（winLv のとき）・回数・報酬（G・魔石・パック券）」。行の欄を変えるとすぐ反映 */
+  qRowHTML(list, i, x, opts = {}) {
+    const k = `${list}:${i}`;
+    const opt = (o, cur) => Object.entries(o).map(([v, l]) => `<option value="${v}" ${cur === v ? "selected" : ""}>${esc(typeof l === "string" ? l : l.label)}</option>`).join("");
+    return `<div class="qe-row">
+      ${opts.order ? `<span class="qe-no">${i + 1}</span>` : ""}
+      <select class="txt" data-qe="${k}:type" aria-label="内容">${opt(QUEST_TYPES, x.type)}</select>
+      ${x.type === "winLv" ? `<select class="txt" data-qe="${k}:lv" aria-label="CPUの強さ">${opt(CPU_LV_NAMES, x.lv)}</select>` : ""}
+      <label class="small">回数<input class="txt" type="number" min="1" max="999" data-qe="${k}:n" value="${x.n}"></label>
+      <label class="small">G<input class="txt" type="number" min="0" step="100" data-qe="${k}:gold" value="${x.gold || 0}"></label>
+      <label class="small">魔石<input class="txt" type="number" min="0" step="50" data-qe="${k}:stones" value="${x.stones || 0}"></label>
+      <label class="small">券<input class="txt" type="number" min="0" data-qe="${k}:tickets" value="${x.tickets || 0}"></label>
+      ${opts.dates ? `<label class="small">始まり<input class="txt" type="date" data-qe="${k}:from" value="${esc(x.from || "")}"></label><label class="small">終わり<input class="txt" type="date" data-qe="${k}:until" value="${esc(x.until || "")}"></label>` : ""}
+      <input class="txt qe-title" data-qe="${k}:title" maxlength="30" placeholder="名前（空なら内容が名前）" value="${esc(x.title || "")}">
+      <span class="qe-prev hint">${esc(questText(x))} → ${esc(questReward(x) || "報酬なし")}</span>
+      <span class="qe-btns">${opts.order ? `<button type="button" class="btn sm" data-act="qeUp" data-k="${k}" ${i ? "" : "disabled"} aria-label="上へ">↑</button>` : ""}<button type="button" class="btn sm danger" data-act="qeDel" data-k="${k}">消す</button></span>
+    </div>`;
+  },
+  renderQuests() {
+    const el = $("#tab-quests"); if (!el) return;
+    if (!DATA.daily || !DATA.daily.length) DATA.daily = DAILY_POOL.map(x => ({ ...x }));
+    if (!DATA.beginner || !DATA.beginner.length) DATA.beginner = BEGINNER.map(x => ({ ...x }));
+    DATA.quests = DATA.quests || [];
+    const gifts = (DATA.decks || []).filter(d => d.level === "gift");
+    el.innerHTML = `<h2>クエスト</h2>
+      <p class="hint">ゲームのホームの掲示板に出ます。どれも上の「公開する」でゲームに届きます。報酬を受け取ったかどうかはプレイヤーごとに残るので、すでに受け取ったクエストの報酬を変えても、もう一度はもらえません。</p>
+      <div class="fgroup">
+        <span class="gl">デイリー（毎日この中から抽選）</span>
+        <div class="cfg"><div class="item"><label for="f-cfg-DAILY_N">${CONFIG_INFO.DAILY_N.label}<small>初期値 ${DEFAULT_CONFIG.DAILY_N}</small></label>${stepper("cfg-DAILY_N", DATA.config.DAILY_N || 3, CONFIG_INFO.DAILY_N.label)}</div></div>
+        <p class="hint">人ごと・日ごとに、この候補から ${DATA.config.DAILY_N || 3} 個がランダムに出ます。日付が変わると入れ替わります。候補は ${DATA.daily.length} 個。</p>
+        <div class="qe-list">${DATA.daily.map((x, i) => this.qRowHTML("daily", i, x)).join("")}</div>
+        <button type="button" class="btn sm" data-act="qeAdd" data-v="daily">＋ 候補を足す</button>
+      </div>
+      <div class="fgroup">
+        <span class="gl">初心者歓迎（上から順に表示）</span>
+        <p class="hint">全部の報酬を受け取ると、贈り物のデッキ（${gifts.map(d => `「${esc(d.name)}」`).join("") || "まだありません"}）から1つ選べます。贈り物のデッキは「報酬・CPU・シーズン」→「CPU・デッキ」で強さを「初心者の贈り物」にしたデッキです。</p>
+        <div class="qe-list">${DATA.beginner.map((x, i) => this.qRowHTML("beginner", i, x, { order: true })).join("")}</div>
+        <button type="button" class="btn sm" data-act="qeAdd" data-v="beginner">＋ クエストを足す</button>
+      </div>
+      <div class="fgroup">
+        <span class="gl">期間限定</span>
+        <p class="hint">期間中だけ「期間限定」に出ます。日付を空にすると、始まり＝すぐ／終わり＝ずっと。</p>
+        <div class="qe-list">${DATA.quests.length ? DATA.quests.map((x, i) => this.qRowHTML("quests", i, x, { dates: true })).join("") : `<p class="hint">まだありません。</p>`}</div>
+        <button type="button" class="btn sm" data-act="qeAdd" data-v="quests">＋ 期間限定クエストを足す</button>
+      </div>`;
+  },
+  qeSet(key, value) {
+    const [list, i, f] = key.split(":"), x = DATA[list] && DATA[list][+i]; if (!x) return;
+    if (["n", "gold", "stones", "tickets"].includes(f)) x[f] = Math.max(f === "n" ? 1 : 0, Math.floor(+value || 0));
+    else if (f === "type") { x.type = value; if (value === "winLv") x.lv = x.lv || "normal"; else delete x.lv; }
+    else if (f === "title") { if (value.trim()) x.title = value.trim().slice(0, 30); else delete x.title; }
+    else x[f] = value;
+    this.touch();
+    if (f === "type") this.renderQuests();
+    else { const row = document.querySelector(`[data-qe="${key}"]`); const pv = row && row.closest(".qe-row").querySelector(".qe-prev"); if (pv) pv.textContent = `${questText(x)} → ${questReward(x) || "報酬なし"}`; }
+  },
+  /* ---------- 期間限定クエスト（前の形。今は使っていない） ---------- */
   qd: { title: "", type: "winLv", lv: "hard", n: 3, from: "", until: "", gold: 1000, stones: 0, tickets: 0 },
   questHTML() {
     const q = this.qd, list = DATA.quests || [];
@@ -348,10 +405,10 @@ const Admin = {
     if (name === "pk-size") { p.size = Math.max(1, Math.min(10, Math.round(+value || 1))); this.touch(this.renderPacks); return true; }
     const m = name.match(/^pk-odds-(normal|last)-(\w+)$/);
     if (m) { p.odds[m[1]][m[2]] = Math.max(0, Math.round((+value || 0) * 100) / 100); this.touch(this.renderPacks); return true; }
-    if (name.startsWith("cfg-") && CONFIG_INFO[name.slice(4)] && CONFIG_INFO[name.slice(4)].group === "eco") {
+    if (name.startsWith("cfg-") && CONFIG_INFO[name.slice(4)] && ["eco", "quest"].includes(CONFIG_INFO[name.slice(4)].group)) {
       const k = name.slice(4), info = CONFIG_INFO[k];
       DATA.config[k] = Math.max(info.min, Math.min(info.max, Math.round(+value || 0)));
-      this.touch(this.renderEco); return true;
+      this.touch(info.group === "quest" ? this.renderQuests : this.renderEco); return true;
     }
     return false;
   },
@@ -421,6 +478,9 @@ const Admin = {
         if (!v || v === DATA.config.SEASON) return true;
         this.confirm = { kind: "season", id: v }; this.renderEco(); return true;
       }
+      case "qeAdd": { const L = el.dataset.v; DATA[L] = DATA[L] || []; DATA[L].push({ id: (L === "daily" ? "d" : L === "beginner" ? "b" : "q") + Date.now().toString(36), type: "winLv", lv: "normal", n: 1, gold: 300, stones: 0, tickets: 0 }); this.touch(this.renderQuests); return true; }
+      case "qeDel": { const [L, i] = el.dataset.k.split(":"); DATA[L].splice(+i, 1); this.touch(this.renderQuests); return true; }
+      case "qeUp": { const [L, i] = el.dataset.k.split(":"); const a = DATA[L], j = +i; if (j > 0) [a[j - 1], a[j]] = [a[j], a[j - 1]]; this.touch(this.renderQuests); return true; }
       case "qAdd": {
         const v = id => { const el = $("#" + id); return el ? el.value : ""; };
         const q = { title: v("qd-title").trim().slice(0, 30), type: v("qd-type"), lv: v("qd-lv"), n: Math.max(1, Math.floor(+v("qd-n") || 1)), from: v("qd-from"), until: v("qd-until"),
@@ -501,3 +561,6 @@ document.addEventListener("change", e => {
   x[t.dataset.k] = Math.max(0, Math.floor(+t.value || 0)); t.value = x[t.dataset.k];
   saveDraft(); renderStatus();
 });
+
+/* クエストタブの欄を変えたら、その場で反映 */
+document.addEventListener("change", e => { const k = e.target && e.target.dataset && e.target.dataset.qe; if (k) Admin.qeSet(k, e.target.value); });

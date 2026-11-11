@@ -277,7 +277,7 @@ const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
 const playEffects = card => (card.effects || []).filter(e => whenOf(e) === "play");
 
 const DEFAULT_CONFIG = {
-  PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10, DECK_SLOT_COST: 1500, DECK_SLOT_MAX: 10,
+  PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10, DECK_SLOT_COST: 1500, DECK_SLOT_MAX: 10, DAILY_N: 3,
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_EX: 450, REWARD_ONLINE: 80,
   STREAK_STEP: 10, STREAK_MAX: 50,
@@ -308,6 +308,7 @@ const CONFIG_INFO = {
   DECK_MAX:   { label: "作れるデッキの数（通常・サンプルそれぞれ）", min: 1, max: 50, group: "eco" },
   DECK_SLOT_COST: { label: "デッキ枠を1つ増やす魔石", min: 0, max: 100000, group: "eco" },
   DECK_SLOT_MAX:  { label: "ショップで増やせるデッキ枠の数", min: 0, max: 50, group: "eco" },
+  DAILY_N:        { label: "デイリークエストの1日の数", min: 1, max: 6, group: "quest" },
   STARTING_GOLD: { label: "始めたときに配るG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_EASY:   { label: "CPU初級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_NORMAL: { label: "CPU中級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
@@ -727,11 +728,15 @@ function normalizeData(data) {
     gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards), picks: cleanPicks(x.picks) }));
   // ログインボーナス（7日で1周。休んでも進んだ分は消えない）
   const login = (Array.isArray(d.login) && d.login.length ? d.login : DEFAULT_LOGIN).slice(0, 14).map(x => ({ gold: Math.max(0, Math.floor(+(x && x.gold) || 0)), stones: Math.max(0, Math.floor(+(x && x.stones) || 0)), tickets: Math.max(0, Math.floor(+(x && x.tickets) || 0)) }));
-  // 期間限定クエスト（工房で作る）。1つのクエストは1つの目標と報酬
-  const quests = (Array.isArray(d.quests) ? d.quests : []).filter(x => x && x.id && QUEST_TYPES[x.type]).map(x => ({ id: String(x.id), title: String(x.title || "").slice(0, 30),
-    type: x.type, ...(CPU_LV_NAMES[x.lv] ? { lv: x.lv } : {}), n: Math.max(1, Math.min(999, Math.floor(+x.n || 1))), from: date(x.from), until: date(x.until),
-    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)) }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests };
+  // クエスト（工房の「クエスト」タブ）。1つのクエストは1つの目標と報酬
+  const qItem = x => ({ id: String(x.id), ...(x.title ? { title: String(x.title).slice(0, 30) } : {}),
+    type: x.type, ...(x.type === "winLv" ? { lv: CPU_LV_NAMES[x.lv] ? x.lv : "normal" } : {}), n: Math.max(1, Math.min(999, Math.floor(+x.n || 1))),
+    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)) });
+  const qList = (a, def) => (Array.isArray(a) && a.length ? a : def).filter(x => x && x.id && QUEST_TYPES[x.type]).slice(0, 60).map(qItem);
+  const daily = qList(d.daily, DAILY_POOL);        // デイリーの候補（毎日この中から DAILY_N 個）
+  const beginner = qList(d.beginner, BEGINNER);    // 初心者歓迎（上から順）
+  const quests = (Array.isArray(d.quests) ? d.quests : []).filter(x => x && x.id && QUEST_TYPES[x.type]).map(x => ({ ...qItem(x), from: date(x.from), until: date(x.until) }));   // 期間限定
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner };
 }
 
 function cleanDeckCards(cards) {
