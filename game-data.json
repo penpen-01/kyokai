@@ -1,5 +1,5 @@
 {
- "version": 121,
+ "version": 122,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -28,7 +28,7 @@
   "BOSS_PITY": 15,
   "BOSS_HP": 25,
   "SAMPLE_ONLINE_DAY": 5,
-  "SAMPLE_CPU": 1,
+  "SAMPLE_CPU": 0,
   "STONE_GET_COMMON": 5,
   "STONE_GET_RARE": 30,
   "STONE_GET_SR": 100,
@@ -40,7 +40,7 @@
   "STONE_COST_UR": 1000,
   "STONE_COST_LEGEND": 2500,
   "STONE_TICKET": 300,
-  "SEASON": "beta",
+  "SEASON": "s1",
   "STARTER_DECK": "starter",
   "SAMPLE_DECKS": true
  },
@@ -1147,50 +1147,7 @@
    "level": "test"
   }
  ],
- "serials": [
-  {
-   "h": "aa386987abb5ee11754fdb57caea5db3d197ec86830829b3e9295b14466e76e3",
-   "label": "ベータ用ゴールド",
-   "gold": 10000,
-   "cards": {},
-   "until": "2026-11-01",
-   "created": "2026-10-31"
-  },
-  {
-   "h": "ab96f55d0a87bb7e48f4fd0c5ed0050861828815dca19af0eb78211a69ddb1e5",
-   "label": "テスト用ゴールド",
-   "gold": 20000,
-   "cards": {},
-   "until": "2026-11-04",
-   "created": "2026-11-03"
-  },
-  {
-   "h": "bbfecea1141efe8485dea20e593c58cf70ea626ce30215e652a94222396adeb3",
-   "label": "テスト：隠しボスを呼ぶ",
-   "gold": 0,
-   "cards": {},
-   "until": "2026-12-31",
-   "created": "2026-11-05",
-   "boss": true,
-   "repeat": true
-  },
-  {
-   "h": "94e927aeb73e525cc379ba83ed0f4b785a305136db073de665f59032fedda2bb",
-   "label": "ベータ参加のお礼",
-   "gold": 10000,
-   "cards": {},
-   "until": "2026-11-06",
-   "created": "2026-11-05"
-  },
-  {
-   "h": "0a9884b648e9360a3c07503795ce86526a106f5242850b4398c6f10033d0057f",
-   "label": "コイン配布",
-   "gold": 20000,
-   "cards": {},
-   "until": "",
-   "created": "2026-11-10"
-  }
- ],
+ "serials": [],
  "news": [],
  "mail": [
   {
