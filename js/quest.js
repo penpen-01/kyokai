@@ -114,7 +114,7 @@ const Quest = {
     return `<button type="button" class="qboard" data-act="quests" aria-label="クエスト掲示板${n ? `（受け取れる報酬 ${n}）` : ""}">
       <span class="qb-pin" aria-hidden="true"></span>
       <b>クエスト</b>
-      <small>デイリー ${dn}/${d.length}${this.showBeginner() ? " ・ 初心者" : ""}${this.limited().length ? " ・ 期間限定" : ""}</small>
+      <small>デイリー ${dn}/${d.length}</small>
       ${n ? `<span class="navbadge">${n}</span>` : ""}
     </button>`;
   },

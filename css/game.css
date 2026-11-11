@@ -2244,3 +2244,13 @@ html.nofx .card .shine{display:none}
 .q-giftdone h2{margin:0;font-family:var(--f-display)}
 .qtabs .navbadge,.qboard .navbadge{left:auto;bottom:auto;width:auto;min-width:18px;max-width:none}
 .qtabs .navbadge{right:6px;top:-7px}
+/* 掲示板の札（Gemini の絵 ui/qboard.webp）。文字は羊皮紙の上に重ねる */
+.qboard{width:100px;aspect-ratio:360/258;padding:0;transform:rotate(2deg);background:url("../ui/qboard.webp") center/contain no-repeat;border:0;box-shadow:none;border-radius:0;
+  align-items:center;justify-content:center;gap:0;padding-top:4px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+.qboard .qb-pin{display:none}
+.qboard b{color:#4a2e14;font-size:14px;text-shadow:none;margin-top:-4px}
+.qboard small{color:#6b4a26;font-size:9px;font-weight:700}
+.qboard .navbadge{top:-6px;right:-6px}
+.qboard:active{transform:rotate(2deg) scale(.96)}
+.qboard{width:88px;bottom:-26px;right:12px}
+.qboard b{font-size:13px}
