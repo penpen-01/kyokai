@@ -1,5 +1,5 @@
 {
- "version": 120,
+ "version": 121,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -15,6 +15,7 @@
   "DECK_MAX": 10,
   "DECK_SLOT_COST": 1500,
   "DECK_SLOT_MAX": 10,
+  "DAILY_N": 3,
   "STARTING_GOLD": 1000,
   "REWARD_EASY": 100,
   "REWARD_NORMAL": 200,
@@ -1081,6 +1082,69 @@
    },
    "key": "f-spirit",
    "level": "gift"
+  },
+  {
+   "id": "dkmwcio44znx",
+   "name": "神話の光",
+   "cards": {
+    "st-recruit": 3,
+    "n-slinger": 2,
+    "rally": 2,
+    "n-lightarrow": 1,
+    "pegasus": 3,
+    "bolt": 3,
+    "st-guard": 2,
+    "thunder": 3,
+    "sage": 2,
+    "berserker": 3,
+    "n-highpriest": 2,
+    "wargod": 2,
+    "n-heroking": 1,
+    "m-sungod": 1
+   },
+   "level": "test"
+  },
+  {
+   "id": "dkmwciowavmg",
+   "name": "鋼の行軍",
+   "cards": {
+    "n-workbot": 3,
+    "eye": 2,
+    "x-reboot": 2,
+    "n-salvage": 1,
+    "x-rush": 3,
+    "turret": 3,
+    "x-drone": 2,
+    "st-infantry": 3,
+    "x-armored": 2,
+    "x-tochka": 3,
+    "st-rockman": 2,
+    "x-tank": 2,
+    "x-executor": 1,
+    "x-gigas": 1
+   },
+   "level": "test"
+  },
+  {
+   "id": "dkmwcip5hcn",
+   "name": "森の調べ",
+   "cards": {
+    "n-flowergirl": 3,
+    "f-twins": 2,
+    "f-whisper": 2,
+    "st-water": 1,
+    "archer": 3,
+    "f-curse": 3,
+    "f-healer": 2,
+    "st-wolf": 3,
+    "n-spiritcaller": 2,
+    "f-icewitch": 3,
+    "n-moonwitch": 2,
+    "n-ancienttree": 2,
+    "cmvr3jwcugk8": 1,
+    "f-spirit": 1
+   },
+   "level": "test"
   }
  ],
  "serials": [
@@ -1181,6 +1245,176 @@
   }
  ],
  "picks": [],
+ "quests": [],
+ "daily": [
+  {
+   "id": "d-hard",
+   "type": "winLv",
+   "lv": "hard",
+   "n": 1,
+   "gold": 500,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-normal",
+   "type": "winLv",
+   "lv": "normal",
+   "n": 1,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-win2",
+   "type": "win",
+   "n": 2,
+   "gold": 500,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-bat3",
+   "type": "battle",
+   "n": 3,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-poison",
+   "type": "poison",
+   "n": 1,
+   "gold": 500,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-pack",
+   "type": "pack",
+   "n": 1,
+   "gold": 0,
+   "stones": 300,
+   "tickets": 0
+  },
+  {
+   "id": "d-spell",
+   "type": "spell",
+   "n": 5,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-char",
+   "type": "char",
+   "n": 8,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-kill",
+   "type": "kill",
+   "n": 6,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-face",
+   "type": "online",
+   "n": 1,
+   "gold": 400,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-freeze",
+   "type": "freeze",
+   "n": 1,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "d-trade",
+   "type": "trade",
+   "n": 1,
+   "gold": 0,
+   "stones": 300,
+   "tickets": 0
+  },
+  {
+   "id": "dmwcixhzh",
+   "type": "winLv",
+   "lv": "easy",
+   "n": 1,
+   "gold": 200,
+   "stones": 0,
+   "tickets": 0
+  }
+ ],
+ "beginner": [
+  {
+   "id": "b-deck",
+   "type": "deck",
+   "n": 1,
+   "gold": 200,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "b-easy",
+   "type": "winLv",
+   "lv": "easy",
+   "n": 3,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "b-pack",
+   "type": "pack",
+   "n": 1,
+   "gold": 0,
+   "stones": 300,
+   "tickets": 0
+  },
+  {
+   "id": "b-trade",
+   "type": "trade",
+   "n": 1,
+   "gold": 200,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "b-spell",
+   "type": "spell",
+   "n": 5,
+   "gold": 300,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "b-normal",
+   "type": "winLv",
+   "lv": "normal",
+   "n": 1,
+   "gold": 500,
+   "stones": 0,
+   "tickets": 0
+  },
+  {
+   "id": "b-bat5",
+   "type": "battle",
+   "n": 5,
+   "gold": 1000,
+   "stones": 0,
+   "tickets": 0
+  }
+ ],
  "cards": [
   {
    "id": "squire",
@@ -4710,9 +4944,9 @@
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "heal",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "set": "2-1",
@@ -7566,7 +7800,7 @@
      "kind": "summon",
      "n": 10,
      "when": "turnStart",
-     "cmin": "6"
+     "cmin": 6
     }
    ],
    "set": "2-3",
