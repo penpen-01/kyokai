@@ -1,5 +1,5 @@
 {
- "version": 119,
+ "version": 120,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -1015,6 +1015,72 @@
     "x-tochka": 3
    },
    "level": "test"
+  },
+  {
+   "id": "gift-myth",
+   "name": "神話の光",
+   "cards": {
+    "st-recruit": 3,
+    "n-slinger": 2,
+    "rally": 2,
+    "n-lightarrow": 1,
+    "pegasus": 3,
+    "bolt": 3,
+    "st-guard": 2,
+    "thunder": 3,
+    "sage": 2,
+    "berserker": 3,
+    "n-highpriest": 2,
+    "wargod": 2,
+    "n-heroking": 1,
+    "m-sungod": 1
+   },
+   "key": "m-sungod",
+   "level": "gift"
+  },
+  {
+   "id": "gift-mech",
+   "name": "鋼の行軍",
+   "cards": {
+    "n-workbot": 3,
+    "eye": 2,
+    "x-reboot": 2,
+    "n-salvage": 1,
+    "x-rush": 3,
+    "turret": 3,
+    "x-drone": 2,
+    "st-infantry": 3,
+    "x-armored": 2,
+    "x-tochka": 3,
+    "st-rockman": 2,
+    "x-tank": 2,
+    "x-executor": 1,
+    "x-gigas": 1
+   },
+   "key": "x-gigas",
+   "level": "gift"
+  },
+  {
+   "id": "gift-fan",
+   "name": "森の調べ",
+   "cards": {
+    "n-flowergirl": 3,
+    "f-twins": 2,
+    "f-whisper": 2,
+    "st-water": 1,
+    "archer": 3,
+    "f-curse": 3,
+    "f-healer": 2,
+    "st-wolf": 3,
+    "n-spiritcaller": 2,
+    "f-icewitch": 3,
+    "n-moonwitch": 2,
+    "n-ancienttree": 2,
+    "cmvr3jwcugk8": 1,
+    "f-spirit": 1
+   },
+   "key": "f-spirit",
+   "level": "gift"
   }
  ],
  "serials": [

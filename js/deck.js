@@ -40,6 +40,14 @@ const Decks = {
     }
     return Account.decks().map(d => ({ ...d, cards: { ...d.cards } }));
   },
+  /* 初心者クエストの贈り物：デッキをマイデッキに足す（枠がいっぱいでも足す） */
+  addGiftDeck(d) {
+    const list = this.mine().slice();
+    const id = "g" + Date.now().toString(36);
+    list.push({ id, name: d.name, cards: { ...d.cards }, ...(d.key ? { key: d.key } : {}) });
+    this.saveMine(list);
+    if (!this.isValid(this.selected())) this.select(id);
+  },
   saveMine(list) {
     if (this.free()) { try { localStorage.setItem(DECKS_KEY, JSON.stringify(list)); return true; } catch { return false; } }
     if (Account.status === "none") return false;
@@ -679,6 +687,7 @@ const Decks = {
         // 対戦に使えるデッキになったときだけ「使用中」にする（未完成のデッキは選ばない）
         if (!this.isWorld(ed) && (ed.isNew || !this.isValid(this.selected())) && !this.problems(this.mine().find(d => d.id === ed.id) || ed).length) this.select(ed.id);
         const saved = ed;
+        if (deckCount(ed) === CONFIG.DECK_SIZE && typeof Quest !== "undefined") Quest.add("deck", 1);
         this.editing = null; this.detail = null;
         this.showView(saved.id);
         const ms = this.missing(saved);

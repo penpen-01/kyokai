@@ -50,13 +50,13 @@ async function loadCardData() {
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
-  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || [];
+  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || [];
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 let SERIALS = []; // シリアルコード（ハッシュ）
-let NEWS = [], MAIL = [], LOGIN = [], PICKS = [];   // お知らせ・メール（js/inbox.js）
+let NEWS = [], MAIL = [], LOGIN = [], PICKS = [], QUESTS = [];   // QUESTS：期間限定クエスト（js/quest.js）   // お知らせ・メール（js/inbox.js）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
 /* デッキ（{id: 枚数}）を、シャッフルした山札（idの並び）にする */
@@ -430,7 +430,7 @@ function playCard(pi, idx, targetsIn, useGear) {
     const u = p.field.find(x => x.uid === targets.sacrifice);
     if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); onDeath(pi, u); }
   }
-  if (spend) { spendGears(p, spend); log(`歯車を${spend}枚使った。`); fx(playerSel(pi), `歯車-${spend}`, "gear"); }
+  if (spend) { spendGears(p, spend); log(`歯車を${spend}枚使った。`); fx(playerSel(pi), `歯車-${spend}`, "gear"); stat(pi, "gear", spend); }
   else if (d.gear === "all") log("使える歯車がなかった。");
   let self = null;
   if (d.type === "char") {
@@ -444,6 +444,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   S.dmgBonus = grow && d.grow.dmg ? grow : 0;
   S.numBonus = grow && d.grow.num ? grow : 0;
   try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
+  stat(pi, d.type === "spell" ? "spell" : "char");
   if (d.type === "spell") { trigUnits(pi, "spell"); (p.used || (p.used = [])).push(id); p.lastG = id; }   // 使った魔法（墓地の画面で見せる）
   trigUnits(pi, "cardPlay", self, { card: id });
   // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
@@ -891,9 +892,12 @@ function hitUnit(u, n) {
   if (dmg > 0 && u.hp > 0) { const pi = S.players.findIndex(p => p.field.includes(u)); if (pi >= 0) queueTrig(pi, "survive", u); }
   return dmg;
 }
-function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); }
+function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); if (n > 0) stat(opp(pi), "face", n); }
+/* クエスト用の数（この対戦で何をしたか）。S の中に持つので、CPU の読みの中の数は捨てられ、対人戦でも両方に届く */
+function stat(pi, k, n = 1) { if (!S || pi == null) return; const st = S.stats || (S.stats = [{}, {}]); st[pi][k] = (st[pi][k] || 0) + n; }
+const ownerOf = u => S.players.findIndex(p => p.field.includes(u));
 function destroyUnit(u) { u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); }
-function freezeUnit(u) { u.frozen = true; u.ready = false; fx(unitSel(u.uid), "凍結", "freeze"); }
+function freezeUnit(u) { u.frozen = true; u.ready = false; fx(unitSel(u.uid), "凍結", "freeze"); const o = ownerOf(u); if (o >= 0) stat(opp(o), "freeze"); }
 function debuff(u, n) { const b = u.atk; u.atk = Math.max(0, u.atk - n); fx(unitSel(u.uid), `攻撃-${b - u.atk}`, "dmg"); }
 function buff(u, a, h) {
   u.atk += a; u.hp += h; u.maxHp += h;
@@ -939,6 +943,7 @@ function fireTrig(t) {
 }
 /* キャラが場から消えたとき（倒れた・代償で破壊された） */
 function onDeath(pi, u) {
+  stat(opp(pi), "kill");
   const p = S.players[u.owner != null ? u.owner : pi];   // 奪われたキャラは元の持ち主の墓地へ
   (p.grave || (p.grave = [])).push(u.id); p.lastG = u.id;   // この対戦で破壊された自分のキャラ（復活の効果で使う）
   queueTrig(pi, "death", u);
@@ -1025,10 +1030,10 @@ function attack(pi, uid, target) {
       fx(playerSel(opp(pi)), "貫通", "pierce");
       hitPlayer(opp(pi), over);
     }
-    if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); fx(unitSel(d.uid), "毒", "poison"); destroyUnit(d); }
+    if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); fx(unitSel(d.uid), "毒", "poison"); destroyUnit(d); stat(pi, "poison"); }
     steal(a, pi, dRealHit);
     const back = hitUnit(a, d.atk);
-    if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); fx(unitSel(a.uid), "毒", "poison"); destroyUnit(a); }
+    if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); fx(unitSel(a.uid), "毒", "poison"); destroyUnit(a); stat(opp(pi), "poison"); }
     // 吸収は自分から攻撃したときだけ（反撃では回復しない。オーナー 11-10）
     queueTrig(pi, "attack", a);
     if (before > 0 && d.hp <= 0) queueTrig(pi, "kill", a);
@@ -2044,6 +2049,7 @@ function showStart() {
       </div>
     </div>
     <div class="homemain">
+      ${goldOK ? Quest.boardHTML() : ""}
       ${Showcase.html()}
       ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
       ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
@@ -2295,6 +2301,7 @@ function showResult(res) {
   if (!res) return;
   const online = MODE === "online";
   const r = giveReward(res), g = r.g;
+  if (typeof Quest !== "undefined") Quest.onGame(res, r.sample);
   const en = { win: "VICTORY", lose: "DEFEAT", draw: "DRAW" }[res], ja = { win: "勝利", lose: "敗北", draw: "引き分け" }[res];
   const B = S && S.battle;
   const notes = [
@@ -2786,6 +2793,7 @@ function handleAct(act, el) {
       if (Feedback.handleAct(act, el)) return;
       if (Serial.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
+      if (Quest.handleAct(act, el)) return;
       if (Shop.handleAct(act, el)) return;
       if (Inbox.handleAct(act, el)) return;
       if (Showcase.handleAct(act, el)) return;

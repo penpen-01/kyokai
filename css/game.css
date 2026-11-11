@@ -2199,3 +2199,47 @@ html.nofx .card .shine{display:none}
 .cdlink{display:inline;font:inherit;line-height:inherit;color:#ffe2a0;background:none;border:0;padding:0;margin:0;cursor:pointer;text-decoration:underline dotted rgba(255,226,160,.6);text-underline-offset:3px}
 .cdlink:hover,.cdlink:focus-visible{color:#fff3cf;outline:none}
 .c-slot{--c1:#3d5a2a;--c2:#18240f;color:#d4f5b8;cursor:default}
+
+/* ---------- クエスト掲示板（ホームの左上に貼られた木の札） ---------- */
+.homemain{position:relative}
+.qboard{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;left:10px;top:6px;z-index:3;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  padding:9px 14px 8px;min-width:118px;border-radius:6px;transform:rotate(-2deg);
+  background:linear-gradient(160deg,#7a5631,#4e351c);border:2px solid #2b1d0f;box-shadow:0 6px 14px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,220,160,.25);color:#fff2d6}
+.qboard b{font-family:var(--f-display);font-size:16px;letter-spacing:.08em}
+.qboard small{font-size:11px;color:#f1d9b0}
+.qboard .qb-pin{position:absolute;top:-5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ff9a8a,#b8352a);box-shadow:0 1px 2px #000}
+.qboard .navbadge{top:-8px;right:-8px}
+.qboard:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.qpanel{gap:12px}
+.overlay:has(.qpanel){background:linear-gradient(rgba(8,9,20,.55),rgba(8,9,20,.75)),url("../ui/bg-shop.webp") center/cover no-repeat,#0b0d1a}
+.qtabs{display:flex;gap:6px}
+.qtabs button{all:unset;box-sizing:border-box;cursor:pointer;flex:1;position:relative;text-align:center;padding:9px 6px;border-radius:10px;border:1px solid var(--line);background:rgba(10,12,24,.7);font-weight:700;font-size:14px}
+.qtabs button[aria-selected="true"]{background:linear-gradient(180deg,#ffe8a8,#d8a84c);color:#1a1408;border-color:#ffe8a8}
+.qtabs .navbadge{top:-7px;right:-4px}
+.qlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.qrow{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;background:linear-gradient(160deg,rgba(78,54,30,.92),rgba(44,30,17,.92));border:1px solid rgba(255,215,150,.25)}
+.qrow.done{border-color:var(--gold);box-shadow:0 0 0 1px rgba(255,214,120,.35),0 0 18px rgba(255,214,120,.2)}
+.qrow.got{opacity:.55}
+.q-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.q-main b{font-size:15px;color:#fff2d6}
+.q-main small{font-size:12px;color:#e8d2ad}
+.q-bar{height:6px;border-radius:3px;background:rgba(0,0,0,.35);overflow:hidden}
+.q-bar i{display:block;height:100%;background:linear-gradient(90deg,#c8963c,#ffe7a3)}
+.q-state{flex:none;font-size:12px;color:#e8d2ad}
+.q-gift{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;border:1px dashed rgba(255,215,150,.4);background:rgba(10,12,24,.6)}
+.q-gift.ready{border-style:solid;border-color:var(--gold)}
+.q-gift h3{margin:0;font-size:15px}
+.q-gifts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.q-gd{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border-radius:10px;border:1px solid var(--line);text-align:center}
+.q-gd .card{width:100%}
+.q-gd b{font-size:13px}.q-gd small{font-size:11px;color:var(--muted)}
+.q-gd.sel{border-color:var(--gold);background:rgba(233,200,115,.14)}
+.q-gd[disabled]{cursor:default;filter:grayscale(.7) brightness(.7)}
+.q-gd:focus-visible{outline:2px solid var(--gold)}
+.q-giftlist{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:var(--fg)}
+.q-giftlist .r-sr,.q-giftlist .r-ur{color:#ffe08a}.q-giftlist .r-legend{color:#ffb3ec;font-weight:700}
+.q-giftdone{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.q-giftdone .card{width:150px}
+.q-giftdone h2{margin:0;font-family:var(--f-display)}
+.qtabs .navbadge,.qboard .navbadge{left:auto;bottom:auto;width:auto;min-width:18px;max-width:none}
+.qtabs .navbadge{right:6px;top:-7px}

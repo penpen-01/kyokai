@@ -59,6 +59,7 @@ const Packs = {
       }
       rows.push(row);
     }
+    if (typeof Quest !== "undefined") Quest.add("pack", n);
     // 開封の履歴（直近100パック分）。カードと同じ保存で一緒に残す
     const log = Array.isArray(Account.data.packLog) ? Account.data.packLog : [];
     const t = Date.now();

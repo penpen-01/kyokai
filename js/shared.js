@@ -548,7 +548,55 @@ function cardHTML(card, o = {}) {
 const EX_SETS = ["2-1", "2-2", "2-3"];
 const exOpen = () => /[?&]gatetest\b/.test(location.search) || EX_SETS.every(s => setOpen(s));   // ?gatetest（オーナーの試し用）でも出る
 /* ふだんの CPU戦・練習・CPU用一覧に出さないデッキ（検証用・開放戦用・まだ開いていない超級） */
-const hiddenDeck = d => ["test", "gate"].includes(d.level) || (d.level === "ex" && !exOpen());
+const hiddenDeck = d => ["test", "gate", "gift"].includes(d.level) || (d.level === "ex" && !exOpen());   // gift＝初心者クエストで選んでもらえるデッキ
+/* ---------- クエスト ----------
+   type＝何をするか。lv はCPUの強さ（winLv のとき）。数はクエストごとに決める */
+const CPU_LV_NAMES = { easy: "初級", normal: "中級", hard: "上級", ex: "超級" };
+const QUEST_TYPES = {
+  winLv:  { label: "CPUに勝つ（強さを選ぶ）", text: (n, q) => `CPU（${CPU_LV_NAMES[q.lv] || "中級"}）に${n}回勝つ` },
+  win:    { label: "対戦に勝つ", text: n => `対戦に${n}回勝つ` },
+  battle: { label: "対戦する（勝ち負けは問わない）", text: n => `対戦を${n}回する` },
+  online: { label: "友達と対戦する", text: n => `友達と${n}回対戦する` },
+  pack:   { label: "パックを開ける", text: n => `パックを${n}パック開ける` },
+  trade:  { label: "カードを交換する（ショップ）", text: n => `ショップでカードを${n}枚交換する` },
+  dis:    { label: "カードを分解する", text: n => `カードを${n}枚分解する` },
+  deck:   { label: "デッキを作る（30枚で保存）", text: n => `30枚のデッキを${n}つ保存する` },
+  spell:  { label: "対戦で魔法を使う", text: n => `対戦で魔法を${n}回使う` },
+  char:   { label: "対戦でキャラを出す", text: n => `対戦でキャラを${n}体出す` },
+  kill:   { label: "対戦で相手のキャラを倒す", text: n => `対戦で相手のキャラを${n}体倒す` },
+  face:   { label: "相手プレイヤーにダメージ", text: n => `相手プレイヤーに合計${n}ダメージを与える` },
+  poison: { label: "毒で倒す", text: n => `「毒」で相手のキャラを${n}体倒す` },
+  freeze: { label: "凍結させる", text: n => `相手のキャラを${n}回凍結させる` },
+  gear:   { label: "歯車を使う", text: n => `歯車を${n}枚使う` }
+};
+const questText = q => (QUEST_TYPES[q.type] ? QUEST_TYPES[q.type].text(q.n, q) : "？");
+const questReward = q => [q.gold ? `${q.gold}G` : "", q.stones ? `魔石${q.stones}` : "", q.tickets ? `パック券${q.tickets}枚` : ""].filter(Boolean).join("・");
+/* デイリーの候補。毎日、この中から3つを抽選（人ごと・日ごとに決まる） */
+const DAILY_POOL = [
+  { id: "d-hard",   type: "winLv", lv: "hard", n: 1, gold: 500 },
+  { id: "d-normal", type: "winLv", lv: "normal", n: 1, gold: 300 },
+  { id: "d-win2",   type: "win", n: 2, gold: 400 },
+  { id: "d-bat3",   type: "battle", n: 3, gold: 300 },
+  { id: "d-poison", type: "poison", n: 1, gold: 500 },
+  { id: "d-pack",   type: "pack", n: 1, stones: 300 },
+  { id: "d-spell",  type: "spell", n: 5, gold: 300 },
+  { id: "d-char",   type: "char", n: 8, gold: 300 },
+  { id: "d-kill",   type: "kill", n: 6, gold: 400 },
+  { id: "d-face",   type: "face", n: 20, gold: 400 },
+  { id: "d-freeze", type: "freeze", n: 2, gold: 400 },
+  { id: "d-trade",  type: "trade", n: 1, stones: 200 }
+];
+/* 初心者歓迎クエスト（恒常）。上から順に表示。全部終わると、贈り物のデッキ（level "gift"）から1つ選べる */
+const BEGINNER = [
+  { id: "b-deck",   type: "deck", n: 1, gold: 200 },
+  { id: "b-easy",   type: "winLv", lv: "easy", n: 1, gold: 300 },
+  { id: "b-pack",   type: "pack", n: 1, stones: 300 },
+  { id: "b-trade",  type: "trade", n: 1, gold: 200 },
+  { id: "b-spell",  type: "spell", n: 5, gold: 300 },
+  { id: "b-normal", type: "winLv", lv: "normal", n: 1, gold: 500 },
+  { id: "b-bat5",   type: "battle", n: 5, tickets: 1 }
+];
+
 const MAIL_TO = { all: "全員（これから始める人にも届く）", before: "送った日までに始めた人だけ", new: "送った日から後に始めた人（ずっと届く）" };
 /* 選択券で選べるカード */
 function pickPool(pk, defs) {
@@ -637,7 +685,7 @@ function normalizeData(data) {
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
     ...(typeof x.key === "string" && x.key ? { key: x.key } : {}),   // 代表カード（対戦の始まりの演出・相手の顔に使う）
-    level: ["easy", "normal", "hard", "ex", "boss", "test", "gate"].includes(x.level) ? x.level : "normal"   // ex = 超級（第2弾をすべて開放すると出る）、test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用、gate = パック開放戦の相手（ふだんのCPU戦では使わない）
+    level: ["easy", "normal", "hard", "ex", "boss", "test", "gate", "gift"].includes(x.level) ? x.level : "normal"   // ex = 超級（第2弾をすべて開放すると出る）、test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用、gate = パック開放戦の相手（ふだんのCPU戦では使わない）
   }));
   const packs = (Array.isArray(d.packs) ? d.packs : []).filter(x => x && x.id).map(x => ({
     id: String(x.id), name: String(x.name || "パック"), price: Math.max(0, +x.price || 0), size: Math.max(1, Math.min(10, +x.size || 5)),
@@ -679,7 +727,11 @@ function normalizeData(data) {
     gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards), picks: cleanPicks(x.picks) }));
   // ログインボーナス（7日で1周。休んでも進んだ分は消えない）
   const login = (Array.isArray(d.login) && d.login.length ? d.login : DEFAULT_LOGIN).slice(0, 14).map(x => ({ gold: Math.max(0, Math.floor(+(x && x.gold) || 0)), stones: Math.max(0, Math.floor(+(x && x.stones) || 0)), tickets: Math.max(0, Math.floor(+(x && x.tickets) || 0)) }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks };
+  // 期間限定クエスト（工房で作る）。1つのクエストは1つの目標と報酬
+  const quests = (Array.isArray(d.quests) ? d.quests : []).filter(x => x && x.id && QUEST_TYPES[x.type]).map(x => ({ id: String(x.id), title: String(x.title || "").slice(0, 30),
+    type: x.type, ...(CPU_LV_NAMES[x.lv] ? { lv: x.lv } : {}), n: Math.max(1, Math.min(999, Math.floor(+x.n || 1))), from: date(x.from), until: date(x.until),
+    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)) }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests };
 }
 
 function cleanDeckCards(cards) {

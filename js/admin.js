@@ -134,7 +134,7 @@ const Admin = {
             <div class="frow">
               <input class="txt" data-admin="deck-name" data-id="${esc(d.id)}" value="${esc(d.name)}" maxlength="16" aria-label="デッキ名" style="flex:1;min-width:140px">
               <select class="txt" data-admin="deck-level" data-id="${esc(d.id)}" aria-label="CPUの強さ" style="width:auto">
-                ${["easy", "normal", "hard", "ex"].map(l => `<option value="${l}" ${d.level === l ? "selected" : ""}>${{ easy: "初級", normal: "中級", hard: "上級", ex: "超級" }[l]}</option>`).join("")}
+                ${["easy", "normal", "hard", "ex", "gift"].map(l => `<option value="${l}" ${d.level === l ? "selected" : ""}>${{ easy: "初級", normal: "中級", hard: "上級", ex: "超級", gift: "初心者の贈り物" }[l]}</option>`).join("")}
               </select>
               ${isStarter ? `<span class="tagS">スターター</span>` : ""}
             </div>
@@ -172,12 +172,14 @@ const Admin = {
           <li><b>カードの調整を知らせたい</b> → ①「お知らせの下書き」。変わったカードが自動で並ぶので、確かめて「メールにする」→ 上の「公開する」</li>
           <li><b>文だけのお知らせ・G やカードを配るメール</b> → ②「お知らせ・メールを書く」</li>
           <li><b>決まった人にだけ配りたい</b>（友達に教えるコード） → ③「シリアルコード」</li>
+          <li><b>期間限定のクエストを出したい</b> → ④「期間限定クエスト」（デイリーと初心者歓迎は自動）</li>
         </ul>
         <p class="hint">どれも、上の「公開する」を押すまでゲームには届きません。</p>
       </div>
       <div class="fgroup" id="notice-box">${Notice.html()}</div>
       <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
-      <div class="fgroup" id="serial-box">${this.serialHTML()}</div>`;
+      <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
+      <div class="fgroup" id="quest-box">${this.questHTML()}</div>`;
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -201,6 +203,26 @@ const Admin = {
     this.sd.label = v("sd-label").slice(0, 30);
     this.sd.gold = Math.max(0, Math.floor(+v("sd-gold") || 0));
     this.sd.until = v("sd-until");
+  },
+  /* ---------- 期間限定クエスト ---------- */
+  qd: { title: "", type: "winLv", lv: "hard", n: 3, from: "", until: "", gold: 1000, stones: 0, tickets: 0 },
+  questHTML() {
+    const q = this.qd, list = DATA.quests || [];
+    const opt = (o, cur) => Object.entries(o).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(typeof v === "string" ? v : v.label)}</option>`).join("");
+    return `<span class="gl">④ 期間限定クエスト</span>
+      <p class="hint">ホームの掲示板の「期間限定」に、期間中だけ出ます。デイリー（毎日3つ）と初心者歓迎は自動で出るので、作らなくてかまいません。</p>
+      ${list.length ? `<ul class="qadm">${list.map(x => `<li><b>${esc(x.title || questText(x))}</b> <span class="hint">${esc(questText(x))}・${esc(questReward(x) || "報酬なし")}・${esc(x.from || "今日")}〜${esc(x.until || "ずっと")}</span>
+        <button type="button" class="btn sm danger" data-act="qDel" data-id="${esc(x.id)}">消す</button></li>`).join("")}</ul>` : `<p class="hint">まだありません。</p>`}
+      <div class="frow"><input class="txt" id="qd-title" placeholder="名前（空なら内容がそのまま名前）" maxlength="30" value="${esc(q.title)}" style="flex:1;min-width:180px"></div>
+      <div class="frow"><select class="txt" id="qd-type" style="width:auto">${opt(QUEST_TYPES, q.type)}</select>
+        <select class="txt" id="qd-lv" style="width:auto" aria-label="CPUの強さ（CPUに勝つのときだけ）">${opt(CPU_LV_NAMES, q.lv)}</select>
+        <label class="small">回数 <input class="txt" type="number" id="qd-n" min="1" max="999" value="${q.n}" style="width:80px"></label></div>
+      <div class="frow"><label class="small">始まり <input class="txt" type="date" id="qd-from" value="${esc(q.from)}"></label><label class="small">終わり <input class="txt" type="date" id="qd-until" value="${esc(q.until)}"></label></div>
+      <div class="frow"><label class="small">G <input class="txt" type="number" id="qd-gold" min="0" step="100" value="${q.gold}" style="width:100px"></label>
+        <label class="small">魔石 <input class="txt" type="number" id="qd-stones" min="0" step="50" value="${q.stones}" style="width:90px"></label>
+        <label class="small">パック券 <input class="txt" type="number" id="qd-tickets" min="0" value="${q.tickets}" style="width:70px"></label></div>
+      <button type="button" class="btn primary sm" data-act="qAdd">このクエストを足す</button>
+      <p class="hint">足したあと、上の「公開する」で届きます。</p>`;
   },
   serialHTML() {
     if (!DATA.serials) DATA.serials = [];
@@ -399,6 +421,17 @@ const Admin = {
         if (!v || v === DATA.config.SEASON) return true;
         this.confirm = { kind: "season", id: v }; this.renderEco(); return true;
       }
+      case "qAdd": {
+        const v = id => { const el = $("#" + id); return el ? el.value : ""; };
+        const q = { title: v("qd-title").trim().slice(0, 30), type: v("qd-type"), lv: v("qd-lv"), n: Math.max(1, Math.floor(+v("qd-n") || 1)), from: v("qd-from"), until: v("qd-until"),
+          gold: Math.max(0, Math.floor(+v("qd-gold") || 0)), stones: Math.max(0, Math.floor(+v("qd-stones") || 0)), tickets: Math.max(0, Math.floor(+v("qd-tickets") || 0)) };
+        this.qd = { ...q };
+        if (!QUEST_TYPES[q.type]) return true;
+        if (q.type !== "winLv") delete q.lv;
+        DATA.quests = [...(DATA.quests || []), { id: "q" + Date.now().toString(36), ...q }];
+        this.touch(); this.renderEco(); return true;
+      }
+      case "qDel": DATA.quests = (DATA.quests || []).filter(x => x.id !== el.dataset.id); this.touch(); this.renderEco(); return true;
       case "sdAddCard": {
         this.readSerialForm();
         const id = $("#sd-card").value, n = Math.max(1, Math.min(9, Math.floor(+$("#sd-n").value || 1)));

@@ -68,6 +68,7 @@ const Shop = {
     if (!list.length) return this.showDismantle(picks ? "分解するカードを選んでください。" : "分解できるカードはありません。");
     let n = 0, s = 0;
     list.forEach(x => { Account.data.cards[x.c.id] -= x.k; n += x.k; s += x.k * this.getRate(x.c.rarity); });
+    if (typeof Quest !== "undefined") Quest.add("dis", n);
     Account.data.stones = Account.stones + s;
     Account.saveNow();
     Sound.play("flip");
@@ -106,6 +107,7 @@ const Shop = {
     if (Account.stones < cost) return this.showTrade(`魔石が足りません（あと${cost - Account.stones}個）。`);
     Account.data.stones -= cost;
     Account.data.cards[id] = (Account.data.cards[id] || 0) + 1;
+    if (typeof Quest !== "undefined") Quest.add("trade", 1);
     Account.saveNow();
     Sound.play(RARITY_ORDER.indexOf(c.rarity) >= 2 ? "rare" : "flip", RARITY_ORDER.indexOf(c.rarity));
     this.detailId = null;
@@ -140,6 +142,7 @@ const Shop = {
     else {
       Account.data.stones -= cost;
       Account.data.cards[id] = (Account.data.cards[id] || 0) + 1;
+      if (typeof Quest !== "undefined") Quest.add("trade", 1);
       Account.saveNow();
       Sound.play(RARITY_ORDER.indexOf(c.rarity) >= 2 ? "rare" : "flip", RARITY_ORDER.indexOf(c.rarity));
       toast(`${c.name}を手に入れました（所持${Account.owned(id)}枚）`);
