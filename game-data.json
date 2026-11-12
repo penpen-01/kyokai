@@ -1,5 +1,5 @@
 {
- "version": 126,
+ "version": 127,
  "updated": "2026-11-12",
  "config": {
   "PLAYER_HP": 20,
@@ -7986,7 +7986,8 @@
    "keywords": [],
    "effects": [],
    "token": true,
-   "note": "超級の隠しボスの顔（対戦画面のアイコン用。場には出ない）"
+   "note": "超級の隠しボスの顔（対戦画面のアイコン用。場には出ない）",
+   "art": "art/b-yomimaru-f295cdb1c5.webp"
   },
   {
    "id": "b-meifu",
@@ -8013,7 +8014,8 @@
     }
    ],
    "token": true,
-   "note": "超級の隠しボス：最初から場にいる。ターンの始めに、相手のキャラ1体に死の宣告"
+   "note": "超級の隠しボス：最初から場にいる。ターンの始めに、相手のキャラ1体に死の宣告",
+   "art": "art/b-meifu-6fb52a90eb.webp"
   },
   {
    "id": "b-y-valk",
@@ -8038,7 +8040,8 @@
      "who": "self"
     }
    ],
-   "boss": true
+   "boss": true,
+   "art": "art/b-y-valk-52d427766b.webp"
   },
   {
    "id": "b-y-murasame",
@@ -8062,7 +8065,8 @@
      "who": "self"
     }
    ],
-   "boss": true
+   "boss": true,
+   "art": "art/b-y-murasame-1f0b962877.webp"
   },
   {
    "id": "b-y-zantetsu",
@@ -8086,7 +8090,8 @@
      "to": "enemy1"
     }
    ],
-   "boss": true
+   "boss": true,
+   "art": "art/b-y-zantetsu-4d8f6f87a6.webp"
   }
  ]
 }
