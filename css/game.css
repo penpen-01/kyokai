@@ -2302,7 +2302,7 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 
 /* ---- チュートリアル：吹き出しと光 ---- */
 #tutbox{position:fixed;left:50%;transform:translateX(-50%);top:64px;width:min(94vw,460px);z-index:60;pointer-events:none;transition:top .25s ease}
-#tutbox .tut-in{pointer-events:auto;position:relative;display:flex;gap:9px;align-items:flex-start;padding:9px 10px 9px 9px;border-radius:14px;background:linear-gradient(180deg,#fbf3df,#efe0bb);color:#2b1d0c;border:2px solid #c9a253;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+#tutbox .tut-in{pointer-events:none;position:relative;display:flex;gap:9px;align-items:flex-start;padding:9px 10px 9px 9px;border-radius:14px;background:linear-gradient(180deg,#fbf3df,#efe0bb);color:#2b1d0c;border:2px solid #c9a253;box-shadow:0 8px 24px rgba(0,0,0,.55)}
 #tutbox.in .tut-in{animation:tutin .28s ease-out}
 #tutbox.shake .tut-in{animation:tutshake .35s}
 @keyframes tutin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
@@ -2317,3 +2317,6 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .tut-hl{position:relative;z-index:5;outline:3px solid #ffd66b!important;outline-offset:3px;border-radius:10px;box-shadow:0 0 0 6px rgba(255,214,107,.25),0 0 22px rgba(255,214,107,.8)!important;animation:tuthl 1.2s ease-in-out infinite}
 @keyframes tuthl{50%{outline-color:#fff3c4}}
 .tut-reward b{display:block;font-size:15px;margin-bottom:4px;color:var(--gold)}
+#tutbox .tut-in button{pointer-events:auto}
+#tutbox{transition:top .25s ease,opacity .15s}
+#tutbox.faded{opacity:.18}
