@@ -52,18 +52,18 @@ const Showcase = {
     if (!el) return;
     this.el = el;
     this.items = [...el.querySelectorAll(".sc-item")];
-    this.vel = Motion.reduced ? 0 : this.AUTO;
+    this.vel = (Motion.reduced || (typeof Eco !== "undefined" && Eco.on)) ? 0 : this.AUTO;
     this.last = performance.now();
     this.bind(el);
     this.layout();
     const tick = t => {
       if (!this.el || !this.el.isConnected) return;   // ホームから離れたら止める
       // 自動で回らない（省エネ・動きを減らす）ときは、止まったら描き直しもやめる。なぞると再開する
-      if (Motion.reduced && !this.drag && Math.abs(this.vel) < 0.01) { this.vel = 0; this.layout(); this.raf = 0; return; }
+      if ((Motion.reduced || (typeof Eco !== "undefined" && Eco.on)) && !this.drag && Math.abs(this.vel) < 0.01) { this.vel = 0; this.layout(); this.raf = 0; return; }
       const dt = Math.min(.05, (t - this.last) / 1000);
       this.last = t;
       if (!this.drag) {
-        const target = Motion.reduced ? 0 : this.AUTO;
+        const target = (Motion.reduced || (typeof Eco !== "undefined" && Eco.on)) ? 0 : this.AUTO;
         this.vel += (target - this.vel) * Math.min(1, dt * 1.6);   // 惰性からいつもの速さへ戻る
         this.angle += this.vel * dt;
       }

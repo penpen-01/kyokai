@@ -242,13 +242,11 @@ const Motion = {
   }
 };
 
-/* 省エネモード：演出を短く・少なくし、ずっと動き続ける光や回転を止める。スマホが熱くなる・電池の減りが気になる人向け（2026-11-12） */
+/* 省エネモード：ずっと動き続ける光・回転・降るカードを止める。攻撃などの1回きりの演出は、何が起きたか分かるようにそのまま残す（2026-11-12 オーナー：省きすぎ）。スマホが熱くなる・電池の減りが気になる人向け（2026-11-12） */
 const Eco = {
-  os: Motion.reduced,   // 端末の「視差効果を減らす」設定
   on: (() => { try { return localStorage.getItem("kyokai-eco") === "on"; } catch (e) { return false; } })(),
   apply() {
     document.documentElement.classList.toggle("eco", this.on);
-    Motion.reduced = this.os || this.on;
   },
   toggle() { this.on = !this.on; try { localStorage.setItem("kyokai-eco", this.on ? "on" : "off"); } catch (e) {} this.apply(); }
 };
