@@ -109,9 +109,10 @@ const Decks = {
   selectedId() { try { return localStorage.getItem(DECK_SEL_KEY); } catch { return null; } },
   select(id) { try { localStorage.setItem(DECK_SEL_KEY, id); } catch {} },
   selected() {
+    // 限定構築のデッキは、ふつうの対戦（CPU戦・オンライン）では使わない。縛りのある対戦で、その場で選ぶ
     const d = this.find(this.selectedId());
-    if (d) return d;
-    const mine = this.mine();
+    if (d && !this.isLtd(d)) return d;
+    const mine = this.mine().filter(x => !this.isLtd(x));
     return mine.find(x => this.isValid(x)) || mine[0] || (this.free() ? PRESETS.find(p => this.isValid(p)) : null) || null;
   },
   readyDeck(onFail) {
@@ -246,15 +247,13 @@ const Decks = {
     if (!this.saveMine(next)) toast("保存できませんでした（サーバーに接続できていません）");
   },
 
-  /* 限定構築：新しいデッキの縛りを選ぶ（今は世界限定と縛りなし。コスト縛りなどはあとで足す） */
+  /* 限定構築：新しいデッキの縛りを選ぶ（今は世界限定だけ。コスト縛りなどはここに足す） */
   showWorldPick() {
     openOverlay(`<div class="panel">
       ${this.topbar("限定構築：縛りを選ぶ", "decks")}
       <p class="lead small">このデッキの縛りを選んでください。あとから変えることはできません（変えたいときは新しく作ります）。</p>
       <div class="lvls">${Object.entries(WORLDS).map(([k, v]) => `<button type="button" class="lvl lvl-mode wpick w-${k}" data-act="deckNewWorldGo" data-v="${k}">
-        <span class="lvl-body"><span class="lvl-head"><b>${v}</b></span><span class="lvl-desc">世界限定：${v}のカードだけで30枚を組む</span></span><span class="lvl-go" aria-hidden="true">›</span></button>`).join("")}
-        <button type="button" class="lvl lvl-mode wpick w-ltd" data-act="deckNewWorldGo" data-v="ltd">
-        <span class="lvl-body"><span class="lvl-head"><b>縛りなし</b></span><span class="lvl-desc">ふつうのルールで組む。コスト縛りやイベント戦など、ルールに合わせて自分で組むとき用</span></span><span class="lvl-go" aria-hidden="true">›</span></button></div>
+        <span class="lvl-body"><span class="lvl-head"><b>${v}</b></span><span class="lvl-desc">世界限定：${v}のカードだけで30枚を組む</span></span><span class="lvl-go" aria-hidden="true">›</span></button>`).join("")}</div>
     </div>`, "start", true);
   },
 
@@ -288,10 +287,10 @@ const Decks = {
     openOverlay(`<div class="panel wide">
       ${this.topbar("デッキ", "decks")}
       <div class="dview-head"><h2 class="title sm">${esc(d.name)}${d.free ? `<small class="ptag">サンプル</small>` : ""}</h2><span class="dcount ${n === CONFIG.DECK_SIZE ? "ok" : "bad"}">${n}<small>/${CONFIG.DECK_SIZE}</small></span></div>
-      <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(d, true) : "このデッキで対戦できます"}</p>
+      <p class="dprob ${pr.length ? "bad" : "ok"}">${pr.length ? this.probText(d, true) : this.isLtd(d) ? "限定構築のデッキです。パック開放戦など、ルールに合う対戦のときに選んで使います（ふつうの CPU戦・オンライン対戦では使えません）" : "このデッキで対戦できます"}</p>
       ${this.curveHTML(d.cards)}
       <div class="dview-acts">
-        ${sel && sel.id === id ? `<span class="usingtag big">使用中</span>` : `<button type="button" class="btn primary" data-act="deckUse" data-id="${esc(id)}" ${pr.length ? "disabled" : ""}>このデッキを使う</button>`}
+        ${this.isLtd(d) ? "" : sel && sel.id === id ? `<span class="usingtag big">使用中</span>` : `<button type="button" class="btn primary" data-act="deckUse" data-id="${esc(id)}" ${pr.length ? "disabled" : ""}>このデッキを使う</button>`}
         ${isPreset ? `<button type="button" class="btn" data-act="deckCopy" data-id="${esc(id)}">コピーして編集</button>`
           : `<button type="button" class="btn" data-act="deckEdit" data-id="${esc(id)}">編集</button>
              <button type="button" class="btn" data-act="deckCopy" data-id="${esc(id)}">複製</button>`}
