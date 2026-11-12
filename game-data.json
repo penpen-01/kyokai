@@ -1,5 +1,5 @@
 {
- "version": 129,
+ "version": 130,
  "updated": "2026-11-13",
  "config": {
   "PLAYER_HP": 20,
@@ -7996,22 +7996,23 @@
    "type": "char",
    "cost": 0,
    "atk": 0,
-   "hp": 12,
+   "hp": 20,
    "glyph": "門",
    "limit": 0,
    "rarity": "ur",
    "keywords": [
-    "noattack"
+    "noattack",
+    "elusive"
    ],
    "effects": [
     {
      "kind": "revive",
-     "n": 5,
+     "n": 3,
      "when": "turnStart"
     },
     {
      "kind": "winTimer",
-     "n": 10
+     "n": 13
     }
    ],
    "token": true,
@@ -8030,14 +8031,15 @@
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "haste",
-    "shield"
+    "rush"
    ],
    "effects": [
     {
-     "kind": "readySelf",
+     "kind": "unit",
      "n": 1,
-     "when": "kill"
+     "when": "strike",
+     "act": "silence",
+     "to": "foe"
     }
    ],
    "boss": true,
@@ -8049,7 +8051,7 @@
    "world": "fan",
    "type": "char",
    "cost": 4,
-   "atk": 3,
+   "atk": 1,
    "hp": 3,
    "glyph": "刀",
    "limit": 3,
@@ -8067,7 +8069,7 @@
      "n": 1,
      "act": "grant",
      "to": "own1",
-     "kw": "twice"
+     "kw": "pierce"
     },
     {
      "kind": "unit",
@@ -8080,7 +8082,7 @@
      "kind": "unit",
      "n": 2,
      "when": "allyDeath",
-     "act": "both",
+     "act": "atk",
      "to": "self"
     }
    ],

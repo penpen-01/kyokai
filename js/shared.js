@@ -161,7 +161,8 @@ const UTOS = {
   enemyAll:  { label: "相手キャラ全体", side: "enemy", world: true },
   ownAll:    { label: "自分のキャラ全体", side: "own", world: true },
   all:       { label: "すべてのキャラ（自分のキャラも）", world: true },
-  self:      { label: "このキャラ", side: "own", charOnly: true }
+  self:      { label: "このキャラ", side: "own", charOnly: true },
+  foe:       { label: "攻撃する相手キャラ（「キャラを攻撃するとき」だけ）", side: "enemy", charOnly: true }
 };
 /* 汎用「プレイヤーに効果」 */
 const PACTS = { dmg: "ダメージを与える", heal: "体力を回復する", draw: "カードを引かせる", discard: "手札をランダムに捨てさせる" };
@@ -176,7 +177,7 @@ function toPhrase(e, isChar, auto) {
   if (auto && to === "enemyF") return "ランダムな相手キャラ1体か相手プレイヤー";
   return {
     enemy1: w ? `相手の${w}キャラ1体` : "相手キャラ1体", own1: isChar ? `このキャラ以外の自分の${w}キャラ1体` : `自分の${w}キャラ1体`, any1: isChar ? `このキャラ以外の${w}キャラ1体（自分か相手）` : `${w}キャラ1体（自分か相手）`,
-    enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
+    foe: "攻撃する相手キャラ", enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
     enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
   }[to] || "（対象未設定）";
 }
@@ -244,6 +245,7 @@ const WHENS = {
   turnEnd:   { label: "自分のターンの終わり",         head: "自分のターンの終わりに" },
   oppTurnEnd:{ label: "相手のターンの終わり",         head: "相手のターンの終わりに" },
   attack:    { label: "攻撃したとき",                 head: "攻撃したとき" },
+  strike:    { label: "キャラを攻撃するとき（ダメージの前。対象は「攻撃する相手キャラ」）", head: "キャラを攻撃するとき、ダメージの前に" },
   kill:      { label: "攻撃で敵キャラを倒したとき",   head: "攻撃で敵キャラを倒したとき" },
   survive:   { label: "ダメージを受けて生き残ったとき", head: "ダメージを受けて生き残ったとき" },
   allyEnter: { label: "ほかの味方が出たとき",         head: "ほかの自分のキャラが出たとき" },

@@ -522,6 +522,7 @@ function unitTargets(pi, e, targets, self) {
     case "enemyAll": return en.field.filter(wf);
     case "ownAll": return me.field.filter(wf);
     case "all": return [...en.field, ...me.field].filter(wf);
+    case "foe": { const u = en.field.find(x => x.uid === targets.foe); return u ? [u] : []; }   // 攻撃する相手（strike のときだけ）
     case "self": return self && (self.hp > 0 || (DEF[self.id] && DEF[self.id].hp === 0 && !self.destroyed)) && me.field.includes(self) ? [self] : [];   // 0/0 から歯車で強くなるキャラも対象にする
   }
   return [];
@@ -1026,6 +1027,8 @@ function attack(pi, uid, target) {
     if (a.atk > 0) queueTrig(pi, "face", a);
   } else {
     const d = en.field.find(u => u.uid === target);
+    // 「キャラを攻撃するとき」：ダメージの前に、攻撃する相手へすぐ効く（沈黙で聖盾を消してから殴る、など）
+    if (!a.silenced && DEF[a.id]) DEF[a.id].effects.filter(e => e.when === "strike").forEach(e => { log(`${cname(a.id)}の効果（キャラを攻撃するとき）。`); effect(pi, e, { foe: d.uid }, a); });
     fx(unitSel(a.uid), unitSel(d.uid), "lunge");
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
     const before = d.hp;
