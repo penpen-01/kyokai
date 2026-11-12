@@ -1,6 +1,6 @@
 {
- "version": 127,
- "updated": "2026-11-12",
+ "version": 128,
+ "updated": "2026-11-13",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -27,6 +27,10 @@
   "BOSS_RATE": 10,
   "BOSS_PITY": 15,
   "BOSS_HP": 25,
+  "BOSS_EX_ON": 0,
+  "BOSS_EX_RATE": 10,
+  "BOSS_EX_PITY": 15,
+  "BOSS_EX_HP": 30,
   "SAMPLE_ONLINE_DAY": 5,
   "SAMPLE_CPU": 0,
   "STONE_GET_COMMON": 5,
@@ -42,11 +46,7 @@
   "STONE_TICKET": 300,
   "SEASON": "s1",
   "STARTER_DECK": "starter",
-  "SAMPLE_DECKS": true,
-  "BOSS_EX_RATE": 10,
-  "BOSS_EX_PITY": 15,
-  "BOSS_EX_HP": 30,
-  "BOSS_EX_ON": 0
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {
@@ -1173,8 +1173,8 @@
     "b-y-murasame": 2,
     "b-y-zantetsu": 2
    },
-   "level": "boss",
-   "key": "b-y-zantetsu"
+   "key": "b-y-zantetsu",
+   "level": "boss"
   }
  ],
  "serials": [
@@ -4311,7 +4311,7 @@
    "hp": 8,
    "glyph": "裂",
    "limit": 0,
-   "rarity": "legend",
+   "rarity": "ur",
    "keywords": [
     "noattack"
    ],
@@ -7999,7 +7999,7 @@
    "hp": 10,
    "glyph": "門",
    "limit": 0,
-   "rarity": "legend",
+   "rarity": "ur",
    "keywords": [
     "noattack"
    ],
