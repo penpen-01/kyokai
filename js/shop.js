@@ -205,7 +205,21 @@ const Shop = {
       </div>
       <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
       ${this.detailHTML()}
+      ${this.hubAskHTML(tc, slotCost)}
     </div>`, "start", true);
+  },
+  /* パック券・デッキ枠を交換する前の確認（魔石は戻せないので） */
+  hubAskHTML(tc, slotCost) {
+    const k = this.hubAsk; if (!k) return "";
+    const t = k === "slot"
+      ? { title: "デッキ枠を1つ増やしますか？", body: `魔石<b>${slotCost}</b>個を使います（所持 ${Account.stones} → ${Account.stones - slotCost}）。マイデッキ・限定構築の枠が、それぞれ ${Decks.max("mine")} → ${Decks.max("mine") + 1}個になります。`, yes: "増やす" }
+      : { title: "パック券と交換しますか？", body: `魔石<b>${tc}</b>個を使って、パック券を1枚手に入れます（魔石 ${Account.stones} → ${Account.stones - tc}）。`, yes: "交換する" };
+    return `<div class="dmodal" data-act="shopHubNo">
+      <div class="dmodal-in confirmbox" role="alertdialog" aria-label="交換の確認" data-act="noop">
+        <b class="dm-name">${t.title}</b>
+        <p class="dm-text">${t.body}使った魔石は元に戻せません。</p>
+        <div class="pre-btns"><button type="button" class="btn primary" data-act="shopHubYes">${t.yes}</button><button type="button" class="btn" data-act="shopHubNo">やめる</button></div>
+      </div></div>`;
   },
 
   /* カードと交換の売り場 */
@@ -307,7 +321,7 @@ const Shop = {
 
   handleAct(act, el) {
     switch (act) {
-      case "shop": this.msg = null; this.detailId = null; this.show(); return true;
+      case "shop": this.msg = null; this.detailId = null; this.hubAsk = null; this.show(); return true;
       case "shopMain": this.msg = null; this.detailId = null; this.show(); return true;
       case "shopTrade": this.msg = null; this.detailId = null; this.showTrade(); return true;
       case "shopFeature": this.msg = null; this.rar = "all"; this.detailId = el.dataset.id; this.showTrade(); return true;
@@ -334,8 +348,10 @@ const Shop = {
       }
       case "shopAskNo": this.ask = null; this.showDismantle(); return true;
       case "shopAskYes": { const a = this.ask; this.ask = null; if (a) this.dismantle(a.all ? null : this.sel); return true; }
-      case "shopTicket": this.buyTicket(); return true;
-      case "shopSlot": this.buySlot(); return true;
+      case "shopTicket": this.hubAsk = "ticket"; this.show(); return true;
+      case "shopSlot": this.hubAsk = "slot"; this.show(); return true;
+      case "shopHubNo": this.hubAsk = null; this.show(); return true;
+      case "shopHubYes": { const k = this.hubAsk; this.hubAsk = null; if (k === "slot") this.buySlot(); else if (k === "ticket") this.buyTicket(); else this.show(); return true; }
       case "shopRar": this.rar = el.dataset.v; this.showTrade(); return true;
       case "shopNeed": this.onlyNeed = !!el.checked; this.showTrade(); return true;
       case "shopDetail": this.detailId = el.dataset.id; this.showTrade(); return true;

@@ -2139,7 +2139,7 @@ function showRules() {
 }
 
 /* 図鑑：カードを絵で並べる（検索・絞り込み）。押すと効果。「効果も表示」で前の1行ずつの一覧にもできる */
-const CL = { q: "", w: "", t: "", own: "", text: false, detail: null, ids: [] };
+const CL = { q: "", f: null, more: false, own: "", text: false, detail: null, ids: [] };   // f：CardFilter の条件（複数選択）
 /* 詳細の窓の左右の矢印：開いたときの一覧（ids）の並びで、前後のカードへ移る。端まで行ったら反対の端へ回る */
 function detailNavHTML(ids, cur, act) {
   const i = ids.indexOf(cur);
@@ -2155,7 +2155,8 @@ function showCardList() {
   const hide = c => collect && Account.owned(c.id) <= 0;
   const ownedN = usable.filter(c => Account.owned(c.id) > 0).length;
   const q = CL.q.trim();
-  const list = usable.filter(c => (!CL.w || c.world === CL.w) && (!CL.t || c.type === CL.t)
+  if (!CL.f) CL.f = CardFilter.empty();
+  const list = usable.filter(c => CardFilter.match(c, CL.f)
       && (!CL.own || (CL.own === "y" ? Account.owned(c.id) > 0 : Account.owned(c.id) <= 0))
       && (!q || c.name.includes(q) || cardText(c).includes(q)))
     .sort((a, b) => a.cost - b.cost || (a.type > b.type ? 1 : -1) || a.name.localeCompare(b.name, "ja"));
@@ -2179,8 +2180,9 @@ function showCardList() {
     <div class="totals"><span>${collect ? `集めたカード <b>${ownedN}</b> / ${usable.length}種` : `全<b>${usable.length}</b>種`}</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
     <div class="cl-tools">
       <input class="otxt" id="cl-q" type="search" placeholder="名前や効果で探す（例：守護、ドロー）" value="${esc(CL.q)}" autocomplete="off">
-      <div class="seg wide">${chip("w", "", "全世界")}${chip("w", "myth", "神話")}${chip("w", "fan", "幻想")}${chip("w", "mech", "機械")}</div>
-      <div class="seg wide">${chip("t", "", "全種類")}${chip("t", "char", "キャラ")}${chip("t", "spell", "魔法")}${collect ? chip("own", "", "すべて") + chip("own", "y", "所持") + chip("own", "n", "未所持") : ""}</div>
+      ${collect ? `<div class="seg wide">${chip("own", "", "すべて")}${chip("own", "y", "所持")}${chip("own", "n", "未所持")}</div>` : ""}
+      <button type="button" class="cl-more ${CardFilter.count(CL.f) ? "on" : ""}" data-act="clMore" aria-expanded="${CL.more}">絞り込み（種類・世界・コスト・レア・弾）${CardFilter.count(CL.f) ? `<b>${esc(CardFilter.words(CL.f).join("・"))}</b>` : ""}<i aria-hidden="true">${CL.more ? "▲" : "▼"}</i></button>
+      ${CL.more ? `<div class="cl-filters">${CardFilter.rowsHTML(CL.f, "clFilterM", usable)}${CardFilter.count(CL.f) ? `<button type="button" class="btn sm" data-act="clFilterReset">絞り込みを解除</button>` : ""}</div>` : ""}
       <label class="cl-text"><input type="checkbox" data-act="clText" ${CL.text ? "checked" : ""}> 効果も一覧で表示</label>
     </div>
     <p class="hint">${list.length}種 ・ ${CL.text ? "" : "カードを押すと効果を見られます"}</p>
@@ -2399,6 +2401,7 @@ function showCpuSelect() {
         <span class="lvl-body">
           <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
           <span class="lvl-desc">${v.desc}</span>
+          ${k === "hard" ? `<span class="lvl-boss">勝つと、まれに<b>隠しボス</b>が現れる。倒すとボスの<b>限定レジェンド</b>が手に入る</span>` : k === "ex" ? `<span class="lvl-boss">超級の隠しボスは近日登場</span>` : ""}
           <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[REWARD_KEY[k]]}</b>G</em>${streakTag(k)}</span>
         </span>
         <span class="lvl-go" aria-hidden="true">›</span>
@@ -2596,7 +2599,11 @@ const GATE_TEST = /[?&]gatetest\b/.test(location.search);
 function gatePacks(all) {
   return PACKS.filter(p => (p.open || GATE_TEST) && p.set && p.set !== "1" && (all || GATE_TEST || !gateOpened(p)));
 }
+/* 開放戦の絵：相手デッキの代表カード → パックの表紙 → パックのレジェンド・UR の順（2026-11-13 オーナー） */
 function gateArt(p) {
+  const opp = gateOpponent(p), k = opp && Decks.keyCard(opp);
+  if (k && k.art) return k.art;
+  if (p.art) return p.art;
   const c = (p.cards || []).map(id => DEF[id]).filter(c => c && c.art && ["legend", "ur"].includes(c.rarity))[0];
   return c ? c.art : "";
 }
@@ -2737,6 +2744,9 @@ function handleAct(act, el) {
     case "prStart": startPractice(); return;
     case "cpu": showCpuSelect(); return;
     case "clFilter": CL[el.dataset.k] = el.dataset.v; showCardList(); return;
+    case "clFilterM": CardFilter.toggle(CL.f, el.dataset.k, el.dataset.v); showCardList(); return;
+    case "clFilterReset": CL.f = CardFilter.empty(); showCardList(); return;
+    case "clMore": CL.more = !CL.more; showCardList(); return;
     case "clText": CL.text = !!el.checked; showCardList(); return;
     case "clStep": CL.detail = stepId(CL.ids, CL.detail, +el.dataset.v); if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;
     case "clDetail": CL.detail = el.dataset.id; CL.ids = [...document.querySelectorAll("#overlay [data-act=clDetail]")].map(x => x.dataset.id).filter((v, k, a) => a.indexOf(v) === k); if (typeof Shop !== "undefined") Shop.tradeAsk = null; showCardList(); return;

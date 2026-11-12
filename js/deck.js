@@ -9,13 +9,64 @@
 
 const DECKS_KEY = "kyokai-decks-v1";
 const DECK_SEL_KEY = "kyokai-deck-sel";
-const COST_BANDS = { all: "全コスト", "0-2": "0〜2", "3-4": "3〜4", "5-6": "5〜6", "7+": "7以上" };
+/* カードの絞り込み（デッキ編成・カード一覧で共通）。どの項目も複数選べる。同じ項目の中は「どれか」、項目どうしは「かつ」
+   例：世界［神話・幻想］× コスト［2・5］→ 神話か幻想の、2コストか5コストのカード */
+const CardFilter = {
+  KEYS: ["type", "world", "cost", "rarity", "pack"],
+  COSTS: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],   // 10 は「10以上」
+  empty() { return { type: [], world: [], cost: [], rarity: [], pack: [] }; },
+  costKey(c) { return String(Math.min(10, Math.max(0, c.cost | 0))); },
+  packKey(c) { return c.boss ? "boss" : String(c.set || "1"); },
+  packs(cards) {   // 今見えているカードがある弾だけ（まだ開放していない弾は出さない）
+    const keys = [...new Set(cards.map(c => this.packKey(c)))];
+    const label = k => { if (k === "boss") return "ボス限定";
+      const p = (typeof PACKS !== "undefined" ? PACKS : []).find(x => String(x.set || (x.id === "pack1" ? "1" : "")) === k);
+      return p ? p.name : `第${k}弾`; };
+    const order = k => k === "boss" ? "zz" : k;
+    return keys.sort((a, b) => order(a).localeCompare(order(b))).map(k => [k, label(k)]);
+  },
+  match(c, f) {
+    const has = (k, v) => !f[k] || !f[k].length || f[k].includes(v);
+    return has("type", c.type) && has("world", c.world) && has("cost", this.costKey(c)) && has("rarity", c.rarity) && has("pack", this.packKey(c));
+  },
+  toggle(f, k, v) {
+    if (!Array.isArray(f[k])) f[k] = [];
+    if (v === "all") f[k] = [];
+    else f[k] = f[k].includes(v) ? f[k].filter(x => x !== v) : [...f[k], v];
+  },
+  count(f, skip = []) { return this.KEYS.filter(k => !skip.includes(k) && f[k] && f[k].length).length; },
+  /* 選んだ条件を短い言葉に */
+  words(f, skip = []) {
+    const w = [];
+    const lab = { type: v => TYPES[v], world: v => WORLDS[v], cost: v => v === "10" ? "10+" : v, rarity: v => RARITY_SHORT[v],
+      pack: v => (this.packs(CARDS).find(x => x[0] === v) || [v, v])[1] };
+    this.KEYS.forEach(k => { if (skip.includes(k) || !f[k] || !f[k].length) return;
+      const s = f[k].map(lab[k]).join("・"); w.push(k === "cost" ? `コスト${s}` : s); });
+    return w;
+  },
+  /* 1行分のボタン（act と data-k / data-v を押すと切り替え） */
+  row(f, k, label, opts, act) {
+    const sel = f[k] || [];
+    const b = (v, t) => `<button type="button" data-act="${act}" data-k="${k}" data-v="${esc(v)}" aria-pressed="${v === "all" ? !sel.length : sel.includes(v)}">${esc(t)}</button>`;
+    return `<div class="dfp-row"><span>${label}<small>（複数選べます）</small></span><div class="chips">${b("all", "すべて")}${opts.map(([v, t]) => b(v, t)).join("")}</div></div>`;
+  },
+  rowsHTML(f, act, cards, skip = []) {
+    const rows = [
+      ["type", "種類", Object.entries(TYPES)],
+      ["world", "世界", Object.entries(WORLDS)],
+      ["cost", "コスト", this.COSTS.map(v => [v, v === "10" ? "10+" : v])],
+      ["rarity", "レア", Object.keys(RARITY).map(k => [k, RARITY_SHORT[k]])],
+      ["pack", "弾", this.packs(cards)]
+    ];
+    return rows.filter(r => !skip.includes(r[0])).map(r => this.row(f, r[0], r[1], r[2], act)).join("");
+  }
+};
 
 const Decks = {
   editing: null,     // 編集中のデッキ（コピー）
   viewing: null,     // 閲覧中のデッキid
   detail: null,      // 詳細を開いているカードid
-  filter: { type: "all", world: "all", cost: "all", rarity: "all", owned: false, q: "" },
+  filter: { ...CardFilter.empty(), owned: false, q: "" },
 
   free() { return Account.status === "free"; },
   sampleOK() { return !!CONFIG.SAMPLE_DECKS; },
@@ -332,8 +383,8 @@ const Decks = {
       if (room > 0) cards[id] = (cards[id] || 0) + Math.min(n, room);
     });
     this.editing = { id: deck.id, name: deck.name, cards, want: {}, key: deck.key || null, isNew, free: !!deck.free, ...this.fmtOf(deck), confirmDel: false };
-    if (this.isWorld(deck)) this.filter.world = deck.world;   // 限定構築は、その世界のカードだけを出す
-    else if (this.filter.world !== "all" && this.lastWorldEdit) this.filter.world = "all";
+    if (this.isWorld(deck)) this.filter.world = [deck.world];   // 限定構築は、その世界のカードだけを出す
+    else if (this.lastWorldEdit) this.filter.world = [];
     this.lastWorldEdit = this.isWorld(deck);
     this.editTab = isNew && !deckCount(deck) ? "pool" : (deckCount(deck) ? "deck" : "pool");
     this.detail = null;
@@ -344,11 +395,8 @@ const Decks = {
     const f = this.filter, q = f.q.trim(), ed = this.editing;
     const unb = this.unbound(ed);
     return CARDS.filter(c => c.limit > 0 && cardShown(c))
-      .filter(c => f.type === "all" || c.type === f.type)
-      .filter(c => f.world === "all" || c.world === f.world)
+      .filter(c => CardFilter.match(c, f))
       .filter(c => !this.isWorld(ed) || c.world === ed.world)
-      .filter(c => f.rarity === "all" || c.rarity === f.rarity)
-      .filter(c => f.cost === "all" || (f.cost === "7+" ? c.cost >= 7 : (([a, b]) => c.cost >= a && c.cost <= b)(f.cost.split("-").map(Number))))
       .filter(c => !f.owned || unb || this.owned(c.id) > 0)
       .filter(c => !q || c.name.includes(q) || cardText(c).includes(q))
       .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja"));
@@ -409,15 +457,13 @@ const Decks = {
     const max = Math.max(1, ...curve);
     return `<div class="dcm" aria-label="コストの分布">${curve.map((k, i) => `<span><i style="height:${Math.round(k / max * 100)}%"></i><b>${i === 8 ? "8+" : i}</b></span>`).join("")}<em>キャラ${chars}・魔法${total - chars}</em></div>`;
   },
-  filterCount() { const f = this.filter; return ["type", "cost", "rarity"].filter(k => f[k] !== "all").length + (f.owned ? 1 : 0) + (f.world !== "all" && !this.isWorld(this.editing) ? 1 : 0) + (f.q.trim() ? 1 : 0); },
+  filterSkip() { return this.isWorld(this.editing) ? ["world"] : []; },
+  filterCount() { const f = this.filter; return CardFilter.count(f, this.filterSkip()) + (f.owned ? 1 : 0) + (f.q.trim() ? 1 : 0); },
   /* 今の絞り込みを短い言葉で（上のバーに1行で出す） */
   filterWords() {
     const f = this.filter, w = [];
     if (f.q.trim()) w.push(`「${f.q.trim()}」`);
-    if (f.type !== "all") w.push(TYPES[f.type]);
-    if (f.world !== "all" && !this.isWorld(this.editing)) w.push(WORLDS[f.world]);
-    if (f.cost !== "all") w.push(`コスト${COST_BANDS[f.cost]}`);
-    if (f.rarity !== "all") w.push(RARITY_SHORT[f.rarity]);
+    w.push(...CardFilter.words(f, this.filterSkip()));
     if (f.owned) w.push("所持のみ");
     return w;
   },
@@ -433,12 +479,8 @@ const Decks = {
   /* 絞り込みの小さな窓（上のバーの下に開く。押した条件はすぐ下の一覧に反映） */
   filterPopHTML() {
     const ed = this.editing, f = this.filter, unb = this.unbound(ed), n = this.poolCards().length;
-    const seg = (key, val, label) => `<button type="button" data-act="deckFilter" data-k="${key}" data-v="${val}" aria-pressed="${f[key] === val}">${label}</button>`;
     return `<input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索（例：守護）" value="${esc(f.q)}" autocomplete="off">
-      <div class="dfp-row"><span>種類</span><div class="seg">${seg("type", "all", "すべて")}${seg("type", "char", "キャラ")}${seg("type", "spell", "魔法")}</div></div>
-      ${this.isWorld(ed) ? "" : `<div class="dfp-row"><span>世界</span><div class="seg">${seg("world", "all", "すべて")}${Object.entries(WORLDS).map(([k, v]) => seg("world", k, v)).join("")}</div></div>`}
-      <div class="dfp-row"><span>コスト</span><div class="seg">${Object.entries(COST_BANDS).map(([k, v]) => seg("cost", k, k === "all" ? "すべて" : v)).join("")}</div></div>
-      <div class="dfp-row"><span>レア</span><div class="seg">${seg("rarity", "all", "すべて")}${Object.keys(RARITY).map(k => seg("rarity", k, RARITY_SHORT[k])).join("")}</div></div>
+      ${CardFilter.rowsHTML(f, "deckFilter", CARDS.filter(c => c.limit > 0 && cardShown(c)), this.filterSkip())}
       ${unb ? "" : `<label class="ownchk"><input type="checkbox" id="deck-owned" ${f.owned ? "checked" : ""}> 持っているカードだけ</label>`}
       <div class="dfp-foot">
         <button type="button" class="btn sm" data-act="deckFilterReset" ${this.filterCount() ? "" : "disabled"}>解除</button>
@@ -669,10 +711,10 @@ const Decks = {
         this.rerender(); toast("代表カードにしました"); return true;
       }
       case "deckDetailClose": this.detail = null; Shop.tradeAsk = null; this.rerender(); return true;
-      case "deckFilter": this.filter[el.dataset.k] = el.dataset.v; this.applyFilter(); return true;
+      case "deckFilter": CardFilter.toggle(this.filter, el.dataset.k, el.dataset.v); this.applyFilter(); return true;
       case "deckTab": this.editTab = el.dataset.v; this.renderEdit(); return true;
       case "deckFilters": this.showFilters = !this.showFilters; this.renderEdit(); return true;
-      case "deckFilterReset": Object.assign(this.filter, { q: "", type: "all", cost: "all", rarity: "all", owned: false, ...(this.isWorld(ed) ? {} : { world: "all" }) }); this.applyFilter(); return true;
+      case "deckFilterReset": Object.assign(this.filter, { q: "", type: [], cost: [], rarity: [], pack: [], owned: false, ...(this.isWorld(ed) ? {} : { world: [] }) }); this.applyFilter(); return true;
       case "deckRename": this.renaming = true; this.renderEdit(); setTimeout(() => { const i = $("#deck-name"); if (i) { i.focus(); i.select(); } }, 30); return true;
       case "deckRenameYes": { const v = ($("#deck-name") ? $("#deck-name").value : "").trim().slice(0, 16); if (v) { ed.name = v; ed.named = true; } this.renaming = false; this.renderEdit(); return true; }
       case "deckRenameNo": this.renaming = false; this.renderEdit(); return true;

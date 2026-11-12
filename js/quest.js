@@ -121,8 +121,8 @@ const Quest = {
     return `<button type="button" class="qboard" data-act="quests" aria-label="クエスト掲示板${n ? `（受け取れる報酬 ${n}）` : ""}">
       <span class="qb-pin" aria-hidden="true"></span>
       <b>クエスト</b>
-      <small>デイリー ${dn}/${d.length}</small>
-      ${n ? `<span class="navbadge">${n}</span>` : ""}
+      <small>${this.guideSeen() ? `デイリー ${dn}/${d.length}` : "まずは進め方"}</small>
+      ${n ? `<span class="navbadge">${n}</span>` : !this.guideSeen() ? `<span class="navbadge">!</span>` : ""}
     </button>`;
   },
   rowHTML(kind, x) {
@@ -134,17 +134,58 @@ const Quest = {
       ${got ? `<span class="q-state">受け取り済み</span>` : done ? `<button type="button" class="btn sm primary" data-act="questClaim" data-k="${kind}" data-id="${esc(x.id)}">受け取る</button>` : `<span class="q-state">${x.n - p > 0 ? "あと" + (x.n - p) : ""}</span>`}
     </li>`;
   },
+  /* ---------- 進め方（はじめた人に、このゲームの遊び進め方を一本の道で見せる） ---------- */
+  guideSeen() { try { return localStorage.getItem("kyokai-guide") === "1"; } catch (e) { return true; } },
+  guideSteps() {
+    const own = id => Account.owned(id) > 0;
+    const bossCards = CARDS.filter(c => c.boss && !c.token);
+    const gAll = typeof gatePacks === "function" ? gatePacks(true) : [], gLeft = typeof gatePacks === "function" ? gatePacks() : [];
+    const ex = typeof exOpen === "function" && exOpen();
+    const hasDeck = Decks.mine().some(d => !Decks.isLtd(d) && !Decks.problems(d).length);
+    return [
+      { t: "カードを集める", done: this.beginnerDone() || this.begin().every(x => this.got("b", x)),
+        b: `まずは CPU戦の<b>初級・中級</b>で勝って G をためて、<b>パック</b>を開けましょう。<b>初心者歓迎クエスト</b>を全部クリアすると、レジェンド入りのデッキが1つもらえます。毎日の<b>デイリークエスト</b>も報酬がおいしいです。ダブったカードは<b>ショップで分解</b>して魔石にし、欲しいカードと<b>交換</b>できます。`,
+        go: [["cpu", "CPU戦へ"], ["packs", "パックへ"], ["shop", "ショップへ"]] },
+      { t: "自分のデッキを作る", done: hasDeck,
+        b: `集めたカードで、<b>デッキ編成</b>から30枚のデッキを組みます。最初は1つの世界にしぼると、カードどうしがかみ合いやすくなります。強いカードが手に入ったら、少しずつ入れ替えて強くしていきましょう。`,
+        go: [["decks", "デッキ編成へ"]] },
+      { t: "上級に勝って、隠しボスを倒す", done: bossCards.some(c => own(c.id)),
+        b: `デッキが育ったら<b>上級</b>に挑戦。上級に勝つと、<b>まれに隠しボスが現れます</b>（上級に何度も勝てば、いつか必ず現れます）。ボスを倒すと、<b>ボスが使う限定レジェンド</b>が手に入ります。限定レジェンドはパックや交換では手に入りません。あわせて第1弾のカードもそろえていきましょう。`,
+        go: [["cpu", "CPU戦へ"]] },
+      ...(gAll.length ? [{ t: "パック開放戦で、新しいパックを開く", done: !gLeft.length,
+        b: `第2弾のパックは、<b>パック開放戦</b>に勝つとショップに並びます。開放戦はパックごとにルール（世界限定など）が決まっていて、ルールに合ったデッキで挑みます。一気に全部開ける人も、1つ開けてカードを集めてから次に挑む人も。自分のペースでどうぞ。`,
+        go: [["gate", "パック開放戦へ"]] }] : []),
+      { t: "超級に挑む", done: false,
+        b: ex ? `第2弾を全部開放したので、CPU戦に<b>超級</b>が出ています。第2弾のカードを使いこなす強敵です。勝てるように、デッキをさらに鍛えましょう。<b>超級の隠しボスも近日登場予定</b>です。`
+          : `第2弾のパックを<b>すべて開放すると</b>、CPU戦に<b>超級</b>が現れます。第2弾のカードを使いこなす強敵です。<b>超級の隠しボスも近日登場予定</b>です。`,
+        go: ex ? [["cpu", "CPU戦へ"]] : [] }
+    ];
+  },
+  guideHTML() {
+    const st = this.guideSteps(), cur = st.findIndex(x => !x.done);
+    return `<p class="hint">このゲームの進め方の一例です。自分のペースで遊んでください。</p>
+      <ol class="guide">${st.map((x, i) => `<li class="g-step ${x.done ? "done" : i === cur ? "now" : ""}">
+        <span class="g-no" aria-hidden="true">${x.done ? "✓" : i + 1}</span>
+        <div class="g-body"><b>${esc(x.t)}${x.done ? `<small>クリア</small>` : i === cur ? `<small>いまここ</small>` : ""}</b>
+          <p>${x.b}</p>
+          ${x.go.length ? `<div class="g-go">${x.go.map(([a, l]) => `<button type="button" class="btn sm" data-act="${a}">${l}</button>`).join("")}</div>` : ""}</div>
+      </li>`).join("")}</ol>`;
+  },
+
   show(tab) {
     if (!this.ok() || !Account.data) { toast("アカウントを読み込めていないため、クエストは使えません"); return; }
     if (tab) this.tab = tab;
+    else if (!this.guideSeen()) this.tab = "guide";   // はじめて開いた人には、まず進め方
+    if (this.tab === "guide") { try { localStorage.setItem("kyokai-guide", "1"); } catch (e) {} }
     const q = this.st(), L = this.limited(), B = this.showBeginner();
     if (this.tab === "limited" && !L.length) this.tab = "daily";
     if (this.tab === "beginner" && !B) this.tab = "daily";
-    const tabs = [["daily", "デイリー"], ...(L.length ? [["limited", "期間限定"]] : []), ...(B ? [["beginner", "初心者歓迎"]] : [])];
-    const badge = k => { const list = k === "daily" ? [["d", this.daily()]] : k === "limited" ? [["l", L]] : [["b", this.begin()]];
+    const tabs = [["guide", "進め方"], ["daily", "デイリー"], ...(L.length ? [["limited", "期間限定"]] : []), ...(B ? [["beginner", "初心者歓迎"]] : [])];
+    const badge = k => { if (k === "guide") return ""; const list = k === "daily" ? [["d", this.daily()]] : k === "limited" ? [["l", L]] : [["b", this.begin()]];
       let n = 0; list.forEach(([kk, LL]) => LL.forEach(x => { if (this.done(kk, x) && !this.got(kk, x)) n++; })); if (k === "beginner" && this.beginnerDone()) n++; return n ? `<span class="navbadge">${n}</span>` : ""; };
     let body = "";
-    if (this.tab === "daily") body = `<p class="hint">毎日3つ、新しいクエストが届きます（日付が変わると入れ替わります。受け取っていない報酬も消えます）。</p><ul class="qlist">${this.daily().map(x => this.rowHTML("d", x)).join("")}</ul>`;
+    if (this.tab === "guide") body = this.guideHTML();
+    else if (this.tab === "daily") body = `<p class="hint">毎日3つ、新しいクエストが届きます（日付が変わると入れ替わります。受け取っていない報酬も消えます）。</p><ul class="qlist">${this.daily().map(x => this.rowHTML("d", x)).join("")}</ul>`;
     else if (this.tab === "limited") body = `<p class="hint">期間中だけのクエストです。</p><ul class="qlist">${L.map(x => this.rowHTML("l", x)).join("")}</ul>`;
     else {
       const all = this.beginnerDone(), gifts = this.gifts();
