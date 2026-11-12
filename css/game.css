@@ -2299,3 +2299,21 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .g-go{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .lvl-boss{display:block;margin-top:3px;font-size:11px;line-height:1.5;color:#e9c46a}
 .lvl .lvl-boss b{color:#ffd66b;font-size:inherit;font-family:inherit;font-weight:800;display:inline;letter-spacing:0;text-shadow:none}
+
+/* ---- チュートリアル：吹き出しと光 ---- */
+#tutbox{position:fixed;left:50%;transform:translateX(-50%);top:64px;width:min(94vw,460px);z-index:60;pointer-events:none;transition:top .25s ease}
+#tutbox .tut-in{pointer-events:auto;position:relative;display:flex;gap:9px;align-items:flex-start;padding:9px 10px 9px 9px;border-radius:14px;background:linear-gradient(180deg,#fbf3df,#efe0bb);color:#2b1d0c;border:2px solid #c9a253;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+#tutbox.in .tut-in{animation:tutin .28s ease-out}
+#tutbox.shake .tut-in{animation:tutshake .35s}
+@keyframes tutin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes tutshake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.tut-face{flex:none;width:36px;height:36px;border-radius:50%;background:#d8c08a center 18%/cover no-repeat;border:2px solid #c9a253}
+.tut-txt{flex:1;min-width:0}
+.tut-txt small{display:block;font-size:10.5px;font-weight:700;color:#8a6a33;letter-spacing:.04em}
+.tut-txt p{margin:2px 0 0;font-size:12.5px;line-height:1.55}
+.tut-txt p b{color:#8f2f12}
+.tut-txt .btn{margin-top:6px}
+.tut-x{all:unset;cursor:pointer;position:absolute;top:6px;right:8px;font-size:10.5px;color:#8a6a33;text-decoration:underline}
+.tut-hl{position:relative;z-index:5;outline:3px solid #ffd66b!important;outline-offset:3px;border-radius:10px;box-shadow:0 0 0 6px rgba(255,214,107,.25),0 0 22px rgba(255,214,107,.8)!important;animation:tuthl 1.2s ease-in-out infinite}
+@keyframes tuthl{50%{outline-color:#fff3c4}}
+.tut-reward b{display:block;font-size:15px;margin-bottom:4px;color:var(--gold)}

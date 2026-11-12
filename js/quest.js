@@ -70,6 +70,7 @@ const Quest = {
   /* 決着したとき（結果の画面を出すときに1回）。サンプルデッキの試合は数えない */
   onGame(res, sample) {
     if (!S || sample || this.doneGid === S.gid) return;
+    if (S.battle && S.battle.kind === "tutorial") return;   // チュートリアルはクエストに数えない（くり返して稼げないように）
     this.doneGid = S.gid;
     const me = MODE === "online" && typeof Online !== "undefined" ? Online.me : ME;
     const st = (S.stats || [])[me] || {};

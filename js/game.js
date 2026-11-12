@@ -158,6 +158,13 @@ function mulligan(pi, redraw) {
 /* CPU の開始前の判断 */
 function cpuPreGame() {
   if (!S || MODE !== "cpu") return;
+  // チュートリアル：じゃんけんは必ずあなたの勝ち（あなたが出してから負ける手を出す）。マリガンはしない
+  if (typeof Tut !== "undefined" && Tut.on()) {
+    const g = S;
+    if (S.phase === "rps" && S.rps.picks[0] && !S.rps.picks[1]) setTimeout(() => { if (S === g) rpsPick(1, RPS_WIN[S.rps.picks[0]]); }, 400);
+    else if (S.phase === "mulligan" && S.mull[1] == null) mulligan(1, false);
+    return;
+  }
   if (S.phase === "rps" && !S.rps.picks[1]) {
     const g = S;
     setTimeout(() => { if (S === g) rpsPick(1, "gcp"[Math.floor(Math.random() * 3)]); }, 250);
@@ -1282,8 +1289,10 @@ async function cpuTurn() {
   while (typeof Mull !== "undefined" && Mull.busy) await sleep(80);   // 手札を配り直している間は待つ
   await sleep(CPU_DELAY * 0.6);
   if (S !== g) return;
+  const plan = typeof Tut !== "undefined" && Tut.on() ? Tut.cpuActions() : null;   // チュートリアルは決まった動き
   for (let guard = 0; guard < 30 && !S.over; guard++) {
-    const a = cpuChoose(1);
+    const a = plan ? (plan.length ? plan.shift()() : null) : cpuChoose(1);
+    if (plan && !a && plan.length) continue;
     if (!a) break;
     if (!applyAction(1, a)) break;
     await sleep(CPU_DELAY);
@@ -1300,16 +1309,19 @@ function canAct() {
 }
 function doPlay(idx, targets, gear) {
   if (!canAct()) return;
+  if (typeof Tut !== "undefined" && !Tut.allow("play", { id: S.players[ME].hand[idx], targets })) return;
   if (MODE === "online" && Online.role === "guest") return Online.send({ t: "play", idx, targets: targets || {}, hand: S.players[ME].hand[idx], ...(gear ? { gear: true } : {}) });
   playCard(ME, idx, targets || {}, !!gear);
 }
 function doAttack(uid, target) {
   if (!canAct()) return;
+  if (typeof Tut !== "undefined" && Tut.on() && !Tut.allow("attack", { id: Tut.idOfUid(uid), target })) return;
   if (MODE === "online" && Online.role === "guest") return Online.send({ t: "attack", uid, target });
   attack(ME, uid, target);
 }
 function doEnd() {
   if (!canAct()) return;
+  if (typeof Tut !== "undefined" && !Tut.allow("end")) return;
   ui = { sel: null, mode: null };
   if (MODE === "online" && Online.role === "guest") return Online.send({ t: "end" });
   endTurn(ME);
@@ -1364,6 +1376,7 @@ function isTargetable(pi, u) {
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
 function beginPlay(idx, gear) {
   const d = DEF[S.players[ME].hand[idx]];
+  if (typeof Tut !== "undefined" && !Tut.allow("begin", { id: S.players[ME].hand[idx] })) return;
   // 歯車を使うか選べるカードは、先に選んでもらう（詳細の「歯車を使って出す／使わずに出す」）
   if (gear == null && gearChoice(ME, idx)) { ui = { sel: { kind: "hand", idx }, mode: null }; render(); toast("歯車を使うかどうか選んでください"); return; }
   const roles = neededRoles(ME, d);
@@ -1530,14 +1543,17 @@ function pregameHTML() {
 }
 
 function doRps(v) {
+  if (typeof Tut !== "undefined" && !Tut.allow("rps")) return;
   if (MODE === "online" && Online.role === "guest") return Online.send({ t: "rps", v });
   rpsPick(ME, v);
 }
 function doChoose(first) {
+  if (typeof Tut !== "undefined" && !Tut.allow("choose", { first })) return;
   if (MODE === "online" && Online.role === "guest") return Online.send({ t: "choose", first });
   chooseOrder(ME, first);
 }
 function doMull(redraw) {
+  if (typeof Tut !== "undefined" && !Tut.allow("mull", { redraw })) return;
   const go = () => {
     if (MODE === "online" && Online.role === "guest") return Online.send({ t: "mull", redraw });
     mulligan(ME, redraw);
@@ -2056,7 +2072,7 @@ function showStart() {
     </div>
     <div class="battles">
       <button type="button" class="battlebtn cpu" data-act="solo">
-        <span class="bicon">${HOME_ICON.cpu}</span><b>一人で対戦</b><small>CPU戦・世界限定戦など</small>
+        <span class="bicon">${HOME_ICON.cpu}</span><b>一人で対戦</b><small>CPU戦・練習・チュートリアルなど</small>
       </button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="battlebtn online" data-act="online">
         <span class="bicon">${HOME_ICON.online}</span><b>友達と対戦</b><small>合言葉で部屋に入る</small>
@@ -2070,6 +2086,8 @@ function showStart() {
     </nav>
   </div>`, "start", true);
   Showcase.start();
+  // はじめての人をチュートリアルに誘う（一度だけ。ログインボーナスなどが閉じてから）
+  if (goldOK && typeof Tut !== "undefined" && !Tut.invited && Account.data && !Account.data.tut) setTimeout(() => { if (!S && document.querySelector("#overlay .homebar") && !document.querySelector(".dmodal")) Tut.invite(); }, 700);
 }
 
 /* 歯車ボタン：ルール・アカウント・音などの事務的なもの */
@@ -2278,6 +2296,7 @@ function giveReward(res) {
     }
     if (B.kind === "boss" && res === "win") r.boss = bossReward();
     if (B.kind === "gate" && res === "win") r.gate = gateReward();
+    if (B.kind === "tutorial") r.tut = Tut.reward(res);
   }
   if (r.g) Account.addGold(r.g);       // 連勝数も一緒に保存される
   else if (counts) Account.saveNow();   // 負け：連勝が0になったこと・ボスの天井などを保存
@@ -2316,10 +2335,11 @@ function showResult(res) {
   // 次にすること：大きいボタン1つ＋小さいボタン
   const again = online
     ? (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
+    : B && B.kind === "tutorial" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度チュートリアル</button>`
     : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
     : `<button type="button" class="btn primary res-main" data-act="cpuAgain">同じ強さでもう一度</button>`;
   const sub = [
-    !online && !(B && B.kind === "gate" && r.gate) ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
+    !online && !(B && B.kind === "gate" && r.gate) && !(B && B.kind === "tutorial") ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
     `<button type="button" class="res-sub" data-act="log">${RES_IC.log}<span>ログ</span></button>`,
     `<button type="button" class="res-sub" data-act="closeOverlay">${RES_IC.board}<span>盤面</span></button>`,
     `<button type="button" class="res-sub" data-act="toTitle">${RES_IC.home}<span>${online ? "部屋を出る" : "タイトル"}</span></button>`
@@ -2328,6 +2348,7 @@ function showResult(res) {
     <div class="res-head"><span class="res-en">${en}</span><b class="res-ja">${ja}</b></div>
     ${g ? `<div class="res-reward">${curIcon("gold", "res-coin")}<b class="res-g" data-to="${g}">+0</b><span class="res-gl">G</span><small>所持 ${Account.gold.toLocaleString()}G</small></div>` : ""}
     ${streakHTML(r, res)}
+    ${B && B.kind === "tutorial" && typeof Tut !== "undefined" ? Tut.resultHTML(r.tut) : ""}
     ${r.boss ? bossRewardHTML(r.boss) : ""}
     ${r.gate ? `<div class="gate-open"><b>「${esc(r.gate.name)}」が開放されました！</b><small>ショップに並びました。このパックのカードもカード一覧に出ます</small></div>` : ""}
     ${r.bossSign ? `<p class="boss-sign">……境界が、揺らいでいる。<small>次の上級戦で、何かが起こるかもしれない</small></p>` : ""}
@@ -2463,6 +2484,7 @@ function startCpuGame(level) {
      practice… 報酬・連勝なしの練習
      setup(S)… 対戦を作った直後に呼ぶ（体力を変える・最初から場に出すなど、ボスやチュートリアル用） */
 function startBattle(spec) {
+  if (spec.kind !== "tutorial" && typeof Tut !== "undefined") Tut.active = false;
   CPU_LEVEL = CPU_LEVELS[spec.level] ? spec.level : "normal";
   MODE = "cpu"; setPerspective(0);
   $("#overlay").hidden = true;
@@ -2478,7 +2500,8 @@ function startBattle(spec) {
 /* 結果画面の「もう一度」「選び直す」 */
 function battleAgain() {
   const k = S && S.battle ? S.battle.kind : (S && S.practice ? "practice" : "cpu");
-  if (k === "practice") startPractice();
+  if (k === "tutorial") Tut.start();
+  else if (k === "practice") startPractice();
   else if (k === "world") startWorldGame(CPU_LEVEL);
   else if (k === "gate") { if (gatePacks().some(p => p.id === GATE.pack)) startGateGame(); else showGate(); }
   else startCpuGame(k === "boss" ? "hard" : CPU_LEVEL);
@@ -2578,7 +2601,7 @@ function showSolo() {
       ${tile("start", "CPU戦", "初級・中級・上級の CPU と戦う。勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
       ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
       ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
-      ${TUTORIAL_OPEN ? tile("noop", "チュートリアル", "遊び方を、実際に対戦しながら覚える", { off: true, tag: "準備中", cls: "m-off" }) : ""}
+      ${TUTORIAL_OPEN ? tile("tutorial", "チュートリアル", `遊び方を、実際に1戦しながら覚える（何度でも遊べる）${Tut.done() ? "" : `。初めてクリアするとパック券${TUT_REWARD.tickets}枚${TUT_REWARD.gold ? `と${TUT_REWARD.gold}G` : ""}`}`, { tag: Tut.done() ? "クリア済み" : "報酬あり", cls: "m-tut", art: art("squire") }) : ""}
       ${(() => { const g = gatePacks(), all = gatePacks(true);
         return tile("gate", "パック開放戦", "パックごとに決められたルールのもとで勝つと、新しいパックが開く",
           { off: !g.length, tag: !all.length ? "第2弾から" : !g.length ? "すべて開放ずみ" : `あと${g.length}つ`, cls: g.length ? "m-gate" : "m-off", art: g.length ? gateArt(g[0]) : "" }); })()}
@@ -2684,7 +2707,7 @@ function gateReward() {
 /* ---------- 世界限定戦：30枚すべて同じ世界のデッキ同士で戦う ----------
    CPU 用の世界限定デッキをオーナーが作るまでは、入口を閉じておく（中身はできている） */
 const WORLD_MODE_OPEN = false;   // 世界限定戦。できるまで画面に出さない（デッキ編成の「限定構築」は、パック開放戦などでも使うので出したまま）
-const TUTORIAL_OPEN = false;     // チュートリアル。できるまで画面に出さない
+const TUTORIAL_OPEN = true;      // チュートリアル（js/tutorial.js）
 const WORLDB = { deck: null };
 function worldDecks() {
   return Decks.mine().filter(d => Decks.isWorld(d) && !Decks.problems(d).length);
@@ -2809,6 +2832,7 @@ function handleAct(act, el) {
       if (Serial.handleAct(act, el)) return;
       if (Packs.handleAct(act, el)) return;
       if (typeof Quest !== "undefined" && Quest.handleAct(act, el)) return;
+      if (typeof Tut !== "undefined" && Tut.handleAct(act, el)) return;
       if (Shop.handleAct(act, el)) return;
       if (Inbox.handleAct(act, el)) return;
       if (Showcase.handleAct(act, el)) return;

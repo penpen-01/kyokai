@@ -86,7 +86,8 @@ const Account = {
       srTickets: Math.max(0, Math.floor(+d.srTickets || 0)),
       // ショップで増やしたデッキ枠（マイデッキ・限定構築それぞれ +1）
       deckSlots: Math.max(0, Math.min(50, Math.floor(+d.deckSlots || 0))),
-      ...(d.q && typeof d.q === "object" ? { q: d.q } : {}),   // クエストの進み具合（js/quest.js）
+      ...(d.q && typeof d.q === "object" ? { q: d.q } : {}),
+      ...(d.tut === "done" || d.tut === "skip" ? { tut: d.tut } : {}),   // チュートリアル：done＝クリアして報酬を受け取った・skip＝誘いをスキップ   // クエストの進み具合（js/quest.js）
       // 選択券（選択券のID → 枚数）。メールで受け取り、好きなカード1枚と交換する
       picks: Object.fromEntries(Object.entries(d.picks || {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && +v > 0).map(([k, v]) => [k, Math.floor(+v)])),
       opened: Array.isArray(d.opened) ? d.opened.filter(k => !!normSet(k)) : [],   // 開放した弾（「2-1」など。パック開放戦に勝つと増える）
