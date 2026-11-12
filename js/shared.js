@@ -17,7 +17,10 @@ function setOpen(s) {
   return typeof Account !== "undefined" && !!(Account.data && (Account.data.opened || []).includes(s));
 }
 /* プレイヤーに見せてよいカード（開放していない弾のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
-const cardShown = c => !!c && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
+/* 超級の隠しボス（冥府の剣鬼）の限定レジェンド：BOSS_EX_ON が 0 の間は、どこにも出さない（できあがるまで隠す。2026-11-13 オーナー） */
+const BOSS_EX_CARDS = ["b-y-valk", "b-y-murasame", "b-y-zantetsu"];
+const bossExOn = () => !!(typeof CONFIG !== "undefined" && CONFIG.BOSS_EX_ON);
+const cardShown = c => !!c && !(BOSS_EX_CARDS.includes(c.id) && !bossExOn()) && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
 /* パック開放戦のルール（パックごとに決める）。今は「世界限定」と「制限なし」。あとでレア度の制限・相手の特殊ルールなどを足す */
 const GATE_RULES = {
   world: { label: "世界限定", text: p => `使えるのは、30枚すべて${WORLDS[p.gateWorld] || "決めた世界"}のカードで組んだデッキだけ。`, deckOK: (p, d) => deckWorld(d) === p.gateWorld },
@@ -281,7 +284,7 @@ const DEFAULT_CONFIG = {
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_EX: 450, REWARD_ONLINE: 80,
   STREAK_STEP: 10, STREAK_MAX: 50,
-  BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, BOSS_EX_RATE: 5, BOSS_EX_PITY: 20, BOSS_EX_HP: 30, SAMPLE_ONLINE_DAY: 3, SAMPLE_CPU: 1,
+  BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, BOSS_EX_ON: 0, BOSS_EX_RATE: 5, BOSS_EX_PITY: 20, BOSS_EX_HP: 30, SAMPLE_ONLINE_DAY: 3, SAMPLE_CPU: 1,
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
@@ -320,6 +323,7 @@ const CONFIG_INFO = {
   BOSS_RATE:     { label: "隠しボス：上級に勝ったとき次に出る確率（%）", min: 0, max: 100, group: "eco" },
   BOSS_PITY:     { label: "隠しボス：天井（上級でこの回数勝つと必ず出る）", min: 1, max: 999, group: "eco" },
   BOSS_HP:       { label: "隠しボス：ボスの体力", min: 1, max: 99, group: "eco" },
+  BOSS_EX_ON:    { label: "超級の隠しボス（黄泉丸）を出す（1＝出す・0＝隠す。できあがるまで0）", min: 0, max: 1, group: "eco" },
   BOSS_EX_RATE:  { label: "超級の隠しボス（黄泉丸）：超級に勝ったとき次に出る確率（%）", min: 0, max: 100, group: "eco" },
   BOSS_EX_PITY:  { label: "超級の隠しボス：天井（超級でこの回数勝つと必ず出る）", min: 1, max: 999, group: "eco" },
   BOSS_EX_HP:    { label: "超級の隠しボス：ボスの体力", min: 1, max: 99, group: "eco" },

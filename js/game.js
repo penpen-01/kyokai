@@ -2290,7 +2290,7 @@ function giveReward(res) {
   // 隠しボス：上級に勝つたびに、次の上級戦でボスが出るかを決める（天井つき）。ボスに勝つと報酬
   if (counts && B) {
     const BZ = BOSSES[CPU_LEVEL];
-    if (B.kind === "cpu" && BZ && res === "win" && !Account.data[BZ.next] && PRESETS.some(p => p.id === BZ.deck)) {
+    if (B.kind === "cpu" && BZ && (CPU_LEVEL !== "ex" || bossExOn()) && res === "win" && !Account.data[BZ.next] && PRESETS.some(p => p.id === BZ.deck)) {
       const pity = (Account.data[BZ.pity] || 0) + 1;
       if (pity >= (CONFIG[BZ.cfg + "PITY"] || 20) || Math.random() * 100 < (CONFIG[BZ.cfg + "RATE"] || 0)) { Account.data[BZ.next] = true; Account.data[BZ.pity] = 0; r.bossSign = CPU_LEVEL; }
       else Account.data[BZ.pity] = pity;
@@ -2423,7 +2423,7 @@ function showCpuSelect() {
         <span class="lvl-body">
           <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
           <span class="lvl-desc">${v.desc}</span>
-          ${k === "hard" ? `<span class="lvl-boss">勝つと、まれに<b>隠しボス</b>が現れる。倒すとボスの<b>限定レジェンド</b>が手に入る</span>` : k === "ex" ? `<span class="lvl-boss">勝つと、まれに<b>冥府の剣鬼</b>が現れる。倒すと冥府の<b>限定レジェンド</b>が手に入る</span>` : ""}
+          ${k === "hard" ? `<span class="lvl-boss">勝つと、まれに<b>隠しボス</b>が現れる。倒すとボスの<b>限定レジェンド</b>が手に入る</span>` : k === "ex" ? (bossExOn() ? `<span class="lvl-boss">勝つと、まれに<b>冥府の剣鬼</b>が現れる。倒すと冥府の<b>限定レジェンド</b>が手に入る</span>` : `<span class="lvl-boss">超級の隠しボスは近日登場</span>`) : ""}
           <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[REWARD_KEY[k]]}</b>G</em>${streakTag(k)}</span>
         </span>
         <span class="lvl-go" aria-hidden="true">›</span>
@@ -2469,7 +2469,7 @@ function startCpuGame(level) {
   if (!mine) return;
   if (mine.sample && !CONFIG.SAMPLE_CPU) { toast("サンプルデッキは CPU戦では使えません（練習対戦と友達との対戦だけ）"); return showCpuSelect(); }
   const lv = CPU_LEVELS[level] && (level !== "ex" || exOpen()) ? level : "normal";
-  if (BOSSES[lv] && Account.data && Account.data[BOSSES[lv].next] && !mine.sample && ["ready", "offline"].includes(Account.status)) return startBossGame(mine, lv);
+  if (BOSSES[lv] && (lv !== "ex" || bossExOn()) && Account.data && Account.data[BOSSES[lv].next] && !mine.sample && ["ready", "offline"].includes(Account.status)) return startBossGame(mine, lv);
   const cpu = Decks.randomPreset(lv);
   if (!cpu) return Decks.showList("CPU用のサンプルデッキがありません");
   startBattle({ kind: "cpu", level: lv, mine, opp: cpu, streak: true });

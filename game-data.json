@@ -45,7 +45,8 @@
   "SAMPLE_DECKS": true,
   "BOSS_EX_RATE": 10,
   "BOSS_EX_PITY": 15,
-  "BOSS_EX_HP": 30
+  "BOSS_EX_HP": 30,
+  "BOSS_EX_ON": 0
  },
  "packs": [
   {
