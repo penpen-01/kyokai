@@ -97,7 +97,10 @@ const Decks = {
     return pr;
   },
   isWorld(deck) { return !!(deck && deck.fmt === "world" && WORLDS[deck.world]); },
-  kindOf(d) { return d.free ? "sample" : d.fmt === "world" ? "world" : "mine"; },
+  /* 限定構築のデッキか（縛りのあるルール用の別枠。世界限定 world と、縛りなし ltd） */
+  isLtd(deck) { return !!(deck && (this.isWorld(deck) || deck.fmt === "ltd")); },
+  fmtOf(deck) { return this.isWorld(deck) ? { fmt: "world", world: deck.world } : deck && deck.fmt === "ltd" ? { fmt: "ltd" } : {}; },
+  kindOf(d) { return d.free ? "sample" : this.isLtd(d) ? "world" : "mine"; },
   isValid(deck) { return !!deck && this.problems(deck).length === 0; },
   // 入れられる枚数：持っていないカードも上限まで入れられる（保存はできる・対戦には使えない）
   maxFor(c, deck) { return cardLimit(c, CONFIG, deck); },
@@ -198,7 +201,7 @@ const Decks = {
         <span class="dbt-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
         ${using ? `<span class="dbt-using">使用中</span>` : ""}
         ${st}
-        <span class="dbt-foot">${this.isWorld(d) ? `<small class="wtag w-${d.world}">限定・${WORLDS[d.world]}</small>` : ""}<b class="dbt-name">${esc(d.name)}</b>${this.worldBar(d)}</span>
+        <span class="dbt-foot">${this.isWorld(d) ? `<small class="wtag w-${d.world}">限定・${WORLDS[d.world]}</small>` : this.isLtd(d) ? `<small class="wtag w-ltd">限定・縛りなし</small>` : ""}<b class="dbt-name">${esc(d.name)}</b>${this.worldBar(d)}</span>
       </button>
     </div>`;
   },
@@ -208,7 +211,6 @@ const Decks = {
     const samp = this.sampleOK() && !this.free();
     if (this.listTab === "sample" && !samp) this.listTab = "mine";
     if (this.listTab === "cpu" && !this.free()) this.listTab = "mine";
-    if (this.listTab === "world" && !WORLD_MODE_OPEN) this.listTab = "mine";
     const tab = this.listTab;
     const list = tab === "cpu" ? PRESETS : all.filter(d => this.kindOf(d) === tab);
     const tabBtn = (v, label, n) => `<button type="button" role="tab" data-act="deckListTab" data-v="${v}" aria-pressed="${tab === v}">${label}${n != null ? ` <small>${n}</small>` : ""}</button>`;
@@ -218,12 +220,12 @@ const Decks = {
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
       ${true ? `<div class="seg wide dl-tabs" role="tablist">
         ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => this.kindOf(d) === "mine").length}/${this.max("mine")}`)}
-        ${WORLD_MODE_OPEN ? tabBtn("world", "限定構築", `${all.filter(d => this.kindOf(d) === "world").length}/${this.max("world")}`) : ""}
+        ${tabBtn("world", "限定構築", `${all.filter(d => this.kindOf(d) === "world").length}/${this.max("world")}`)}
         ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
       ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）${CONFIG.SAMPLE_CPU ? "。CPU戦でも使えます（Gと連勝・隠しボスはなし）" : "だけです。CPU戦では使えません"}。</p>` : ""}
-      <p class="hint dl-hint">${tab === "world" ? "世界限定戦で使うデッキです。1つの世界を決めて、その世界のカードだけで30枚を組みます。"
+      <p class="hint dl-hint">${tab === "world" ? "縛りのあるルール（パック開放戦・イベント戦など）で使うデッキの置き場です。マイデッキを崩さずに、ルールに合わせたデッキを別に組めます。作るときに縛りを選びます。"
         : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです。勝ってもGはもらえません。"
         : tab === "cpu" ? "CPU が使っているデッキです。"
         : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っていないカードも入れて保存できます（そろうまで対戦には使えません）。"}`}
@@ -244,13 +246,15 @@ const Decks = {
     if (!this.saveMine(next)) toast("保存できませんでした（サーバーに接続できていません）");
   },
 
-  /* 限定構築：新しいデッキの世界を選ぶ */
+  /* 限定構築：新しいデッキの縛りを選ぶ（今は世界限定と縛りなし。コスト縛りなどはあとで足す） */
   showWorldPick() {
     openOverlay(`<div class="panel">
-      ${this.topbar("限定構築：世界を選ぶ", "decks")}
-      <p class="lead small">このデッキで使う世界を選んでください。あとから変えることはできません（変えたいときは新しく作ります）。</p>
+      ${this.topbar("限定構築：縛りを選ぶ", "decks")}
+      <p class="lead small">このデッキの縛りを選んでください。あとから変えることはできません（変えたいときは新しく作ります）。</p>
       <div class="lvls">${Object.entries(WORLDS).map(([k, v]) => `<button type="button" class="lvl lvl-mode wpick w-${k}" data-act="deckNewWorldGo" data-v="${k}">
-        <span class="lvl-body"><span class="lvl-head"><b>${v}</b></span><span class="lvl-desc">${v}のカードだけで30枚を組む</span></span><span class="lvl-go" aria-hidden="true">›</span></button>`).join("")}</div>
+        <span class="lvl-body"><span class="lvl-head"><b>${v}</b></span><span class="lvl-desc">世界限定：${v}のカードだけで30枚を組む</span></span><span class="lvl-go" aria-hidden="true">›</span></button>`).join("")}
+        <button type="button" class="lvl lvl-mode wpick w-ltd" data-act="deckNewWorldGo" data-v="ltd">
+        <span class="lvl-body"><span class="lvl-head"><b>縛りなし</b></span><span class="lvl-desc">ふつうのルールで組む。コスト縛りやイベント戦など、ルールに合わせて自分で組むとき用</span></span><span class="lvl-go" aria-hidden="true">›</span></button></div>
     </div>`, "start", true);
   },
 
@@ -328,7 +332,7 @@ const Decks = {
       const room = Math.min(cardLimit(c, CONFIG, deck) - (cards[id] || 0), CONFIG.DECK_SIZE - deckCount({ cards }));
       if (room > 0) cards[id] = (cards[id] || 0) + Math.min(n, room);
     });
-    this.editing = { id: deck.id, name: deck.name, cards, want: {}, key: deck.key || null, isNew, free: !!deck.free, ...(this.isWorld(deck) ? { fmt: "world", world: deck.world } : {}), confirmDel: false };
+    this.editing = { id: deck.id, name: deck.name, cards, want: {}, key: deck.key || null, isNew, free: !!deck.free, ...this.fmtOf(deck), confirmDel: false };
     if (this.isWorld(deck)) this.filter.world = deck.world;   // 限定構築は、その世界のカードだけを出す
     else if (this.filter.world !== "all" && this.lastWorldEdit) this.filter.world = "all";
     this.lastWorldEdit = this.isWorld(deck);
@@ -585,8 +589,9 @@ const Decks = {
       case "deckNew": if (this.full(false)) return true; this.startEdit({ id: "d" + Date.now().toString(36), name: "新しいデッキ", cards: {} }, true); return true;
       case "deckNewWorld": if (this.full("world")) return true; this.showWorldPick(); return true;
       case "deckNewWorldGo": {
-        const w = el.dataset.v; if (!WORLDS[w] || this.full("world")) return true;
-        this.startEdit({ id: "w" + Date.now().toString(36), name: `${WORLDS[w]}の限定デッキ`, cards: {}, fmt: "world", world: w }, true);
+        const w = el.dataset.v; if ((!WORLDS[w] && w !== "ltd") || this.full("world")) return true;
+        if (w === "ltd") this.startEdit({ id: "w" + Date.now().toString(36), name: "限定デッキ", cards: {}, fmt: "ltd" }, true);
+        else this.startEdit({ id: "w" + Date.now().toString(36), name: `${WORLDS[w]}の限定デッキ`, cards: {}, fmt: "world", world: w }, true);
         return true;
       }
       case "deckNewSample": if (this.full(true)) return true; this.startEdit({ id: "s" + Date.now().toString(36), name: "サンプルデッキ", cards: {}, free: true }, true); return true;
@@ -650,7 +655,7 @@ const Decks = {
       }
       case "deckCopy": {
         const p = this.find(id); if (!p || this.full(this.kindOf(p))) return true;
-        this.startEdit({ id: (p.free ? "s" : this.isWorld(p) ? "w" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, want: p.want, free: !!p.free, ...(this.isWorld(p) ? { fmt: "world", world: p.world } : {}) }, true);
+        this.startEdit({ id: (p.free ? "s" : this.isLtd(p) ? "w" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, want: p.want, free: !!p.free, ...this.fmtOf(p) }, true);
         return true;
       }
       case "deckEdit": { const d = this.find(id); if (d) { this.viewing = null; this.startEdit(d, false); } return true; }
@@ -677,16 +682,16 @@ const Decks = {
       case "deckInc": this.inc(id, false); return true;
       case "deckDec": this.dec(id); return true;
       case "deckSave": {
-        if (ed.isNew && !ed.named && (["新しいデッキ", "サンプルデッキ"].includes(ed.name) || /の限定デッキ$/.test(ed.name)) && deckCount(ed)) ed.name = (this.isWorld(ed) ? "限定・" : "") + this.autoName(ed);
+        if (ed.isNew && !ed.named && (["新しいデッキ", "サンプルデッキ", "限定デッキ"].includes(ed.name) || /の限定デッキ$/.test(ed.name)) && deckCount(ed)) ed.name = (this.isLtd(ed) ? "限定・" : "") + this.autoName(ed);
         ed.name = (ed.name || "").trim().slice(0, 16) || "デッキ";
         const pr = this.saveProblems(ed);
         if (pr.length) { toast(pr[0]); return true; }
         const list = this.mine().filter(d => d.id !== ed.id);
         const want = cleanDeckCards(ed.want);
-        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}), ...(this.isWorld(ed) ? { fmt: "world", world: ed.world } : {}), ...(ed.key ? { key: ed.key } : {}), ...(Object.keys(want).length ? { want } : {}) });
+        list.push({ id: ed.id, name: ed.name, cards: ed.cards, ...(ed.free ? { free: true } : {}), ...this.fmtOf(ed), ...(ed.key ? { key: ed.key } : {}), ...(Object.keys(want).length ? { want } : {}) });
         if (!this.saveMine(list)) { this.editing = null; this.showList("保存できませんでした（サーバーに接続できていません）"); return true; }
         // 対戦に使えるデッキになったときだけ「使用中」にする（未完成のデッキは選ばない）
-        if (!this.isWorld(ed) && (ed.isNew || !this.isValid(this.selected())) && !this.problems(this.mine().find(d => d.id === ed.id) || ed).length) this.select(ed.id);
+        if (!this.isLtd(ed) && (ed.isNew || !this.isValid(this.selected())) && !this.problems(this.mine().find(d => d.id === ed.id) || ed).length) this.select(ed.id);
         const saved = ed;
         if (deckCount(ed) === CONFIG.DECK_SIZE && typeof Quest !== "undefined") Quest.add("deck", 1);
         this.editing = null; this.detail = null;

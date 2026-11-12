@@ -97,7 +97,7 @@ const Shop = {
     Account.data.deckSlots = Account.deckSlots + 1;
     Account.saveNow();
     Sound.play("click");
-    this.show(`デッキ枠が1つ増えました（${Decks.max("mine")}個まで）。`);
+    this.show(`デッキ枠が1つ増えました（マイデッキ・限定構築とも ${Decks.max("mine")}個まで）。`);
   },
   buy(id) {
     const c = DEF[id];
@@ -199,7 +199,7 @@ const Shop = {
           <span class="sh-ic">${SHOP_IC.ticket}</span><b>パック券</b><small>魔石${tc}で1枚 ・ 所持${Account.tickets}枚</small>
           <button type="button" class="btn sm primary" data-act="shopTicket" ${use && Account.stones >= tc ? "" : "disabled"}>交換する</button></div>
         <div class="sh-cat c-slot">
-          <span class="sh-ic">${SHOP_IC.slot}</span><b>デッキ枠</b><small>${slotLeft > 0 ? `魔石${slotCost}で1つ増やす・今 ${Decks.max("mine")}個` : `もう増やせません（${Decks.max("mine")}個）`}</small>
+          <span class="sh-ic">${SHOP_IC.slot}</span><b>デッキ枠</b><small>${slotLeft > 0 ? `魔石${slotCost}で1つ増やす（マイデッキ・限定構築とも）・今 ${Decks.max("mine")}個` : `もう増やせません（${Decks.max("mine")}個）`}</small>
           <button type="button" class="btn sm primary" data-act="shopSlot" ${use && slotLeft > 0 && Account.stones >= slotCost ? "" : "disabled"}>増やす</button></div>
         ${soon ? fut.map(x => `<div class="sh-cat soon"><span class="sh-ic">${SHOP_IC[x.ic] || SHOP_IC.star}</span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("") : ""}
       </div>

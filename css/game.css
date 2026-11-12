@@ -1504,6 +1504,7 @@ html.nofx .card .shine{display:none}
 .wtag{font-weight:800}
 .wtag.w-myth{color:var(--w-myth)} .wtag.w-fan{color:var(--w-fan)} .wtag.w-mech{color:var(--w-mech)}
 .wpick.w-myth{--lc:var(--w-myth)} .wpick.w-fan{--lc:var(--w-fan)} .wpick.w-mech{--lc:var(--w-mech)}
+.wtag.w-ltd{color:var(--gold)} .wpick.w-ltd{--lc:var(--gold)}
 .wpick .lvl-head b{color:var(--lc)}
 .dbt-foot .wtag{font-size:10.5px;text-shadow:0 1px 3px #000}
 

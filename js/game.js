@@ -2676,7 +2676,7 @@ function gateReward() {
 
 /* ---------- 世界限定戦：30枚すべて同じ世界のデッキ同士で戦う ----------
    CPU 用の世界限定デッキをオーナーが作るまでは、入口を閉じておく（中身はできている） */
-const WORLD_MODE_OPEN = false;   // 世界限定戦（と、デッキ編成の「限定構築」）。できるまで画面に出さない
+const WORLD_MODE_OPEN = false;   // 世界限定戦。できるまで画面に出さない（デッキ編成の「限定構築」は、パック開放戦などでも使うので出したまま）
 const TUTORIAL_OPEN = false;     // チュートリアル。できるまで画面に出さない
 const WORLDB = { deck: null };
 function worldDecks() {
