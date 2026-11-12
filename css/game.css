@@ -80,8 +80,9 @@ body{
 }
 .hpgem::before{content:"";position:absolute;inset:3px;clip-path:polygon(50% 0, 100% 16%, 100% 60%, 50% 100%, 0 60%, 0 16%);background:linear-gradient(160deg,#ff8f7f,#cf3240 50%,#6e1018)}
 .hpgem::after{content:"";position:absolute;inset:3px 3px 50% 3px;clip-path:polygon(50% 0, 100% 32%, 100% 100%, 0 100%, 0 32%);background:linear-gradient(rgba(255,255,255,.35),transparent);pointer-events:none}
-.hpgem.low{animation:hplow 1.1s ease-in-out infinite}
-@keyframes hplow{50%{filter:drop-shadow(0 0 9px #ff4d4d)}}
+/* 光る演出は「影や filter を毎フレーム描き直す」とスマホが熱くなるので、光の板の透明度だけを動かす（2026-11-12） */
+.hpglow{position:absolute;right:-22px;bottom:-18px;width:56px;height:61px;z-index:1;pointer-events:none;border-radius:50%;background:radial-gradient(closest-side,rgba(255,77,77,.95),rgba(255,77,77,0));opacity:0;will-change:opacity;animation:glowfade 1.1s ease-in-out infinite}
+@keyframes glowfade{50%{opacity:1}}
 .hpv{position:relative;z-index:1;font-family:var(--f-display);font-weight:800;font-size:17px;line-height:1;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);font-variant-numeric:tabular-nums;margin-top:-3px}
 
 .pname{font-size:12.5px;display:flex;gap:6px;align-items:baseline;max-width:100%}
@@ -150,7 +151,6 @@ body{
   display:grid;place-items:center;text-align:center;font-weight:800;font-size:12.5px;line-height:1.25;color:#2a1d06;
   background:radial-gradient(circle at 50% 35%, #fff1bf, #e7c063 45%, #a87a22 100%);
   box-shadow:0 0 0 3px #3a2a0c, 0 0 0 5px color-mix(in srgb,var(--gold) 80%,transparent), 0 0 18px color-mix(in srgb,var(--gold) 55%,transparent), 0 6px 14px rgba(0,0,0,.6);
-  animation:medal 2.4s ease-in-out infinite;
 }
 .endbtn span{display:block;transform:translateY(1px);position:relative;z-index:1}
 /* メダルの外周の刻み */
@@ -2254,3 +2254,7 @@ html.nofx .card .shine{display:none}
 .qboard:active{transform:rotate(2deg) scale(.96)}
 .qboard{width:88px;bottom:-26px;right:12px}
 .qboard b{font-size:13px}
+
+/* ターン終了のメダルの光：透明度だけを動かす */
+.endbtn .eb-glow{position:absolute;inset:-6px;border-radius:50%;pointer-events:none;box-shadow:0 0 0 2px var(--gold),0 0 26px color-mix(in srgb,var(--gold) 80%,transparent);opacity:0;will-change:opacity;animation:glowfade 2.4s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){ .endbtn .eb-glow,.hpglow{animation:none;opacity:.6} }

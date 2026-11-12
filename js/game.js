@@ -1346,7 +1346,7 @@ function pbarHTML(pi) {
     <button type="button" class="avatar ${tgt ? "tgt" : ""} ${S.over && resultShown && S.winner !== "draw" && S.winner !== pi ? "fin-broken" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
       <span class="halo" aria-hidden="true"></span>
       <span class="face">${art ? iconImgHTML(icon) : `<span class="glyph">召</span>`}</span>
-      <span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
+      ${hp <= 5 ? `<span class="hpglow" aria-hidden="true"></span>` : ""}<span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
     <div class="pl-right">
       <div class="pname"><b>${esc(p.name)}</b>${S.phase === "play" && S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
@@ -1406,7 +1406,7 @@ function fieldHTML(pi) {
 }
 
 function endButtonHTML() {
-  if (S.over && resultShown) return `<button type="button" class="endbtn" data-act="showResult"><span>結果<br>画面へ</span></button>`;
+  if (S.over && resultShown) return `<button type="button" class="endbtn" data-act="showResult"><i class="eb-glow" aria-hidden="true"></i><span>結果<br>画面へ</span></button>`;
   if (S.over) return `<button type="button" class="endbtn" disabled><span>決着</span></button>`;
   if (S.phase !== "play") return `<button type="button" class="endbtn" disabled><span>準備中</span></button>`;
   if (S.turn !== ME) {
@@ -1414,7 +1414,7 @@ function endButtonHTML() {
     return `<button type="button" class="endbtn" disabled aria-label="${label.replace("<br>", "")}"><span>${label}</span></button>`;
   }
   if (typeof Online !== "undefined" && Online.blocked()) return `<button type="button" class="endbtn" disabled><span>送信中</span></button>`;
-  return `<button type="button" class="endbtn" data-act="end" aria-label="ターン終了" ${canAct() ? "" : "disabled"}><span>ターン<br>終了</span></button>`;
+  return `<button type="button" class="endbtn" data-act="end" aria-label="ターン終了" ${canAct() ? "" : "disabled"}>${canAct() ? `<i class="eb-glow" aria-hidden="true"></i>` : ""}<span>ターン<br>終了</span></button>`;
 }
 
 let renderDeferred = false;
