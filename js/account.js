@@ -96,6 +96,8 @@ const Account = {
       // 隠しボス：最後に会ってから上級で勝った回数（天井用）と、次の上級戦でボスが出るか
       bossPity: Math.max(0, Math.floor(+d.bossPity || 0)),
       ...(d.bossNext ? { bossNext: true } : {}),
+      bossPityEx: Math.max(0, Math.floor(+d.bossPityEx || 0)),   // 超級の隠しボス（黄泉丸）
+      ...(d.bossNextEx ? { bossNextEx: true } : {}),
       // パックの開封履歴（直近100パック）{ t: 時刻, p: パックID, c: [カードID] }
       packLog: (Array.isArray(d.packLog) ? d.packLog : Object.values(d.packLog || {})).filter(e => e && Array.isArray(e.c)).slice(-100).map(e => ({ t: +e.t || 0, p: String(e.p || ""), c: e.c.map(String).slice(0, 10) })),
       // CPU戦の連勝数（強さごと）と、終わっていないCPU戦の強さ（途中でやめたら連勝が途切れる）

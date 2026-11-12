@@ -2320,3 +2320,11 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 #tutbox .tut-in button{pointer-events:auto}
 #tutbox{transition:top .25s ease,opacity .15s}
 #tutbox.faded{opacity:.18}
+
+/* 超級の隠しボス（冥府の剣鬼）：乱入の色を、赤い警告から冥府の青白い魂の炎へ */
+.bossin.meifu .bi-warn{color:#8fd8ff;text-shadow:0 0 16px #2f9bff,0 0 2px #fff}
+.bossin.meifu .bi-n{text-shadow:0 2px 12px #000,0 0 22px rgba(80,180,255,.85)}
+.bossin.meifu .bi-n::before{color:#c4002f}
+.bossin.meifu .bi-n::after{color:#9fe4ff}
+.bossin.meifu .bi-pulse{animation-name:bi-beat-blue}
+@keyframes bi-beat-blue{0%,100%{box-shadow:inset 0 0 0 0 rgba(60,160,255,0)}50%{box-shadow:inset 0 0 90px 10px rgba(60,160,255,.55)}}
