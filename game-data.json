@@ -1,5 +1,5 @@
 {
- "version": 130,
+ "version": 131,
  "updated": "2026-11-13",
  "config": {
   "PLAYER_HP": 20,
@@ -1154,24 +1154,21 @@
    "id": "boss-yomi",
    "name": "冥府の百鬼",
    "cards": {
-    "m-hammer": 1,
-    "n-skypaladin": 2,
-    "x-emp": 1,
-    "x-executor": 2,
-    "y2-archangel": 1,
-    "y2-dragonking": 1,
-    "y2-dragonknight": 1,
-    "y2-gatekeeper": 3,
-    "y2-healer": 3,
-    "y2-iai": 1,
-    "y2-kensei": 3,
+    "b-y-valk": 3,
+    "b-y-murasame": 3,
+    "b-y-zantetsu": 3,
+    "m2-mirage": 1,
+    "m2-jumper2": 3,
+    "m2-transfer": 2,
+    "m2-jumper": 2,
+    "n-bomber": 2,
     "y2-lightwing": 1,
-    "y2-nestguard": 2,
-    "y2-shizuku": 1,
-    "y2-valkyrie": 1,
-    "b-y-valk": 2,
-    "b-y-murasame": 2,
-    "b-y-zantetsu": 2
+    "m2-hive": 1,
+    "f2-icequeen": 2,
+    "y2-nest": 1,
+    "f2-rebloom": 1,
+    "m-pact": 2,
+    "y2-angel": 3
    },
    "key": "b-y-zantetsu",
    "level": "boss"
@@ -8024,7 +8021,7 @@
    "name": "冥府の戦乙女",
    "world": "myth",
    "type": "char",
-   "cost": 7,
+   "cost": 6,
    "atk": 6,
    "hp": 6,
    "glyph": "乙",
@@ -8043,6 +8040,10 @@
     }
    ],
    "boss": true,
+   "pay": {
+    "kind": "life",
+    "n": 2
+   },
    "art": "art/b-y-valk-52d427766b.webp"
   },
   {
