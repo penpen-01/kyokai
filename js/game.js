@@ -2531,7 +2531,12 @@ function startBossGame(mine, lv = "hard") {
     setup: S => {
       const b = S.players[1];
       b.hp = CONFIG[B.cfg + "HP"] || B.hp; b.maxHp = b.hp;
-      if (DEF[B.field]) { const u = addUnit(1, B.field); u.ready = false; }
+      if (DEF[B.field]) {
+        const u = addUnit(1, B.field); u.ready = false;
+        // 最初から場にいるカードは登場時の効果が出ないので、特殊勝利（winTimer）の数だけここで付ける
+        const wt = DEF[B.field].effects.find(e => e.kind === "winTimer" && (!e.when || e.when === "play"));
+        if (wt) u.winIn = wt.n;
+      }
     } }));
 }
 /* 乱入の演出（約5秒・タップで飛ばせる）

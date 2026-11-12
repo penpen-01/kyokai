@@ -1,5 +1,5 @@
 {
- "version": 128,
+ "version": 129,
  "updated": "2026-11-13",
  "config": {
   "PLAYER_HP": 20,
@@ -7996,7 +7996,7 @@
    "type": "char",
    "cost": 0,
    "atk": 0,
-   "hp": 10,
+   "hp": 12,
    "glyph": "門",
    "limit": 0,
    "rarity": "ur",
@@ -8005,16 +8005,17 @@
    ],
    "effects": [
     {
-     "kind": "unit",
-     "n": 1,
-     "when": "turnStart",
-     "act": "grant",
-     "to": "enemyRand",
-     "kw": "doom"
+     "kind": "revive",
+     "n": 5,
+     "when": "turnStart"
+    },
+    {
+     "kind": "winTimer",
+     "n": 10
     }
    ],
    "token": true,
-   "note": "超級の隠しボス：最初から場にいる。ターンの始めに、相手のキャラ1体に死の宣告",
+   "note": "超級の隠しボスの場に、最初からいる（登場時の効果も、はじめから働いている）",
    "art": "art/b-meifu-6fb52a90eb.webp"
   },
   {
@@ -8023,21 +8024,20 @@
    "world": "myth",
    "type": "char",
    "cost": 7,
-   "atk": 5,
-   "hp": 5,
+   "atk": 6,
+   "hp": 6,
    "glyph": "乙",
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "haste"
+    "haste",
+    "shield"
    ],
    "effects": [
     {
-     "kind": "player",
-     "n": 3,
-     "when": "kill",
-     "act": "heal",
-     "who": "self"
+     "kind": "readySelf",
+     "n": 1,
+     "when": "kill"
     }
    ],
    "boss": true,
@@ -8048,21 +8048,40 @@
    "name": "妖刀・村雨",
    "world": "fan",
    "type": "char",
-   "cost": 5,
-   "atk": 6,
-   "hp": 4,
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
    "glyph": "刀",
    "limit": 3,
    "rarity": "legend",
-   "keywords": [
-    "lifesteal"
-   ],
+   "keywords": [],
    "effects": [
     {
-     "kind": "player",
+     "kind": "unit",
      "n": 3,
-     "act": "dmg",
-     "who": "self"
+     "act": "both",
+     "to": "own1"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "own1",
+     "kw": "twice"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "own1",
+     "kw": "doom"
+    },
+    {
+     "kind": "unit",
+     "n": 2,
+     "when": "allyDeath",
+     "act": "both",
+     "to": "self"
     }
    ],
    "boss": true,
@@ -8070,24 +8089,37 @@
   },
   {
    "id": "b-y-zantetsu",
-   "name": "斬鉄機ザンテツ",
+   "name": "冥機ザンテツ",
    "world": "mech",
    "type": "char",
-   "cost": 8,
-   "atk": 7,
-   "hp": 7,
+   "cost": 6,
+   "atk": 4,
+   "hp": 5,
    "glyph": "斬",
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "pierce"
+    "lifesteal"
    ],
    "effects": [
     {
      "kind": "unit",
-     "n": 1,
-     "act": "destroy",
+     "n": -2,
+     "act": "both",
      "to": "enemy1"
+    },
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "both",
+     "to": "self"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "when": "kill",
+     "act": "both",
+     "to": "self"
     }
    ],
    "boss": true,
