@@ -2108,6 +2108,7 @@ function showOptions() {
       <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="fbOpen"><b>ご意見・感想</b><small>不具合の報告や、ほしい機能を送る</small></button>`}
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
+      <button type="button" class="optrow" data-act="ecoToggle" aria-pressed="${Eco.on}"><b>省エネモード</b><small>現在：${Eco.on ? "オン（演出を短く・少なくして、本体の発熱と電池の減りをおさえる）" : "オフ"}</small></button>
       <button type="button" class="optrow" data-act="fxToggle" aria-pressed="${Fx.on}"><b>カードの光の動き</b><small>現在：${Fx.on ? "オン" : "オフ（UR・レジェンドの光を止めて軽くする）"}</small></button>
     </div>
     <p class="datainfo">${info}</p>
@@ -2779,6 +2780,7 @@ function handleAct(act, el) {
     case "soundPanel": Sound.showPanel(); break;
     case "grave": showGrave(+el.dataset.p); break;
     case "fxToggle": Fx.toggle(); showOptions(); break;
+    case "ecoToggle": Eco.toggle(); showOptions(); break;
     case "nameEdit": showName(); break;
     case "nameSave": { const n = setPlayerName($("#pl-name") && $("#pl-name").value); showName(n ? `「${n}」にしました` : "名前を入れてください"); break; }
     case "options": showOptions(); break;

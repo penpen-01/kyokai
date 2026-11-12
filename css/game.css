@@ -2258,3 +2258,10 @@ html.nofx .card .shine{display:none}
 /* ターン終了のメダルの光：透明度だけを動かす */
 .endbtn .eb-glow{position:absolute;inset:-6px;border-radius:50%;pointer-events:none;box-shadow:0 0 0 2px var(--gold),0 0 26px color-mix(in srgb,var(--gold) 80%,transparent);opacity:0;will-change:opacity;animation:glowfade 2.4s ease-in-out infinite}
 @media (prefers-reduced-motion: reduce){ .endbtn .eb-glow,.hpglow{animation:none;opacity:.6} }
+
+/* ---- 省エネモード（設定でオン）：ずっと続く動きは1回で止め、重い描き方（ぼかし・回る光・降るカード）をやめる ---- */
+html.eco *,html.eco *::before,html.eco *::after{animation-iteration-count:1!important}
+html.eco .sp-rain,html.eco .sp-motes{display:none!important}
+html.eco *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.eco .endbtn .eb-glow,html.eco .hpglow{animation:none!important;opacity:.6}
+html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,html.eco .card.rar-legend .art::after{animation:none!important}

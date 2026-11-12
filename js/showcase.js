@@ -58,6 +58,8 @@ const Showcase = {
     this.layout();
     const tick = t => {
       if (!this.el || !this.el.isConnected) return;   // ホームから離れたら止める
+      // 自動で回らない（省エネ・動きを減らす）ときは、止まったら描き直しもやめる。なぞると再開する
+      if (Motion.reduced && !this.drag && Math.abs(this.vel) < 0.01) { this.vel = 0; this.layout(); this.raf = 0; return; }
       const dt = Math.min(.05, (t - this.last) / 1000);
       this.last = t;
       if (!this.drag) {
@@ -68,6 +70,7 @@ const Showcase = {
       this.layout();
       this.raf = requestAnimationFrame(tick);
     };
+    this.tick = tick;
     this.raf = requestAnimationFrame(tick);
   },
 
@@ -102,6 +105,7 @@ const Showcase = {
     el.addEventListener("pointerdown", e => {
       this.drag = { x: e.clientX, t: performance.now(), moved: false, id: e.pointerId };
       this.vel = 0;
+      if (!this.raf) { this.last = performance.now(); this.raf = requestAnimationFrame(this.tick); }
     });
     el.addEventListener("pointermove", e => {
       const d = this.drag;
