@@ -1618,7 +1618,7 @@ html.nofx .card .shine{display:none}
 .pick-tile small{font-size:12px;color:var(--muted)}
 .pick-tile.on{border-color:#ffe08a;background:rgba(255,224,138,.12)}
 .pick-tile:focus-visible{outline:2px solid #ffe08a}
-.pick-bar{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;margin:0 -4px;border-radius:12px;background:rgba(12,14,28,.94);border:1px solid rgba(255,255,255,.12)}
+.pick-bar{position:sticky;bottom:0;z-index:20;isolation:isolate;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;margin:0 -4px;border-radius:12px;background:rgba(12,14,28,.94);border:1px solid rgba(255,255,255,.12)}
 .pick-bar span{flex:1;min-width:180px}
 @media (max-width:520px){ .pick-grid{grid-template-columns:repeat(3,1fr);gap:6px} }
 .pick-info{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
@@ -2328,3 +2328,6 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .bossin.meifu .bi-n::after{color:#9fe4ff}
 .bossin.meifu .bi-pulse{animation-name:bi-beat-blue}
 @keyframes bi-beat-blue{0%,100%{box-shadow:inset 0 0 0 0 rgba(60,160,255,0)}50%{box-shadow:inset 0 0 90px 10px rgba(60,160,255,.55)}}
+
+/* 選択券：カード（光の層を持つ）が下の帯の上に描かれないよう、カードの重なりを一覧の中に閉じ込める */
+.pick-grid{position:relative;z-index:0;isolation:isolate}

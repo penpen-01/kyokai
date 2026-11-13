@@ -306,7 +306,7 @@ const Shop = {
     const label = own >= cap ? `${cap}枚持っています` : Account.stones < cost ? `魔石が足りません（あと${cost - Account.stones}）` : `魔石${cost}で交換する`;
     return `<div class="dmodal" data-act="shopDetailClose">
       <div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}" data-act="noop">
-        <div class="dmodal-card">${cardHTML(c, { static: true })}</div>
+        <div class="dmodal-card">${cardHTML(c, { static: true, cls: Account.owned(c.id) <= 0 ? "dim" : "" })}</div>
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
