@@ -31,6 +31,8 @@ const Serial = {
       <h2 class="title sm">受け取りました</h2>
       <p class="lead">「${esc(r.label)}」</p>
       ${r.gold ? `<p class="serialgold">＋${r.gold}G</p>` : ""}
+      ${r.bossTest ? `<p class="boss-sign">検証用：${esc(BOSSES[r.bossTest].name)}と戦えます。<small>報酬・クエスト・連勝はありません。使用中のデッキで戦います</small></p>
+        <button type="button" class="btn primary" data-act="bossTestGo" data-v="${esc(r.bossTest)}">${esc(BOSSES[r.bossTest].name)}と戦う</button>` : ""}
       ${r.boss ? `<p class="boss-sign">……境界が、揺らいでいる。<small>次の上級戦で、隠しボスが乱入します</small></p>` : ""}
       ${list.length ? `<div class="serialcards">${list.map(([id, n]) => `<div class="serialcard">${cardHTML(DEF[id], { static: true })}<span>${esc(DEF[id].name)} ×${n}</span></div>`).join("")}</div>` : ""}
       <p class="datainfo">所持G：${Account.gold}G</p>
@@ -59,6 +61,12 @@ const Serial = {
       // 受け取り
       if (!s.repeat) Account.data.redeemed[h] = Date.now();
       if (s.boss) Account.data.bossNext = true;
+      if (s.bossTest) {   // 検証用：何も配らず、その場でボスと戦うボタンを出す
+        if (!s.repeat) { Account.data.redeemed[h] = Date.now(); await Account.saveNow(); }
+        this.result = { label: s.label, gold: 0, cards: {}, bossTest: s.bossTest };
+        this.showResult();
+        return;
+      }
       Account.data.gold += s.gold;
       Object.entries(s.cards).forEach(([id, n]) => { if (DEF[id]) Account.data.cards[id] = (Account.data.cards[id] || 0) + n; });
       const saved = await Account.saveNow();
@@ -79,10 +87,11 @@ const Serial = {
     }
   },
 
-  handleAct(act) {
+  handleAct(act, el) {
     switch (act) {
       case "serial": this.show(); return true;
       case "serialGo": this.redeem(); return true;
+      case "bossTestGo": $("#overlay").hidden = true; startBossTest(el.dataset.v); return true;
     }
     return false;
   }

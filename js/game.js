@@ -2277,8 +2277,9 @@ function giveReward(res) {
   const r = { g: 0, bonus: 0, wins: 0, prev: 0, cpu: false, sample: false };
   // サンプルデッキで戦った試合は、Gも連勝もなし（全カードを試すための機能なので）
   r.sample = MODE === "online" ? !!(typeof Online !== "undefined" && Online.mySample) : !!S.mySample;
-  const counts = Account.status !== "free" && Account.status !== "none" && !r.sample;
   const B = MODE === "cpu" && S.battle ? S.battle : null;   // 一人で対戦の設定（startBattle）
+  if (B && B.test) { r.test = true; return (rewarded[S.gid] = r); }   // 検証の対戦：何も配らない
+  const counts = Account.status !== "free" && Account.status !== "none" && !r.sample;
   const streak = MODE === "cpu" && (!B || B.streak);
   if (streak && counts) {
     Object.assign(r, Account.streakEnd(CPU_LEVEL, res === "win"), { cpu: true });
@@ -2353,6 +2354,7 @@ function showResult(res) {
     ${g ? `<div class="res-reward">${curIcon("gold", "res-coin")}<b class="res-g" data-to="${g}">+0</b><span class="res-gl">G</span><small>所持 ${Account.gold.toLocaleString()}G</small></div>` : ""}
     ${streakHTML(r, res)}
     ${B && B.kind === "tutorial" && typeof Tut !== "undefined" ? Tut.resultHTML(r.tut) : ""}
+    ${r.test ? `<p class="callout">検証用の対戦なので、報酬・クエスト・連勝はありません。</p>` : ""}
     ${r.boss ? bossRewardHTML(r.boss) : ""}
     ${r.gate ? `<div class="gate-open"><b>「${esc(r.gate.name)}」が開放されました！</b><small>ショップに並びました。このパックのカードもカード一覧に出ます</small></div>` : ""}
     ${r.bossSign ? `<p class="boss-sign">${BOSSES[r.bossSign].sign}</p>` : ""}
@@ -2508,6 +2510,7 @@ function battleAgain() {
   else if (k === "practice") startPractice();
   else if (k === "world") startWorldGame(CPU_LEVEL);
   else if (k === "gate") { if (gatePacks().some(p => p.id === GATE.pack)) startGateGame(); else showGate(); }
+  else if (k === "boss" && S.battle.test) startBossTest(S.battle.boss || "ex");
   else startCpuGame(k === "boss" ? (S.battle.boss || "hard") : CPU_LEVEL);
 }
 
@@ -2526,11 +2529,17 @@ const BOSSES = {
     sign: "……どこかで、冥府の鐘が鳴っている。<small>次の超級戦で、何かが起こるかもしれない</small>" }
 };
 const BOSS = BOSSES.hard;   // 古い呼び方（上級のボス）
-function startBossGame(mine, lv = "hard") {
+/* 検証用（シリアルの bossTest）：非公開のボスとも戦える。報酬・クエスト・連勝なし */
+function startBossTest(lv) {
+  const mine = Decks.readyDeck(); if (!mine) return;
+  CPU_LEVEL = lv === "ex" ? "ex" : "hard";
+  startBossGame(mine, lv, true);
+}
+function startBossGame(mine, lv = "hard", test = false) {
   const B = BOSSES[lv], deck = B && PRESETS.find(p => p.id === B.deck);
-  if (!deck) { if (B) Account.data[B.next] = false; return startCpuGame(lv); }
-  Account.data[B.next] = false; Account.saveNow();   // 会ったら消える（途中でやめても、もう一度は出ない）
-  bossIntro(B, () => startBattle({ kind: "boss", level: lv === "ex" ? "ex" : "hard", mine, opp: { ...deck, icon: B.face }, oppName: B.name, reward: CONFIG[REWARD_KEY[lv]], streak: false, extra: { boss: lv },
+  if (!deck) { if (test) { toast("ボスのデッキが見つかりません"); return; } if (B) Account.data[B.next] = false; return startCpuGame(lv); }
+  if (!test) { Account.data[B.next] = false; Account.saveNow(); }   // 会ったら消える（途中でやめても、もう一度は出ない）
+  bossIntro(B, () => startBattle({ kind: "boss", level: lv === "ex" ? "ex" : "hard", mine, opp: { ...deck, icon: B.face }, oppName: B.name, reward: test ? 0 : CONFIG[REWARD_KEY[lv]], streak: false, extra: { boss: lv, ...(test ? { test: true } : {}) },
     setup: S => {
       const b = S.players[1];
       b.hp = CONFIG[B.cfg + "HP"] || B.hp; b.maxHp = b.hp;

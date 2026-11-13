@@ -1,5 +1,5 @@
 {
- "version": 131,
+ "version": 132,
  "updated": "2026-11-13",
  "config": {
   "PLAYER_HP": 20,
@@ -1182,6 +1182,16 @@
    "cards": {},
    "until": "",
    "created": "2026-11-12"
+  },
+  {
+   "h": "ecdd062170f32c9354f13f9f160bf821df0f045b7cb5d03931dec0febf691d4e",
+   "label": "検証：冥府の剣鬼",
+   "gold": 0,
+   "cards": {},
+   "until": "2026-12-31",
+   "created": "2026-11-14",
+   "repeat": true,
+   "bossTest": "ex"
   }
  ],
  "news": [],
