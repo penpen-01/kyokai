@@ -470,6 +470,9 @@ async function boot() {
   // 試遊（カード工房から）のときは起動画面を出さずにすぐ始める
   if (!DATA_INFO.draft) Splash.show();
   await Account.init();
+  if (Account.status === "ready") Account.watchNet();
+  NetBanner.update();
+  if (Account.recovered) setTimeout(() => toast("前回、通信が切れて保存できていなかった分を保存しました"), 2500);
   const next = () => (Account.isNew ? Account.showWelcome() : showStart());
   if (Splash.shown) Splash.setReady(next); else next();
 }

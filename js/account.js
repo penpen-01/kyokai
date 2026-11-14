@@ -46,16 +46,24 @@ const Account = {
       await Promise.race([Net.init(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 12000))]);
     } catch (e) {
       console.error(e);
-      if (code && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; return; }
+      if (code && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; this.retryLater(); return; }
       this.status = "none";
       return;
     }
     if (code) {
       let d = null, failed = false;
       try { d = await Net.get(this.path(code)); } catch (e) { console.error(e); failed = true; }
-      if (d) { this.code = code; this.data = this.fix(d); this.status = "ready"; this.writeCache(); this.watch(); this.streakAbandon(); return; }
+      if (d) {
+        this.code = code;
+        // 前回、保存が届かないまま閉じた（通信が切れていた・オフラインで遊んだ）変更が端末に残っていれば、それを保存する
+        const keep = this.unsaved(cache, d);
+        this.data = this.fix(keep ? cache : d); this.status = "ready"; this.writeCache(); this.watch(); this.streakAbandon();
+        if (keep) { this.saveNow(); this.recovered = true; }
+        this.watchNet();
+        return;
+      }
       // 読み込みに失敗しただけのときは、端末に残っている古いデータでサーバーを上書きしない（オフライン扱い）
-      if (failed && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; return; }
+      if (failed && cache) { this.code = code; this.data = this.fix(cache); this.status = "offline"; this.retryLater(); return; }
       if (cache && cache.gold != null) { this.code = code; this.data = this.fix(cache); this.status = "ready"; this.watch(); this.streakAbandon(false); this.save(); return; }
     }
     await this.create();
@@ -122,6 +130,49 @@ const Account = {
   },
 
   writeCache() { try { localStorage.setItem(this.cacheKey(), JSON.stringify(this.data)); } catch {} },
+  /* ---------- 通信が切れたとき・オフラインで始めたとき（2026-11-14） ----------
+     ・サーバーへの保存は rev（何回目の保存か）で数えている。保存が届くたびに rev が1増える
+     ・端末の控え（cache）の rev がサーバーと同じなのに中身が違う → 届かなかった変更が端末に残っている → それを保存する
+     ・サーバーの rev の方が大きい → 別の端末で遊んだ → サーバーを使う（端末の変更は捨てる） */
+  stable(v) { return JSON.stringify(v, (k, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(k => [k, x[k]])) : x); },
+  unsaved(cache, server) {
+    if (!cache || !server) return false;
+    try {
+      const c = this.fix(JSON.parse(JSON.stringify(cache))), s = this.fix(JSON.parse(JSON.stringify(server)));
+      return (+c.rev || 0) === (+s.rev || 0) && this.stable(c) !== this.stable(s);
+    } catch (e) { return false; }
+  },
+  /* オフラインで始めたら、通信が戻ったときにつなぎ直す（そのまま遊び続けていてよい） */
+  retryLater() {
+    if (this.retryOn) return; this.retryOn = true;
+    const tryNow = async () => {
+      if (this.status !== "offline" || this.retrying) return;
+      this.retrying = true;
+      try {
+        await Promise.race([Net.init(), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 10000))]);
+        const d = await Promise.race([Net.get(this.path(this.code)), new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 10000))]);
+        if (this.status !== "offline") return;
+        if (d && (+d.rev || 0) > (+this.data.rev || 0)) {
+          this.data = this.fix(d); this.status = "ready"; this.writeCache();
+          if (typeof toast === "function") toast("通信が戻りました。別の端末で遊んだ新しいデータを読み込みました（オフラインの間の変更は保存されていません）");
+          if (typeof this.onReload === "function") this.onReload();
+        } else {
+          this.status = "ready";
+          const ok = await this.saveNow();
+          if (typeof toast === "function") toast(ok ? "通信が戻りました。オフラインの間に手に入れたものを保存しました" : "通信が戻りました");
+        }
+        this.watch(); this.watchNet(); NetBanner.update();
+      } catch (e) { /* まだつながらない。次の機会に */ }
+      finally { this.retrying = false; }
+    };
+    window.addEventListener("online", () => setTimeout(tryNow, 1500));
+    setInterval(tryNow, 30000);
+  },
+  /* 遊んでいる途中で通信が切れたかを見張る（切れている間は画面の上に知らせる） */
+  watchNet() {
+    if (this.netOn || !Net.onConnected) return; this.netOn = true;
+    try { Net.onConnected(v => { this.connected = v; NetBanner.update(); }); } catch (e) {}
+  },
   save() {
     if (this.status === "free" || !this.data) return;
     this.writeCache();
@@ -234,7 +285,7 @@ const Account = {
   },
 
   showScreen(msg) {
-    const st = { ready: "", offline: "（オフライン：この間に手に入れたものは保存されません。通信できるところで開き直してください）", none: "", free: "" }[this.status] || "";
+    const st = { ready: "", offline: "（オフライン：手に入れたものはこの端末に残り、通信が戻ると自動で保存されます）", none: "", free: "" }[this.status] || "";
     openOverlay(`<div class="panel">
       <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>アカウント</b></div>
       ${this.status === "free" ? `<p class="lead">試遊モードでは、すべてのカードを使えます。アカウントは使いません。</p>`
@@ -307,3 +358,24 @@ const Account = {
 
 /* アプリを閉じる・裏に回すときは、保存待ちを先に書き込む */
 document.addEventListener("visibilitychange", () => { if (document.hidden && Account.saveTimer) { clearTimeout(Account.saveTimer); Account.saveTimer = null; Account.saveNow(); } });
+
+/* 通信の知らせ：オフラインで始めた・遊んでいる途中で通信が切れた、のどちらかの間だけ画面の上に出す */
+const NetBanner = {
+  timer: 0,
+  update() {
+    clearTimeout(this.timer);
+    const off = Account.status === "offline", cut = Account.status === "ready" && Account.connected === false;
+    // つながった直後や一瞬の切断で点滅しないよう、切れてから3秒たって出す
+    if (off || cut) this.timer = setTimeout(() => this.show(off), off ? 0 : 3000);
+    else this.hide();
+  },
+  show(off) {
+    let b = document.getElementById("netbanner");
+    if (!b) { b = document.createElement("div"); b.id = "netbanner"; b.setAttribute("role", "status"); document.body.appendChild(b); }
+    b.innerHTML = off
+      ? "<b>オフライン</b>手に入れたカードやGはこの端末に残り、通信が戻ると自動で保存されます。オンライン対戦・シリアルコードは使えません"
+      : "<b>通信が切れています</b>つながると自動で保存されます。保存されるまで、できればアプリを閉じないでください";
+    b.hidden = false;
+  },
+  hide() { const b = document.getElementById("netbanner"); if (b) b.hidden = true; }
+};
