@@ -2215,11 +2215,37 @@ function showCardList() {
         <span class="pmeta">${RARITY[d.rarity]} ・ ${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}${d.type === "char" ? ` ・ ${d.atk}/${d.hp}` : ""}</span>
         <p class="dm-text">${cardTextHTML(d)}</p>
         <span class="pmeta">${Account.status === "free" ? "" : `所持 ${Account.owned(d.id)}枚 ・ `}1デッキに${cardLimit(d, CONFIG)}枚まで</span>
-        ${d.boss ? `<span class="boss-only">ボス限定：隠しボスを倒すと手に入る</span>` : ""}
+        ${cardSourcesHTML(d)}
         ${typeof Shop !== "undefined" && !S ? Shop.tradeHTML(d) : ""}
         <button type="button" class="btn" data-act="clClose">閉じる</button></div></div></div>` : ""}
   </div>`, null, !S);
   if (keep) o.scrollTop = y;
+}
+
+/* カードの入手方法（カード一覧の詳しい表示に出す。2026-11-14） */
+function cardSources(d) {
+  const out = [];
+  if (d.token || !(d.limit > 0)) {
+    const makers = CARDS.filter(c => c.id !== d.id && !c.token && cardShown(c) && JSON.stringify(c.effects || []).includes(`"${d.id}"`)).map(c => `「${c.name}」`);
+    out.push(`トークン：${makers.length ? makers.slice(0, 4).join("") + (makers.length > 4 ? "など" : "") + "の効果で場に出る" : "効果で場に出る"}（デッキには入れられない）`);
+    return out;
+  }
+  for (const [lv, B] of Object.entries(typeof BOSSES !== "undefined" ? BOSSES : {}))
+    if ((B.legends || []).includes(d.id)) out.push(`ボス限定：${lv === "ex" ? "超級" : "上級"}の隠しボス「${B.name}」を倒すと、限定レジェンド${(B.legends || []).length}種のうち1枚が手に入る`);
+  if (d.boss) { if (!out.length) out.push("ボス限定：隠しボスを倒すと手に入る"); return out; }
+  const packs = PACKS.filter(p => p.open && setOpen(p.set) && (p.cards.length ? p.cards.includes(d.id) : true));
+  if (packs.length) out.push(`パック：${packs.map(p => `「${p.name}」`).join("")}から出る`);
+  if (typeof Shop !== "undefined" && Shop.pool().some(c => c.id === d.id)) out.push(`交換所：魔石${Shop.costRate(d.rarity)}個で交換できる`);
+  const st = PRESETS.find(p => p.id === CONFIG.STARTER_DECK);
+  if (st && st.cards[d.id]) out.push("はじめから持っている（最初のデッキに入っている）");
+  const gifts = PRESETS.filter(p => p.level === "gift" && p.cards[d.id]);
+  if (gifts.length) out.push(`初心者歓迎クエストのギフトデッキ ${gifts.map(p => `「${p.name}」`).join("")}に入っている`);
+  if (d.rarity === "legend" && (typeof PICKS !== "undefined") && PICKS.some(pk => pickPool(pk, CARDS).some(c => c.id === d.id))) out.push("選択券：メールで配られる選択券で選べることがある");
+  return out;
+}
+function cardSourcesHTML(d) {
+  const s = cardSources(d);
+  return s.length ? `<div class="srcs"><b>入手方法</b><ul>${s.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
 }
 
 /* 墓地：倒されたキャラ（grave）と使った魔法（used）。中央の段に、いちばん上の1枚と枚数を出す */

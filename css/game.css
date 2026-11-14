@@ -2339,3 +2339,9 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 /* 選択券：下の帯は画面の下に固定し、不透明にする。カードが帯に隠れないよう、一覧の下に帯のぶんの余白を取る（2026-11-14） */
 .pick-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 10px);width:min(calc(100vw - 24px),860px);margin:0;background:#0e1124;box-shadow:0 -8px 24px rgba(0,0,0,.55)}
 .pick-grid{padding-bottom:calc(env(safe-area-inset-bottom) + 230px)}
+
+/* カード一覧：入手方法 */
+.srcs{display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.srcs b{font-size:11.5px;color:var(--gold);letter-spacing:.05em}
+.srcs ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:2px}
+.srcs li{font-size:12px;line-height:1.55;color:var(--fg)}
