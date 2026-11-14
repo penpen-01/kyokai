@@ -417,6 +417,15 @@ const Decks = {
     const keepScroll = o.scrollTop;
     openOverlay(this.editHTML(), "start", true);
     o.scrollTop = keepScroll;
+    this.fitPop();
+  },
+  /* 絞り込みの窓は、画面の下の操作バーより上に収める（項目が増えて、下の「結果を見る」に届かなかったため 2026-11-14） */
+  fitPop() {
+    const pop = document.querySelector("#overlay .dfpop"); if (!pop) return;
+    const bar = document.querySelector("#overlay .dedit-bar");
+    const bottom = bar ? bar.getBoundingClientRect().top : window.innerHeight;
+    const top = pop.getBoundingClientRect().top;
+    pop.style.maxHeight = Math.max(180, Math.floor(bottom - top - 8)) + "px";
   },
   /* カードを1枚足したり減らしたりしたときは、画面を作り直さずに変わったところだけ差し替える
      （一覧のカードの絵を作り直さないので、絵が消えたり重くなったりしない） */
@@ -495,9 +504,10 @@ const Decks = {
     const b = o.querySelector(".dfbtn"); if (b) b.outerHTML = this.filterBtnHTML();
     const st = o.querySelector(".dfstate"); if (st) st.outerHTML = this.filterStateHTML();
     const pop = o.querySelector(".dfpop");
-    if (pop && !keepPop) pop.innerHTML = this.filterPopHTML();
+    if (pop && !keepPop) { const y = pop.scrollTop; pop.innerHTML = this.filterPopHTML(); pop.scrollTop = y; }   // 選ぶたびに窓の一番上へ戻らないように
     const pn = o.querySelector(".dfp-n"); if (pn) pn.textContent = this.poolCards().length;
     o.scrollTop = 0;
+    this.fitPop();
   },
   editHTML() {
     const ed = this.editing;
@@ -849,3 +859,4 @@ document.addEventListener("change", e => {
   document.addEventListener("touchmove", e => { if (drag) e.preventDefault(); }, { passive: false });
   document.addEventListener("contextmenu", e => { if (e.target.closest("#dbgrid .dbt")) e.preventDefault(); });
 })();
+window.addEventListener("resize", () => { if (typeof Decks !== "undefined" && Decks.showFilters) Decks.fitPop(); });
