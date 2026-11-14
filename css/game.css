@@ -2335,3 +2335,7 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 /* 通信の知らせ（オフライン・通信が切れている間だけ） */
 #netbanner{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 6px);z-index:80;width:min(94vw,520px);padding:7px 12px;border-radius:10px;background:rgba(60,40,8,.94);border:1px solid #d9a441;color:#ffe9b8;font-size:11.5px;line-height:1.5;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
 #netbanner b{display:block;font-size:12.5px;color:#ffd06b}
+
+/* 選択券：下の帯は画面の下に固定し、不透明にする。カードが帯に隠れないよう、一覧の下に帯のぶんの余白を取る（2026-11-14） */
+.pick-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 10px);width:min(calc(100vw - 24px),860px);margin:0;background:#0e1124;box-shadow:0 -8px 24px rgba(0,0,0,.55)}
+.pick-grid{padding-bottom:calc(env(safe-area-inset-bottom) + 230px)}
