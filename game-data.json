@@ -1,5 +1,5 @@
 {
- "version": 145,
+ "version": 146,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -257,18 +257,18 @@
    ],
    "odds": {
     "normal": {
-     "common": 70,
-     "rare": 22,
-     "sr": 6.4,
-     "ur": 1.5,
-     "legend": 0.1
+     "common": 60,
+     "rare": 28,
+     "sr": 9,
+     "ur": 2.7,
+     "legend": 0.3
     },
     "last": {
      "common": 0,
-     "rare": 70,
-     "sr": 23,
-     "ur": 6,
-     "legend": 1
+     "rare": 55,
+     "sr": 33,
+     "ur": 10,
+     "legend": 2
     }
    },
    "open": true,
@@ -333,18 +333,18 @@
    ],
    "odds": {
     "normal": {
-     "common": 70,
-     "rare": 22,
-     "sr": 6.4,
-     "ur": 1.5,
-     "legend": 0.1
+     "common": 60,
+     "rare": 28,
+     "sr": 9,
+     "ur": 2.7,
+     "legend": 0.3
     },
     "last": {
      "common": 0,
-     "rare": 70,
-     "sr": 23,
-     "ur": 6,
-     "legend": 1
+     "rare": 55,
+     "sr": 33,
+     "ur": 10,
+     "legend": 2
     }
    },
    "open": true,
@@ -409,18 +409,18 @@
    ],
    "odds": {
     "normal": {
-     "common": 70,
-     "rare": 22,
-     "sr": 6.4,
-     "ur": 1.5,
-     "legend": 0.1
+     "common": 60,
+     "rare": 28,
+     "sr": 9,
+     "ur": 2.7,
+     "legend": 0.3
     },
     "last": {
      "common": 0,
-     "rare": 70,
-     "sr": 23,
-     "ur": 6,
-     "legend": 1
+     "rare": 55,
+     "sr": 33,
+     "ur": 10,
+     "legend": 2
     }
    },
    "open": true,
@@ -1373,9 +1373,9 @@
   },
   {
    "id": "d-poison",
-   "type": "poison",
-   "n": 1,
-   "gold": 500,
+   "type": "face",
+   "n": 20,
+   "gold": 300,
    "stones": 0,
    "tickets": 0
   },
