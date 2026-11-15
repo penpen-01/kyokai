@@ -1,5 +1,5 @@
 {
- "version": 141,
+ "version": 142,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -6928,7 +6928,8 @@
    "set": "2-3",
    "shrink": {
     "n": 1,
-    "world": "fan"
+    "world": "fan",
+    "ctype": "spell"
    },
    "art": "art/f2-susuki-123bc1b4a0.webp"
   },
@@ -6974,7 +6975,8 @@
    "set": "2-3",
    "shrink": {
     "n": 1,
-    "world": "fan"
+    "world": "fan",
+    "ctype": "spell"
    },
    "art": "art/f2-lantern-7b7d17c627.webp"
   },
@@ -6983,7 +6985,7 @@
    "name": "育ち盛りの小鬼",
    "world": "fan",
    "type": "char",
-   "cost": 2,
+   "cost": 3,
    "atk": 1,
    "hp": 2,
    "glyph": "幻",
@@ -6997,7 +6999,8 @@
     "world": "fan",
     "stat": true,
     "dmg": false,
-    "num": false
+    "num": false,
+    "ctype": "spell"
    },
    "art": "art/f2-oni-dfef436efe.webp"
   },
@@ -7025,7 +7028,8 @@
     "world": "fan",
     "stat": false,
     "dmg": true,
-    "num": false
+    "num": false,
+    "ctype": "spell"
    },
    "art": "art/f2-pebble-0467452bea.webp"
   },
@@ -7353,7 +7357,8 @@
    "set": "2-3",
    "shrink": {
     "n": 1,
-    "world": "fan"
+    "world": "fan",
+    "ctype": "spell"
    },
    "art": "art/f2-dancer-b694bf56ac.webp"
   },
@@ -7378,7 +7383,8 @@
    "set": "2-3",
    "shrink": {
     "n": 1,
-    "world": "fan"
+    "world": "fan",
+    "ctype": "spell"
    },
    "art": "art/f2-kamikakushi-98870d9c20.webp"
   },
@@ -7602,8 +7608,8 @@
    "name": "樹海の若木",
    "world": "fan",
    "type": "char",
-   "cost": 3,
-   "atk": 1,
+   "cost": 4,
+   "atk": 2,
    "hp": 4,
    "glyph": "幻",
    "limit": 3,
@@ -7618,7 +7624,8 @@
     "world": "fan",
     "stat": true,
     "dmg": false,
-    "num": false
+    "num": false,
+    "ctype": "spell"
    },
    "art": "art/f2-sapling-bd2022f6fa.webp"
   },
@@ -7648,7 +7655,8 @@
     "world": "fan",
     "stat": false,
     "dmg": false,
-    "num": true
+    "num": true,
+    "ctype": "spell"
    },
    "art": "art/f2-sake-1a0ee6edf8.webp"
   },
@@ -7681,7 +7689,8 @@
    "set": "2-3",
    "shrink": {
     "n": 1,
-    "world": "fan"
+    "world": "fan",
+    "ctype": "spell"
    },
    "art": "art/f2-kohaku-3d1564ae91.webp"
   },
@@ -7871,7 +7880,8 @@
     "world": "fan",
     "stat": false,
     "dmg": true,
-    "num": false
+    "num": false,
+    "ctype": "spell"
    },
    "art": "art/f2-wisp-6e50cd45a3.webp"
   },
@@ -7988,9 +7998,9 @@
    "name": "白面九尾タマモ",
    "world": "fan",
    "type": "char",
-   "cost": 10,
+   "cost": 12,
    "atk": 7,
-   "hp": 7,
+   "hp": 5,
    "glyph": "幻",
    "limit": 3,
    "rarity": "legend",
@@ -8002,8 +8012,9 @@
      "kind": "unit",
      "n": 1,
      "act": "dmg",
-     "to": "enemyAll",
-     "per": "played"
+     "to": "enemyRand",
+     "per": "played",
+     "split": true
     },
     {
      "kind": "tokenHand",
@@ -8015,7 +8026,8 @@
    "set": "2-3",
    "shrink": {
     "n": 1,
-    "world": "fan"
+    "world": "fan",
+    "ctype": "spell"
    },
    "art": "art/f2-tamamo-ee81d102c4.webp"
   },

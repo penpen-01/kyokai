@@ -653,7 +653,11 @@ function discardRandom(q, pi) {
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
   if (e.per === "gear") { const k = S.gearSpent || 0; if (!k) return; e = { ...e, n: e.n * k }; }
-  if (e.per === "played") { const k = Math.max(0, (S.players[pi].played || 0) - 1); if (!k) return; e = { ...e, n: e.n * k }; }
+  if (e.per === "played") {
+    const k = Math.max(0, (S.players[pi].played || 0) - 1); if (!k) return;
+    if (e.split) { const one = { ...e, per: null, split: false }; for (let i = 0; i < k && !S.over; i++) { effect(pi, one, targets, self); } return; }   // 1回ずつ、ランダムな対象を選び直す
+    e = { ...e, n: e.n * k };
+  }
   if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気（ダメージ）
   else if (S.numBonus && e.n > 0 && e.act !== "dmg" && !["costDown", "winTimer", "merge", "tutor"].includes(e.kind)) e = { ...e, n: e.n + S.numBonus };   // 妖気（そのほかの数）
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
@@ -1354,9 +1358,12 @@ function pbarHTML(pi) {
   }
   const icon = playerIcon(pi), art = icon && DEF[icon].art;
   const status = typeof Online !== "undefined" && MODE === "online" && pi === OP ? Online.oppStatusHTML() : "";
+  // 歯車の枚数（相手のも見える）と、このターンに使ったカードの枚数（詠唱・タマモなどの目安）
+  const gearN = gearsOf(p), usedN = S.phase === "play" && S.turn === pi && !S.over ? (p.played || 0) : 0;
+  const extra = `${gearN ? `<i class="cnt-gear">歯車 ${gearN}</i>` : ""}${usedN ? `<i class="cnt-used">使用 ${usedN}枚</i>` : ""}`;
   const left = pi === OP
-    ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i>手札 ${p.hand.length}</i><i>山札 ${p.deck.length}</i></span>`
-    : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i></span>`;
+    ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i>手札 ${p.hand.length}</i><i>山札 ${p.deck.length}</i>${extra}</span>`
+    : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i>${extra}</span>`;
   const hp = Math.max(0, p.hp);
   return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.phase === "play" && S.turn === pi && !S.over ? "active" : ""}">
     <div class="pl-left">${left}</div>
@@ -1482,7 +1489,7 @@ function render() {
       // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
       const dim = !DEF[id] || (id !== GEAR_ID && S.turn === ME && !S.over && !canPlay(ME, i).ok);
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
-      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}), ...(handGrowAt(me, i) ? { grow: handGrowAt(me, i) } : {}) });
+      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}), ...(S.turn === ME && me.played && DEF[id] && (DEF[id].effects || []).some(e => e.per === "played") ? { perN: me.played } : {}), ...(handGrowAt(me, i) ? { grow: handGrowAt(me, i) } : {}) });
     }).join("")}</div>
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;

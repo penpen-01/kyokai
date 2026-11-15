@@ -434,7 +434,7 @@ function effectsText(card, list, auto) {
       t = unitText(e, T);
     } else t = EFFECTS[e.kind].text(e.n, e);
     if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
-    if (e.per === "played") t = `このターン、このカードより先に使ったカード1枚につき、${t}`;
+    if (e.per === "played") t = e.split ? `このターン、このカードより先に使ったカードの枚数だけ、${t.replace(/。$/, "")}（1回ずつ対象を選び直す）。` : `このターン、このカードより先に使ったカード1枚につき、${t}`;
     if (e.cond && CONDS[e.cond]) t = `${condText(e, isChar)}、${t}`;
     if (k > 1) t = e.kind === "unit" && e.act === "dmg" && e.to === "enemyRand" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回${e.kind === "unit" && e.act !== "dmg" && e.to === "enemyRand" ? "。同じキャラは2回選ばれない" : ""}）。`;
     out.push(t);
@@ -458,7 +458,7 @@ function cardTextLines(card) {
     if (g.stat && card.type === "char") w.push("攻撃力と体力");
     if (g.dmg) w.push("効果で与えるダメージ");
     if (g.num) w.push("効果の数（引く枚数・回復量など）");
-    lines.push(`妖気：このターン、自分が${useWhat(g)}を使うたびに、手札のこのカードの${w.join("・")}が1上がる（ターンの終わりに元に戻る）。`); }
+    lines.push(`妖気：手札にある間、このターン自分が${useWhat(g)}を使うたびに、このカードの${w.join("・")}が1上がる。手札に残ったままなら、ターンの終わりに元に戻る（場に出したり使ったりした分は、そのまま残る）。`); }
   if (card.gear) lines.push(card.gear === "all" ? "歯車すべて：出すときに、手札の歯車をすべて使う。" : `歯車${card.gear}：出すときに、手札の歯車を${card.gear}枚使ってもよい。`);
   if (card.type === "char") {
     // タイミングごとに1行（登場時 → ほかのタイミングの順）
@@ -547,7 +547,8 @@ function cardHTML(card, o = {}) {
     const g = card.grow && card.grow.stat ? o.grow || 0 : 0;   // 妖気で手札のうちに強くなった分
     const atk = u ? u.atk : card.atk + g, hp = u ? u.hp : card.hp + g;
     stats = `<span class="stats"><span class="atk ${(u && u.atk > card.atk) || g ? "up" : ""}">${atk}</span>`
-      + `<span class="hp ${u && u.hp < u.maxHp ? "hurt" : (u && u.maxHp > card.hp) || g ? "up" : ""}">${hp}</span></span>`;
+      + `<span class="hp ${u && u.hp < u.maxHp ? "hurt" : (u && u.maxHp > card.hp) || g ? "up" : ""}">${hp}</span></span>`
+      + (o.grow ? `<b class="growb ch">妖気+${o.grow}</b>` : "");
   } else {
     stats = `<span class="stats spelltag">魔法${o.grow ? `<b class="growb">妖気+${o.grow}</b>` : ""}</span>`;
   }
@@ -570,6 +571,7 @@ function cardHTML(card, o = {}) {
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
     ${o.count ? `<span class="gearcnt" aria-label="${o.count}枚">×${o.count}</span>` : ""}
+    ${o.perN ? `<span class="perb" aria-label="このターン先に使ったカード${o.perN}枚">先に${o.perN}枚</span>` : ""}
     ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}${u && u.wakeIn != null && !u.silenced ? `<span class="wintag wake" title="目覚めまであと${u.wakeIn}回">目覚めまで${u.wakeIn}</span>` : ""}
     <span class="foot"><span class="nm ${nmLen(card) >= 11 ? "xlong x3" : nmLen(card) >= 10 ? "xlong x2" : nmLen(card) >= 9 ? "xlong" : nmLen(card) >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
@@ -668,7 +670,8 @@ function normEffect(e, type) {
   if (o.includes("world") && WORLDS[e.world]) out.world = e.world;
   if (o.includes("ctype") && TYPES[e.ctype]) out.ctype = e.ctype;
   if (o.includes("cmin") && +e.cmin > 0) out.cmin = Math.max(1, Math.min(10, Math.round(+e.cmin)));
-  if (e.per === "gear" || e.per === "played") out.per = e.per;   // 使った歯車／先に使ったカード 1枚ごとに n 倍
+  if (e.per === "gear" || e.per === "played") out.per = e.per;
+  if (e.per === "played" && e.split) out.split = true;   // 倍にせず、その回数だけくり返す（ランダムな対象を毎回選び直す）   // 使った歯車／先に使ったカード 1枚ごとに n 倍
   if (e.turn && e.act === "atk") out.turn = true;   // 攻撃力アップ（このターンだけ）
   if (CONDS[e.cond]) {
     out.cond = e.cond;

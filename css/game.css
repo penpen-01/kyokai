@@ -2349,3 +2349,9 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 /* 運営用アカウントの印（ホームの左上） */
 .admin-badge{display:inline-flex;align-items:center;padding:2px 8px;margin-left:6px;border-radius:999px;font-size:11px;font-weight:800;color:#1a1206;background:#ff9f5a;letter-spacing:.05em}
 .maint-note{font-weight:700}
+
+/* 妖気（キャラ）・先に使った枚数（タマモなど）の札、歯車と使用枚数の表示 */
+.card .growb.ch{position:absolute;left:50%;transform:translateX(-50%);top:30%;z-index:4;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px;background:#7b3cc4;color:#fff;box-shadow:0 0 6px rgba(160,90,255,.8);white-space:nowrap}
+.card .perb{position:absolute;left:50%;transform:translateX(-50%);top:30%;z-index:4;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px;background:#c2410c;color:#fff;box-shadow:0 0 6px rgba(255,120,60,.8);white-space:nowrap}
+.counts .cnt-gear{color:#ffd66b}
+.counts .cnt-used{color:#9fd8ff}
