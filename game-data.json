@@ -1,5 +1,5 @@
 {
- "version": 140,
+ "version": 141,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -27,7 +27,7 @@
   "BOSS_RATE": 10,
   "BOSS_PITY": 15,
   "BOSS_HP": 25,
-  "MAINT": 0,
+  "MAINT": 1,
   "BOSS_EX_ON": 0,
   "BOSS_EX_RATE": 10,
   "BOSS_EX_PITY": 15,
@@ -47,7 +47,7 @@
   "STONE_TICKET": 300,
   "SEASON": "s1",
   "STARTER_DECK": "starter",
-  "MAINT_NOTE": "",
+  "MAINT_NOTE": "終了予定 11/16 05:00予定",
   "ADMINS": [
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
