@@ -1,5 +1,5 @@
 {
- "version": 138,
+ "version": 139,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -1182,6 +1182,54 @@
    },
    "key": "b-y-zantetsu",
    "level": "boss"
+  },
+  {
+   "id": "dkmwi2kspmqn",
+   "name": "タマモ様",
+   "cards": {
+    "f-twins": 1,
+    "f-whisper": 3,
+    "f2-bakefox": 3,
+    "f2-dancer": 3,
+    "f2-homeward": 1,
+    "f2-kamikakushi": 1,
+    "f2-kit": 3,
+    "f2-kohaku": 3,
+    "f2-moonwalk": 3,
+    "f2-rebloom": 1,
+    "f2-sake": 1,
+    "f2-squirrel": 1,
+    "f2-tamamo": 3,
+    "f2-tanuki": 1,
+    "x-reboot": 2
+   },
+   "level": "test"
+  },
+  {
+   "id": "dkmwi2lt30t6",
+   "name": "ゴーゴー量産品",
+   "cards": {
+    "bolt": 2,
+    "f-blizzard": 1,
+    "f-horn": 3,
+    "f2-silentnight": 1,
+    "m-altar": 1,
+    "m-anthem": 1,
+    "m-inferno": 1,
+    "m-order": 2,
+    "m2-exo": 2,
+    "m2-reboot": 2,
+    "n-assembly": 2,
+    "n-blessing": 2,
+    "n-massprod": 1,
+    "quantum": 1,
+    "wargod": 1,
+    "x-commander": 3,
+    "x-factory": 1,
+    "x-overcharge": 2,
+    "x-reboot": 1
+   },
+   "level": "test"
   }
  ],
  "serials": [
