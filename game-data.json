@@ -1,5 +1,5 @@
 {
- "version": 144,
+ "version": 145,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -3227,7 +3227,15 @@
    "keywords": [
     "haste"
    ],
-   "effects": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "reset",
+     "to": "self",
+     "when": "oppTurnEnd"
+    }
+   ],
    "token": true,
    "art": "art/tk-drone-ff5b2194a9.webp"
   },

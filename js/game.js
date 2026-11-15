@@ -570,6 +570,14 @@ function unitEach(pi, e, list, self, me, n) {
       case "shuffle": bounce(side, u, "deck"); break;
       case "banish": banishUnit(side, u); break;
       case "swap": swapStats(u); break;
+      case "reset": {   // カードの元の攻撃力・体力に戻す（受けたダメージで元より低い体力は、そのまま）
+        const d = DEF[u.id]; if (!d || d.type !== "char") break;
+        if (u.atk === d.atk && u.maxHp === d.hp) break;
+        delete u.tmpAtk;
+        u.atk = d.atk; u.maxHp = d.hp; u.hp = Math.min(u.hp, u.maxHp);
+        log(`${cname(u.id)}の攻撃力と体力が元に戻った。`); fx(unitSel(u.uid), "元に戻る", "trig");
+        break;
+      }
       case "transform": {
         const t = DEF[e.card], before = cname(u.id);
         if (t && t.type === "char") { u.id = t.id; u.atk = t.atk; u.hp = t.hp; u.maxHp = t.hp; u.silenced = false; }

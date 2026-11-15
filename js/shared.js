@@ -163,6 +163,7 @@ const UACTS = {
   banish:    { label: "亜空間に送る（持ち主の次のターンの始めに戻る）" },
   transform: { label: "変身させる", token: true },
   swap:      { label: "攻撃力と体力を入れ替える" },
+  reset:     { label: "攻撃力と体力を元の数値に戻す（強化・弱化が消える。受けたダメージは残る）" },
   copy:      { label: "複製を自分の場に出す（今の状態ごと）" },
   steal:     { label: "奪う（相手キャラだけ）", enemyOnly: true }
 };
@@ -219,6 +220,7 @@ function unitText(e, T) {
     case "shuffle": return side === "enemy" ? `${T}を相手の山札に混ぜる（トークンは消える）。` : `${T}を持ち主の山札に混ぜる（トークンは消える）。`;
     case "transform": return e.card ? `${T}を${tokDesc(e)}に変身させる。` : `${T}を、効果も能力もない1/1に変身させる。`;
     case "swap": return `${T}の攻撃力と体力を入れ替える。`;
+    case "reset": return `${T}の攻撃力と体力が、カードに書かれた元の数値に戻る（強化も弱化も消える。体力が元より減っていれば、減ったまま）。`;
     case "banish": return side === "own" ? `${T}を亜空間に送る（次の自分のターンの始めに、同じ場所に戻る）。` : side === "enemy" ? `${T}を亜空間に送る（相手の次のターンの始めに戻る）。` : `${T}を亜空間に送る（持ち主の次のターンの始めに戻る）。`;
     case "copy": return `${T}の複製を、自分の場に1体出す（受けたダメージ・強化・与えられた能力もそのまま写す。登場時の効果は発動しない）。`;
     case "steal": return `${T}を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。`;
