@@ -1,5 +1,5 @@
 {
- "version": 148,
+ "version": 149,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -22,12 +22,15 @@
   "REWARD_HARD": 300,
   "REWARD_EX": 450,
   "REWARD_ONLINE": 300,
+  "REWARD_ONLINE_LOSE": 100,
+  "ONLINE_MIN_TURNS": 6,
+  "ONLINE_DAY_MAX": 10,
   "STREAK_STEP": 10,
   "STREAK_MAX": 50,
   "BOSS_RATE": 10,
   "BOSS_PITY": 15,
   "BOSS_HP": 25,
-  "MAINT": 1,
+  "MAINT": 0,
   "BOSS_EX_ON": 1,
   "BOSS_EX_RATE": 10,
   "BOSS_EX_PITY": 15,
@@ -51,10 +54,7 @@
   "ADMINS": [
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
-  "SAMPLE_DECKS": true,
-  "REWARD_ONLINE_LOSE": 100,
-  "ONLINE_MIN_TURNS": 6,
-  "ONLINE_DAY_MAX": 10
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {
@@ -1361,11 +1361,11 @@
    "type": "winLv",
    "lv": "ex",
    "n": 3,
-   "from": "2026-11-16",
-   "until": "2026-11-30",
    "gold": 1500,
    "stones": 0,
-   "tickets": 0
+   "tickets": 0,
+   "from": "2026-11-16",
+   "until": "2026-11-30"
   },
   {
    "id": "q-yomi-boss",
@@ -1373,11 +1373,11 @@
    "type": "boss",
    "lv": "ex",
    "n": 1,
-   "from": "2026-11-16",
-   "until": "2026-11-30",
    "gold": 0,
    "stones": 500,
-   "tickets": 3
+   "tickets": 3,
+   "from": "2026-11-16",
+   "until": "2026-11-30"
   }
  ],
  "daily": [
@@ -3275,9 +3275,9 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "oppTurnEnd",
      "act": "reset",
-     "to": "self",
-     "when": "oppTurnEnd"
+     "to": "self"
     }
    ],
    "token": true,
