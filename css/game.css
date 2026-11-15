@@ -217,7 +217,7 @@ body{
 
 /* ---- オーバーレイ ---- */
 .overlay{
-  position:fixed;inset:0;z-index:40;display:flex;overflow-y:auto;
+  position:fixed;inset:0;z-index:40;display:flex;overflow-y:auto;overscroll-behavior:none;
   background:color-mix(in srgb,var(--bg) 92%,transparent);
   padding:calc(24px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left, 0px));
 }

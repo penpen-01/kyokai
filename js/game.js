@@ -2634,7 +2634,8 @@ function bossIntro(B, done) {
     </div>
     <small class="bi-skip">タップで進む</small>`;
   let fin = false;
-  const go = () => { if (fin) return; fin = true; v.classList.add("out"); setTimeout(() => { v.remove(); done(); }, 260); };
+  // 先に対戦を裏で始めてから演出を消す（消えていく間に、前の画面が一瞬見えないように）
+  const go = () => { if (fin) return; fin = true; try { done(); } catch (e) { console.error(e); } v.classList.add("out"); setTimeout(() => v.remove(), 260); };
   v.addEventListener("click", go);
   document.body.appendChild(v);
   if (typeof Sound !== "undefined") { try { Sound.play("lose"); } catch (e) {} }

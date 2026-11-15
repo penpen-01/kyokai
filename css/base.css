@@ -19,11 +19,12 @@
 *,*::before,*::after{box-sizing:border-box}
 html{
   -webkit-text-size-adjust:100%;
+  overscroll-behavior:none;   /* iPhone：上や下に引っぱったとき、画面ごと伸びて固定の枠までずれないように */
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
   background:var(--bg);
 }
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;-webkit-tap-highlight-color:transparent}
+body{margin:0;overscroll-behavior:none;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font-family:inherit;color:inherit;font-size:inherit}
 img{max-width:100%}
 [hidden]{display:none!important}
