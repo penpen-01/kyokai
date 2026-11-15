@@ -2015,9 +2015,13 @@ html.nofx .card .shine{display:none}
 .pk2-tabs button small{font-size:10px;font-weight:600}
 .pk2-tabs button[aria-selected="true"]{color:#1a1408;background:linear-gradient(180deg,#ffe8a8,#d8a84c);border-color:#ffe8a8}
 .pk2-tabs button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-.pk2-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -16px;padding:4px calc((100% - min(78%,340px)) / 2 + 16px) 10px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.pk2-track{--pkw:min(64%,300px);display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -16px;padding:4px 0 10px;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+/* 両端の余白は padding ではなく見えない札で作る（右の padding が効かない端末で、1つだけのときに左へ寄り、横に滑ってしまっていた） */
+.pk2-track::before,.pk2-track::after{content:"";flex:0 0 calc((100% - var(--pkw)) / 2 - 12px)}
+.pk2-track.one{overflow-x:hidden}
+.pk2-tabs.one{justify-content:center}
 .pk2-track::-webkit-scrollbar{display:none}
-.pk2{flex:0 0 min(78%,340px);scroll-snap-align:center;display:flex;flex-direction:column;gap:10px;transition:transform .25s,opacity .25s;transform:scale(.9);opacity:.5}
+.pk2{flex:0 0 var(--pkw);scroll-snap-align:center;display:flex;flex-direction:column;gap:10px;transition:transform .25s,opacity .25s;transform:scale(.9);opacity:.5}
 .pk2.on{transform:none;opacity:1}
 .pk2:not(.on) .pk-buy,.pk2:not(.on) .pk2-links{pointer-events:none}
 .pk2-art{position:relative;aspect-ratio:800/1192;border-radius:14px;overflow:hidden;background:#1a1f3a center/cover no-repeat;
@@ -2366,3 +2370,7 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 #mulltimer.warn{background:#b91c1c}
 #mulltimer[hidden]{display:none}
 .res-deck{margin:0 0 8px;font-size:13px;text-align:center;opacity:.9}.res-deck small{display:block;font-size:11px;color:#9fd8ff;margin-top:2px}
+
+/* パック開封：重ねたパックや、めくる演出が横にはみ出して、画面が左右に滑らないようにする */
+#overlay:has(.openstage){overflow-x:hidden}
+.openstage{overflow-x:hidden;overflow-x:clip}

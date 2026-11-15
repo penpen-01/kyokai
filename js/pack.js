@@ -132,8 +132,8 @@ const Packs = {
       ${acctNote}
       ${msg ? `<p class="callout warn">${esc(msg)}</p>` : ""}
       ${open.length ? `
-        <div class="pk2-tabs" role="tablist">${open.map(p => `<button type="button" role="tab" data-act="packPick" data-id="${esc(p.id)}" aria-selected="${p.id === this.cur}"><small>${esc(this.shortName(p))}</small>${esc(title(p).nm)}</button>`).join("")}</div>
-        <div class="pk2-track" id="pk-track">${open.map(slide).join("")}</div>
+        <div class="pk2-tabs ${open.length === 1 ? "one" : ""}" role="tablist">${open.map(p => `<button type="button" role="tab" data-act="packPick" data-id="${esc(p.id)}" aria-selected="${p.id === this.cur}"><small>${esc(this.shortName(p))}</small>${esc(title(p).nm)}</button>`).join("")}</div>
+        <div class="pk2-track ${open.length === 1 ? "one" : ""}" id="pk-track">${open.map(slide).join("")}</div>
         <p class="pk2-hint">${open.length > 1 ? "横にスワイプしてパックを選ぶ" : ""}</p>
         <button type="button" class="linkbtn pk2-log" data-act="packLog">開封履歴を見る</button>`
         : `<p class="callout">今は買えるパックがありません。</p>`}
