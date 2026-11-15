@@ -1,5 +1,5 @@
 {
- "version": 135,
+ "version": 136,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -30,7 +30,7 @@
   "BOSS_EX_ON": 0,
   "BOSS_EX_RATE": 10,
   "BOSS_EX_PITY": 15,
-  "BOSS_EX_HP": 30,
+  "BOSS_EX_HP": 25,
   "SAMPLE_ONLINE_DAY": 5,
   "SAMPLE_CPU": 0,
   "STONE_GET_COMMON": 5,
@@ -8025,8 +8025,8 @@
    "world": "myth",
    "type": "char",
    "cost": 0,
-   "atk": 12,
-   "hp": 12,
+   "atk": 10,
+   "hp": 10,
    "glyph": "門",
    "limit": 0,
    "rarity": "ur",
@@ -8053,15 +8053,14 @@
    "name": "冥府の戦乙女",
    "world": "myth",
    "type": "char",
-   "cost": 6,
-   "atk": 6,
-   "hp": 6,
+   "cost": 5,
+   "atk": 5,
+   "hp": 4,
    "glyph": "乙",
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "rush",
-    "shield"
+    "rush"
    ],
    "effects": [
     {
@@ -8085,7 +8084,7 @@
    "world": "fan",
    "type": "char",
    "cost": 3,
-   "atk": 2,
+   "atk": 1,
    "hp": 3,
    "glyph": "刀",
    "limit": 3,
@@ -8095,7 +8094,7 @@
     {
      "kind": "unit",
      "n": 3,
-     "act": "both",
+     "act": "atk",
      "to": "own1"
     },
     {
@@ -8114,7 +8113,7 @@
     },
     {
      "kind": "unit",
-     "n": 2,
+     "n": 1,
      "when": "allyDeath",
      "act": "both",
      "to": "self"
@@ -8130,7 +8129,7 @@
    "type": "char",
    "cost": 6,
    "atk": 4,
-   "hp": 5,
+   "hp": 4,
    "glyph": "斬",
    "limit": 3,
    "rarity": "legend",
@@ -8142,7 +8141,7 @@
      "kind": "unit",
      "n": -2,
      "act": "both",
-     "to": "enemy1"
+     "to": "enemyRand"
     },
     {
      "kind": "unit",
