@@ -377,7 +377,7 @@ img{max-width:100%}
 .kwhint{font-size:10px;opacity:.55;margin-left:2px}
 .kwdesc{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:rgba(120,150,255,.12);border-left:3px solid #8fb0ff;font-size:12px;line-height:1.55;white-space:normal}
 .kwdesc[hidden]{display:none}
-.kwfull{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:11px;line-height:1.5;opacity:.78;white-space:normal}
+.kwfull{display:flex;flex-direction:column;gap:2px;line-height:1.55;white-space:normal}
 .kwfull b{color:#cfe0ff}
 #cardtip{position:fixed;z-index:9999;display:none;width:min(300px,calc(100vw - 16px));padding:10px 12px;border-radius:10px;background:rgba(14,17,32,.97);border:1px solid rgba(160,190,255,.35);box-shadow:0 8px 28px rgba(0,0,0,.55);color:#eef1fb;pointer-events:none;font-size:13px}
 #cardtip .ct-name{display:block;font-size:15px}

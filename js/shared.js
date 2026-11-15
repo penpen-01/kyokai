@@ -501,9 +501,10 @@ function kwItems(card) {
 /* 能力の札（押すと説明が開く）。full＝説明も最初から全部出す（PCでカードに重ねたときの表示など） */
 function kwChipsHTML(items, full) {
   if (!items.length) return "";
+  // full のときは札を出さず、説明だけを並べる（押せない表示で、名前が二重にならないように）
+  if (full) return `<span class="kwfull">${items.map(k => `<span><b>${esc(k.label)}</b>：${esc(k.text)}</span>`).join("")}</span>`;
   const chips = items.map(k => `<button type="button" class="kwlink" data-kwl="${esc(k.label)}" data-kwt="${esc(k.text)}">${esc(k.label)}</button>`).join("");
-  return `<span class="kwrow">${chips}${full ? "" : `<span class="kwhint">押すと説明</span>`}</span>`
-    + (full ? `<span class="kwfull">${items.map(k => `<span><b>${esc(k.label)}</b>：${esc(k.text)}</span>`).join("")}</span>` : `<span class="kwdesc" hidden></span>`);
+  return `<span class="kwrow">${chips}<span class="kwhint">押すと説明</span></span><span class="kwdesc" hidden></span>`;
 }
 function cardTextHTML(card, o = {}) {
   const items = kwItems(card);
