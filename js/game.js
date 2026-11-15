@@ -2047,6 +2047,7 @@ const HOME_ICON = {
 
 /* ホーム：上の段（所持・アイコン・設定）→ 背景の絵を見せる空き → 対戦の2つのボタン → 下のメニュー（片手で届くように下へ寄せる） */
 function showStart() {
+  if (typeof Maint !== "undefined" && Maint.pending && !Maint.pass()) { Maint.screen(); return; }   // メンテナンスが始まった
   if (typeof Inbox !== "undefined" && Inbox.checkLogin()) return;   // 今日初めて開いたら、先にログインボーナス
   const deck = Decks.selected();
   const goldOK = Account.status !== "none" && Account.status !== "free";
@@ -2891,6 +2892,7 @@ function handleAct(act, el) {
       if (Packs.handleAct(act, el)) return;
       if (typeof Quest !== "undefined" && Quest.handleAct(act, el)) return;
       if (typeof Tut !== "undefined" && Tut.handleAct(act, el)) return;
+      if (typeof Maint !== "undefined" && Maint.handleAct(act, el)) return;
       if (Shop.handleAct(act, el)) return;
       if (Inbox.handleAct(act, el)) return;
       if (Showcase.handleAct(act, el)) return;

@@ -452,6 +452,43 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- 起動 ---------- */
+/* ---------- メンテナンス（2026-11-16） ----------
+   工房の設定 MAINT を 1 にして公開すると、プレイヤーは入れなくなる。
+   ・開いたとき：メンテナンスの画面だけを出す
+   ・遊んでいる人：1分ごとに確かめ、対戦中は最後まで遊ばせて、ホームに戻ったところで止める
+   ・運営（オーナー）は、メンテナンス画面の「メンテナンス中」の文字を7回続けて押すと、この端末だけ入れる */
+const Maint = {
+  pending: false, taps: 0,
+  pass() { try { return localStorage.getItem("kyokai-maint-pass") === "1"; } catch (e) { return false; } },
+  on(cfg = CONFIG) { return !!(cfg && +cfg.MAINT) && !this.pass(); },
+  screen() {
+    this.pending = true;
+    openOverlay(`<div class="panel maint">
+      <h1 class="title sm" data-act="maintTap">メンテナンス中</h1>
+      <p class="lead">ただいま、ゲームの調整や修正を行っています。<br>終わるまで、しばらくお待ちください。</p>
+      <p class="lead small">手に入れたカードやGは、そのまま残っています。終わったら、アプリを開き直してください。</p>
+      <button type="button" class="btn primary" data-act="maintCheck">終わったか確かめる</button></div>`, "start", true);
+  },
+  async check(silent) {
+    try {
+      const d = normalizeData(await fetchPublished());
+      if (!this.on(d.config)) { if (this.pending) { toast("メンテナンスが終わりました。読み込み直します"); setTimeout(() => location.reload(), 900); } return false; }
+      if (!this.pending) { this.pending = true; if (!S) this.screen(); }   // 対戦中なら、終わってホームに戻ったときに止める
+      else if (!silent) toast("まだメンテナンス中です");
+      return true;
+    } catch (e) { if (!silent) toast("確かめられませんでした（通信を確認してください）"); return null; }
+  },
+  watch() { setInterval(() => { if (!document.hidden) this.check(true); }, 60000); document.addEventListener("visibilitychange", () => { if (!document.hidden) this.check(true); }); },
+  handleAct(act) {
+    if (act === "maintCheck") { this.check(false); return true; }
+    if (act === "maintTap") {
+      if (++this.taps >= 7) { try { localStorage.setItem("kyokai-maint-pass", "1"); } catch (e) {} this.pending = false; toast("運営として入ります（この端末だけ）"); setTimeout(() => location.reload(), 700); }
+      return true;
+    }
+    return false;
+  }
+};
+
 async function boot() {
   // カード工房の検証ラボから開かれたとき：画面は出さず、データだけ読んで知らせる
   if (new URLSearchParams(location.search).has("sim")) {
@@ -466,6 +503,11 @@ async function boot() {
       <p class="lead">カードデータを読み込めませんでした。通信状態を確認して、ページを再読み込みしてください。</p>
       <p class="lead">${esc(e.message)}</p></div>`, "start", true);
     return;
+  }
+  if (!DATA_INFO.draft) {
+    if (Maint.on()) { Maint.screen(); Maint.watch(); return; }
+    if (Maint.pass() && +CONFIG.MAINT) setTimeout(() => toast("メンテナンス中（運営として入っています）"), 1500);
+    Maint.watch();
   }
   // 試遊（カード工房から）のときは起動画面を出さずにすぐ始める
   if (!DATA_INFO.draft) Splash.show();
