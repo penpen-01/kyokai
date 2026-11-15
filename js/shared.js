@@ -268,6 +268,7 @@ const CONDS = {
   handGE:  { label: "手札がN枚以上",              text: e => `自分の手札が${e.cn}枚以上なら` },
   maxEGE:  { label: "最大エナジーがN以上",        text: e => `自分のエナジーの最大値が${e.cn}以上なら` },
   bounced: { label: "手札に戻せた", text: () => "手札に戻せたら", noN: true },
+  hitEnemy:{ label: "（直前までの効果が）相手キャラに当たった", text: () => "相手キャラに効果を与えたら", noN: true },
   recycled:{ label: "山札に戻せた", text: () => "1枚でも戻せたら", noN: true },
   gearPaid:{ label: "出すときに歯車を使った",     text: () => "歯車を使ったなら", noN: true },
   gearNone:{ label: "出すときに歯車を使わなかった", text: () => "歯車を使わなかったなら", noN: true }

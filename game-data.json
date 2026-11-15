@@ -1,5 +1,5 @@
 {
- "version": 137,
+ "version": 138,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -8147,7 +8147,8 @@
      "kind": "unit",
      "n": 2,
      "act": "both",
-     "to": "self"
+     "to": "self",
+     "cond": "hitEnemy"
     },
     {
      "kind": "unit",

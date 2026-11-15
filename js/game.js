@@ -447,7 +447,7 @@ function playCard(pi, idx, targetsIn, useGear) {
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
     if (kw(self, "guard")) fx(unitSel(self.uid), "守護", "guard");
   }
-  S.gearSpent = spend; S.bouncedNow = 0; S.castWorld = d.world;
+  S.gearSpent = spend; S.bouncedNow = 0; S.hitNow = 0; S.castWorld = d.world;
   S.dmgBonus = grow && d.grow.dmg ? grow : 0;
   S.numBonus = grow && d.grow.num ? grow : 0;
   try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
@@ -491,6 +491,7 @@ function condOK(pi, e, self) {
     case "gearPaid": return (S.gearSpent || 0) > 0;
     case "recycled": return (S.recycled || 0) > 0;
     case "bounced": return (S.bouncedNow || 0) > 0;
+    case "hitEnemy": return (S.hitNow || 0) > 0;
     case "gearNone": return !(S.gearSpent > 0);
   }
   return true;
@@ -531,6 +532,7 @@ function unitEffect(pi, e, targets, self) {
   const me = S.players[pi], n = e.n;
   const list = unitTargets(pi, e, targets, self);
   if (!list.length) return;
+  if (list.some(u => u !== "face" && u !== self && sideOf(u) !== pi)) S.hitNow = (S.hitNow || 0) + 1;   // 「相手キャラに効果が当たったら」の条件用
   if (["enemyAll", "ownAll", "all"].includes(e.to)) log(`${e.to === "enemyAll" ? "相手キャラ全体" : e.to === "ownAll" ? "自分のキャラ全体" : "すべてのキャラ"}に効果。`);
   if (e.act === "dmg") boltFx(pi, self, list.map(u => (u === "face" ? playerSel(opp(pi)) : unitSel(u.uid))));
   // 全体・複数に効く効果は、演出をいっぺんに出して最後に1回だけ待つ
