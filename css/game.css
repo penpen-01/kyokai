@@ -2365,3 +2365,4 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 #mulltimer{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:9000;padding:6px 14px;border-radius:999px;background:rgba(14,17,32,.92);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
 #mulltimer.warn{background:#b91c1c}
 #mulltimer[hidden]{display:none}
+.res-deck{margin:0 0 8px;font-size:13px;text-align:center;opacity:.9}.res-deck small{display:block;font-size:11px;color:#9fd8ff;margin-top:2px}

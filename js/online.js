@@ -116,8 +116,11 @@ const Online = {
   },
 
   /* ---------- 操作 ---------- */
-  handleAct(act) {
+  handleAct(act, el) {
     switch (act) {
+      case "onlDeck": this.showDeckPick(); break;
+      case "onlDeckSet": this.setDeck(el && el.dataset.id); break;
+      case "onlDeckBack": if (S && S.over) showResult(myResult()); else $("#overlay").hidden = true; break;
       case "onlCreate": this.create(); break;
       case "onlJoin": this.join(); break;
       case "onlBack": showStart(); break;
@@ -149,7 +152,7 @@ const Online = {
 
   reset() {
     this.unsubs.forEach(f => { try { f(); } catch {} });
-    Object.assign(this, { role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null });
+    Object.assign(this, { role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, myDeck: null, guestDeck: null });
     clearTimeout(this.pendingTimer);
   },
 
@@ -209,7 +212,7 @@ const Online = {
       console.error(e);
       return this.lobbyMsg("参加できませんでした。");
     }
-    this.role = "guest"; this.code = code; this.mySample = !!deck.sample;
+    this.role = "guest"; this.code = code; this.myDeck = deck; this.mySample = !!deck.sample;
     if (this.mySample) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
@@ -250,6 +253,12 @@ const Online = {
     this.oppOnline = !ou || !!(room.presence && room.presence[ou]);
     this.oppLeft = !!(ou && room.left && room.left[ou]);
 
+    // 相手がデッキを変えたら知らせる（中身は見せない）
+    const oc = room.dchg && room.dchg[this.role === "host" ? "guest" : "host"];
+    if (oc && oc !== this.seenOppDchg) {
+      if (this.seenOppDchg !== undefined) { toast("相手がデッキを変更しました"); this.oppDeckChanged = true; const rd = $(".res-deck"); if (rd && !rd.querySelector("small")) rd.insertAdjacentHTML("beforeend", "<small>相手はデッキを変更しました</small>"); }
+      this.seenOppDchg = oc;
+    } else if (!oc && this.seenOppDchg === undefined) this.seenOppDchg = null;
     const netKey = `${this.oppOnline}|${this.oppLeft}`;
     const netChanged = netKey !== this.netKey;
     this.netKey = netKey;
@@ -261,6 +270,44 @@ const Online = {
       if (room.state) this.onState(room.state);
       if (S && netChanged) render();
     }
+  },
+
+  /* ---------- 対戦の合間にデッキを変える ---------- */
+  deckOK(d) {
+    if (!d) return "デッキが見つかりません";
+    const pr = Decks.problems(d);
+    if (pr.length) return pr[0];
+    if (this.room && this.room.rule === "world" && !deckWorld(d)) return "世界限定ルールの部屋なので、30枚すべて同じ世界のカードのデッキが必要です";
+    if (d.free && Decks.sampleOK() && !this.mySample && Decks.sampleLeft() <= 0) return "サンプルデッキで友達と対戦できる回数（1日）を使い切っています";
+    return "";
+  },
+  showDeckPick(msg) {
+    const list = Decks.mine().filter(d => !Decks.isLtd(d));
+    const cur = this.myDeck && this.myDeck.name;
+    openOverlay(`<div class="panel">
+      <h2 class="title sm">次の対戦のデッキ</h2>
+      <p class="lead small">いま使うデッキ：<b>${esc(cur || "—")}</b>。選ぶと次の対戦（「同じ相手ともう一度」）から使います。相手には「デッキを変更した」ことだけが伝わり、中身は見えません。</p>
+      ${this.room && this.room.rule === "world" ? `<p class="callout"><b>世界限定ルール</b>30枚すべて同じ世界のカードのデッキだけ選べます。</p>` : ""}
+      <ul class="dlist">${list.map(d => { const why = this.deckOK(d);
+        return `<li class="drow"><span class="drow-main"><b>${esc(d.name)}</b><span class="hint">${why ? esc(why) : `${deckCount(d)}枚${d.free ? " ・ サンプル（Gはもらえません）" : ""}`}</span></span>
+          <div class="drow-acts"><button type="button" class="btn sm ${why ? "" : "primary"}" data-act="onlDeckSet" data-id="${esc(d.id)}" ${why ? "disabled" : ""}>これにする</button></div></li>`; }).join("") || `<li class="drow"><span class="hint">使えるデッキがありません。</span></li>`}</ul>
+      <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
+      <button type="button" class="btn" data-act="onlDeckBack">戻る</button>
+    </div>`, "lobby", true);
+  },
+  setDeck(id) {
+    const d = Decks.find(id), why = this.deckOK(d);
+    if (why) return this.showDeckPick(why);
+    const icon = Account.icon(), sample = !!(d.free && Decks.sampleOK());
+    const deck = { name: d.name, cards: { ...d.cards }, ...(sample ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}) };
+    if (sample && !this.mySample) Decks.useSample();
+    this.myDeck = deck; this.mySample = sample;
+    Decks.select(d.id);
+    store.set(ROOM_KEY, { code: this.code, role: this.role, sample });
+    if (this.role === "guest") Net.push(`rooms/${this.code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), by: this.uid, at: Date.now() });
+    Net.update(`rooms/${this.code}/dchg`, { [this.role]: Date.now() }).catch(e => console.error(e));
+    toast(`次の対戦は「${deck.name}」で戦います`);
+    if (S && S.over) showResult(myResult()); else $("#overlay").hidden = true;
   },
 
   startGame() {
@@ -276,7 +323,8 @@ const Online = {
     if (this.oppLeft) return toast("相手が退出しているため、もう一度対戦できません");
     $("#overlay").hidden = true;
     this.logSent = null;
-    newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], S.decks);
+    this.oppDeckChanged = false;
+    newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], [this.myDeck || S.decks[0], this.guestDeck || S.decks[1]]);   // デッキを変えていれば、新しいデッキで
   },
 
   /* ---------- ホスト：盤面を書き込む ---------- */
@@ -375,7 +423,7 @@ const Online = {
     MODE = "online"; setPerspective(1);
     this.pending = false;
     clearTimeout(this.pendingTimer);
-    if (isNewGame || (S && S.gid !== this.lastGid)) { Motion.reset(); Finale.reset(); Mull.close(); ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; lastBoardHTML = ""; }   // 前の対戦の「負けで灰色」を残さない
+    if (isNewGame || (S && S.gid !== this.lastGid)) { this.oppDeckChanged = false; Motion.reset(); Finale.reset(); Mull.close(); ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; lastBoardHTML = ""; }   // 前の対戦の「負けで灰色」を残さない
     this.lastGid = S.gid;
     this.noticeTimeout();
     render();

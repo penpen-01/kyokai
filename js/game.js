@@ -2380,12 +2380,14 @@ function showResult(res) {
   ].filter(Boolean);
   // 次にすること：大きいボタン1つ＋小さいボタン
   const again = online
-    ? (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
+    ? `<p class="res-deck">次のデッキ：<b>${esc((Online.myDeck && Online.myDeck.name) || (S.decks && S.decks[ME] && S.decks[ME].name) || "—")}</b>${Online.oppDeckChanged ? `<small>相手はデッキを変更しました</small>` : ""}</p>`
+      + (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
     : B && B.kind === "tutorial" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度チュートリアル</button>`
     : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
     : `<button type="button" class="btn primary res-main" data-act="cpuAgain">同じ強さでもう一度</button>`;
   const sub = [
     !online && !(B && B.kind === "gate" && r.gate) && !(B && B.kind === "tutorial") ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
+    online && !Online.oppLeft && !Online.closed ? `<button type="button" class="res-sub" data-act="onlDeck">${RES_IC.deck}<span>デッキ変更</span></button>` : "",
     `<button type="button" class="res-sub" data-act="log">${RES_IC.log}<span>ログ</span></button>`,
     `<button type="button" class="res-sub" data-act="closeOverlay">${RES_IC.board}<span>盤面</span></button>`,
     `<button type="button" class="res-sub" data-act="toTitle">${RES_IC.home}<span>${online ? "部屋を出る" : "タイトル"}</span></button>`
@@ -2413,6 +2415,7 @@ function showResult(res) {
   }
 }
 const RES_IC = {
+  deck: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="12" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 7v12a2 2 0 0 0 2 2h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
   again: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   log: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 11h7M9 15h7M9 7h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
   board: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M9 5v14M15 5v14" stroke="currentColor" stroke-width="1.6"/></svg>`,
