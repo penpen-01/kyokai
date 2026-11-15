@@ -2345,3 +2345,7 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .srcs b{font-size:11.5px;color:var(--gold);letter-spacing:.05em}
 .srcs ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:2px}
 .srcs li{font-size:12px;line-height:1.55;color:var(--fg)}
+
+/* 運営用アカウントの印（ホームの左上） */
+.admin-badge{display:inline-flex;align-items:center;padding:2px 8px;margin-left:6px;border-radius:999px;font-size:11px;font-weight:800;color:#1a1206;background:#ff9f5a;letter-spacing:.05em}
+.maint-note{font-weight:700}

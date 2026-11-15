@@ -19,15 +19,25 @@ const SETS = { "1": "第1弾", "2-1": "第2弾-1", "2-2": "第2弾-2", "2-3": "�
 const SET_KEYS = ["1", "2-1", "2-2", "2-3", "3"];   // 並び順（SETS を Object.entries で回すと "1","3" が先に来てしまうので、必ずこちらを使う）
 const setName = s => SETS[s || "1"] || `第${String(s).replace("-", "弾-")}${String(s).includes("-") ? "" : "弾"}`;
 const normSet = v => { const s = String(v ?? "").trim(); return /^\d{1,2}(-\d{1,2})?$/.test(s) && s !== "1" ? s : ""; };
+/* 運営用アカウント（工房に登録した引き継ぎコードのアカウント。2026-11-16）
+   メンテナンス中も入れる・全カードを3枚ずつ持っている扱い・まだ開放していない弾や非公開のボスも見える */
+const Ops = { admin: false };   // 運営用アカウントで入っているか（工房の Admin とは別）
+const adminOn = () => !!Ops.admin;
+async function adminHash(code) {
+  const c = String(code || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("kyokai-admin:" + c));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
 function setOpen(s) {
   if (!s || s === "1") return true;
+  if (adminOn()) return true;
   if (typeof DATA_INFO !== "undefined" && DATA_INFO.draft) return true;   // 試遊中（?draft）はすべて見える
   return typeof Account !== "undefined" && !!(Account.data && (Account.data.opened || []).includes(s));
 }
 /* プレイヤーに見せてよいカード（開放していない弾のカードは、一覧・デッキ作り・交換に出さない。持っていれば見せる） */
 /* 超級の隠しボス（冥府の剣鬼）の限定レジェンド：BOSS_EX_ON が 0 の間は、どこにも出さない（できあがるまで隠す。2026-11-13 オーナー） */
 const BOSS_EX_CARDS = ["b-y-valk", "b-y-murasame", "b-y-zantetsu"];
-const bossExOn = () => !!(typeof CONFIG !== "undefined" && CONFIG.BOSS_EX_ON);
+const bossExOn = () => adminOn() || !!(typeof CONFIG !== "undefined" && CONFIG.BOSS_EX_ON);
 const cardShown = c => !!c && !(BOSS_EX_CARDS.includes(c.id) && !bossExOn()) && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
 /* パック開放戦のルール（パックごとに決める）。今は「世界限定」と「制限なし」。あとでレア度の制限・相手の特殊ルールなどを足す */
 const GATE_RULES = {
@@ -300,7 +310,7 @@ const DEFAULT_CONFIG = {
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
   STONE_TICKET: 150,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
-  SEASON: "beta", STARTER_DECK: "starter",
+  SEASON: "beta", STARTER_DECK: "starter", MAINT_NOTE: "", ADMINS: [],
   SAMPLE_DECKS: true   // ベータ用：所持に関係なく全カードで組める「サンプルデッキ」を許可
 };
 
@@ -725,6 +735,8 @@ function normalizeData(data) {
   }));
   config.SAMPLE_DECKS = config.SAMPLE_DECKS !== false;
   config.SEASON = String(config.SEASON || "beta").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24) || "beta";
+  config.MAINT_NOTE = String(config.MAINT_NOTE || "").slice(0, 80);   // メンテナンスの終わる予定など（画面に出す）
+  config.ADMINS = (Array.isArray(config.ADMINS) ? config.ADMINS : []).filter(h => /^[0-9a-f]{64}$/.test(h));   // 運営用アカウント（コードのハッシュ）
   // シリアルコード。コードそのものは入れず、ハッシュ（h）だけを公開データに置く
   const serials = (Array.isArray(d.serials) ? d.serials : []).filter(x => x && /^[0-9a-f]{64}$/.test(x.h)).map(x => ({
     h: x.h, label: String(x.label || "シリアルコード").slice(0, 30),

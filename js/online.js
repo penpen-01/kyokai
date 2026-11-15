@@ -460,18 +460,20 @@ document.addEventListener("keydown", e => {
 const Maint = {
   pending: false, taps: 0,
   pass() { try { return localStorage.getItem("kyokai-maint-pass") === "1"; } catch (e) { return false; } },
-  on(cfg = CONFIG) { return !!(cfg && +cfg.MAINT) && !this.pass(); },
+  on(cfg = CONFIG) { return !!(cfg && +cfg.MAINT) && !this.pass() && !adminOn(); },
   screen() {
     this.pending = true;
     openOverlay(`<div class="panel maint">
       <h1 class="title sm" data-act="maintTap">メンテナンス中</h1>
       <p class="lead">ただいま、ゲームの調整や修正を行っています。<br>終わるまで、しばらくお待ちください。</p>
+      ${CONFIG.MAINT_NOTE ? `<p class="callout maint-note">${esc(CONFIG.MAINT_NOTE)}</p>` : ""}
       <p class="lead small">手に入れたカードやGは、そのまま残っています。終わったら、アプリを開き直してください。</p>
       <button type="button" class="btn primary" data-act="maintCheck">終わったか確かめる</button></div>`, "start", true);
   },
   async check(silent) {
     try {
       const d = normalizeData(await fetchPublished());
+      CONFIG.MAINT_NOTE = d.config.MAINT_NOTE;
       if (!this.on(d.config)) { if (this.pending) { toast("メンテナンスが終わりました。読み込み直します"); setTimeout(() => location.reload(), 900); } return false; }
       if (!this.pending) { this.pending = true; if (!S) this.screen(); }   // 対戦中なら、終わってホームに戻ったときに止める
       else if (!silent) toast("まだメンテナンス中です");
@@ -505,6 +507,8 @@ async function boot() {
     return;
   }
   if (!DATA_INFO.draft) {
+    // 運営用アカウントか（この端末に残っている引き継ぎコードで判定。メンテナンス中でも入れる）
+    try { const code = localStorage.getItem(Account.key()); if (code && CONFIG.ADMINS.length) Ops.admin = CONFIG.ADMINS.includes(await adminHash(code)); } catch (e) {}
     if (Maint.on()) { Maint.screen(); Maint.watch(); return; }
     if (Maint.pass() && +CONFIG.MAINT) setTimeout(() => toast("メンテナンス中（運営として入っています）"), 1500);
     Maint.watch();
@@ -512,6 +516,7 @@ async function boot() {
   // 試遊（カード工房から）のときは起動画面を出さずにすぐ始める
   if (!DATA_INFO.draft) Splash.show();
   await Account.init();
+  try { if (Account.code && CONFIG.ADMINS.length) Ops.admin = CONFIG.ADMINS.includes(await adminHash(Account.code)); } catch (e) {}
   if (Account.status === "ready") Account.watchNet();
   NetBanner.update();
   if (Account.recovered) setTimeout(() => toast("前回、通信が切れて保存できていなかった分を保存しました"), 2500);

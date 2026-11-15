@@ -2058,7 +2058,7 @@ function showStart() {
   openOverlay(`<div class="homebg" aria-hidden="true"></div>
   <div class="panel home">
     <div class="homebar">
-      <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}</div>
+      <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}${adminOn() ? `<span class="admin-badge" title="運営用アカウント：全カード3枚の扱い・メンテナンス中も入れる・非公開の内容も見える">運営</span>` : ""}</div>
       <div class="hb-me">
         ${goldOK ? `<button type="button" class="homeicon" data-act="icons" data-from="start" aria-label="アイコンを変える">
           <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : `<span class="glyph">任</span>`}</span></button>` : ""}

@@ -90,7 +90,7 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["season", "シーズン（リセット）"]];
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["season", "シーズン（リセット）"]];
     const sub = this.ecoSub || "money";
     const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
     const S = {};
@@ -180,6 +180,23 @@ const Admin = {
       <div class="fgroup" id="inbox-box">${this.inboxHTML()}</div>
       <div class="fgroup" id="serial-box">${this.serialHTML()}</div>
       <div class="fgroup"><span class="gl">④ クエスト</span><p class="hint">デイリー・初心者歓迎・期間限定は、上の「クエスト」タブで作ります。</p><button type="button" class="btn sm" data-tab="quests">クエストタブを開く</button></div>`;
+    S.ops = `
+      <div class="fgroup">
+        <span class="gl">メンテナンス</span>
+        <p class="hint">「メンテナンス中にする」にして公開すると、プレイヤーは入れなくなります。遊んでいる人は、対戦が終わってホームに戻ったところで止まります。終わったら「ふつうに戻す」にして公開してください。</p>
+        <div class="seg"><button type="button" data-act="maintSet" data-v="1" aria-pressed="${+cfg.MAINT === 1}">メンテナンス中にする</button><button type="button" data-act="maintSet" data-v="0" aria-pressed="${+cfg.MAINT !== 1}">ふつうに戻す</button></div>
+        <label class="fl" for="maint-note">メンテナンス画面に出す文（終わる予定など。80文字まで）</label>
+        <input class="txt" id="maint-note" maxlength="80" value="${esc(cfg.MAINT_NOTE || "")}" placeholder="例：終了予定 11月16日 15:00ごろ">
+        <p class="hint">空にすると出しません。</p>
+      </div>
+      <div class="fgroup">
+        <span class="gl">運営用アカウント</span>
+        <p class="hint">登録したアカウントだけ、<b>メンテナンス中も入れる・全カードを3枚ずつ持っている扱い・まだ開放していない弾や非公開のボスも見える</b>ようになります（持ち物そのものは増えません）。公開データにはコードそのものではなく、暗号化した形だけを載せます。</p>
+        <div class="frow"><input class="txt" id="admin-code" maxlength="24" placeholder="引き継ぎコード（16文字）" style="max-width:260px" autocomplete="off"><button type="button" class="btn sm" data-act="adminAdd">登録する</button></div>
+        ${this.adminMsg ? `<p class="hint"><b>${esc(this.adminMsg)}</b></p>` : ""}
+        <p class="hint">登録済み：${(cfg.ADMINS || []).length}件 ${(cfg.ADMINS || []).length ? `<button type="button" class="btn sm danger" data-act="adminClear">全部消す</button>` : ""}</p>
+        <p class="hint">引き継ぎコードは、運営に使う端末のゲームで「設定」→「引き継ぎコード」に出ます。登録したら「公開する」を押して、その端末でゲームを開き直してください（ホームに「運営」と出ます）。</p>
+      </div>`;
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -473,6 +490,19 @@ const Admin = {
         this.importMsg = `「${d.name}」を追加しました`;
         this.touch(this.renderEco); return true;
       }
+      case "maintSet": DATA.config.MAINT = +el.dataset.v; this.touch(this.renderEco); return true;
+      case "adminAdd": {
+        const code = ($("#admin-code").value || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+        if (code.length !== 16) { this.adminMsg = "引き継ぎコードは16文字です（ハイフンはあってもなくても大丈夫です）"; this.renderEco(); return true; }
+        adminHash(code).then(h => {
+          const list = DATA.config.ADMINS = (DATA.config.ADMINS || []);
+          if (list.includes(h)) this.adminMsg = "このアカウントは登録済みです";
+          else { list.push(h); this.adminMsg = "登録しました。「公開する」を押すと有効になります"; }
+          this.touch(this.renderEco);
+        });
+        return true;
+      }
+      case "adminClear": DATA.config.ADMINS = []; this.adminMsg = "運営用アカウントを全部消しました"; this.touch(this.renderEco); return true;
       case "seasonSet": {
         const v = ($("#season-in").value || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 24);
         if (!v || v === DATA.config.SEASON) return true;
@@ -564,3 +594,4 @@ document.addEventListener("change", e => {
 
 /* クエストタブの欄を変えたら、その場で反映 */
 document.addEventListener("change", e => { const k = e.target && e.target.dataset && e.target.dataset.qe; if (k) Admin.qeSet(k, e.target.value); });
+document.addEventListener("change", e => { if (e.target && e.target.id === "maint-note" && typeof DATA !== "undefined") { DATA.config.MAINT_NOTE = e.target.value.slice(0, 80); Admin.touch(() => {}); } });

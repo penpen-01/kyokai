@@ -38,6 +38,7 @@ const Account = {
   /* 所持数（試遊中はすべて上限まで持っている扱い） */
   owned(id) {
     if (this.status === "free") return 99;
+    if (adminOn()) { const c = DEF[id]; return Math.max((this.data && this.data.cards && this.data.cards[id]) || 0, c && c.limit > 0 ? CONFIG.COPY_MAX : 0); }   // 運営用：全カード3枚の扱い（持ち物は増やさない）
     if (this.status === "none") { const st = PRESETS.find(p => p.id === CONFIG.STARTER_DECK); return st ? st.cards[id] || 0 : 0; }
     return (this.data && this.data.cards && this.data.cards[id]) || 0;
   },
