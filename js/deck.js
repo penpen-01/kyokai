@@ -92,9 +92,15 @@ const Decks = {
     return Account.decks().map(d => ({ ...d, cards: { ...d.cards } }));
   },
   /* 初心者クエストの贈り物：デッキをマイデッキに足す（枠がいっぱいでも足す） */
+  /* 新しいデッキの ID。今あるデッキと絶対にかぶらないようにする（時刻＋乱数、かぶったら作り直す） */
+  newId(prefix) {
+    const used = new Set(this.mine().map(x => x.id));
+    let id; do { id = prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); } while (used.has(id));
+    return id;
+  },
   addGiftDeck(d) {
     const list = this.mine().slice();
-    const id = "g" + Date.now().toString(36);
+    const id = this.newId("g");
     list.push({ id, name: d.name, cards: { ...d.cards }, ...(d.key ? { key: d.key } : {}) });
     this.saveMine(list);
     if (!this.isValid(this.selected())) this.select(id);
@@ -637,19 +643,19 @@ const Decks = {
       case "deckBack": this.editing = null; this.viewing = null; showStart(); return true;
       case "deckUse": this.select(id); if (this.viewing) this.showView(this.viewing); else this.showList(); return true;
       case "deckView": this.detail = null; this.codeFor = null; this.showView(id); return true;
-      case "deckNew": if (this.full(false)) return true; this.startEdit({ id: "d" + Date.now().toString(36), name: "新しいデッキ", cards: {} }, true); return true;
+      case "deckNew": if (this.full(false)) return true; this.startEdit({ id: this.newId("d"), name: "新しいデッキ", cards: {} }, true); return true;
       case "deckNewWorld": if (this.full("world")) return true; this.showWorldPick(); return true;
       case "deckNewWorldGo": {
         const w = el.dataset.v; if ((!WORLDS[w] && w !== "ltd") || this.full("world")) return true;
-        if (w === "ltd") this.startEdit({ id: "w" + Date.now().toString(36), name: "限定デッキ", cards: {}, fmt: "ltd" }, true);
-        else this.startEdit({ id: "w" + Date.now().toString(36), name: `${WORLDS[w]}の限定デッキ`, cards: {}, fmt: "world", world: w }, true);
+        if (w === "ltd") this.startEdit({ id: this.newId("w"), name: "限定デッキ", cards: {}, fmt: "ltd" }, true);
+        else this.startEdit({ id: this.newId("w"), name: `${WORLDS[w]}の限定デッキ`, cards: {}, fmt: "world", world: w }, true);
         return true;
       }
-      case "deckNewSample": if (this.full(true)) return true; this.startEdit({ id: "s" + Date.now().toString(36), name: "サンプルデッキ", cards: {}, free: true }, true); return true;
+      case "deckNewSample": if (this.full(true)) return true; this.startEdit({ id: this.newId("s"), name: "サンプルデッキ", cards: {}, free: true }, true); return true;
       case "deckPresets": this.showPresets(); return true;
       case "deckFromPreset": {
         const p = PRESETS.find(x => x.id === id); if (!p || this.full(true)) return true;
-        this.startEdit({ id: "s" + Date.now().toString(36), name: p.name.slice(0, 16), cards: p.cards, free: true }, true);
+        this.startEdit({ id: this.newId("s"), name: p.name.slice(0, 16), cards: p.cards, free: true }, true);
         return true;
       }
       case "deckImport": this.showImport(); return true;
@@ -679,7 +685,7 @@ const Decks = {
           if (cap > 0) cards[cid] = cap;
           if (!asSample && !this.free()) wantN += Math.max(0, cap - this.owned(cid));
         });
-        this.startEdit({ id: (asSample ? "s" : "d") + Date.now().toString(36), name: d.name, cards, want, free: asSample }, true);
+        this.startEdit({ id: this.newId(asSample ? "s" : "d"), name: d.name, cards, want, free: asSample }, true);
         if (wantN) toast(`持っていないカードが${wantN}枚入っています。保存はできます。そろうと対戦に使えます`);
         if (gone) setTimeout(() => toast(`今は使えないカード${gone}枚は外しました`), 1900);
         return true;
@@ -706,7 +712,7 @@ const Decks = {
       }
       case "deckCopy": {
         const p = this.find(id); if (!p || this.full(this.kindOf(p))) return true;
-        this.startEdit({ id: (p.free ? "s" : this.isLtd(p) ? "w" : "d") + Date.now().toString(36), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, want: p.want, free: !!p.free, ...this.fmtOf(p) }, true);
+        this.startEdit({ id: this.newId(p.free ? "s" : this.isLtd(p) ? "w" : "d"), name: (p.name + "（複製）").slice(0, 16), cards: p.cards, want: p.want, free: !!p.free, ...this.fmtOf(p) }, true);
         return true;
       }
       case "deckEdit": { const d = this.find(id); if (d) { this.viewing = null; this.startEdit(d, false); } return true; }
@@ -733,6 +739,7 @@ const Decks = {
       case "deckInc": this.inc(id, false); return true;
       case "deckDec": this.dec(id); return true;
       case "deckSave": {
+        if (!ed) return true;   // 保存ボタンの二度押し
         if (ed.isNew && !ed.named && (["新しいデッキ", "サンプルデッキ", "限定デッキ"].includes(ed.name) || /の限定デッキ$/.test(ed.name)) && deckCount(ed)) ed.name = (this.isLtd(ed) ? "限定・" : "") + this.autoName(ed);
         ed.name = (ed.name || "").trim().slice(0, 16) || "デッキ";
         const pr = this.saveProblems(ed);
@@ -768,10 +775,13 @@ const Decks = {
 /* 名前・検索・所持のみの切り替え */
 document.addEventListener("input", e => {
   if (e.target.id === "deck-name" && Decks.editing && !Decks.renaming) Decks.editing.name = e.target.value;
-  if (e.target.id === "deck-q" && Decks.editing) {
+  if (e.target.id === "deck-q" && Decks.editing && !e.isComposing && !IME.on) {
     Decks.filter.q = e.target.value;
     Decks.applyFilter(true);   // 入力中の欄は作り直さない
   }
+});
+document.addEventListener("compositionend", e => {
+  if (e.target.id === "deck-q" && Decks.editing) setTimeout(() => { if (Decks.filter.q !== e.target.value) { Decks.filter.q = e.target.value; Decks.applyFilter(true); } }, 0);
 });
 document.addEventListener("change", e => {
   if (e.target.id === "deck-owned" && Decks.editing) { Decks.filter.owned = e.target.checked; Decks.applyFilter(); }

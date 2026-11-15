@@ -2,7 +2,15 @@
    境界の召喚士 — ゲームと編集ページで共通の定義
    ========================================================= */
 
+/* 日本語の変換中か（入力欄の作り直しは変換が終わってから） */
+const IME = { on: false };
+if (typeof document !== "undefined") {
+  document.addEventListener("compositionstart", () => { IME.on = true; }, true);
+  document.addEventListener("compositionend", () => { IME.on = false; }, true);
+}
 const WORLDS = { myth: "神話", fan: "幻想", mech: "機械" };
+// 無属性（境界の欠片など）。表示の名前だけ引けるようにして、一覧や絞り込み（Object.keys など）には出さない
+Object.defineProperty(WORLDS, "none", { value: "無属性", enumerable: false });
 const TYPES = { char: "キャラクター", spell: "魔法" };
 /* 弾（カードとパックの区分）。第2弾以降は、パック開放戦に勝つまでプレイヤーには見せない */
 /* 弾は「1」「2-1」「2-2」「2-3」「3」のような文字。第2弾は世界ごとに3つ（2-1・2-2・2-3）に分かれて出る。
@@ -391,7 +399,7 @@ function cardTargetRoles(card) {
 
 /* 後攻の人だけが最初に持つ、使い切りのカード（パックやデッキには入らない） */
 const COIN_CARD = {
-  id: "coin", name: "境界の欠片", world: "fan", type: "spell", cost: 0, glyph: "欠", limit: 0, rarity: "common", art: "art/coin-e8ebaefc8f.webp",
+  id: "coin", name: "境界の欠片", world: "none", type: "spell", cost: 0, glyph: "欠", limit: 0, rarity: "common", art: "art/coin-e8ebaefc8f.webp",
   keywords: [], effects: [{ kind: "energyNow", n: 1 }], note: "後攻の人だけが最初に持っている。好きなときに1回だけ使える。"
 };
 

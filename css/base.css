@@ -41,7 +41,7 @@ img{max-width:100%}
   background:#10121f;
   transition:transform .15s ease, box-shadow .15s ease, opacity .15s, filter .15s;
 }
-.w-myth{--wc:var(--w-myth)} .w-fan{--wc:var(--w-fan)} .w-mech{--wc:var(--w-mech)}
+.w-myth{--wc:var(--w-myth)} .w-fan{--wc:var(--w-fan)} .w-mech{--wc:var(--w-mech)} .w-none{--wc:#a9a6b8}
 .card .art{
   position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:18cqw;overflow:hidden;
   background:

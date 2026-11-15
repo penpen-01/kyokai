@@ -9,6 +9,17 @@
 const ACCT_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const STREAK_LEVELS = ["easy", "normal", "hard", "ex"];
 
+/* 同じ ID のデッキが2つあると、片方を消すともう片方も消える（2026-11-16 オーナー報告）。
+   読み込むときに、2つ目以降の ID を付け直して、別々のデッキとして残す */
+function uniqDeckIds(list) {
+  const seen = new Set();
+  return list.map((x, i) => {
+    let id = String(x.id);
+    if (seen.has(id)) { let k = 2; while (seen.has(`${id}-${k}`)) k++; id = `${id}-${k}`; }
+    seen.add(id);
+    return id === String(x.id) ? x : { ...x, id };
+  });
+}
 const Account = {
   code: null,
   data: null,       // { gold, cards: {id: 枚数}, decks: [...], created }
@@ -74,7 +85,7 @@ const Account = {
       gold: Math.max(0, Math.floor(+d.gold || 0)),
       rev: Math.max(0, Math.floor(+d.rev || 0)),   // 保存するたびに1増える（古いデータでの上書きを防ぐ）
       cards: cleanDeckCards(d.cards),
-      decks: (Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.fmt === "world" && WORLDS[x.world] ? { fmt: "world", world: String(x.world) } : x.fmt === "ltd" ? { fmt: "ltd" } : {}), ...(x.key ? { key: String(x.key) } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
+      decks: uniqDeckIds((Array.isArray(d.decks) ? d.decks : Object.values(d.decks || {})).filter(x => x && x.id)).map(x => ({ id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards), ...(x.free ? { free: true } : {}), ...(x.fmt === "world" && WORLDS[x.world] ? { fmt: "world", world: String(x.world) } : x.fmt === "ltd" ? { fmt: "ltd" } : {}), ...(x.key ? { key: String(x.key) } : {}), ...(x.want && Object.keys(cleanDeckCards(x.want)).length ? { want: cleanDeckCards(x.want) } : {}) })),
       created: d.created || Date.now(),
       // プレイヤー名（対戦で表示する。10文字まで）
       ...(typeof d.name === "string" && d.name.trim() ? { name: d.name.trim().slice(0, 10) } : {}),

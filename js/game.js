@@ -2952,12 +2952,15 @@ document.addEventListener("click", e => {
 window.addEventListener("resize", () => { if (S && !(drag && drag.started)) render(); });
 
 /* 図鑑の検索：入力のたびに絞り込む（文字入力中にカーソルが飛ばないよう、入力欄を戻す） */
-document.addEventListener("input", e => {
-  if (e.target.id !== "cl-q") return;
-  CL.q = e.target.value; const pos = e.target.selectionStart;
+// 日本語の入力（変換中）の途中で画面を作り直すと、スマホで文字が二重に入って打てなくなるので、変換が終わってから絞り込む（2026-11-16）
+const clSearch = t => {
+  if (CL.q === t.value) return;
+  CL.q = t.value; const pos = t.selectionStart;
   showCardList();
   const n = document.getElementById("cl-q"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} }
-});
+};
+document.addEventListener("input", e => { if (e.target.id === "cl-q" && !e.isComposing && !IME.on) clSearch(e.target); });
+document.addEventListener("compositionend", e => { if (e.target.id === "cl-q") setTimeout(() => clSearch(e.target), 0); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".artview").forEach(v => v.remove()); });
 
 /* ---- カードの光の動き（UR・レジェンド）を軽くする ----
