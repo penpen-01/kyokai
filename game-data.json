@@ -1,5 +1,5 @@
 {
- "version": 143,
+ "version": 144,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -6971,11 +6971,6 @@
     }
    ],
    "set": "2-3",
-   "shrink": {
-    "n": 1,
-    "world": "fan",
-    "ctype": "spell"
-   },
    "art": "art/f2-lantern-7b7d17c627.webp"
   },
   {
