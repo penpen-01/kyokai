@@ -2355,3 +2355,4 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .card .perb{position:absolute;left:50%;transform:translateX(-50%);top:30%;z-index:4;font-size:9px;font-weight:800;padding:1px 6px;border-radius:999px;background:#c2410c;color:#fff;box-shadow:0 0 6px rgba(255,120,60,.8);white-space:nowrap}
 .counts .cnt-gear{color:#ffd66b}
 .counts .cnt-used{color:#9fd8ff}
+.adm-tag{font-style:normal;font-size:10px;font-weight:700;padding:0 6px;margin-right:4px;border-radius:999px;background:#b45309;color:#fff}

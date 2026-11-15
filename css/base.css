@@ -368,3 +368,19 @@ img{max-width:100%}
 /* 歯車（手札で重なる）：右下に枚数 */
 .card .gearcnt{position:absolute;z-index:6;right:4cqw;bottom:22cqw;min-width:22cqw;padding:1cqw 3cqw;border-radius:99px;background:linear-gradient(180deg,#f4d58a,#b8862e);color:#2a1a04;font-weight:900;font-size:11cqw;line-height:1.2;text-align:center;box-shadow:0 0 0 .8cqw rgba(0,0,0,.45),0 1cqw 3cqw rgba(0,0,0,.5)}
 .card .growb{display:block;font-size:8cqw;color:#ffd27a;font-weight:900;line-height:1.1}
+
+/* 能力の札（押すと説明）と、PCでカードに重ねたときの説明 */
+.kwrow{display:inline-flex;flex-wrap:wrap;gap:4px;align-items:center;vertical-align:middle}
+.kwlink{font:inherit;font-size:12px;font-weight:700;line-height:1.3;padding:2px 9px;border-radius:999px;border:1px solid rgba(160,190,255,.45);background:rgba(120,150,255,.14);color:#cfe0ff;cursor:pointer}
+.kwlink.on,.kwlink:hover{background:rgba(120,150,255,.35);color:#fff}
+.kwlink:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.kwhint{font-size:10px;opacity:.55;margin-left:2px}
+.kwdesc{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:rgba(120,150,255,.12);border-left:3px solid #8fb0ff;font-size:12px;line-height:1.55;white-space:normal}
+.kwdesc[hidden]{display:none}
+.kwfull{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:11px;line-height:1.5;opacity:.78;white-space:normal}
+.kwfull b{color:#cfe0ff}
+#cardtip{position:fixed;z-index:9999;display:none;width:min(300px,calc(100vw - 16px));padding:10px 12px;border-radius:10px;background:rgba(14,17,32,.97);border:1px solid rgba(160,190,255,.35);box-shadow:0 8px 28px rgba(0,0,0,.55);color:#eef1fb;pointer-events:none;font-size:13px}
+#cardtip .ct-name{display:block;font-size:15px}
+#cardtip .ct-meta{display:block;font-size:11px;opacity:.7;margin:2px 0 6px}
+#cardtip .ct-text{margin:0;line-height:1.6;white-space:pre-line}
+#cardtip .kwhint{display:none}

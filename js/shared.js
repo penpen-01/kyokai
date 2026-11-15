@@ -444,17 +444,17 @@ function effectsText(card, list, auto) {
 }
 /* 「自分がカードを使ったとき」の見出し（世界・種類で絞っていればそれも書く） */
 function cardPlayHead(e) { return `自分が${worldNo(e && { world: e.pw })}${e && e.pt === "char" ? "キャラ" : e && e.pt === "spell" ? "魔法" : "カード"}を使ったとき`; }
-function cardTextLines(card) {
+function cardTextLines(card, o = {}) {
   const lines = [];
-  if (card.type === "char") {
+  if (card.type === "char" && !o.noKw) {
     (card.keywords || []).forEach(k => KEYWORDS[k] && lines.push(`${KEYWORDS[k].label}：${KEYWORDS[k].text}`));
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
   const useWhat = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
   if (card.req) lines.unshift(reqText(card.req) + "。");
-  if (card.shrink) lines.push(`化かし：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが1下がる。`);
-  if (card.grow) { const g = card.grow, w = [];
+  if (card.shrink && !o.noKw) lines.push(`化かし：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが1下がる。`);
+  if (card.grow && !o.noKw) { const g = card.grow, w = [];
     if (g.stat && card.type === "char") w.push("攻撃力と体力");
     if (g.dmg) w.push("効果で与えるダメージ");
     if (g.num) w.push("効果の数（引く枚数・回復量など）");
@@ -485,8 +485,31 @@ function cardText(card) {
   return l.length ? l.join("\n") : "特殊能力なし。";
 }
 /* 画面に出す説明文（HTML）。出てくるトークンの名前は青い文字にして、タップでトークンの絵と効果を見られる */
-function cardTextHTML(card) {
-  let h = esc(cardText(card));
+/* 能力（キーワード）の一覧：{ label：札に出す短い名前, text：くわしい説明 } */
+const useWhatOf = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
+function kwItems(card) {
+  const out = [];
+  if (card.type === "char") {
+    (card.keywords || []).forEach(k => KEYWORDS[k] && out.push({ label: KEYWORDS[k].label, text: KEYWORDS[k].text }));
+    if (card.armor) out.push({ label: `装甲${card.armor}`, text: ARMOR_TEXT(card.armor).replace(/^[^：]*：/, "") });
+  }
+  const full = cardTextLines({ ...card, keywords: [], armor: 0, effects: [], note: "", req: null, pay: null, gear: 0 });   // 化かし・妖気の文だけを作る
+  if (card.shrink) { const t = full.find(l => l.startsWith("化かし：")); out.push({ label: `化かし（${useWhatOf(card.shrink)}）`, text: t ? t.replace(/^化かし：/, "") : "" }); }
+  if (card.grow) { const t = full.find(l => l.startsWith("妖気：")); out.push({ label: `妖気（${useWhatOf(card.grow)}）`, text: t ? t.replace(/^妖気：/, "") : "" }); }
+  return out;
+}
+/* 能力の札（押すと説明が開く）。full＝説明も最初から全部出す（PCでカードに重ねたときの表示など） */
+function kwChipsHTML(items, full) {
+  if (!items.length) return "";
+  const chips = items.map(k => `<button type="button" class="kwlink" data-kwl="${esc(k.label)}" data-kwt="${esc(k.text)}">${esc(k.label)}</button>`).join("");
+  return `<span class="kwrow">${chips}${full ? "" : `<span class="kwhint">押すと説明</span>`}</span>`
+    + (full ? `<span class="kwfull">${items.map(k => `<span><b>${esc(k.label)}</b>：${esc(k.text)}</span>`).join("")}</span>` : `<span class="kwdesc" hidden></span>`);
+}
+function cardTextHTML(card, o = {}) {
+  const items = kwItems(card);
+  const rest = cardTextLines(card, { noKw: true });
+  let h = esc(rest.length ? rest.join("\n") : items.length ? "" : "特殊能力なし。");
+  if (items.length) h = kwChipsHTML(items, o.full) + (h ? "\n" + h : "");
   const ids = new Set();
   (card.effects || []).forEach(e => { const t = e && e.card && cardRef(e.card); if (t && t.token && t.id !== card.id) ids.add(t.id); });
   ids.forEach(id => { const n = esc(cardRef(id).name); h = h.split(`「${n}」`).join(`「<button type="button" class="tklink" data-tk="${esc(id)}">${n}</button>」`); });
@@ -517,6 +540,19 @@ const TokenPop = {
   close() { const o = document.getElementById("tkpop"); if (o) o.remove(); }
 };
 if (typeof document !== "undefined") document.addEventListener("click", e => {
+  const kw = e.target.closest && e.target.closest(".kwlink");
+  if (kw) {
+    e.stopPropagation(); e.preventDefault();
+    const row = kw.parentElement, d = row && row.nextElementSibling;
+    if (!d || !d.classList.contains("kwdesc")) return;
+    const same = !d.hidden && d.dataset.kwl === kw.dataset.kwl;
+    row.querySelectorAll(".kwlink.on").forEach(b => b.classList.remove("on"));
+    if (same) { d.hidden = true; return; }
+    kw.classList.add("on"); d.dataset.kwl = kw.dataset.kwl;
+    d.innerHTML = `<b>${esc(kw.dataset.kwl)}</b>：${esc(kw.dataset.kwt)}`; d.hidden = false;
+    if (typeof Sound !== "undefined") Sound.play("click");
+    return;
+  }
   const t = e.target.closest && e.target.closest(".tklink, .cdlink");
   if (t) { e.stopPropagation(); e.preventDefault(); TokenPop.show(t.dataset.tk); return; }
   const pop = e.target.closest && e.target.closest("#tkpop");
@@ -564,7 +600,7 @@ function cardHTML(card, o = {}) {
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
   const guard = card.type === "char" && kwl.includes("guard");
-  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${o.cls || ""}" ${o.attrs || ""} aria-label="${esc(card.name)}">
+  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${o.cls || ""}" ${o.attrs || ""} ${o.hidden || !card.id ? "" : `data-cid="${esc(card.id)}"`} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
     <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span><span class="gem" aria-hidden="true"></span>
     ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}
@@ -580,7 +616,7 @@ function cardHTML(card, o = {}) {
 const EX_SETS = ["2-1", "2-2", "2-3"];
 const exOpen = () => /[?&]gatetest\b/.test(location.search) || EX_SETS.every(s => setOpen(s));   // ?gatetest（オーナーの試し用）でも出る
 /* ふだんの CPU戦・練習・CPU用一覧に出さないデッキ（検証用・開放戦用・まだ開いていない超級） */
-const hiddenDeck = d => ["test", "gate", "gift"].includes(d.level) || (d.level === "ex" && !exOpen());   // gift＝初心者クエストで選んでもらえるデッキ
+const hiddenDeck = d => ["test", "gate", "gift", "boss"].includes(d.level) || (d.level === "ex" && !exOpen());   // gift＝初心者クエストで選んでもらえるデッキ
 /* ---------- クエスト ----------
    type＝何をするか。lv はCPUの強さ（winLv のとき）。数はクエストごとに決める */
 const CPU_LV_NAMES = { easy: "初級", normal: "中級", hard: "上級", ex: "超級" };
@@ -901,3 +937,33 @@ function curIcon(kind, cls) {
 function goldTag(n) { return `<span class="goldtag" aria-label="所持 ${n}G">${curIcon("gold")}<span>${n.toLocaleString()}</span></span>`; }
 function stoneTag(n) { return `<span class="stonetag" aria-label="魔石 ${n}個">${curIcon("stone")}<span>${n.toLocaleString()}</span></span>`; }
 function ticketTag(n) { return `<span class="tickettag" aria-label="パック券 ${n}枚">${curIcon("ticket")}<span>${n.toLocaleString()}</span></span>`; }
+
+/* PC（マウス）：カードにマウスを重ねると、名前と効果を横に出す（デッキ編成・カード一覧・パック・工房など。対戦中の手札と場は game.js が出す） */
+const CardTip = {
+  el: null, cur: null,
+  show(card, id) {
+    const c = cardRef(id); if (!c) return;
+    if (!this.el) { this.el = document.createElement("div"); this.el.id = "cardtip"; this.el.setAttribute("role", "tooltip"); document.body.appendChild(this.el); }
+    const el = this.el;
+    el.innerHTML = `<b class="ct-name">${esc(c.name)}</b><span class="ct-meta">${WORLDS[c.world] || ""} ・ ${TYPES[c.type] || ""} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span><p class="ct-text">${cardTextHTML(c, { full: true })}</p>`;
+    el.hidden = false; el.style.display = "block";
+    const r = card.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
+    let x = r.right + 10; if (x + w > innerWidth - 8) x = r.left - w - 10; if (x < 8) x = Math.max(8, Math.min(innerWidth - w - 8, r.left));
+    let y = r.top; if (y + h > innerHeight - 8) y = innerHeight - h - 8;
+    el.style.left = x + "px"; el.style.top = Math.max(8, y) + "px";
+    this.cur = card;
+  },
+  hide() { if (this.el) this.el.style.display = "none"; this.cur = null; }
+};
+if (typeof document !== "undefined" && typeof matchMedia !== "undefined" && matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  const skip = ".dmodal-card, .sheet-card, #preview, #cardtip, .tutbox";
+  document.addEventListener("pointerover", e => {
+    if (e.pointerType !== "mouse") return;
+    const card = e.target.closest && e.target.closest(".card[data-cid]");
+    if (!card || card === CardTip.cur) return;
+    if (card.dataset.hand != null || card.dataset.uid != null || card.closest(skip)) return;
+    CardTip.show(card, card.dataset.cid);
+  });
+  document.addEventListener("pointerout", e => { if (CardTip.cur && !CardTip.cur.contains(e.relatedTarget)) CardTip.hide(); });
+  ["pointerdown", "scroll", "wheel"].forEach(ev => document.addEventListener(ev, () => CardTip.hide(), true));
+}

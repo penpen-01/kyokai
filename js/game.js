@@ -1602,7 +1602,7 @@ function layoutHand() {
   });
 }
 
-function detailHTML(id, unit, owner) {
+function detailHTML(id, unit, owner, full) {
   const d = DEF[id];
   const statLine = d.type === "char"
     ? `<div class="sh-stats">攻撃 ${unit ? unit.atk : d.atk} ／ 体力 ${unit ? `${unit.hp}/${unit.maxHp}` : d.hp}${unit && unit.frozen ? "（凍結：次のターンは攻撃できません）" : unit && !unit.ready && owner === ME ? "（このターンは攻撃できません）" : ""}</div>`
@@ -1613,8 +1613,8 @@ function detailHTML(id, unit, owner) {
       <div class="sh-name">${esc(d.name)}</div>
       <div class="sh-meta">${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}</div>
       ${statLine}
-      ${unit && unit.silenced ? `<p class="sh-text">沈黙：効果と能力をすべて失っています。</p>` : `<p class="sh-text">${cardTextHTML(d)}</p>`}
-      ${unit && !unit.silenced && ((unit.kws || []).length || unit.armorPlus) ? `<p class="sh-text">与えられた能力：${[...(unit.kws || []).filter(k => KEYWORDS[k]).map(k => `${KEYWORDS[k].label}（${KEYWORDS[k].text}）`), ...(unit.armorPlus ? [`装甲+${unit.armorPlus}`] : [])].join("／")}</p>` : ""}`;
+      ${unit && unit.silenced ? `<p class="sh-text">沈黙：効果と能力をすべて失っています。</p>` : `<p class="sh-text">${cardTextHTML(d, { full })}</p>`}
+      ${unit && !unit.silenced && ((unit.kws || []).length || unit.armorPlus) ? `<p class="sh-text">与えられた能力：\n${kwChipsHTML([...(unit.kws || []).filter(k => KEYWORDS[k]).map(k => ({ label: KEYWORDS[k].label, text: KEYWORDS[k].text })), ...(unit.armorPlus ? [{ label: `装甲+${unit.armorPlus}`, text: `受けるダメージをさらに${unit.armorPlus}減らす。` }] : [])], full)}</p>` : ""}`;
 }
 
 function renderSheet() {
@@ -1678,7 +1678,7 @@ function showPreview(card) {
   const info = cardInfoFromEl(card);
   if (!info || !DEF[info.id]) return;
   const p = $("#preview");
-  p.innerHTML = detailHTML(info.id, info.unit, info.owner) + "</div>";
+  p.innerHTML = detailHTML(info.id, info.unit, info.owner, true) + "</div>";
   p.hidden = false;
   const r = card.getBoundingClientRect(), ph = p.offsetHeight;
   const top = r.top > innerHeight / 2 ? r.top - ph - 14 : r.bottom + 14;
