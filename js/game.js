@@ -1430,16 +1430,21 @@ function fieldHTML(pi) {
   return `<div class="field" data-zone="${pi}" style="--cols:${CONFIG.FIELD_MAX}">${s}</div>`;
 }
 
+/* 友達対戦の持ち時間（ターン終了ボタンの下に出す） */
+function ttHTML() {
+  const sec = MODE === "online" && typeof Online !== "undefined" ? Online.secLeft() : null;
+  return sec == null ? "" : `<b class="ttimer ${sec <= 15 ? "warn" : ""}" data-tt role="timer">残り${sec}秒</b>`;
+}
 function endButtonHTML() {
   if (S.over && resultShown) return `<button type="button" class="endbtn" data-act="showResult"><i class="eb-glow" aria-hidden="true"></i><span>結果<br>画面へ</span></button>`;
   if (S.over) return `<button type="button" class="endbtn" disabled><span>決着</span></button>`;
   if (S.phase !== "play") return `<button type="button" class="endbtn" disabled><span>準備中</span></button>`;
   if (S.turn !== ME) {
     const label = MODE === "cpu" ? "CPU<br>行動中" : "相手の<br>ターン";
-    return `<button type="button" class="endbtn" disabled aria-label="${label.replace("<br>", "")}"><span>${label}</span></button>`;
+    return `<button type="button" class="endbtn" disabled aria-label="${label.replace("<br>", "")}"><span>${label}</span>${ttHTML()}</button>`;
   }
-  if (typeof Online !== "undefined" && Online.blocked()) return `<button type="button" class="endbtn" disabled><span>送信中</span></button>`;
-  return `<button type="button" class="endbtn" data-act="end" aria-label="ターン終了" ${canAct() ? "" : "disabled"}>${canAct() ? `<i class="eb-glow" aria-hidden="true"></i>` : ""}<span>ターン<br>終了</span></button>`;
+  if (typeof Online !== "undefined" && Online.blocked()) return `<button type="button" class="endbtn" disabled><span>送信中</span>${ttHTML()}</button>`;
+  return `<button type="button" class="endbtn" data-act="end" aria-label="ターン終了" ${canAct() ? "" : "disabled"}>${canAct() ? `<i class="eb-glow" aria-hidden="true"></i>` : ""}<span>ターン<br>終了</span>${ttHTML()}</button>`;
 }
 
 let renderDeferred = false;

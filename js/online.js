@@ -9,6 +9,10 @@ const WORLD_RULE_KEY = "kyokai-world-rule";
 const ROOM_KEY = "kyokai-room";
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 見間違えやすい O/0, I/1 は使わない
 const SEND_TIMEOUT = 10000;
+const TURN_LIMIT_KEY = "kyokai-turn-limit";
+const TURN_LIMITS = [0, 60, 90, 120];   // 1ターンの持ち時間（秒）。0＝なし
+const MULL_LIMIT = 30;                  // 最初の手札の引き直しを決める時間（秒）
+const TURN_GRACE = 3;                  // 「あなたのターン」などの演出の分だけ、おまけで足す（表示は持ち時間を超えない）
 
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
@@ -49,6 +53,8 @@ const Online = {
       <div class="obox">
         <h3>部屋を作る</h3>
         <label class="ownchk"><input type="checkbox" id="onl-world" ${store.get(WORLD_RULE_KEY) === "1" ? "checked" : ""}> 世界限定ルール（2人とも、30枚すべて同じ世界のカードのデッキで戦う）</label>
+        <div class="ofield"><label for="onl-tl">1ターンの持ち時間（過ぎたら自動でターン終了）</label>
+          <select class="otxt" id="onl-tl">${TURN_LIMITS.map(v => `<option value="${v}" ${v === this.prefLimit() ? "selected" : ""}>${v ? v + "秒" : "なし（時間制限なし）"}</option>`).join("")}</select></div>
         <button type="button" class="btn primary" data-act="onlCreate">部屋を作って合言葉を出す</button>
       </div>
       <div class="obox">
@@ -80,6 +86,7 @@ const Online = {
       <p class="lead">この合言葉を相手に伝えてください。相手が入力すると対戦が始まります。</p>
       <div class="roomcode" aria-label="合言葉">${esc(this.code)}</div>
       ${store.get(WORLD_RULE_KEY) === "1" ? `<p class="callout"><b>世界限定ルール</b>相手も、30枚すべて同じ世界のカードのデッキで参加します。</p>` : ""}
+      <p class="lead small">1ターンの持ち時間：${this.prefLimit() ? `<b>${this.prefLimit()}秒</b>（過ぎたら自動でターン終了）` : "なし"}</p>
       <button type="button" class="btn" data-act="onlCopy">合言葉をコピー</button>
       <p class="onl-msg" id="onl-msg" role="status"></p>
       <button type="button" class="btn" data-act="onlCancel">部屋を閉じる</button>
@@ -142,7 +149,7 @@ const Online = {
 
   reset() {
     this.unsubs.forEach(f => { try { f(); } catch {} });
-    Object.assign(this, { role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null });
+    Object.assign(this, { role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null });
     clearTimeout(this.pendingTimer);
   },
 
@@ -153,6 +160,8 @@ const Online = {
     if (!deck) return;
     const worldRule = !!($("#onl-world") && $("#onl-world").checked);
     store.set(WORLD_RULE_KEY, worldRule ? "1" : "0");
+    const tl = $("#onl-tl") ? +$("#onl-tl").value : this.prefLimit();
+    store.set(TURN_LIMIT_KEY, TURN_LIMITS.includes(tl) ? tl : 90);
     if (deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
     if (worldRule && !deckWorld(deck)) return this.lobbyMsg(`世界限定ルールでは、30枚すべて同じ世界のカードで組んだデッキが必要です。今のデッキ「${deck.name}」は世界が混ざっています。`);
     this.lobbyMsg("接続中…");
@@ -165,7 +174,7 @@ const Online = {
     }
     if (!code) return this.lobbyMsg("部屋を作れませんでした。もう一度お試しください。");
     try {
-      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now(), ...(worldRule ? { rule: "world" } : {}) });
+      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now(), tl: this.prefLimit(), ...(worldRule ? { rule: "world" } : {}) });
     } catch (e) {
       console.error(e);
       return this.lobbyMsg("部屋を作れませんでした（サーバーの設定を確認してください）。");
@@ -212,6 +221,7 @@ const Online = {
   /* ---------- 部屋の監視（両者共通） ---------- */
   watchRoom() {
     const base = `rooms/${this.code}`;
+    this.startTicker();
     // 自分の接続状態を記録（切断したら自動で消える）
     this.unsubs.push(Net.onConnected(ok => {
       if (!ok) return;
@@ -295,7 +305,7 @@ const Online = {
       if (this.logSent == null || this.logSent > L.length || this.pubN % 15 === 0 || S.over) this.logSent = 0;
       const lg = { base: this.logSent, add: L.slice(this.logSent) };
       this.logSent = L.length;
-      const payload = JSON.stringify({ S: { ...out, log: [] }, lg, fx: this.fxq });
+      const payload = JSON.stringify({ S: { ...out, log: [] }, lg, fx: this.fxq, now: Date.now() });
       this.fxq = [];
       Net.update(`rooms/${this.code}`, { state: payload, status: S.over ? "over" : "playing" }).catch(e => console.error(e));
     });
@@ -359,6 +369,7 @@ const Online = {
     if (S && !isNewGame && Array.isArray(p.fx)) p.fx.forEach(f => playFx(f[0], f[1], f[2]));
     const wasOver = S && S.over;
     const prevLog = (S && !isNewGame && S.log) || [];
+    if (typeof p.now === "number") this.skew = Date.now() - p.now;   // ホストの時計とのずれ（持ち時間の表示に使う）
     S = p.S;
     if (p.lg) S.log = prevLog.slice(0, p.lg.base).concat(p.lg.add || []);   // ログは増えた分だけ届く
     MODE = "online"; setPerspective(1);
@@ -366,6 +377,7 @@ const Online = {
     clearTimeout(this.pendingTimer);
     if (isNewGame || (S && S.gid !== this.lastGid)) { Motion.reset(); Finale.reset(); Mull.close(); ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; lastBoardHTML = ""; }   // 前の対戦の「負けで灰色」を残さない
     this.lastGid = S.gid;
+    this.noticeTimeout();
     render();
     if (S.over && !wasOver) scheduleResult();
   },
@@ -392,6 +404,74 @@ const Online = {
     } catch (e) { console.error(e); }
     store.del(ROOM_KEY);
     this.reset();
+  },
+
+  /* ---------- 1ターンの持ち時間（ホストが時間を決めて、切れたらターンを終わらせる） ---------- */
+  skew: 0,
+  ticker: null,
+  prefLimit() { const v = store.get(TURN_LIMIT_KEY); return TURN_LIMITS.includes(v) ? v : 90; },
+  turnLimit() { return this.room ? +this.room.tl || 0 : 0; },
+  dlKey() { if (!S || S.over) return null; if (S.phase === "play") return "p" + S.turnNo; if (S.phase === "mulligan") return "m"; return null; },
+  secLeft() {
+    const k = this.dlKey();
+    if (!k || !S.dl || S.dlKey !== k) return null;
+    const sec = Math.max(0, Math.ceil((S.dl - (Date.now() - (this.role === "host" ? 0 : this.skew))) / 1000));
+    return Math.min(sec, k === "m" ? MULL_LIMIT : this.turnLimit() || sec);
+  },
+  startTicker() { if (!this.ticker) this.ticker = setInterval(() => this.tick(), 250); },
+  tick() {
+    if (MODE !== "online" || !S || !this.code) { this.paint(null); return; }
+    const tl = this.turnLimit();
+    if (this.role === "host" && tl && !this.blocked()) {
+      const k = this.dlKey();
+      // 相手の接続が切れている間は、時間を止めておく（戻ってきたとき、すぐ時間切れにならないように）
+      if (!this.oppOnline && S.dl && S.dlKey === k && S.dl - Date.now() < 15000) S.dl = Date.now() + 15000;
+      if (k && S.dlKey !== k) { S.dlKey = k; S.dl = Date.now() + ((k === "m" ? MULL_LIMIT : tl) + TURN_GRACE) * 1000; render(); this.publish(true); }
+      else if (k && S.dl && Date.now() > S.dl + 300) this.expire(k);
+    }
+    this.paint(tl ? this.secLeft() : null);
+  },
+  expire(k) {
+    S.dl = 0;   // 同じ時間切れを2回処理しない
+    if (k === "m") {
+      const who = [0, 1].filter(pi => S.mull[pi] == null);
+      S.timeout = { n: (S.timeout && S.timeout.n || 0) + 1, pis: who, m: true };
+      who.forEach(pi => mulligan(pi, false));
+    } else {
+      const pi = S.turn;
+      S.timeout = { n: (S.timeout && S.timeout.n || 0) + 1, pis: [pi] };
+      if (pi === ME) { ui = { sel: null, mode: null }; try { cancelDrag(); } catch (e) {} if (typeof renderSheet === "function") renderSheet(); }
+      log(`${pname(pi)}の持ち時間が切れたので、ターンを終了した。`);
+      endTurn(pi);
+    }
+    this.noticeTimeout();
+    render(); this.publish(true);
+  },
+  /* 自分の時間が切れたときだけ知らせる */
+  noticeTimeout() {
+    const t = S && S.timeout;
+    if (!t || t.n === this.seenTimeout) return;
+    const first = this.seenTimeout == null && this.role === "guest";
+    this.seenTimeout = t.n;
+    if (first || !(t.pis || []).includes(ME)) return;
+    toast(t.m ? "時間切れ：最初の手札をそのまま使います" : "時間切れ：ターンを終了しました");
+  },
+  /* 残り時間の表示（行動中の人の名前の横。最初の手札を選ぶ間は画面の上） */
+  paint(sec) {
+    const on = sec != null && S && !S.over;
+    const mine = on && (S.phase === "mulligan" ? S.mull[ME] == null : S.turn === ME);
+    document.querySelectorAll("[data-tt]").forEach(el => {
+      el.hidden = !on || S.phase !== "play";
+      if (el.hidden) return;
+      el.textContent = `残り${sec}秒`;
+      el.classList.toggle("warn", sec <= 15);
+    });
+    let f = document.getElementById("mulltimer");
+    const showM = on && S.phase === "mulligan";
+    if (showM && !f) { f = document.createElement("div"); f.id = "mulltimer"; f.setAttribute("role", "timer"); document.body.appendChild(f); }
+    if (f) { f.hidden = !showM; if (showM) { f.textContent = mine ? `決めるまで 残り${sec}秒` : `相手が選んでいます（残り${sec}秒）`; f.classList.toggle("warn", sec <= 10); } }
+    // 自分の番の最後の10秒は、1秒ごとに小さく音を鳴らす
+    if (mine && sec <= 10 && sec > 0 && sec !== this.lastBeep) { this.lastBeep = sec; if (typeof Sound !== "undefined") Sound.play("click"); }
   },
 
   savedRoom() { return store.get(ROOM_KEY); },

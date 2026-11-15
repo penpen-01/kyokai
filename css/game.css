@@ -2356,3 +2356,12 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .counts .cnt-gear{color:#ffd66b}
 .counts .cnt-used{color:#9fd8ff}
 .adm-tag{font-style:normal;font-size:10px;font-weight:700;padding:0 6px;margin-right:4px;border-radius:999px;background:#b45309;color:#fff}
+
+/* 友達対戦の持ち時間 */
+.endbtn .ttimer{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);z-index:2}
+.ttimer{font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ttimer.warn{background:#dc2626;animation:ttpulse 1s ease-in-out infinite}
+@keyframes ttpulse{50%{transform:translateX(-50%) scale(1.1)}}
+#mulltimer{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);z-index:9000;padding:6px 14px;border-radius:999px;background:rgba(14,17,32,.92);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+#mulltimer.warn{background:#b91c1c}
+#mulltimer[hidden]{display:none}
