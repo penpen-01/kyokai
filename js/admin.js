@@ -229,7 +229,7 @@ const Admin = {
     return `<div class="qe-row">
       ${opts.order ? `<span class="qe-no">${i + 1}</span>` : ""}
       <select class="txt" data-qe="${k}:type" aria-label="内容">${opt(QUEST_TYPES, x.type)}</select>
-      ${x.type === "winLv" ? `<select class="txt" data-qe="${k}:lv" aria-label="CPUの強さ">${opt(CPU_LV_NAMES, x.lv)}</select>` : ""}
+      ${QUEST_TYPES[x.type] && QUEST_TYPES[x.type].lv ? `<select class="txt" data-qe="${k}:lv" aria-label="CPUの強さ">${opt(x.type === "boss" ? { hard: "上級", ex: "超級" } : CPU_LV_NAMES, x.lv)}</select>` : ""}
       <label class="small">回数<input class="txt" type="number" min="1" max="999" data-qe="${k}:n" value="${x.n}"></label>
       <label class="small">G<input class="txt" type="number" min="0" step="100" data-qe="${k}:gold" value="${x.gold || 0}"></label>
       <label class="small">魔石<input class="txt" type="number" min="0" step="50" data-qe="${k}:stones" value="${x.stones || 0}"></label>
@@ -271,7 +271,7 @@ const Admin = {
   qeSet(key, value) {
     const [list, i, f] = key.split(":"), x = DATA[list] && DATA[list][+i]; if (!x) return;
     if (["n", "gold", "stones", "tickets"].includes(f)) x[f] = Math.max(f === "n" ? 1 : 0, Math.floor(+value || 0));
-    else if (f === "type") { x.type = value; if (value === "winLv") x.lv = x.lv || "normal"; else delete x.lv; }
+    else if (f === "type") { x.type = value; if (QUEST_TYPES[value] && QUEST_TYPES[value].lv) x.lv = value === "boss" ? (x.lv === "ex" ? "ex" : "hard") : x.lv || "normal"; else delete x.lv; }
     else if (f === "title") { if (value.trim()) x.title = value.trim().slice(0, 30); else delete x.title; }
     else x[f] = value;
     this.touch();
@@ -517,7 +517,7 @@ const Admin = {
           gold: Math.max(0, Math.floor(+v("qd-gold") || 0)), stones: Math.max(0, Math.floor(+v("qd-stones") || 0)), tickets: Math.max(0, Math.floor(+v("qd-tickets") || 0)) };
         this.qd = { ...q };
         if (!QUEST_TYPES[q.type]) return true;
-        if (q.type !== "winLv") delete q.lv;
+        if (!(QUEST_TYPES[q.type] && QUEST_TYPES[q.type].lv)) delete q.lv;
         DATA.quests = [...(DATA.quests || []), { id: "q" + Date.now().toString(36), ...q }];
         this.touch(); this.renderEco(); return true;
       }

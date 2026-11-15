@@ -627,7 +627,8 @@ const hiddenDeck = d => ["test", "gate", "gift", "boss"].includes(d.level) || (d
    type＝何をするか。lv はCPUの強さ（winLv のとき）。数はクエストごとに決める */
 const CPU_LV_NAMES = { easy: "初級", normal: "中級", hard: "上級", ex: "超級" };
 const QUEST_TYPES = {
-  winLv:  { label: "CPUに勝つ（強さを選ぶ）", text: (n, q) => `CPU（${CPU_LV_NAMES[q.lv] || "中級"}）に${n}回勝つ` },
+  winLv:  { label: "CPUに勝つ（強さを選ぶ）", lv: true, text: (n, q) => `CPU（${CPU_LV_NAMES[q.lv] || "中級"}）に${n}回勝つ` },
+  boss:   { label: "隠しボスに勝つ（上級か超級を選ぶ）", lv: true, text: (n, q) => `${q.lv === "ex" ? "超級" : "上級"}の隠しボスに${n}回勝つ` },
   win:    { label: "対戦に勝つ", text: n => `対戦に${n}回勝つ` },
   battle: { label: "対戦する（勝ち負けは問わない）", text: n => `対戦を${n}回する` },
   online: { label: "友達と対戦する", text: n => `友達と${n}回対戦する` },
@@ -808,7 +809,7 @@ function normalizeData(data) {
   const login = (Array.isArray(d.login) && d.login.length ? d.login : DEFAULT_LOGIN).slice(0, 14).map(x => ({ gold: Math.max(0, Math.floor(+(x && x.gold) || 0)), stones: Math.max(0, Math.floor(+(x && x.stones) || 0)), tickets: Math.max(0, Math.floor(+(x && x.tickets) || 0)) }));
   // クエスト（工房の「クエスト」タブ）。1つのクエストは1つの目標と報酬
   const qItem = x => ({ id: String(x.id), ...(x.title ? { title: String(x.title).slice(0, 30) } : {}),
-    type: x.type, ...(x.type === "winLv" ? { lv: CPU_LV_NAMES[x.lv] ? x.lv : "normal" } : {}), n: Math.max(1, Math.min(999, Math.floor(+x.n || 1))),
+    type: x.type, ...(QUEST_TYPES[x.type] && QUEST_TYPES[x.type].lv ? { lv: CPU_LV_NAMES[x.lv] ? x.lv : x.type === "boss" ? "hard" : "normal" } : {}), n: Math.max(1, Math.min(999, Math.floor(+x.n || 1))),
     gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)) });
   const qList = (a, def) => (Array.isArray(a) && a.length ? a : def).filter(x => x && x.id && QUEST_TYPES[x.type]).slice(0, 60).map(qItem);
   const daily = qList(d.daily, DAILY_POOL);        // デイリーの候補（毎日この中から DAILY_N 個）

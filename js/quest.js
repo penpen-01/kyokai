@@ -78,6 +78,7 @@ const Quest = {
     this.add("battle", 1);
     if (MODE === "online") this.add("online", 1);
     if (res === "win") { this.add("win", 1); if (cpu && (!B || B.kind === "cpu")) this.add("winLv", 1, { lv: CPU_LEVEL }); }
+    if (res === "win" && cpu && B && B.kind === "boss") this.add("boss", 1, { lv: B.boss === "ex" ? "ex" : "hard" });   // 隠しボスに勝った
     ["spell", "char", "kill", "face", "poison", "freeze", "gear"].forEach(k => { if (st[k]) this.add(k, st[k]); });
   },
 
@@ -139,7 +140,8 @@ const Quest = {
   guideSeen() { try { return localStorage.getItem("kyokai-guide") === "1"; } catch (e) { return true; } },
   guideSteps() {
     const own = id => Account.owned(id) > 0;
-    const bossCards = CARDS.filter(c => c.boss && !c.token);
+    const bossCards = CARDS.filter(c => c.boss && !c.token && BOSSES.hard.legends.includes(c.id));
+    const exBossCards = CARDS.filter(c => c.boss && !c.token && BOSSES.ex.legends.includes(c.id));
     const gAll = typeof gatePacks === "function" ? gatePacks(true) : [], gLeft = typeof gatePacks === "function" ? gatePacks() : [];
     const ex = typeof exOpen === "function" && exOpen();
     const hasDeck = Decks.mine().some(d => !Decks.isLtd(d) && !Decks.problems(d).length);
@@ -156,9 +158,9 @@ const Quest = {
       ...(gAll.length ? [{ t: "パック開放戦で、新しいパックを開く", done: !gLeft.length,
         b: `第2弾のパックは、<b>パック開放戦</b>に勝つとショップに並びます。開放戦はパックごとにルール（世界限定など）が決まっていて、ルールに合ったデッキで挑みます。一気に全部開ける人も、1つ開けてカードを集めてから次に挑む人も。自分のペースでどうぞ。`,
         go: [["gate", "パック開放戦へ"]] }] : []),
-      { t: "超級に挑む", done: false,
-        b: ex ? `第2弾を全部開放したので、CPU戦に<b>超級</b>が出ています。第2弾のカードを使いこなす強敵です。勝てるように、デッキをさらに鍛えましょう。${bossExOn() ? "超級に勝つと、まれに<b>冥府の剣鬼 黄泉丸</b>が現れます。倒すと冥府の<b>限定レジェンド</b>が手に入ります。" : "<b>超級の隠しボスも近日登場予定</b>です。"}`
-          : `第2弾のパックを<b>すべて開放すると</b>、CPU戦に<b>超級</b>が現れます。第2弾のカードを使いこなす強敵です。${bossExOn() ? "超級に勝つと、まれに<b>冥府の剣鬼 黄泉丸</b>が現れます。倒すと冥府の<b>限定レジェンド</b>が手に入ります。" : "<b>超級の隠しボスも近日登場予定</b>です。"}`,
+      { t: bossExOn() ? "超級に挑み、冥府の剣鬼を倒す" : "超級に挑む", done: bossExOn() && exBossCards.some(c => own(c.id)),
+        b: ex ? `第2弾を全部開放したので、CPU戦に<b>超級</b>が出ています。第2弾のカードを使いこなす強敵です。勝てるように、デッキをさらに鍛えましょう。${bossExOn() ? "超級に勝つと、まれに<b>冥府の剣鬼 黄泉丸</b>が現れます（超級に何度も勝てば、いつか必ず現れます）。黄泉丸の場には<b>冥府の門</b>があり、倒されたキャラを呼び戻しながら、決まったターンが来ると黄泉丸の勝ちになります。<b>門を早めに倒す</b>のが勝負どころです。倒すと冥府の<b>限定レジェンド</b>（冥府の戦乙女・妖刀・村雨・冥機ザンテツ）が手に入ります。" : "<b>超級の隠しボスも近日登場予定</b>です。"}`
+          : `第2弾のパックを<b>すべて開放すると</b>、CPU戦に<b>超級</b>が現れます。第2弾のカードを使いこなす強敵です。${bossExOn() ? "超級に勝つと、まれに<b>冥府の剣鬼 黄泉丸</b>が現れます（超級に何度も勝てば、いつか必ず現れます）。黄泉丸の場には<b>冥府の門</b>があり、倒されたキャラを呼び戻しながら、決まったターンが来ると黄泉丸の勝ちになります。<b>門を早めに倒す</b>のが勝負どころです。倒すと冥府の<b>限定レジェンド</b>（冥府の戦乙女・妖刀・村雨・冥機ザンテツ）が手に入ります。" : "<b>超級の隠しボスも近日登場予定</b>です。"}`,
         go: ex ? [["cpu", "CPU戦へ"]] : [] }
     ];
   },
