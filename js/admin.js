@@ -195,7 +195,7 @@ const Admin = {
         <div class="frow"><input class="txt" id="admin-code" maxlength="24" placeholder="引き継ぎコード（16文字）" style="max-width:260px" autocomplete="off"><button type="button" class="btn sm" data-act="adminAdd">登録する</button></div>
         ${this.adminMsg ? `<p class="hint"><b>${esc(this.adminMsg)}</b></p>` : ""}
         <p class="hint">登録済み：${(cfg.ADMINS || []).length}件 ${(cfg.ADMINS || []).length ? `<button type="button" class="btn sm danger" data-act="adminClear">全部消す</button>` : ""}</p>
-        <p class="hint">引き継ぎコードは、運営に使う端末のゲームで「設定」→「引き継ぎコード」に出ます。登録したら「公開する」を押して、その端末でゲームを開き直してください（ホームに「運営」と出ます）。</p>
+        <p class="hint">引き継ぎコードは、運営に使う端末のゲームで「設定（歯車）」→「アカウント」に出ます。登録したら「公開する」を押して、その端末でゲームを開き直してください（ホームに「運営」と出ます）。</p>
       </div>`;
     S.season = `
       <div class="fgroup">
