@@ -1,5 +1,5 @@
 {
- "version": 142,
+ "version": 143,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -1192,21 +1192,19 @@
    "id": "dkmwi2kspmqn",
    "name": "タマモ様",
    "cards": {
-    "f-twins": 1,
     "f-whisper": 3,
     "f2-bakefox": 3,
     "f2-dancer": 3,
-    "f2-homeward": 1,
-    "f2-kamikakushi": 1,
-    "f2-kit": 3,
+    "f2-kit": 2,
     "f2-kohaku": 3,
     "f2-moonwalk": 3,
     "f2-rebloom": 1,
     "f2-sake": 1,
-    "f2-squirrel": 1,
     "f2-tamamo": 3,
-    "f2-tanuki": 1,
-    "x-reboot": 2
+    "x-reboot": 1,
+    "stargaze": 3,
+    "f2-lantern": 3,
+    "quantum": 1
    },
    "level": "test"
   },
@@ -6997,10 +6995,10 @@
    "grow": {
     "n": 1,
     "world": "fan",
+    "ctype": "spell",
     "stat": true,
     "dmg": false,
-    "num": false,
-    "ctype": "spell"
+    "num": false
    },
    "art": "art/f2-oni-dfef436efe.webp"
   },
@@ -7026,10 +7024,10 @@
    "grow": {
     "n": 1,
     "world": "fan",
+    "ctype": "spell",
     "stat": false,
     "dmg": true,
-    "num": false,
-    "ctype": "spell"
+    "num": false
    },
    "art": "art/f2-pebble-0467452bea.webp"
   },
@@ -7622,10 +7620,10 @@
    "grow": {
     "n": 1,
     "world": "fan",
+    "ctype": "spell",
     "stat": true,
     "dmg": false,
-    "num": false,
-    "ctype": "spell"
+    "num": false
    },
    "art": "art/f2-sapling-bd2022f6fa.webp"
   },
@@ -7653,10 +7651,10 @@
    "grow": {
     "n": 1,
     "world": "fan",
+    "ctype": "spell",
     "stat": false,
     "dmg": false,
-    "num": true,
-    "ctype": "spell"
+    "num": true
    },
    "art": "art/f2-sake-1a0ee6edf8.webp"
   },
@@ -7878,10 +7876,10 @@
    "grow": {
     "n": 1,
     "world": "fan",
+    "ctype": "spell",
     "stat": false,
     "dmg": true,
-    "num": false,
-    "ctype": "spell"
+    "num": false
    },
    "art": "art/f2-wisp-6e50cd45a3.webp"
   },
