@@ -1,5 +1,5 @@
 {
- "version": 133,
+ "version": 134,
  "updated": "2026-11-14",
  "config": {
   "PLAYER_HP": 20,
@@ -1154,21 +1154,24 @@
    "id": "boss-yomi",
    "name": "冥府の百鬼",
    "cards": {
-    "b-y-valk": 3,
-    "b-y-murasame": 3,
+    "b-y-valk": 2,
+    "b-y-murasame": 2,
     "b-y-zantetsu": 3,
-    "m2-mirage": 1,
-    "m2-jumper2": 3,
-    "m2-transfer": 2,
-    "m2-jumper": 2,
-    "n-bomber": 2,
-    "y2-lightwing": 1,
-    "m2-hive": 1,
-    "f2-icequeen": 2,
-    "y2-nest": 1,
-    "f2-rebloom": 1,
-    "m-pact": 2,
-    "y2-angel": 3
+    "bolt": 2,
+    "x-executor": 2,
+    "f-blizzard": 1,
+    "x-emp": 1,
+    "n-shinobi": 2,
+    "y2-gatekeeper": 2,
+    "priestess": 2,
+    "crystal": 2,
+    "n-kitsune": 2,
+    "m-demonlord": 1,
+    "n-skypaladin": 2,
+    "y2-kensei": 1,
+    "endragon": 1,
+    "n-heroking": 1,
+    "f2-storyteller": 1
    },
    "key": "b-y-zantetsu",
    "level": "boss"
@@ -8015,14 +8018,13 @@
    "world": "myth",
    "type": "char",
    "cost": 0,
-   "atk": 0,
-   "hp": 20,
+   "atk": 12,
+   "hp": 12,
    "glyph": "門",
    "limit": 0,
    "rarity": "ur",
    "keywords": [
-    "noattack",
-    "elusive"
+    "noattack"
    ],
    "effects": [
     {
@@ -8032,7 +8034,7 @@
     },
     {
      "kind": "winTimer",
-     "n": 13
+     "n": 10
     }
    ],
    "token": true,
@@ -8051,7 +8053,8 @@
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "rush"
+    "rush",
+    "shield"
    ],
    "effects": [
     {
@@ -8074,8 +8077,8 @@
    "name": "妖刀・村雨",
    "world": "fan",
    "type": "char",
-   "cost": 4,
-   "atk": 1,
+   "cost": 3,
+   "atk": 2,
    "hp": 3,
    "glyph": "刀",
    "limit": 3,
@@ -8106,7 +8109,7 @@
      "kind": "unit",
      "n": 2,
      "when": "allyDeath",
-     "act": "atk",
+     "act": "both",
      "to": "self"
     }
    ],
