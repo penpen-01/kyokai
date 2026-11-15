@@ -1,5 +1,5 @@
 {
- "version": 146,
+ "version": 147,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -21,7 +21,7 @@
   "REWARD_NORMAL": 200,
   "REWARD_HARD": 300,
   "REWARD_EX": 450,
-  "REWARD_ONLINE": 150,
+  "REWARD_ONLINE": 300,
   "STREAK_STEP": 10,
   "STREAK_MAX": 50,
   "BOSS_RATE": 10,
@@ -51,7 +51,10 @@
   "ADMINS": [
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
-  "SAMPLE_DECKS": true
+  "SAMPLE_DECKS": true,
+  "REWARD_ONLINE_LOSE": 100,
+  "ONLINE_MIN_TURNS": 6,
+  "ONLINE_DAY_MAX": 10
  },
  "packs": [
   {

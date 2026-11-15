@@ -305,7 +305,7 @@ const playEffects = card => (card.effects || []).filter(e => whenOf(e) === "play
 const DEFAULT_CONFIG = {
   PLAYER_HP: 20, START_HAND: 5, ENERGY_MAX: 10, FIELD_MAX: 4, HAND_MAX: 10, FATIGUE: 2, SECOND_BONUS: 0, SECOND_COIN: 1, DECK_SIZE: 30, COPY_MAX: 3, DECK_MAX: 10, DECK_SLOT_COST: 1500, DECK_SLOT_MAX: 10, DAILY_N: 3,
   // ここから下はゲームの裏側（報酬・配布）
-  STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_EX: 450, REWARD_ONLINE: 80,
+  STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_EX: 450, REWARD_ONLINE: 300, REWARD_ONLINE_LOSE: 100, ONLINE_MIN_TURNS: 6, ONLINE_DAY_MAX: 10,
   STREAK_STEP: 10, STREAK_MAX: 50,
   BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, MAINT: 0, BOSS_EX_ON: 0, BOSS_EX_RATE: 5, BOSS_EX_PITY: 20, BOSS_EX_HP: 30, SAMPLE_ONLINE_DAY: 3, SAMPLE_CPU: 1,
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
@@ -341,6 +341,9 @@ const CONFIG_INFO = {
   REWARD_HARD:   { label: "CPU上級に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_EX:     { label: "CPU超級に勝ったときのG（第2弾をすべて開放すると出る）", min: 0, max: 100000, group: "eco", step: 10 },
   REWARD_ONLINE: { label: "対人戦に勝ったときのG", min: 0, max: 100000, group: "eco", step: 10 },
+  REWARD_ONLINE_LOSE: { label: "対人戦に負けたとき（引き分けも）のG", min: 0, max: 100000, group: "eco", step: 10 },
+  ONLINE_MIN_TURNS: { label: "対人戦でGが出るのに必要なターン数（降参・退出でも、ここまで続いていれば出る）", min: 0, max: 99, group: "eco" },
+  ONLINE_DAY_MAX: { label: "対人戦でGを受け取れる回数（1日）", min: 0, max: 999, group: "eco" },
   STREAK_STEP:   { label: "CPU戦の連勝ボーナス：1連勝ごとに増える割合（%）", min: 0, max: 100, group: "eco" },
   STREAK_MAX:    { label: "CPU戦の連勝ボーナス：上限（%）", min: 0, max: 500, group: "eco", step: 10 },
   BOSS_RATE:     { label: "隠しボス：上級に勝ったとき次に出る確率（%）", min: 0, max: 100, group: "eco" },

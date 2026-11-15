@@ -2333,7 +2333,19 @@ function giveReward(res) {
   if (streak && counts) {
     Object.assign(r, Account.streakEnd(CPU_LEVEL, res === "win"), { cpu: true });
   }
-  if (res === "win" && counts) {
+  // 友達との対戦：勝ちでも負けでもGが出る。ただし短すぎる試合は出ない・1日の回数に上限（2台で結託して増やせないように）
+  if (MODE === "online" && counts) {
+    const minT = CONFIG.ONLINE_MIN_TURNS ?? 6, max = CONFIG.ONLINE_DAY_MAX ?? 10;
+    const t = Decks.today(), od = Account.data.onlDay, used = od && od.d === t ? od.n : 0;
+    r.online = { used, max };
+    if ((S.turnNo || 0) < minT) r.online.short = minT;
+    else if (used >= max) r.online.capped = true;
+    else {
+      r.g = res === "win" ? (CONFIG.REWARD_ONLINE || 0) : (CONFIG.REWARD_ONLINE_LOSE || 0);
+      if (r.g > 0) { Account.data.onlDay = { d: t, n: used + 1 }; r.online.used = used + 1; }
+    }
+  }
+  if (res === "win" && counts && MODE !== "online") {
     const base = MODE === "online" ? CONFIG.REWARD_ONLINE
       : B && B.reward != null ? B.reward
       : CONFIG[REWARD_KEY[CPU_LEVEL]] || 0;
@@ -2384,7 +2396,10 @@ function showResult(res) {
   const B = S && S.battle;
   const notes = [
     B && B.kind === "world" && !r.sample ? "世界限定戦（連勝ボーナスはありません）" : "",
-    S && S.practice ? "練習対戦なので、Gと連勝はつきません" : r.sample && res === "win" ? "サンプルデッキの対戦なので、Gはもらえません" : ""
+    S && S.practice ? "練習対戦なので、Gと連勝はつきません" : r.sample && res === "win" ? "サンプルデッキの対戦なので、Gはもらえません" : "",
+    r.online && r.online.short ? `${r.online.short}ターン目まで続かなかった対戦なので、Gはもらえません` : "",
+    r.online && r.online.capped ? `友達との対戦でGを受け取れるのは1日${r.online.max}回までです（今日の分は受け取り済み）` : "",
+    r.online && r.g ? `友達との対戦の報酬：今日 ${r.online.used}/${r.online.max}回目` : ""
   ].filter(Boolean);
   // 次にすること：大きいボタン1つ＋小さいボタン
   const again = online
