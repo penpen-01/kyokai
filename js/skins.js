@@ -34,7 +34,7 @@ const Skins = {
   },
   /* 今の見た目を画面に反映（スリーブ・背景・光らせるカード） */
   apply() {
-    const root = document.documentElement, set = (v, s) => { if (s && s.art && !s.default) root.style.setProperty(v, `url("${s.art}")`); else root.style.removeProperty(v); };
+    const root = document.documentElement, set = (v, s) => { if (s && s.art && !s.default) root.style.setProperty(v, `url("${new URL(s.art, location.href).href}")`)   /* 変数の url は使う側の CSS（css/）基準になるので、絶対パスにする */; else root.style.removeProperty(v); };
     set("--sleeve", this.equipped("sleeve")); set("--battlebg", this.equipped("bg")); set("--homebg", this.equipped("home"));
     const h = (Account.data && Account.data.holo) || {};
     HOLO_SET = new Set(Object.keys(h).filter(id => h[id] === 1 && DEF[id]));

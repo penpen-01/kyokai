@@ -1376,11 +1376,12 @@ function pbarHTML(pi) {
   const gearN = gearsOf(p), usedN = S.phase === "play" && S.turn === pi && !S.over ? (p.played || 0) : 0;
   const extra = `${gearN ? `<i class="cnt-gear">歯車 ${gearN}</i>` : ""}${usedN ? `<i class="cnt-used">使用 ${usedN}枚</i>` : ""}`;
   const left = pi === OP
-    ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i>手札 ${p.hand.length}</i><i>山札 ${p.deck.length}</i>${extra}</span>`
+    ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i><span class="mback" aria-hidden="true"></span>手札 ${p.hand.length}</i><i><span class="mback" aria-hidden="true"></span>山札 ${p.deck.length}</i>${extra}</span>`
     : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}${typeof Stamps !== "undefined" ? Stamps.btnHTML() : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i>${extra}</span>`;
   const hp = Math.max(0, p.hp);
   // スキン：その人のスリーブ（手札の裏）とアイコンの枠
-  const look = p.sleeve ? ` style="--sleeve:url('${esc(p.sleeve)}')"` : pi === OP ? ` style="--sleeve:url('ui/card-back.webp')"` : "";
+  // 相手は相手のスリーブ（CPU は付けていないので初期の裏面）。変数の url は css/ 基準になるので絶対パスにする
+  const look = p.sleeve ? ` style="--sleeve:url('${esc(new URL(p.sleeve, location.href).href)}')"` : pi === OP ? ` style="--sleeve:url('${esc(new URL("ui/card-back.webp", location.href).href)}')"` : "";
   return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.phase === "play" && S.turn === pi && !S.over ? "active" : ""}"${look}>
     <div class="pl-left">${left}</div>
     <button type="button" class="avatar ${tgt ? "tgt" : ""} ${S.over && resultShown && S.winner !== "draw" && S.winner !== pi ? "fin-broken" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">

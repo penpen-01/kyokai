@@ -2571,3 +2571,7 @@ html.eco .card.holo .shine,html.nofx .card.holo .shine{display:none}
 .sk-tabs button[aria-pressed="true"]{background:linear-gradient(180deg,#e3b64f,#b8862e);color:#1d1209;border-color:#f0c766}
 .sk-tabs button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .sk-kind{margin:4px 0 8px;font-family:var(--f-display);font-size:16px;color:#f3d58e;letter-spacing:.06em;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.8)}
+
+/* 相手の手札・山札の数の横に、相手のスリーブ（裏面）を小さく出す。--sleeve は相手の pbar に付いている */
+.pbar.op .counts .mback{display:inline-block;width:11px;height:15px;margin-right:4px;vertical-align:-2px;border-radius:2px;
+  background:#14183a var(--sleeve, url("../ui/card-back.webp")) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
