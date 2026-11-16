@@ -1,5 +1,5 @@
 {
- "version": 169,
+ "version": 170,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -9243,7 +9243,7 @@
    "name": "機神の工場",
    "desc": "歯車と蒸気の巨大な工場の床。",
    "price": 3000,
-   "art": "ui/bg/bg-kishin.webp"
+   "art": "ui/bg/bg-kishin2.webp"
   },
   {
    "id": "bg-shinwa",
@@ -9283,7 +9283,7 @@
    "name": "竜の巣",
    "desc": "溶岩と財宝が眠る火山の奥。",
    "price": 3000,
-   "art": "ui/bg/bg-ryu.webp"
+   "art": "ui/bg/bg-ryu2.webp"
   },
   {
    "id": "hm-default",
