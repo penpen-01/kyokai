@@ -1,6 +1,6 @@
 {
- "version": 177,
- "updated": "2026-11-16",
+ "version": 178,
+ "updated": "2026-11-17",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -50,6 +50,9 @@
   "STONE_TICKET": 300,
   "SHOP_FEATURE_OFF": 20,
   "STONE_PER_GOLD": 3,
+  "MAKO_U": 3000,
+  "MAKO_L": 5000,
+  "SKIN_ON": 0,
   "INFO_HOURS": 24,
   "CHARM_HARD": 3000,
   "CHARM_EX": 5000,
@@ -63,10 +66,7 @@
   "ADMINS": [
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
-  "SAMPLE_DECKS": true,
-  "SKIN_ON": 0,
-  "MAKO_U": 3000,
-  "MAKO_L": 5000
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {
@@ -1620,7 +1620,7 @@
    "id": "weiss",
    "name": "ヴァイス",
    "title": "眼鏡の竜人",
-   "price": 3000,
+   "price": 10000,
    "lines": {
     "enter": [
      "いらっしゃいませ、召喚士殿。本日は何をお探しで？",
@@ -1674,7 +1674,7 @@
    "id": "ruu",
    "name": "ルゥ",
    "title": "眠たげな店番",
-   "price": 3000,
+   "price": 20000,
    "lines": {
     "enter": [
      "…いらっしゃい。買うなら早くして",
@@ -2507,44 +2507,308 @@
   {
    "id": "s01",
    "text": "よろしく！",
+   "art": "ui/stamp/s01.webp",
    "free": true,
-   "price": 0,
-   "art": "ui/stamp/s01.webp"
+   "price": 0
   },
   {
    "id": "s02",
    "text": "ありがとう！",
+   "art": "ui/stamp/s02.webp",
    "free": true,
-   "price": 0,
-   "art": "ui/stamp/s02.webp"
+   "price": 0
   },
   {
    "id": "s03",
    "text": "やるな！",
+   "art": "ui/stamp/s03.webp",
    "free": true,
-   "price": 0,
-   "art": "ui/stamp/s03.webp"
+   "price": 0
   },
   {
    "id": "s04",
    "text": "まだまだ！",
+   "art": "ui/stamp/s04.webp",
    "free": true,
-   "price": 0,
-   "art": "ui/stamp/s04.webp"
+   "price": 0
   },
   {
    "id": "s05",
    "text": "しまった…",
+   "art": "ui/stamp/s05.webp",
    "free": true,
-   "price": 0,
-   "art": "ui/stamp/s05.webp"
+   "price": 0
   },
   {
    "id": "s06",
    "text": "考え中…",
+   "art": "ui/stamp/s06.webp",
    "free": true,
+   "price": 0
+  }
+ ],
+ "skins": [
+  {
+   "id": "sl-default",
+   "kind": "sleeve",
+   "name": "境界の紋章",
+   "desc": "最初のスリーブ。三つの世界の紋章。",
    "price": 0,
-   "art": "ui/stamp/s06.webp"
+   "art": "ui/card-back.webp",
+   "default": true
+  },
+  {
+   "id": "sl-kuro",
+   "kind": "sleeve",
+   "name": "黒金の紋章",
+   "desc": "黒地に金の装飾。落ち着いた紋章。",
+   "price": 10000,
+   "art": "ui/sleeve/sl-kuro.webp"
+  },
+  {
+   "id": "sl-guren",
+   "kind": "sleeve",
+   "name": "紅蓮の紋章",
+   "desc": "赤い光が走る紋章。",
+   "price": 10000,
+   "art": "ui/sleeve/sl-guren.webp"
+  },
+  {
+   "id": "sl-maou",
+   "kind": "sleeve",
+   "name": "境界の魔王",
+   "desc": "三つの世界を見下ろす魔王の紋章。",
+   "price": 15000,
+   "art": "ui/sleeve/sl-maou.webp"
+  },
+  {
+   "id": "fr-default",
+   "kind": "frame",
+   "name": "金のひし形",
+   "desc": "最初の枠。",
+   "price": 0,
+   "default": true
+  },
+  {
+   "id": "fr-shu",
+   "kind": "frame",
+   "name": "朱塗りの雲紋",
+   "desc": "朱と金の雲の模様。",
+   "price": 2000,
+   "art": "ui/frame/fr-shu.webp"
+  },
+  {
+   "id": "fr-gear",
+   "kind": "frame",
+   "name": "歯車の機関",
+   "desc": "青い鋼と歯車の枠。",
+   "price": 5000,
+   "art": "ui/frame/fr-gear.webp"
+  },
+  {
+   "id": "fr-mori",
+   "kind": "frame",
+   "name": "森の蔓",
+   "desc": "蔓と水晶ときのこの枠。",
+   "price": 5000,
+   "art": "ui/frame/fr-mori.webp"
+  },
+  {
+   "id": "fr-tsubasa",
+   "kind": "frame",
+   "name": "白翼の騎士",
+   "desc": "白い翼と騎士の兜。",
+   "price": 15000,
+   "art": "ui/frame/fr-tsubasa.webp"
+  },
+  {
+   "id": "fr-kitsune",
+   "kind": "frame",
+   "name": "狐の鳥居",
+   "desc": "鳥居と白い尾、青い狐火。",
+   "price": 15000,
+   "art": "ui/frame/fr-kitsune.webp"
+  },
+  {
+   "id": "fr-ryu",
+   "kind": "frame",
+   "name": "炎竜の環",
+   "desc": "尾をくわえる炎の竜。",
+   "price": 10000,
+   "art": "ui/frame/fr-ryu.webp"
+  },
+  {
+   "id": "fr-nem",
+   "kind": "frame",
+   "name": "夢渡りの夜",
+   "desc": "三日月と夢の泡。魔女ネムモチーフの枠。",
+   "price": 10000,
+   "art": "ui/frame/fr-nem.webp"
+  },
+  {
+   "id": "bg-default",
+   "kind": "bg",
+   "name": "境界の戦場",
+   "desc": "最初の対戦の背景。",
+   "price": 0,
+   "art": "ui/bg-battle.webp",
+   "default": true
+  },
+  {
+   "id": "bg-kishin",
+   "kind": "bg",
+   "name": "機神の工場",
+   "desc": "歯車と蒸気の巨大な工場の床。",
+   "price": 10000,
+   "art": "ui/bg/bg-kishin2.webp"
+  },
+  {
+   "id": "bg-shinwa",
+   "kind": "bg",
+   "name": "天空の神殿",
+   "desc": "雲の上の白い大理石の床。",
+   "price": 10000,
+   "art": "ui/bg/bg-shinwa.webp"
+  },
+  {
+   "id": "bg-gensou",
+   "kind": "bg",
+   "name": "魔法の森",
+   "desc": "苔むした石と光るきのこの広場。",
+   "price": 10000,
+   "art": "ui/bg/bg-gensou.webp"
+  },
+  {
+   "id": "bg-nezal",
+   "kind": "bg",
+   "name": "虚ろなる裂け目",
+   "desc": "世界の裂け目に浮かぶ黒い石の床。",
+   "price": 10000,
+   "art": "ui/bg/bg-nezal.webp"
+  },
+  {
+   "id": "bg-meifu",
+   "kind": "bg",
+   "name": "冥府の川辺",
+   "desc": "青白い川が流れる死者の国の祭壇。",
+   "price": 10000,
+   "art": "ui/bg/bg-meifu.webp"
+  },
+  {
+   "id": "bg-ryu",
+   "kind": "bg",
+   "name": "竜の巣",
+   "desc": "溶岩と財宝が眠る火山の奥。",
+   "price": 10000,
+   "art": "ui/bg/bg-ryu2.webp"
+  },
+  {
+   "id": "hm-default",
+   "kind": "home",
+   "name": "境界の大広間",
+   "desc": "最初のホームの背景。",
+   "price": 0,
+   "art": "ui/bg-home.webp",
+   "default": true
+  },
+  {
+   "id": "hm-shinwa",
+   "kind": "home",
+   "name": "天空の回廊",
+   "desc": "雲海と朝日が見える神殿の回廊。",
+   "price": 15000,
+   "art": "ui/home/hm-shinwa2.webp"
+  },
+  {
+   "id": "hm-gensou",
+   "kind": "home",
+   "name": "大樹の隠れ家",
+   "desc": "光る森へ続く、木のうろの部屋。",
+   "price": 15000,
+   "art": "ui/home/hm-gensou2.webp"
+  },
+  {
+   "id": "hm-kishin",
+   "kind": "home",
+   "name": "機神の制御室",
+   "desc": "煙突の町を見下ろす工場の制御室。",
+   "price": 15000,
+   "art": "ui/home/hm-kishin2.webp"
+  },
+  {
+   "id": "kp-dorgan",
+   "kind": "keeper",
+   "name": "ドルガン",
+   "desc": "ドワーフの鍛冶屋。最初の店員。",
+   "price": 0,
+   "default": true,
+   "ref": "dorgan"
+  },
+  {
+   "id": "kp-weiss",
+   "kind": "keeper",
+   "name": "ヴァイス",
+   "desc": "眼鏡の竜人。千年生きる物知りの学者。",
+   "price": 10000,
+   "ref": "weiss"
+  },
+  {
+   "id": "kp-ruu",
+   "kind": "keeper",
+   "name": "ルゥ",
+   "desc": "眠たげな小さな店番。",
+   "price": 20000,
+   "ref": "ruu"
+  },
+  {
+   "id": "kp-copel",
+   "kind": "keeper",
+   "name": "コペル",
+   "desc": "ゼンマイで動く、丁寧な人形の店番。",
+   "price": 10000,
+   "ref": "copel"
+  },
+  {
+   "id": "kp-mike",
+   "kind": "keeper",
+   "name": "ミケ",
+   "desc": "偉そうだけど面倒見のいい、三毛猫の番頭。",
+   "price": 10000,
+   "ref": "mike"
+  },
+  {
+   "id": "bgm-1",
+   "kind": "bgm",
+   "name": "新しい曲",
+   "desc": "準備中",
+   "price": 5000
+  },
+  {
+   "id": "art-godgear",
+   "kind": "art",
+   "name": "機神起動",
+   "desc": "第2弾-1のパックを飾った、合体機神ゴッドギアの絵。",
+   "price": 10000,
+   "art": "ui/alt/alt-godgear.webp",
+   "card": "m2-godgear"
+  },
+  {
+   "id": "art-kensei",
+   "kind": "art",
+   "name": "天剣抜刀",
+   "desc": "第2弾-2のパックを飾った、剣聖ヴァルトールの絵。",
+   "price": 10000,
+   "art": "ui/alt/alt-kensei.webp",
+   "card": "y2-kensei"
+  },
+  {
+   "id": "art-tamamo",
+   "kind": "art",
+   "name": "夢幻奇譚",
+   "desc": "第2弾-3のパックを飾った、白面九尾タマモの絵。",
+   "price": 10000,
+   "art": "ui/alt/alt-tamamo.webp",
+   "card": "f2-tamamo"
   }
  ],
  "cards": [
@@ -9268,270 +9532,6 @@
    ],
    "boss": true,
    "art": "art/b-y-zantetsu-4d8f6f87a6.webp"
-  }
- ],
- "skins": [
-  {
-   "id": "sl-default",
-   "kind": "sleeve",
-   "name": "境界の紋章",
-   "desc": "最初のスリーブ。三つの世界の紋章。",
-   "price": 0,
-   "art": "ui/card-back.webp",
-   "default": true
-  },
-  {
-   "id": "sl-kuro",
-   "kind": "sleeve",
-   "name": "黒金の紋章",
-   "desc": "黒地に金の装飾。落ち着いた紋章。",
-   "price": 3000,
-   "art": "ui/sleeve/sl-kuro.webp"
-  },
-  {
-   "id": "sl-guren",
-   "kind": "sleeve",
-   "name": "紅蓮の紋章",
-   "desc": "赤い光が走る紋章。",
-   "price": 3000,
-   "art": "ui/sleeve/sl-guren.webp"
-  },
-  {
-   "id": "sl-maou",
-   "kind": "sleeve",
-   "name": "境界の魔王",
-   "desc": "三つの世界を見下ろす魔王の紋章。",
-   "price": 5000,
-   "art": "ui/sleeve/sl-maou.webp"
-  },
-  {
-   "id": "fr-default",
-   "kind": "frame",
-   "name": "金のひし形",
-   "desc": "最初の枠。",
-   "price": 0,
-   "default": true
-  },
-  {
-   "id": "fr-shu",
-   "kind": "frame",
-   "name": "朱塗りの雲紋",
-   "desc": "朱と金の雲の模様。",
-   "price": 2000,
-   "art": "ui/frame/fr-shu.webp"
-  },
-  {
-   "id": "fr-gear",
-   "kind": "frame",
-   "name": "歯車の機関",
-   "desc": "青い鋼と歯車の枠。",
-   "price": 2000,
-   "art": "ui/frame/fr-gear.webp"
-  },
-  {
-   "id": "fr-mori",
-   "kind": "frame",
-   "name": "森の蔓",
-   "desc": "蔓と水晶ときのこの枠。",
-   "price": 2000,
-   "art": "ui/frame/fr-mori.webp"
-  },
-  {
-   "id": "fr-tsubasa",
-   "kind": "frame",
-   "name": "白翼の騎士",
-   "desc": "白い翼と騎士の兜。",
-   "price": 2000,
-   "art": "ui/frame/fr-tsubasa.webp"
-  },
-  {
-   "id": "fr-kitsune",
-   "kind": "frame",
-   "name": "狐の鳥居",
-   "desc": "鳥居と白い尾、青い狐火。",
-   "price": 2000,
-   "art": "ui/frame/fr-kitsune.webp"
-  },
-  {
-   "id": "fr-ryu",
-   "kind": "frame",
-   "name": "炎竜の環",
-   "desc": "尾をくわえる炎の竜。",
-   "price": 2000,
-   "art": "ui/frame/fr-ryu.webp"
-  },
-  {
-   "id": "fr-nem",
-   "kind": "frame",
-   "name": "夢渡りの夜",
-   "desc": "三日月と夢の泡。魔女ネムの枠。",
-   "price": 2000,
-   "art": "ui/frame/fr-nem.webp"
-  },
-  {
-   "id": "bg-default",
-   "kind": "bg",
-   "name": "境界の戦場",
-   "desc": "最初の対戦の背景。",
-   "price": 0,
-   "art": "ui/bg-battle.webp",
-   "default": true
-  },
-  {
-   "id": "bg-kishin",
-   "kind": "bg",
-   "name": "機神の工場",
-   "desc": "歯車と蒸気の巨大な工場の床。",
-   "price": 3000,
-   "art": "ui/bg/bg-kishin2.webp"
-  },
-  {
-   "id": "bg-shinwa",
-   "kind": "bg",
-   "name": "天空の神殿",
-   "desc": "雲の上の白い大理石の床。",
-   "price": 3000,
-   "art": "ui/bg/bg-shinwa.webp"
-  },
-  {
-   "id": "bg-gensou",
-   "kind": "bg",
-   "name": "魔法の森",
-   "desc": "苔むした石と光るきのこの広場。",
-   "price": 3000,
-   "art": "ui/bg/bg-gensou.webp"
-  },
-  {
-   "id": "bg-nezal",
-   "kind": "bg",
-   "name": "虚ろなる裂け目",
-   "desc": "世界の裂け目に浮かぶ黒い石の床。",
-   "price": 3000,
-   "art": "ui/bg/bg-nezal.webp"
-  },
-  {
-   "id": "bg-meifu",
-   "kind": "bg",
-   "name": "冥府の川辺",
-   "desc": "青白い川が流れる死者の国の祭壇。",
-   "price": 3000,
-   "art": "ui/bg/bg-meifu.webp"
-  },
-  {
-   "id": "bg-ryu",
-   "kind": "bg",
-   "name": "竜の巣",
-   "desc": "溶岩と財宝が眠る火山の奥。",
-   "price": 3000,
-   "art": "ui/bg/bg-ryu2.webp"
-  },
-  {
-   "id": "hm-default",
-   "kind": "home",
-   "name": "境界の大広間",
-   "desc": "最初のホームの背景。",
-   "price": 0,
-   "art": "ui/bg-home.webp",
-   "default": true
-  },
-  {
-   "id": "hm-shinwa",
-   "kind": "home",
-   "name": "天空の回廊",
-   "desc": "雲海と朝日が見える神殿の回廊。",
-   "price": 3000,
-   "art": "ui/home/hm-shinwa2.webp"
-  },
-  {
-   "id": "hm-gensou",
-   "kind": "home",
-   "name": "大樹の隠れ家",
-   "desc": "光る森へ続く、木のうろの部屋。",
-   "price": 3000,
-   "art": "ui/home/hm-gensou2.webp"
-  },
-  {
-   "id": "hm-kishin",
-   "kind": "home",
-   "name": "機神の制御室",
-   "desc": "煙突の町を見下ろす工場の制御室。",
-   "price": 3000,
-   "art": "ui/home/hm-kishin2.webp"
-  },
-  {
-   "id": "kp-dorgan",
-   "kind": "keeper",
-   "name": "ドルガン",
-   "desc": "ドワーフの鍛冶屋。最初の店員。",
-   "price": 0,
-   "ref": "dorgan",
-   "default": true
-  },
-  {
-   "id": "kp-weiss",
-   "kind": "keeper",
-   "name": "ヴァイス",
-   "desc": "眼鏡の竜人。千年生きる物知りの学者。",
-   "price": 10000,
-   "ref": "weiss"
-  },
-  {
-   "id": "kp-ruu",
-   "kind": "keeper",
-   "name": "ルゥ",
-   "desc": "眠たげな小さな店番。",
-   "price": 10000,
-   "ref": "ruu"
-  },
-  {
-   "id": "kp-copel",
-   "kind": "keeper",
-   "name": "コペル",
-   "desc": "ゼンマイで動く、丁寧な人形の店番。",
-   "price": 10000,
-   "ref": "copel"
-  },
-  {
-   "id": "kp-mike",
-   "kind": "keeper",
-   "name": "ミケ",
-   "desc": "偉そうだけど面倒見のいい、三毛猫の番頭。",
-   "price": 10000,
-   "ref": "mike"
-  },
-  {
-   "id": "bgm-1",
-   "kind": "bgm",
-   "name": "新しい曲",
-   "desc": "準備中",
-   "price": 5000
-  },
-  {
-   "id": "art-godgear",
-   "kind": "art",
-   "name": "機神起動",
-   "desc": "第2弾-1のパックを飾った、合体機神ゴッドギアの絵。",
-   "price": 8000,
-   "card": "m2-godgear",
-   "art": "ui/alt/alt-godgear.webp"
-  },
-  {
-   "id": "art-kensei",
-   "kind": "art",
-   "name": "天剣抜刀",
-   "desc": "第2弾-2のパックを飾った、剣聖ヴァルトールの絵。",
-   "price": 8000,
-   "card": "y2-kensei",
-   "art": "ui/alt/alt-kensei.webp"
-  },
-  {
-   "id": "art-tamamo",
-   "kind": "art",
-   "name": "夢幻奇譚",
-   "desc": "第2弾-3のパックを飾った、白面九尾タマモの絵。",
-   "price": 8000,
-   "card": "f2-tamamo",
-   "art": "ui/alt/alt-tamamo.webp"
   }
  ]
 }
