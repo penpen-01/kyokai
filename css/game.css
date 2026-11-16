@@ -2526,8 +2526,10 @@ button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
 .hface,.pf-face,.iface{position:relative}
 
 /* ---------- スキン ---------- */
-.frame-skin{position:absolute;inset:-12%;width:124%;height:124%;object-fit:contain;pointer-events:none;z-index:2}
-.avatar .frame-skin{inset:-6%;width:112%;height:112%}
+.frame-skin{position:absolute;inset:-12%;width:124%;height:124%;max-width:none;max-height:none;object-fit:contain;pointer-events:none;z-index:2}
+/* 枠の画像は「真ん中の穴の半径＝画像の幅の24.5%」にそろえてある（羽や耳がはみ出せるように余白を取っている）。穴が顔の縁に少し重なる大きさで出す */
+.avatar .frame-skin{inset:-37%;width:174%;height:174%}
+.homeicon .frame-skin{inset:-35%;width:170%;height:170%}
 .sk-tabs{flex-wrap:wrap;margin:8px 0 10px}
 .sk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .sk-item{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:12px;background:rgba(28,20,14,.78);border:1px solid rgba(232,168,90,.25)}
@@ -2544,9 +2546,10 @@ button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
 .sk-pic.icon{aspect-ratio:1;width:64%;margin:0 auto;border-radius:50%;border:2px solid var(--gold)}
 .sk-pic.keeper{background-size:auto 150%;background-position:50% 4%}
 .sk-pic.frame{aspect-ratio:1;width:64%;margin:0 auto;background:none;overflow:visible;display:grid;place-items:center}
-.sk-pic.frame img{position:absolute;inset:-6%;width:112%;height:112%;object-fit:contain;z-index:2}
+.sk-pic.frame img{position:absolute;inset:-5%;width:110%;height:110%;max-width:none;object-fit:contain;z-index:2}
 .sk-pic.frame .halo{position:absolute;left:50%;top:50%;width:76%;height:76%;transform:translate(-50%,-50%) rotate(45deg);border-radius:6px;background:linear-gradient(135deg,#3a2c12,#141020);box-shadow:0 0 0 1.5px #c79a44, 0 0 0 4px #1a1424}
 .sk-pic.frame .sk-face{position:absolute;inset:12%;border-radius:50%;overflow:hidden}
+.sk-pic.frame img~.sk-face{inset:24%}
 .sk-pic.none{background:repeating-linear-gradient(45deg,#1a140e,#1a140e 8px,#221a12 8px,#221a12 16px)}
 .sk-empty{padding:24px 12px;text-align:center;opacity:.75}
 .sk-holo{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:8px}

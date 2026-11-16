@@ -1,5 +1,5 @@
 {
- "version": 167,
+ "version": 168,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -9171,6 +9171,62 @@
    "desc": "最初の枠。",
    "price": 0,
    "default": true
+  },
+  {
+   "id": "fr-shu",
+   "kind": "frame",
+   "name": "朱塗りの雲紋",
+   "desc": "朱と金の雲の模様。",
+   "price": 2000,
+   "art": "ui/frame/fr-shu.webp"
+  },
+  {
+   "id": "fr-gear",
+   "kind": "frame",
+   "name": "歯車の機関",
+   "desc": "青い鋼と歯車の枠。",
+   "price": 2000,
+   "art": "ui/frame/fr-gear.webp"
+  },
+  {
+   "id": "fr-mori",
+   "kind": "frame",
+   "name": "森の蔓",
+   "desc": "蔓と水晶ときのこの枠。",
+   "price": 2000,
+   "art": "ui/frame/fr-mori.webp"
+  },
+  {
+   "id": "fr-tsubasa",
+   "kind": "frame",
+   "name": "白翼の騎士",
+   "desc": "白い翼と騎士の兜。",
+   "price": 2000,
+   "art": "ui/frame/fr-tsubasa.webp"
+  },
+  {
+   "id": "fr-kitsune",
+   "kind": "frame",
+   "name": "狐の鳥居",
+   "desc": "鳥居と白い尾、青い狐火。",
+   "price": 2000,
+   "art": "ui/frame/fr-kitsune.webp"
+  },
+  {
+   "id": "fr-ryu",
+   "kind": "frame",
+   "name": "炎竜の環",
+   "desc": "尾をくわえる炎の竜。",
+   "price": 2000,
+   "art": "ui/frame/fr-ryu.webp"
+  },
+  {
+   "id": "fr-nem",
+   "kind": "frame",
+   "name": "夢渡りの夜",
+   "desc": "三日月と夢の泡。魔女ネムの枠。",
+   "price": 2000,
+   "art": "ui/frame/fr-nem.webp"
   },
   {
    "id": "bg-default",
