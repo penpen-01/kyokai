@@ -90,7 +90,7 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["season", "シーズン（リセット）"]];
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["season", "シーズン（リセット）"]];
     const sub = this.ecoSub || "money";
     const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
     const S = {};
@@ -198,6 +198,7 @@ const Admin = {
         <p class="hint">引き継ぎコードは、運営に使う端末のゲームで「設定（歯車）」→「アカウント」に出ます。登録したら「公開する」を押して、その端末でゲームを開き直してください（ホームに「運営」と出ます）。</p>
       </div>`;
     S.keeper = this.keeperHTML();
+    S.info = this.infoHTML();
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -268,6 +269,29 @@ const Admin = {
         <div class="qe-list">${DATA.quests.length ? DATA.quests.map((x, i) => this.qRowHTML("quests", i, x, { dates: true })).join("") : `<p class="hint">まだありません。</p>`}</div>
         <button type="button" class="btn sm" data-act="qeAdd" data-v="quests">＋ 期間限定クエストを足す</button>
       </div>`;
+  },
+  /* ---------- 情報屋の情報 ---------- */
+  infoHTML() {
+    const L = DATA.info = DATA.info || [];
+    const opt = (o, cur) => Object.entries(o).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(v)}</option>`).join("");
+    return `<div class="fgroup">
+        <span class="gl">情報屋</span>
+        <p class="hint">ショップの情報屋で売る情報です。「今の状態」以外は、買ってから設定の時間（今は${DATA.config.INFO_HOURS || 24}時間）読めます。本文に <b>{BOSS_RATE}</b> のように設定の名前を書くと、その数字が入ります。「超級のみ」にした情報は、超級のボスを公開している間だけ並びます。弱体の御札・挑戦状の値段は「G・ログインボーナス」の欄で変えます。</p>
+      </div>
+      ${Object.entries(INFO_CATS).map(([cat, label]) => `<div class="fgroup"><span class="gl">${esc(label)}</span>
+        ${L.map((x, i) => x.cat !== cat ? "" : `<div class="inf-ed">
+          <div class="frow">
+            <label class="fl">名前<input class="txt" data-inf="${i}:title" maxlength="40" value="${esc(x.title || "")}"></label>
+            <label class="fl">値段（G）<input class="txt" type="number" min="0" data-inf="${i}:price" value="${+x.price || 0}" style="max-width:110px"></label>
+            <label class="fl">種類<select class="txt" data-inf="${i}:cat">${opt(INFO_CATS, x.cat)}</select></label>
+            <label class="ownchk"><input type="checkbox" data-inf="${i}:ex" ${x.ex ? "checked" : ""}> 超級のみ</label>
+          </div>
+          <label class="fl">説明（一覧に出る一言）<input class="txt" data-inf="${i}:sub" maxlength="60" value="${esc(x.sub || "")}"></label>
+          ${x.cat === "peek" ? `<label class="fl">見せる内容<select class="txt" data-inf="${i}:peek">${opt(INFO_PEEKS, x.peek)}</select></label>`
+            : `<label class="fl">本文<textarea class="txt" data-inf="${i}:body" rows="${Math.min(14, Math.max(4, String(x.body || "").split("\n").length + 1))}">${esc(x.body || "")}</textarea></label>`}
+          <p>${this.confirm && this.confirm.kind === "info" && this.confirm.id === x.id ? `<b>消しますか？</b> <button type="button" class="btn sm danger" data-act="infDelYes" data-id="${esc(x.id)}">消す</button> <button type="button" class="btn sm" data-act="cancelConfirm">やめる</button>` : `<button type="button" class="btn sm danger" data-act="infDel" data-id="${esc(x.id)}">この情報を消す</button>`}</p>
+        </div>`).join("")}
+        <button type="button" class="btn sm" data-act="infAdd" data-v="${cat}">＋ ${esc(label)}を足す</button></div>`).join("")}`;
   },
   /* ---------- ショップの店員とセリフ ---------- */
   keeperHTML() {
@@ -508,6 +532,9 @@ const Admin = {
         return true;
       }
       case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
+      case "infAdd": { const cat = el.dataset.v; DATA.info = DATA.info || []; DATA.info.push({ id: "i" + Date.now().toString(36), cat, title: "新しい情報", sub: "", price: 100, ...(cat === "peek" ? { peek: "pityHard" } : { body: "" }) }); this.touch(this.renderEco); return true; }
+      case "infDel": this.confirm = { kind: "info", id: el.dataset.id }; this.renderEco(); return true;
+      case "infDelYes": DATA.info = (DATA.info || []).filter(x => x.id !== el.dataset.id); this.confirm = null; this.touch(this.renderEco); return true;
       case "kpSel": this.kpI = +el.dataset.v; this.confirm = null; this.renderEco(); return true;
       case "kpAdd": { const L = DATA.keepers = DATA.keepers || []; L.push({ id: "k" + Date.now().toString(36), name: "新しい店員", title: "", price: 3000, lines: {} }); this.kpI = L.length - 1; this.touch(this.renderEco); return true; }
       case "kpDel": this.confirm = { kind: "keeper" }; this.renderEco(); return true;
@@ -638,4 +665,15 @@ document.addEventListener("change", e => {
     k.lines[t.dataset.kpl] = t.value.split("\n").map(x => x.trim().slice(0, 120)).filter(Boolean).slice(0, 20);
     Admin.touch(Admin.renderEco);
   }
+});
+
+/* 情報屋の情報の欄 */
+document.addEventListener("change", e => {
+  const t = e.target, k = t && t.dataset && t.dataset.inf; if (!k || typeof DATA === "undefined" || !DATA.info) return;
+  const [i, f] = k.split(":"), x = DATA.info[+i]; if (!x) return;
+  if (f === "price") x.price = Math.max(0, Math.floor(+t.value || 0));
+  else if (f === "ex") { if (t.checked) x.ex = true; else delete x.ex; }
+  else if (f === "cat") { x.cat = t.value; if (x.cat === "peek") { x.peek = x.peek || "pityHard"; } else if (x.body == null) x.body = ""; }
+  else x[f] = f === "body" ? t.value : t.value.trim();
+  Admin.touch(f === "cat" ? Admin.renderEco : null);
 });

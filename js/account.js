@@ -113,6 +113,11 @@ const Account = {
       opened: Array.isArray(d.opened) ? d.opened.filter(k => !!normSet(k)) : [],   // 開放した弾（「2-1」など。パック開放戦に勝つと増える）
       // サンプルデッキで友達と対戦した回数（その日の分。日本時間で日付が変わると0に戻る）
       ...(d.sampleDay && /^\d{4}-\d{2}-\d{2}$/.test(d.sampleDay.d) ? { sampleDay: { d: d.sampleDay.d, n: Math.max(0, Math.floor(+d.sampleDay.n || 0)) } } : {}),
+      // 情報屋：読める情報（ID → 読める期限）、弱体の御札（次のボス戦で使う）、挑戦状（枚数）と、その週に買った枚数
+      infoBuy: Object.fromEntries(Object.entries(d.infoBuy || {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && +v > Date.now()).map(([k, v]) => [k, +v])),
+      ...(d.charm && (d.charm.hard || d.charm.ex) ? { charm: { ...(d.charm.hard ? { hard: true } : {}), ...(d.charm.ex ? { ex: true } : {}) } } : {}),
+      btk: { hard: Math.max(0, Math.floor(+(d.btk && d.btk.hard) || 0)), ex: Math.max(0, Math.floor(+(d.btk && d.btk.ex) || 0)) },
+      ...(d.btkWeek && /^\d{4}-\d{2}-\d{2}$/.test(d.btkWeek.w) ? { btkWeek: { w: d.btkWeek.w, hard: Math.max(0, Math.floor(+d.btkWeek.hard || 0)), ex: Math.max(0, Math.floor(+d.btkWeek.ex || 0)) } } : {}),
       // 友達との対戦でGを受け取った回数（1日ごと）
       ...(d.onlDay && /^\d{4}-\d{2}-\d{2}$/.test(d.onlDay.d) ? { onlDay: { d: d.onlDay.d, n: Math.max(0, Math.floor(+d.onlDay.n || 0)) } } : {}),
       // 隠しボス：最後に会ってから上級で勝った回数（天井用）と、次の上級戦でボスが出るか

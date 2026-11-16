@@ -12,7 +12,7 @@ const SHOP_CATS = [
   { id: "trade", ready: true }, { id: "dis", ready: true }, { id: "ticket", ready: true },
   { id: "slot", ready: true },
   // 準備中の売り場（絵付きで「準備中」として並べる）
-  { id: "info", ready: false, ic: "star", name: "情報屋", sub: "ボスの攻略情報を買う" },
+  { id: "info", ready: true },
   { id: "skin", ready: false, ic: "skin", name: "スキン", sub: "店員やカードの見た目を変える" },
   { id: "limited", ready: false, ic: "star", name: "限定カード", sub: "いまだけ・ここだけのカード" }
 ];
@@ -171,12 +171,13 @@ const Shop = {
 
   /* ---------- ショップの入口 ----------
      上に「今日のおすすめ」、その下に売り場のタイル。売り場が増えたら SHOP_CATS に足すだけで並ぶ */
-  feature() {
+  /* 今日のおすすめ（after＝何日後か。情報屋の「明日のおすすめ」は 1） */
+  feature(after = 0) {
     const cap = this.cap(), pool = this.pool();
     const pick = rs => pool.filter(c => rs.includes(c.rarity) && Account.owned(c.id) < cap);
     const list = pick(["legend", "ur"]).length ? pick(["legend", "ur"]) : pick(["sr", "ur", "legend"]);
     if (!list.length) return null;
-    const day = localDate(new Date()); let h = 0; for (const ch of day) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const day = localDate(new Date(Date.now() + after * 864e5)); let h = 0; for (const ch of day) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     return list[h % list.length];   // 日ごとに変わる（その日は同じカード）
   },
   show(msg) {
@@ -204,6 +205,7 @@ const Shop = {
         <div class="sh-cat art c-slot">
           <span class="sh-art" style="background-image:url('ui/shop-slot.webp')" aria-hidden="true"></span><b>デッキ枠</b><small>${slotLeft > 0 ? `魔石${slotCost}で1つ増やす ・ 今${Decks.max("mine")}個` : `もう増やせません（${Decks.max("mine")}個）`}</small>
           <button type="button" class="btn sm primary" data-act="shopSlot" ${use && slotLeft > 0 && Account.stones >= slotCost ? "" : "disabled"}>増やす</button></div>
+        <button type="button" class="sh-cat art c-info" data-act="shopInfo" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-info.webp')" aria-hidden="true"></span><b>情報屋</b><small>攻略の情報や、ボス戦の品をGで</small></button>
         ${fut.map(x => `<div class="sh-cat art soon"><span class="sh-art" style="background-image:url('ui/shop-${x.id}.webp')" aria-hidden="true"></span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("")}
       </div>
       <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
@@ -327,6 +329,13 @@ const Shop = {
   handleAct(act, el) {
     switch (act) {
       case "kpTap": Keeper.tap(); return true;
+      case "shopInfo": this.infoAsk = null; this.infoRead = null; this.msg = null; this.showInfo(); return true;
+      case "infoAsk": this.infoAsk = { kind: el.dataset.kind, id: el.dataset.id }; this.showInfo(); return true;
+      case "infoNo": this.infoAsk = null; this.showInfo(); return true;
+      case "infoYes": this.infoBuy(); return true;
+      case "infoRead": this.infoRead = { id: el.dataset.id }; this.showInfo(); return true;
+      case "infoClose": this.infoRead = null; this.showInfo(); return true;
+      case "infoGo": this.infoChallenge(el.dataset.v); return true;
       case "kpNext": Keeper.next(); return true;
       case "shop": Keeper.enter(); this.msg = null; this.detailId = null; this.hubAsk = null; this.show(); return true;
       case "shopMain": this.msg = null; this.detailId = null; this.show(); return true;
@@ -487,3 +496,113 @@ const Keeper = {
     this.timers.push(loop, typer);
   }
 };
+
+/* ---------- 情報屋 ----------
+   攻略の情報（買ってから INFO_HOURS 時間読める）、今の状態（買ったその時だけ）、ボス戦の品（弱体の御札・挑戦状） */
+Object.assign(Shop, {
+  infoAsk: null, infoRead: null,
+  // 「超級のみ」の情報は、超級のボスを公開している間だけ。超級の「今の状態」は、超級を開放した人にだけ
+  infoList() { const exo = typeof exOpen !== "function" || exOpen(); return (typeof INFO !== "undefined" ? INFO : []).filter(x => !x.ex || (bossExOn() && (x.cat !== "peek" || exo))); },
+  canRead(id) { const t = Account.data && Account.data.infoBuy && Account.data.infoBuy[id]; return t && t > Date.now() ? t : 0; },
+  weekKey() { const d = new Date(); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return localDate(d); },   // その週の月曜日
+  weekBought(lv) { const w = Account.data && Account.data.btkWeek; return w && w.w === this.weekKey() ? (w[lv] || 0) : 0; },
+  /* ボス戦の品：lv＝hard / ex、kind＝charm（御札）/ bchal（挑戦状） */
+  goods() {
+    const ex = bossExOn() && (typeof exOpen !== "function" || exOpen());
+    return [["hard", "上級", "ネザル"], ...(ex ? [["ex", "超級", "黄泉丸"]] : [])].flatMap(([lv, L, who]) => [
+      { kind: "charm", lv, id: "charm-" + lv, title: `弱体の御札（${L}）`, sub: `次の${L}のボス戦だけ、${who}の体力が${CONFIG.CHARM_HP || 20}になる`, price: CONFIG["CHARM_" + lv.toUpperCase()] || 0 },
+      { kind: "bchal", lv, id: "bchal-" + lv, title: `挑戦状（${L}）`, sub: `今すぐ${who}と戦える。勝てばふだんどおりの報酬（1週間に${CONFIG.BCHAL_WEEK ?? 3}枚まで）`, price: CONFIG["BCHAL_" + lv.toUpperCase()] || 0 }]);
+  },
+  /* 本文の {BOSS_RATE} などを設定の数字に置き換える */
+  infoText(t) { return String(t || "").replace(/\{([A-Z_]+)\}/g, (m, k) => CONFIG[k] != null ? String(CONFIG[k]) : m); },
+  peekText(x) {
+    if (x.peek === "tomorrow") {
+      const f = this.feature(1);
+      return f ? `明日の交換所のおすすめは《${f.name}》（${RARITY[f.rarity]}）。\n交換に必要な魔石が、${this.costRate(f.rarity)}から${Math.ceil(this.costRate(f.rarity) * (100 - this.offPct()) / 100)}になる。\n\n※今日の持ち物で選んだ結果です。今日このカードを${this.cap()}枚そろえると、明日のおすすめは別のカードに変わります。`
+        : "明日のおすすめはありません（交換所のカードを、もう全部そろえています）。";
+    }
+    const lv = x.peek === "pityEx" ? "ex" : "hard", B = BOSSES[lv], L = lv === "ex" ? "超級" : "上級";
+    if (Account.data[B.next]) return `次の${L}の戦いで、${B.name}が必ず現れる。\n準備を整えてから挑むといい。`;
+    const pity = Account.data[B.pity] || 0, max = CONFIG[B.cfg + "PITY"] || 20, left = Math.max(1, max - pity);
+    return `${B.name}は、${L}であと最大${left}回勝てば必ず現れる（今は${pity}回）。\nそれより前でも、${L}に勝つたびに${CONFIG[B.cfg + "RATE"] || 0}%の確率で現れることがある。`;
+  },
+  infoBuy() {
+    const a = this.infoAsk; this.infoAsk = null;
+    if (!a || !this.usable()) return this.showInfo();
+    if (a.kind === "info") {
+      const x = this.infoList().find(i => i.id === a.id); if (!x) return this.showInfo();
+      if (Account.gold < x.price) return this.showInfo(`G が足りません（あと${x.price - Account.gold}G）。`);
+      Account.data.gold -= x.price;
+      if (x.cat === "peek") { this.infoRead = { id: x.id, peek: this.peekText(x) }; }
+      else { Account.data.infoBuy = Account.data.infoBuy || {}; Account.data.infoBuy[x.id] = Date.now() + (CONFIG.INFO_HOURS || 24) * 3600e3; this.infoRead = { id: x.id }; }
+      Account.saveNow(); Sound.play("click");
+      return this.showInfo(`「${x.title}」を買いました。`);
+    }
+    const g = this.goods().find(x => x.id === a.id); if (!g) return this.showInfo();
+    if (Account.gold < g.price) return this.showInfo(`G が足りません（あと${g.price - Account.gold}G）。`);
+    if (g.kind === "charm") {
+      if (Account.data.charm && Account.data.charm[g.lv]) return this.showInfo("その御札は、もう持っています（次のボス戦で使われます）。");
+      Account.data.charm = { ...(Account.data.charm || {}), [g.lv]: true };
+    } else {
+      const max = CONFIG.BCHAL_WEEK ?? 3, wk = this.weekKey();
+      if (this.weekBought(g.lv) >= max) return this.showInfo(`今週はもう${max}枚買いました（月曜日にまた買えます）。`);
+      const w = Account.data.btkWeek && Account.data.btkWeek.w === wk ? Account.data.btkWeek : { w: wk, hard: 0, ex: 0 };
+      w[g.lv] = (w[g.lv] || 0) + 1; Account.data.btkWeek = w;
+      Account.data.btk = { hard: 0, ex: 0, ...(Account.data.btk || {}) }; Account.data.btk[g.lv]++;
+    }
+    Account.data.gold -= g.price;
+    Account.saveNow(); Sound.play("click");
+    this.showInfo(`「${g.title}」を買いました。`);
+  },
+  /* 挑戦状で、今すぐボスと戦う */
+  infoChallenge(lv) {
+    const B = BOSSES[lv]; if (!B || !this.usable()) return;
+    if (!(Account.data.btk && Account.data.btk[lv] > 0)) return this.showInfo("挑戦状を持っていません。");
+    const mine = Decks.readyDeck(msg => Decks.showList(msg)); if (!mine) return;
+    if (mine.sample) return this.showInfo("サンプルデッキでは、ボスに挑めません。自分のデッキを選んでください。");
+    Account.data.btk[lv]--; Account.saveNow();
+    CPU_LEVEL = lv === "ex" ? "ex" : "hard";
+    $("#overlay").hidden = true;
+    startBossGame(mine, lv, false, true);
+  },
+  showInfo(msg) {
+    this.view = "info";
+    if (msg !== undefined) this.msg = msg;
+    const g = Account.gold || 0, list = this.infoList();
+    const row = (x, right) => `<li class="inf-row"><span class="inf-main"><b>${esc(x.title)}</b><small>${esc(x.sub || "")}</small></span><span class="inf-acts">${right}</span></li>`;
+    const buyBtn = (kind, x, label) => `<button type="button" class="btn sm ${g >= x.price ? "primary" : ""}" data-act="infoAsk" data-kind="${kind}" data-id="${esc(x.id)}" ${this.usable() && g >= x.price ? "" : "disabled"}>${label || `${x.price.toLocaleString()}G`}</button>`;
+    const goods = this.goods().map(x => {
+      if (x.kind === "charm") { const on = Account.data.charm && Account.data.charm[x.lv]; return row(x, on ? `<span class="inf-on">次のボス戦で使います</span>` : buyBtn("goods", x)); }
+      const have = (Account.data.btk && Account.data.btk[x.lv]) || 0, left = Math.max(0, (CONFIG.BCHAL_WEEK ?? 3) - this.weekBought(x.lv));
+      return row({ ...x, sub: `${x.sub} ・ 所持${have}枚 ・ 今週あと${left}枚` }, `${have ? `<button type="button" class="btn sm primary" data-act="infoGo" data-v="${x.lv}">挑む</button>` : ""}${left ? buyBtn("goods", x) : `<span class="inf-on">今週は売り切れ</span>`}`);
+    }).join("");
+    const cats = Object.entries(INFO_CATS).map(([k, label]) => {
+      const L = list.filter(x => x.cat === k); if (!L.length) return "";
+      return `<section class="inf-sec"><h3>${esc(label)}</h3><ul class="inf-list">${L.map(x => {
+        const t = x.cat !== "peek" && this.canRead(x.id);
+        return row(x, t ? `<button type="button" class="btn sm" data-act="infoRead" data-id="${esc(x.id)}">読む<small>あと${Math.max(1, Math.ceil((t - Date.now()) / 3600e3))}時間</small></button>` : buyBtn("info", x));
+      }).join("")}</ul></section>`;
+    }).join("");
+    const a = this.infoAsk, ax = a && (a.kind === "info" ? list.find(x => x.id === a.id) : this.goods().find(x => x.id === a.id));
+    const rd = this.infoRead, rx = rd && list.find(x => x.id === rd.id);
+    openOverlay(`<div class="panel wide shop">
+      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>情報屋</b>${goldTag(g)}</div>
+      ${this.noteHTML()}
+      ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
+      <p class="hint">攻略の情報は、買ってから${CONFIG.INFO_HOURS || 24}時間読めます。「今の状態」は、買ったその時だけ見られます。</p>
+      <section class="inf-sec"><h3>ボス戦の品</h3><ul class="inf-list">${goods}</ul></section>
+      ${cats}
+      ${ax ? `<div class="dmodal" data-act="infoNo"><div class="dmodal-in confirmbox" role="alertdialog" aria-label="買う前の確認" data-act="noop">
+          <b class="dm-name">「${esc(ax.title)}」を買いますか？</b>
+          <p class="dm-text">${ax.price.toLocaleString()}G を使います（所持 ${g.toLocaleString()}G → ${(g - ax.price).toLocaleString()}G）。${a.kind === "info" ? (ax.cat === "peek" ? "買ったその時だけ見られます。" : `買ってから${CONFIG.INFO_HOURS || 24}時間読めます。`) : ""}</p>
+          <div class="pre-btns"><button type="button" class="btn primary" data-act="infoYes">買う</button><button type="button" class="btn" data-act="infoNo">やめる</button></div>
+        </div></div>` : ""}
+      ${rx ? `<div class="dmodal" data-act="infoClose"><div class="dmodal-in inf-read" role="dialog" aria-label="${esc(rx.title)}" data-act="noop">
+          <b class="dm-name">${esc(rx.title)}</b>
+          <p class="inf-body">${esc(rd.peek || this.infoText(rx.body))}</p>
+          ${rd.peek ? `<p class="hint">この画面を閉じると、もう一度は見られません。</p>` : ""}
+          <button type="button" class="btn" data-act="infoClose">閉じる</button>
+        </div></div>` : ""}
+    </div>`, "start", true);
+  }
+});

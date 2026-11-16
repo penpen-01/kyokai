@@ -311,7 +311,7 @@ const DEFAULT_CONFIG = {
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
-  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
+  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
   SEASON: "beta", STARTER_DECK: "starter", MAINT_NOTE: "", ADMINS: [],
   SAMPLE_DECKS: true   // ベータ用：所持に関係なく全カードで組める「サンプルデッキ」を許可
 };
@@ -367,7 +367,14 @@ const CONFIG_INFO = {
   STONE_COST_UR:     { label: "交換に必要な魔石：UR", min: 0, max: 100000, group: "eco", step: 10 },
   STONE_COST_LEGEND: { label: "交換に必要な魔石：レジェンド", min: 0, max: 100000, group: "eco", step: 10 },
   STONE_TICKET:      { label: "パック券1枚に必要な魔石", min: 0, max: 100000, group: "eco", step: 10 },
-  SHOP_FEATURE_OFF:  { label: "ショップの今日のおすすめの割引（%）", min: 0, max: 90, group: "eco" }
+  SHOP_FEATURE_OFF:  { label: "ショップの今日のおすすめの割引（%）", min: 0, max: 90, group: "eco" },
+  INFO_HOURS:        { label: "情報屋：攻略の情報を買ってから読める時間（時間）", min: 1, max: 720, group: "eco" },
+  CHARM_HARD:        { label: "情報屋：弱体の御札（上級）のG", min: 0, max: 1000000, group: "eco", step: 100 },
+  CHARM_EX:          { label: "情報屋：弱体の御札（超級）のG", min: 0, max: 1000000, group: "eco", step: 100 },
+  CHARM_HP:          { label: "情報屋：弱体の御札を使ったときのボスの体力", min: 1, max: 99, group: "eco" },
+  BCHAL_HARD:        { label: "情報屋：挑戦状（上級）のG", min: 0, max: 1000000, group: "eco", step: 100 },
+  BCHAL_EX:          { label: "情報屋：挑戦状（超級）のG", min: 0, max: 1000000, group: "eco", step: 100 },
+  BCHAL_WEEK:        { label: "情報屋：挑戦状を1週間に買える枚数（上級・超級それぞれ）", min: 0, max: 99, group: "eco" }
 };
 
 /* パックの標準の排出率（%）。最後の1枚はレア以上確定 */
@@ -641,6 +648,9 @@ const KEEPER_SCENES = {
   rich:    { label: "魔石をたくさん持っている" },
   complete:{ label: "交換できるカードを全部集め終えた", hint: "今日のおすすめの代わりにも話します" }
 };
+/* 情報屋で売る情報の種類。peek＝買ったその時だけ見られる「今の状態」、ほかは買ってから INFO_HOURS 時間読める */
+const INFO_CATS = { peek: "今の状態（買ったその時だけ）", boss: "ボスの秘密", legend: "限定レジェンドの解説と考察", cpu: "CPUのデッキ帳", card: "噂の強カード", gate: "パック開放戦の攻略" };
+const INFO_PEEKS = { pityHard: "上級のボスが必ず現れるまでの勝ち数", pityEx: "超級のボスが必ず現れるまでの勝ち数", tomorrow: "明日のおすすめ（交換所）" };
 const QUEST_TYPES = {
   winLv:  { label: "CPUに勝つ（強さを選ぶ）", lv: true, text: (n, q) => `CPU（${CPU_LV_NAMES[q.lv] || "中級"}）に${n}回勝つ` },
   boss:   { label: "隠しボスに勝つ（上級か超級を選ぶ）", lv: true, text: (n, q) => `${q.lv === "ex" ? "超級" : "上級"}の隠しボスに${n}回勝つ` },
@@ -836,7 +846,11 @@ function normalizeData(data) {
     ...(x.art && typeof x.art === "object" ? { art: Object.fromEntries(Object.entries(x.art).filter(([k, v]) => /^\w{1,20}$/.test(k) && typeof v === "string").map(([k, v]) => [k, v.slice(0, 300)])) } : {}),
     lines: Object.fromEntries(Object.keys(KEEPER_SCENES).map(k => [k, (Array.isArray(x.lines && x.lines[k]) ? x.lines[k] : []).map(t => String(t).trim().slice(0, 120)).filter(Boolean).slice(0, 20)]))
   }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers };
+  // 情報屋の情報（文は工房で直せる。{BOSS_RATE} のように書くと、その設定の数字が入る）
+  const info = (Array.isArray(d.info) ? d.info : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id) && INFO_CATS[x.cat]).slice(0, 200).map(x => ({
+    id: x.id, cat: x.cat, title: String(x.title || "情報").slice(0, 40), sub: String(x.sub || "").slice(0, 60), price: Math.max(0, Math.floor(+x.price || 0)),
+    ...(x.ex ? { ex: true } : {}), ...(x.cat === "peek" ? { peek: INFO_PEEKS[x.peek] ? x.peek : "pityHard" } : { body: String(x.body || "").slice(0, 4000) }) }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info };
 }
 
 function cleanDeckCards(cards) {

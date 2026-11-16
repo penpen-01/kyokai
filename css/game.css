@@ -2416,3 +2416,16 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .sh-cat.art.soon{border-style:dashed;cursor:default}
 .sh-cat.art.soon .sh-art{filter:grayscale(.65) brightness(.6)}
 .sh-cat.art.soon .sh-soon{position:absolute;right:8px;top:8px;z-index:2;background:rgba(10,8,6,.75)}
+
+/* 情報屋 */
+.inf-sec h3{margin:14px 0 6px;font-size:14px;color:#f0b25e;letter-spacing:.04em}
+.inf-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.inf-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(28,20,14,.78);border:1px solid rgba(232,168,90,.25)}
+.inf-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.inf-main b{font-size:14px}
+.inf-main small{font-size:11.5px;opacity:.75;line-height:1.45}
+.inf-acts{display:flex;gap:6px;align-items:center;flex:none}
+.inf-acts .btn small{display:block;font-size:10px;opacity:.75;font-weight:500}
+.inf-on{font-size:11.5px;color:#9fd8a0;white-space:nowrap}
+.inf-read{max-width:560px}
+.inf-body{white-space:pre-wrap;line-height:1.75;font-size:14px;margin:6px 0 10px;max-height:60vh;overflow:auto}

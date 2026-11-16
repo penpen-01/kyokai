@@ -50,13 +50,13 @@ async function loadCardData() {
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
-  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner; KEEPERS = data.keepers || [];
+  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner; KEEPERS = data.keepers || []; INFO = data.info || [];
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 let SERIALS = []; // シリアルコード（ハッシュ）
-let KEEPERS = [];   // ショップの店員（js/shop.js）
+let KEEPERS = [], INFO = [];   // ショップの店員・情報屋の情報（js/shop.js）
 let NEWS = [], MAIL = [], LOGIN = [], PICKS = [], QUESTS = [], QUEST_DAILY = null, QUEST_BEGIN = null;   // QUESTS：期間限定クエスト（js/quest.js）   // お知らせ・メール（js/inbox.js）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 
@@ -2603,14 +2603,19 @@ function startBossTest(lv) {
   CPU_LEVEL = lv === "ex" ? "ex" : "hard";
   startBossGame(mine, lv, true);
 }
-function startBossGame(mine, lv = "hard", test = false) {
+/* ticket＝情報屋の挑戦状で挑む（ふだんの乱入の予定はそのまま残す） */
+function startBossGame(mine, lv = "hard", test = false, ticket = false) {
   const B = BOSSES[lv], deck = B && PRESETS.find(p => p.id === B.deck);
   if (!deck) { if (test) { toast("ボスのデッキが見つかりません"); return; } if (B) Account.data[B.next] = false; return startCpuGame(lv); }
-  if (!test) { Account.data[B.next] = false; Account.saveNow(); }   // 会ったら消える（途中でやめても、もう一度は出ない）
+  if (!test && !ticket) { Account.data[B.next] = false; Account.saveNow(); }   // 会ったら消える（途中でやめても、もう一度は出ない）
+  // 弱体の御札（情報屋）：持っていれば、このボス戦で使ってなくなる
+  const charm = !test && Account.data && Account.data.charm && Account.data.charm[lv];
+  if (charm) { delete Account.data.charm[lv]; Account.saveNow(); }
   bossIntro(B, () => startBattle({ kind: "boss", level: lv === "ex" ? "ex" : "hard", mine, opp: { ...deck, icon: B.face }, oppName: B.name, reward: test ? 0 : CONFIG[REWARD_KEY[lv]], streak: false, extra: { boss: lv, ...(test ? { test: true } : {}) },
     setup: S => {
       const b = S.players[1];
-      b.hp = CONFIG[B.cfg + "HP"] || B.hp; b.maxHp = b.hp;
+      b.hp = charm ? (CONFIG.CHARM_HP || 20) : (CONFIG[B.cfg + "HP"] || B.hp); b.maxHp = b.hp;
+      if (charm) log(`弱体の御札の力で、${B.name}の体力が${b.hp}になった。`);
       if (DEF[B.field]) {
         const u = addUnit(1, B.field); u.ready = false;
         // 最初から場にいるカードは登場時の効果が出ないので、特殊勝利（winTimer）の数だけここで付ける
