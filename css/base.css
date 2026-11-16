@@ -385,3 +385,6 @@ img{max-width:100%}
 #cardtip .ct-meta{display:block;font-size:11px;opacity:.7;margin:2px 0 6px}
 #cardtip .ct-text{margin:0;line-height:1.6;white-space:pre-line}
 #cardtip .kwhint{display:none}
+
+/* G・魔石の絵（どの画面でも同じ大きさの基準。各画面で width/height を上書きしてよい） */
+img.cur-img{width:1.45em;height:1.45em;object-fit:contain;flex:none;vertical-align:-.3em;-webkit-user-drag:none;user-select:none}
