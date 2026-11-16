@@ -2620,3 +2620,8 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
   background:#14183a var(--sleeve, url("../ui/card-back.webp")) center/cover no-repeat;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
 
 .sk-item .sk-warn{color:#f0c27a;font-size:11px}
+
+/* お気に入りの★ */
+.favbtn{all:unset;cursor:pointer;display:inline-grid;place-items:center;width:30px;height:30px;margin-left:6px;vertical-align:middle;border-radius:50%;font-size:20px;line-height:1;color:#8a8fa8;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15)}
+.favbtn.on{color:#ffd45c;border-color:rgba(255,212,92,.6);background:rgba(255,212,92,.12);text-shadow:0 0 8px rgba(255,212,92,.6)}
+.favbtn:focus-visible{outline:2px solid #fff;outline-offset:2px}

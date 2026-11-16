@@ -2161,6 +2161,7 @@ function showOptions() {
       <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="fbOpen"><b>ご意見・感想</b><small>不具合の報告や、ほしい機能を送る</small></button>`}
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
+      ${Account.data && Account.status !== "free" ? `<button type="button" class="optrow" data-act="scMode"><b>ホームの飾り棚</b><small>現在：${Account.data.scMode === "fav" ? "お気に入りのカードだけを回す" : "持っているカードをすべて回す"}（押すと切り替え）</small></button>` : ""}
       <button type="button" class="optrow" data-act="ecoToggle" aria-pressed="${Eco.on}"><b>省エネモード</b><small>現在：${Eco.on ? "オン（ずっと動き続ける光や回転を止めて、本体の発熱と電池の減りをおさえる）" : "オフ"}</small></button>
       <button type="button" class="optrow" data-act="fxToggle" aria-pressed="${Fx.on}"><b>カードの光の動き</b><small>現在：${Fx.on ? "オン" : "オフ（UR・レジェンドの光を止めて軽くする）"}</small></button>
     </div>
@@ -2243,7 +2244,7 @@ function showCardList() {
     ${d ? `<div class="dmodal" data-act="clClose"><div class="dmodal-in" role="dialog" aria-label="${esc(d.name)}" data-act="noop">
       ${detailNavHTML(CL.ids, d.id, "clStep")}
       <div class="dmodal-card">${cardHTML(d, { static: true, hidden: hide(d) })}</div>
-      <div class="dmodal-body"><b class="dm-name">${esc(d.name)}</b>
+      <div class="dmodal-body"><b class="dm-name">${esc(d.name)}${favBtnHTML(d)}</b>
         <span class="pmeta">${RARITY[d.rarity]} ・ ${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}${d.type === "char" ? ` ・ ${d.atk}/${d.hp}` : ""}</span>
         <p class="dm-text">${cardTextHTML(d)}</p>
         <span class="pmeta">${Account.status === "free" ? "" : `所持 ${Account.owned(d.id)}枚 ・ `}1デッキに${cardLimit(d, CONFIG)}枚まで</span>
@@ -2929,6 +2930,8 @@ function handleAct(act, el) {
     case "soundPanel": Sound.showPanel(); break;
     case "grave": showGrave(+el.dataset.p); break;
     case "fxToggle": Fx.toggle(); showOptions(); break;
+    case "scMode": if (Account.data) { if (Account.data.scMode === "fav") delete Account.data.scMode; else Account.data.scMode = "fav"; Account.save(); toast(Account.data.scMode === "fav" ? ((Account.data.cardFav || []).some(id => Account.owned(id) > 0) ? "飾り棚にお気に入りのカードだけを回します" : "飾り棚にお気に入りのカードだけを回します（まだお気に入りがないので、今はすべてのカード）") : "飾り棚に持っているカードをすべて回します"); } showOptions(); break;
+    case "cardFav": { const id = el.dataset.id; if (!DEF[id] || !(Account.owned(id) > 0)) break; Account.toggleFav(id); Sound.play("click"); if (typeof Shop !== "undefined") Shop.tradeRedraw(); break; }
     case "ecoToggle": Eco.toggle(); showOptions(); break;
     case "nameEdit": showName(); break;
     case "nameSave": { const n = setPlayerName($("#pl-name") && $("#pl-name").value); showName(n ? `「${n}」にしました` : "名前を入れてください"); break; }

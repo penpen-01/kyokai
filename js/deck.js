@@ -12,9 +12,9 @@ const DECK_SEL_KEY = "kyokai-deck-sel";
 /* カードの絞り込み（デッキ編成・カード一覧で共通）。どの項目も複数選べる。同じ項目の中は「どれか」、項目どうしは「かつ」
    例：世界［神話・幻想］× コスト［2・5］→ 神話か幻想の、2コストか5コストのカード */
 const CardFilter = {
-  KEYS: ["type", "world", "cost", "rarity", "pack"],
+  KEYS: ["fav", "type", "world", "cost", "rarity", "pack"],
   COSTS: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],   // 10 は「10以上」
-  empty() { return { type: [], world: [], cost: [], rarity: [], pack: [] }; },
+  empty() { return { fav: [], type: [], world: [], cost: [], rarity: [], pack: [] }; },
   costKey(c) { return String(Math.min(10, Math.max(0, c.cost | 0))); },
   packKey(c) { return c.boss ? "boss" : String(c.set || "1"); },
   packs(cards) {   // 今見えているカードがある弾だけ（まだ開放していない弾は出さない）
@@ -27,7 +27,7 @@ const CardFilter = {
   },
   match(c, f) {
     const has = (k, v) => !f[k] || !f[k].length || f[k].includes(v);
-    return has("type", c.type) && has("world", c.world) && has("cost", this.costKey(c)) && has("rarity", c.rarity) && has("pack", this.packKey(c));
+    return (!(f.fav && f.fav.includes("y")) || Account.isFav(c.id)) && has("type", c.type) && has("world", c.world) && has("cost", this.costKey(c)) && has("rarity", c.rarity) && has("pack", this.packKey(c));
   },
   toggle(f, k, v) {
     if (!Array.isArray(f[k])) f[k] = [];
@@ -38,7 +38,7 @@ const CardFilter = {
   /* 選んだ条件を短い言葉に */
   words(f, skip = []) {
     const w = [];
-    const lab = { type: v => TYPES[v], world: v => WORLDS[v], cost: v => v === "10" ? "10+" : v, rarity: v => RARITY_SHORT[v],
+    const lab = { fav: () => "お気に入り", type: v => TYPES[v], world: v => WORLDS[v], cost: v => v === "10" ? "10+" : v, rarity: v => RARITY_SHORT[v],
       pack: v => (this.packs(CARDS).find(x => x[0] === v) || [v, v])[1] };
     this.KEYS.forEach(k => { if (skip.includes(k) || !f[k] || !f[k].length) return;
       const s = f[k].map(lab[k]).join("・"); w.push(k === "cost" ? `コスト${s}` : s); });
@@ -52,6 +52,7 @@ const CardFilter = {
   },
   rowsHTML(f, act, cards, skip = []) {
     const rows = [
+      ...(Account.data && Account.status !== "free" ? [["fav", "お気に入り", [["y", "★ お気に入りだけ"]]]] : []),
       ["type", "種類", Object.entries(TYPES)],
       ["world", "世界", Object.entries(WORLDS)],
       ["cost", "コスト", this.COSTS.map(v => [v, v === "10" ? "10+" : v])],
@@ -582,7 +583,7 @@ const Decks = {
         ${detailNavHTML(this.detailIds || [], c.id, "deckStep")}
         <div class="dmodal-card">${cardHTML(c, { static: true, hidden: this.hideArt(c, ed || this.find(this.viewing)) })}</div>
         <div class="dmodal-body">
-          <b class="dm-name">${esc(c.name)}</b>
+          <b class="dm-name">${esc(c.name)}${favBtnHTML(c)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>
           <p class="dm-text">${cardTextHTML(c)}</p>
           <span class="pmeta">${unb ? "" : `所持 ${this.owned(c.id)}枚 ・ `}1デッキに${cardLimit(c, CONFIG, ed)}枚まで</span>

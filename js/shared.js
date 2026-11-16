@@ -595,6 +595,12 @@ const nmLen = card => card.name.length + (["ur", "legend"].includes(card.rarity)
 /* カードの見た目（魔光加工・別イラスト）。CARD_LOOK は自分の分（js/skins.js が入れる）。
    { m: "u"（UR風の光）/"l"（レジェンド風の光）, a: 別イラストの絵 }。対戦では相手の分を S.players[pi].look から見る */
 let CARD_LOOK = {};
+/* お気に入りの★（カードの詳細の名前の横。持っているカードだけ） */
+function favBtnHTML(c) {
+  if (typeof Account === "undefined" || !Account.data || Account.status === "free" || !(Account.owned(c.id) > 0)) return "";
+  const on = Account.isFav(c.id);
+  return `<button type="button" class="favbtn ${on ? "on" : ""}" data-act="cardFav" data-id="${esc(c.id)}" aria-pressed="${on}" aria-label="${on ? "お気に入りから外す" : "お気に入りにする"}" title="${on ? "お気に入りから外す" : "お気に入りにする"}">${on ? "★" : "☆"}</button>`;
+}
 function lookFor(id, pi) {
   if (pi == null || typeof S === "undefined" || !S || !S.players || (typeof ME !== "undefined" && pi === ME)) return CARD_LOOK[id] || null;
   const L = S.players[pi] && S.players[pi].look;

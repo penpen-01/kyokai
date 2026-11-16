@@ -36,6 +36,13 @@ const Account = {
   normCode(s) { return String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); },
 
   /* 所持数（試遊中はすべて上限まで持っている扱い） */
+  isFav(id) { return !!(this.data && (this.data.cardFav || []).includes(id)); },
+  toggleFav(id) {
+    if (!this.data) return;
+    const L = this.data.cardFav || [];
+    this.data.cardFav = L.includes(id) ? L.filter(x => x !== id) : [...L, id];
+    this.save();
+  },
   owned(id) {
     if (this.status === "free") return 99;
     if (adminOn()) { const c = DEF[id]; return Math.max((this.data && this.data.cards && this.data.cards[id]) || 0, c && c.limit > 0 ? CONFIG.COPY_MAX : 0); }   // 運営用：全カード3枚の扱い（持ち物は増やさない）
@@ -137,6 +144,9 @@ const Account = {
       ...(Array.isArray(d.stampSet) ? { stampSet: d.stampSet.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 6) } : {}),
       ...(Array.isArray(d.stampOwn) ? { stampOwn: d.stampOwn.filter(x => /^[\w-]{1,40}$/.test(x)) } : {}),
       ...(Array.isArray(d.iconFav) ? { iconFav: d.iconFav.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 30) } : {}),
+      // お気に入りのカード（カード一覧・デッキ編成の絞り込み、ホームの飾り棚）と、飾り棚に回すカード（fav＝お気に入りだけ）
+      ...(Array.isArray(d.cardFav) ? { cardFav: [...new Set(d.cardFav.filter(x => /^[\w-]{1,40}$/.test(x)))].slice(0, 400) } : {}),
+      ...(d.scMode === "fav" ? { scMode: "fav" } : {}),
       ...(Array.isArray(d.iconRecent) ? { iconRecent: d.iconRecent.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 12) } : {}),
       // 友達との対戦でGを受け取った回数（1日ごと）
       ...(d.onlDay && /^\d{4}-\d{2}-\d{2}$/.test(d.onlDay.d) ? { onlDay: { d: d.onlDay.d, n: Math.max(0, Math.floor(+d.onlDay.n || 0)) } } : {}),

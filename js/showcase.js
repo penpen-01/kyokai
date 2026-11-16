@@ -16,7 +16,12 @@ const Showcase = {
   blockClickUntil: 0,
   AUTO: (Math.PI * 2) / 48,   // 1周48秒
 
-  owned() { return CARDS.filter(c => c.art && c.limit > 0 && Account.owned(c.id) > 0); },
+  /* 回すカード。オプションで「お気に入りだけ」にしていて、お気に入りが1枚以上あればそれだけ（足りなくても水増ししない） */
+  owned() {
+    const all = CARDS.filter(c => c.art && c.limit > 0 && Account.owned(c.id) > 0);
+    if (Account.data && Account.data.scMode === "fav") { const fav = all.filter(c => Account.isFav(c.id)); if (fav.length) return fav; }
+    return all;
+  },
   shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; },
   pick() {
     this.queue = this.shuffle(this.owned());
