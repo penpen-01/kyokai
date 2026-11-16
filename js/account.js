@@ -147,6 +147,12 @@ const Account = {
       // お気に入りのカード（カード一覧・デッキ編成の絞り込み、ホームの飾り棚）と、飾り棚に回すカード（fav＝お気に入りだけ）
       ...(Array.isArray(d.cardFav) ? { cardFav: [...new Set(d.cardFav.filter(x => /^[\w-]{1,40}$/.test(x)))].slice(0, 400) } : {}),
       ...(d.scMode === "fav" ? { scMode: "fav" } : {}),
+      // 選定戦：挑戦中の記録（st＝pick/play、r＝何回目、deck、offer＝今の候補、w/l＝勝ち・負け、fight＝対戦中）・最高の勝ち数・挑んだ回数
+      ...(d.sen && typeof d.sen === "object" && ["pick", "play"].includes(d.sen.st) ? { sen: { st: d.sen.st, r: Math.max(0, Math.floor(+d.sen.r || 0)),
+        deck: Object.fromEntries(Object.entries(d.sen.deck || {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && +v > 0).map(([k, v]) => [k, Math.min(3, Math.floor(+v))])),
+        ...(Array.isArray(d.sen.offer) ? { offer: d.sen.offer.slice(0, 2).map(a => (Array.isArray(a) ? a : Object.values(a || {})).filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 3)) } : {}),
+        w: Math.max(0, Math.floor(+d.sen.w || 0)), l: Math.max(0, Math.floor(+d.sen.l || 0)), ...(d.sen.fight ? { fight: 1 } : {}) } } : {}),
+      ...(+d.senBest > 0 ? { senBest: Math.floor(+d.senBest) } : {}), ...(+d.senRuns > 0 ? { senRuns: Math.floor(+d.senRuns) } : {}),
       ...(Array.isArray(d.iconRecent) ? { iconRecent: d.iconRecent.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 12) } : {}),
       // 友達との対戦でGを受け取った回数（1日ごと）
       ...(d.onlDay && /^\d{4}-\d{2}-\d{2}$/.test(d.onlDay.d) ? { onlDay: { d: d.onlDay.d, n: Math.max(0, Math.floor(+d.onlDay.n || 0)) } } : {}),

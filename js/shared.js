@@ -311,7 +311,7 @@ const DEFAULT_CONFIG = {
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
-  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, MAKO_U: 3000, MAKO_L: 5000, SKIN_ON: 0, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
+  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, MAKO_U: 3000, MAKO_L: 5000, SEN_ON: 0, SEN_FEE: 500, SKIN_ON: 0, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
   SEASON: "beta", STARTER_DECK: "starter", MAINT_NOTE: "", ADMINS: [],
   SAMPLE_DECKS: true   // ベータ用：所持に関係なく全カードで組める「サンプルデッキ」を許可
 };
@@ -370,6 +370,8 @@ const CONFIG_INFO = {
   SHOP_FEATURE_OFF:  { label: "ショップの今日のおすすめの割引（%）", min: 0, max: 90, group: "eco" },
   STONE_PER_GOLD:    { label: "両替：1Gにするのに必要な魔石（2以下にすると、パック→分解→両替でGが増え続けるので注意）", min: 1, max: 1000, group: "eco" },
   SKIN_ON:           { label: "スキンの売り場を開く（1＝開く、0＝準備中。運営用アカウントはいつでも入れる）", min: 0, max: 1, group: "eco" },
+  SEN_ON:            { label: "選定戦を開く（1＝開く、0＝準備中。運営用アカウントは入れる）", min: 0, max: 1, group: "eco" },
+  SEN_FEE:           { label: "選定戦の入場料（G）", min: 0, max: 1000000, group: "eco", step: 50 },
   MAKO_U:            { label: "魔光加工：UR風（1種類）の魔石", min: 0, max: 10000000, group: "eco", step: 100 },
   MAKO_L:            { label: "魔光加工：レジェンド風（1種類）の魔石", min: 0, max: 10000000, group: "eco", step: 100 },
   INFO_HOURS:        { label: "情報屋：攻略の情報を買ってから読める時間（時間）", min: 1, max: 720, group: "eco" },
@@ -921,7 +923,12 @@ function normalizeData(data) {
     id: x.id, kind: x.kind, name: String(x.name || "スキン").slice(0, 30), desc: String(x.desc || "").slice(0, 80), price: Math.max(0, Math.floor(+x.price || 0)),
     ...(typeof x.art === "string" && x.art ? { art: x.art.slice(0, 300) } : {}), ...(x.default ? { default: true } : {}),
     ...(typeof x.ref === "string" && x.ref ? { ref: x.ref.slice(0, 40) } : {}), ...(typeof x.card === "string" && x.card ? { card: x.card.slice(0, 40) } : {}) }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps, skins };
+  // 選定戦：勝った数（0〜7）ごとの報酬と、候補に出さないカード
+  const SEN_DEF = [[100, 0, 0, 0], [200, 0, 0, 0], [400, 0, 0, 0], [500, 0, 1, 0], [700, 100, 1, 0], [900, 200, 2, 0], [1200, 300, 2, 0], [1500, 500, 2, 1]];
+  const sr = d.sen && Array.isArray(d.sen.rewards) && d.sen.rewards.length ? d.sen.rewards : SEN_DEF.map(([gold, stones, tickets, srTickets]) => ({ gold, stones, tickets, srTickets }));
+  const sen = { rewards: Array.from({ length: 8 }, (_, i) => { const x = sr[i] || sr[sr.length - 1] || {}; const n = k => Math.max(0, Math.floor(+x[k] || 0)); return { gold: n("gold"), stones: n("stones"), tickets: n("tickets"), srTickets: n("srTickets") }; }),
+    ban: d.sen && Array.isArray(d.sen.ban) ? [...new Set(d.sen.ban.filter(x => typeof x === "string" && /^[\w-]{1,40}$/.test(x)))].slice(0, 400) : [] };
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps, skins, sen };
 }
 
 function cleanDeckCards(cards) {

@@ -53,6 +53,7 @@ async function loadCardData() {
   NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner; KEEPERS = data.keepers || []; INFO = data.info || [];
   if (typeof TITLES !== "undefined") { TITLES = data.titles || []; STAMPS = data.stamps || []; }
   if (typeof SKINS !== "undefined") SKINS = data.skins || [];
+  if (typeof SEN !== "undefined") SEN = data.sen || { rewards: [], ban: [] };
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
@@ -2374,6 +2375,7 @@ function giveReward(res) {
     if (B.kind === "boss" && res === "win") r.boss = bossReward(B.boss || "hard");
     if (B.kind === "gate" && res === "win") r.gate = gateReward();
     if (B.kind === "tutorial") r.tut = Tut.reward(res);
+    if (B.kind === "sen" && typeof Sentei !== "undefined") r.sen = Sentei.onGame(res);
   }
   if (counts && !(B && B.kind === "tutorial") && typeof Titles !== "undefined") Titles.onGame(res, r, B);   // 通算の記録（称号）
   if (r.g) Account.addGold(r.g);       // 連勝数も一緒に保存される
@@ -2419,10 +2421,11 @@ function showResult(res) {
       + (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
     : B && B.kind === "tutorial" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度チュートリアル</button>`
     : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
+    : B && B.kind === "sen" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">${r.sen && r.sen.done ? "選定戦の結果へ" : "選定戦へ戻る"}</button>`
     : B && B.kind === "boss" && B.ticket ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">情報屋へ（挑戦状 残り${(Account.data && Account.data.btk && Account.data.btk[B.boss]) || 0}枚）</button>`
     : `<button type="button" class="btn primary res-main" data-act="cpuAgain">同じ強さでもう一度</button>`;
   const sub = [
-    !online && !(B && B.kind === "gate" && r.gate) && !(B && B.kind === "tutorial") ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
+    !online && !(B && B.kind === "gate" && r.gate) && !(B && ["tutorial", "sen"].includes(B.kind)) ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
     online && !Online.oppLeft && !Online.closed ? `<button type="button" class="res-sub" data-act="onlDeck">${RES_IC.deck}<span>デッキ変更</span></button>` : "",
     `<button type="button" class="res-sub" data-act="log">${RES_IC.log}<span>ログ</span></button>`,
     `<button type="button" class="res-sub" data-act="closeOverlay">${RES_IC.board}<span>盤面</span></button>`,
@@ -2435,6 +2438,7 @@ function showResult(res) {
     ${B && B.kind === "tutorial" && typeof Tut !== "undefined" ? Tut.resultHTML(r.tut) : ""}
     ${r.test ? `<p class="callout">検証用の対戦なので、報酬・クエスト・連勝はありません。</p>` : ""}
     ${r.boss ? bossRewardHTML(r.boss) : ""}
+    ${r.sen && typeof Sentei !== "undefined" ? Sentei.resultHTML(r.sen) : ""}
     ${r.gate ? `<div class="gate-open"><b>「${esc(r.gate.name)}」が開放されました！</b><small>ショップに並びました。このパックのカードもカード一覧に出ます</small></div>` : ""}
     ${r.bossSign ? `<p class="boss-sign">${BOSSES[r.bossSign].sign}</p>` : ""}
     ${notes.map(t => `<p class="streak lost">${t}</p>`).join("")}
@@ -2587,6 +2591,7 @@ function startBattle(spec) {
 function battleAgain() {
   const k = S && S.battle ? S.battle.kind : (S && S.practice ? "practice" : "cpu");
   if (k === "tutorial") Tut.start();
+  else if (k === "sen") { const x = rewarded[S.gid] && rewarded[S.gid].sen; if (x && x.done) Sentei.showEnd(x); else Sentei.show(); }
   else if (k === "practice") startPractice();
   else if (k === "world") startWorldGame(CPU_LEVEL);
   else if (k === "gate") { if (gatePacks().some(p => p.id === GATE.pack)) startGateGame(); else showGate(); }
@@ -2717,6 +2722,7 @@ function showSolo() {
     <div class="lvls">
       ${tile("start", "CPU戦", "初級・中級・上級の CPU と戦う。勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
       ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
+      ${typeof Sentei !== "undefined" && Sentei.on() ? tile("senOpen", "選定戦", `3枚ずつのセットを選んでその場でデッキを作り、${SEN_WIN}勝を目指す（入場料${Sentei.fee()}G）`, { art: art("f2-tamamo"), cls: "m-sen", tag: Sentei.run() ? "挑戦中" : CONFIG.SEN_ON ? "" : "運営のみ" }) : ""}
       ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
       ${TUTORIAL_OPEN ? tile("tutorial", "チュートリアル", `遊び方を、実際に1戦しながら覚える（何度でも遊べる）${Tut.done() ? "" : `。初めてクリアするとパック券${TUT_REWARD.tickets}枚${TUT_REWARD.gold ? `と${TUT_REWARD.gold}G` : ""}`}`, { tag: Tut.done() ? "クリア済み" : "報酬あり", cls: "m-tut", art: art("squire") }) : ""}
       ${(() => { const g = gatePacks(), all = gatePacks(true);
@@ -2948,6 +2954,7 @@ function handleAct(act, el) {
       if (Splash.handleAct(act, el)) return;
       if (typeof Profile !== "undefined" && Profile.handleAct(act, el)) return;
       if (typeof Skins !== "undefined" && Skins.handleAct(act, el)) return;
+      if (typeof Sentei !== "undefined" && Sentei.handleAct(act, el)) return;
       if (Account.handleAct(act, el)) return;
       if (Feedback.handleAct(act, el)) return;
       if (Serial.handleAct(act, el)) return;

@@ -1,5 +1,5 @@
 {
- "version": 180,
+ "version": 181,
  "updated": "2026-11-17",
  "config": {
   "PLAYER_HP": 20,
@@ -66,7 +66,9 @@
   "ADMINS": [
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
-  "SAMPLE_DECKS": true
+  "SAMPLE_DECKS": true,
+  "SEN_ON": 0,
+  "SEN_FEE": 500
  },
  "packs": [
   {
@@ -9539,5 +9541,61 @@
    "boss": true,
    "art": "art/b-y-zantetsu-4d8f6f87a6.webp"
   }
- ]
+ ],
+ "sen": {
+  "rewards": [
+   {
+    "gold": 100,
+    "stones": 0,
+    "tickets": 0,
+    "srTickets": 0
+   },
+   {
+    "gold": 200,
+    "stones": 0,
+    "tickets": 0,
+    "srTickets": 0
+   },
+   {
+    "gold": 400,
+    "stones": 0,
+    "tickets": 0,
+    "srTickets": 0
+   },
+   {
+    "gold": 500,
+    "stones": 0,
+    "tickets": 1,
+    "srTickets": 0
+   },
+   {
+    "gold": 700,
+    "stones": 100,
+    "tickets": 1,
+    "srTickets": 0
+   },
+   {
+    "gold": 900,
+    "stones": 200,
+    "tickets": 2,
+    "srTickets": 0
+   },
+   {
+    "gold": 1200,
+    "stones": 300,
+    "tickets": 2,
+    "srTickets": 0
+   },
+   {
+    "gold": 1500,
+    "stones": 500,
+    "tickets": 2,
+    "srTickets": 1
+   }
+  ],
+  "ban": [
+   "f2-tamamo",
+   "m2-godgear"
+  ]
+ }
 }

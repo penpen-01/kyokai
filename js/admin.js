@@ -90,7 +90,7 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["titles", "称号"], ["stamps", "スタンプ"], ["skins", "スキン"], ["season", "シーズン（リセット）"]];
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["titles", "称号"], ["stamps", "スタンプ"], ["skins", "スキン"], ["sen", "選定戦"], ["season", "シーズン（リセット）"]];
     const sub = this.ecoSub || "money";
     const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
     const S = {};
@@ -98,7 +98,7 @@ const Admin = {
       <div class="fgroup">
         <span class="gl">G（ゴールド）</span>
         <div class="cfg">
-          ${Object.entries(CONFIG_INFO).filter(([k, v]) => v.group === "eco" && !k.startsWith("MAKO_")).map(([k, v]) => `<div class="item">
+          ${Object.entries(CONFIG_INFO).filter(([k, v]) => v.group === "eco" && !k.startsWith("MAKO_") && !k.startsWith("SEN_")).map(([k, v]) => `<div class="item">
             <label for="f-cfg-${k}">${v.label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>
             ${stepper("cfg-" + k, cfg[k], v.label)}
           </div>`).join("")}
@@ -202,6 +202,7 @@ const Admin = {
     S.titles = this.titlesHTML();
     S.stamps = this.stampsHTML();
     S.skins = this.skinsHTML();
+    S.sen = this.senHTML();
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -296,6 +297,30 @@ const Admin = {
           <button type="button" class="btn sm danger" data-act="sknDel" data-i="${i}">消す</button></div>
           <label class="fl">説明<input class="txt" data-skn="${i}:desc" maxlength="80" value="${esc(x.desc || "")}"></label></div>`).join("")}
         <button type="button" class="btn sm" data-act="sknAdd" data-v="${kind}">＋ ${label}を足す</button></div>`).join("")}`;
+  },
+  /* ---------- 選定戦 ---------- */
+  senHTML() {
+    const S0 = DATA.sen = DATA.sen && Array.isArray(DATA.sen.rewards) && DATA.sen.rewards.length === 8 ? DATA.sen : (typeof normalizeData === "function" ? normalizeData({ sen: DATA.sen }).sen : { rewards: [], ban: [] });
+    S0.ban = S0.ban || [];
+    const cfgs = ["SEN_ON", "SEN_FEE"].map(k => `<div class="item"><label for="f-cfg-${k}">${CONFIG_INFO[k].label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>${stepper("cfg-" + k, DATA.config[k] ?? DEFAULT_CONFIG[k], CONFIG_INFO[k].label)}</div>`).join("");
+    const F = [["gold", "G"], ["stones", "魔石"], ["tickets", "パック券"], ["srTickets", "SR以上確定券"]];
+    const q = (this.senQ || "").trim();
+    const all = (DATA.cards || []).filter(c => c.limit > 0 && !c.token && !c.boss);
+    const hits = q ? all.filter(c => c.name.includes(q) || c.id.includes(q)).slice(0, 40) : [];
+    const name = id => { const c = (DATA.cards || []).find(x => x.id === id); return c ? c.name : id; };
+    return `<div class="fgroup"><span class="gl">選定戦</span>
+        <p class="hint">「一人で対戦」の選定戦です。入場料（G）を払い、3枚ずつの2つのセットから1つを選ぶのを10回くり返してデッキを作り、7勝か2敗まで CPU と戦います。</p>
+        <div class="cfg">${cfgs}</div></div>
+      <div class="fgroup"><span class="gl">勝った数ごとの報酬</span>
+        <p class="hint">途中でやめたときも、その時点の勝った数の報酬を受け取ります。</p>
+        ${S0.rewards.map((x, i) => `<div class="frow inf-ed"><b style="min-width:3em">${i}勝</b>${F.map(([k, l]) => `<label class="fl">${l}<input class="txt" type="number" min="0" data-senr="${i}:${k}" value="${+x[k] || 0}" style="max-width:100px"></label>`).join("")}</div>`).join("")}
+      </div>
+      <div class="fgroup"><span class="gl">選定戦に出さないカード（${S0.ban.length}枚）</span>
+        <p class="hint">ここに入れたカードは、選定戦の候補（プレイヤーにも CPU にも）に出ません。強すぎるカードや、組み合わせがないと働かないカードを外すのに使います。ボス限定のカードは、もともと出ません。</p>
+        <div class="chips">${S0.ban.map(id => `<button type="button" class="btn sm" data-act="senUnban" data-v="${esc(id)}">${esc(name(id))} ✕</button>`).join("") || `<span class="hint">まだありません</span>`}</div>
+        <input class="txt" id="sen-q" placeholder="カードの名前で探して足す" value="${esc(this.senQ || "")}" autocomplete="off" style="margin-top:8px">
+        ${hits.length ? `<div class="chips">${hits.map(c => S0.ban.includes(c.id) ? "" : `<button type="button" class="btn sm" data-act="senBan" data-v="${esc(c.id)}">＋ ${esc(c.name)}</button>`).join("")}</div>` : ""}
+      </div>`;
   },
   /* ---------- スタンプ ---------- */
   stampsHTML() {
@@ -600,6 +625,8 @@ const Admin = {
       }
       case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
       case "sknAdd": DATA.skins = DATA.skins || []; DATA.skins.push({ id: "k" + Date.now().toString(36), kind: el.dataset.v, name: "新しいスキン", price: 5000 }); this.touch(this.renderEco); return true;
+      case "senBan": { const b = DATA.sen.ban = DATA.sen.ban || []; if (!b.includes(el.dataset.v)) b.push(el.dataset.v); this.touch(this.renderEco); return true; }
+      case "senUnban": DATA.sen.ban = (DATA.sen.ban || []).filter(x => x !== el.dataset.v); this.touch(this.renderEco); return true;
       case "sknDel": (DATA.skins || []).splice(+el.dataset.i, 1); this.touch(this.renderEco); return true;
       case "stpAdd": DATA.stamps = DATA.stamps || []; DATA.stamps.push({ id: "s" + Date.now().toString(36), text: "新しいスタンプ", free: true, price: 0 }); this.touch(this.renderEco); return true;
       case "stpDel": (DATA.stamps || []).splice(+el.dataset.i, 1); this.touch(this.renderEco); return true;
@@ -786,4 +813,16 @@ document.addEventListener("change", e => {
   else if (f === "price") x.price = Math.max(0, Math.floor(+t.value || 0));
   else { const v = t.value.trim(); if (v || f === "name") x[f] = v; else delete x[f]; }
   Admin.touch(null);
+});
+
+/* 選定戦の欄 */
+document.addEventListener("change", e => {
+  const t = e.target, k = t && t.dataset && t.dataset.senr; if (!k || typeof DATA === "undefined" || !DATA.sen) return;
+  const [i, f] = k.split(":"), x = DATA.sen.rewards[+i]; if (!x) return;
+  x[f] = Math.max(0, Math.floor(+t.value || 0)); Admin.touch(null);
+});
+document.addEventListener("input", e => {
+  if (!e.target || e.target.id !== "sen-q" || typeof Admin === "undefined") return;
+  Admin.senQ = e.target.value; const pos = e.target.selectionStart; Admin.renderEco();
+  const n = document.getElementById("sen-q"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} }
 });
