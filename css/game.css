@@ -2429,3 +2429,10 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .inf-on{font-size:11.5px;color:#9fd8a0;white-space:nowrap}
 .inf-read{max-width:560px}
 .inf-body{white-space:pre-wrap;line-height:1.75;font-size:14px;margin:6px 0 10px;max-height:60vh;overflow:auto}
+
+/* 運営：持ち物 */
+button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
+.ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;margin:8px 0}
+.ops-f{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-size:13px}
+.ops-q{display:flex;gap:6px;flex-wrap:wrap}
+.ops-flags{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px}

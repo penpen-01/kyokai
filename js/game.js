@@ -2079,7 +2079,7 @@ function showStart() {
   openOverlay(`<div class="homebg" aria-hidden="true"></div>
   <div class="panel home">
     <div class="homebar">
-      <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}${adminOn() ? `<span class="admin-badge" title="運営用アカウント：全カード3枚の扱い・メンテナンス中も入れる・非公開の内容も見える">運営</span>` : ""}</div>
+      <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}${adminOn() ? `<button type="button" class="admin-badge" data-ops="open" title="運営用アカウント：押すと、G・魔石などを好きに変えられる">運営</button>` : ""}</div>
       <div class="hb-me">
         ${goldOK ? `<button type="button" class="homeicon" data-act="icons" data-from="start" aria-label="アイコンを変える">
           <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : `<span class="glyph">任</span>`}</span></button>` : ""}
@@ -3047,3 +3047,43 @@ Fx.apply();
     if (b) { blockClick(); handleAct(b.dataset.act, b); }
   }, true);
 })();
+
+/* ---------- 運営用アカウント：自分の持ち物を好きに変える（ホームの「運営」を押す） ---------- */
+const OpsPanel = {
+  F: [["gold", "G"], ["stones", "魔石"], ["tickets", "パック券"], ["srTickets", "SR以上確定パック券"], ["btk.hard", "挑戦状（上級）"], ["btk.ex", "挑戦状（超級）"], ["bossPity", "上級ボスの天井カウント"], ["bossPityEx", "超級ボスの天井カウント"]],
+  get(k) { const [a, b] = k.split("."); const d = Account.data || {}; return Math.max(0, Math.floor(+(b ? (d[a] || {})[b] : d[a]) || 0)); },
+  set(k, v) { const [a, b] = k.split("."); v = Math.max(0, Math.min(99999999, Math.floor(+v || 0))); if (b) Account.data[a] = { ...(Account.data[a] || {}), [b]: v }; else Account.data[a] = v; },
+  show(msg) {
+    if (!adminOn() || !Account.data) return;
+    const d = Account.data, flag = (k, l) => `<label class="ownchk"><input type="checkbox" data-opsf="${k}" ${k.includes(".") ? ((d[k.split(".")[0]] || {})[k.split(".")[1]] ? "checked" : "") : d[k] ? "checked" : ""}> ${l}</label>`;
+    openOverlay(`<div class="panel wide">
+      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>運営：持ち物</b></div>
+      <p class="hint">運営用アカウントだけの画面です。数字を変えて「保存」を押すと、このアカウントの持ち物になります（ほかのプレイヤーには関係ありません）。</p>
+      ${msg ? `<p class="shopmsg" role="status">${esc(msg)}</p>` : ""}
+      <div class="ops-grid">${this.F.map(([k, l]) => `<label class="ops-f"><span>${l}</span><input class="txt" type="number" min="0" inputmode="numeric" data-opsn="${k}" value="${this.get(k)}">
+        <span class="ops-q">${[1000, 10000, 100000].map(n => `<button type="button" class="btn sm" data-ops="add" data-k="${k}" data-v="${k === "gold" || k === "stones" ? n : Math.max(1, n / 1000)}">+${(k === "gold" || k === "stones" ? n : Math.max(1, n / 1000)).toLocaleString()}</button>`).join("")}</span></label>`).join("")}</div>
+      <div class="ops-flags">${flag("bossNext", "次の上級戦でネザルが乱入する")}${flag("bossNextEx", "次の超級戦で黄泉丸が乱入する")}${flag("charm.hard", "弱体の御札（上級）を持っている")}${flag("charm.ex", "弱体の御札（超級）を持っている")}</div>
+      <div class="pre-btns"><button type="button" class="btn primary" data-ops="save">保存</button><button type="button" class="btn" data-ops="clearInfo">情報屋で買った情報を未購入に戻す</button><button type="button" class="btn" data-ops="clearWeek">挑戦状の今週の購入数を0に</button></div>
+    </div>`, "start", true);
+  },
+  save() {
+    document.querySelectorAll("[data-opsn]").forEach(el => this.set(el.dataset.opsn, el.value));
+    document.querySelectorAll("[data-opsf]").forEach(el => {
+      const [a, b] = el.dataset.opsf.split(".");
+      if (b) { const o = { ...(Account.data[a] || {}) }; if (el.checked) o[b] = true; else delete o[b]; Account.data[a] = o; }
+      else if (el.checked) Account.data[a] = true; else delete Account.data[a];
+    });
+    Account.saveNow();
+    this.show("保存しました。");
+  }
+};
+document.addEventListener("click", e => {
+  const el = e.target.closest && e.target.closest("[data-ops]"); if (!el || !adminOn()) return;
+  e.preventDefault(); e.stopPropagation();
+  const k = el.dataset.ops;
+  if (k === "open") OpsPanel.show();
+  else if (k === "add") { const inp = document.querySelector(`[data-opsn="${el.dataset.k}"]`); if (inp) inp.value = Math.max(0, Math.floor(+inp.value || 0)) + (+el.dataset.v || 0); }
+  else if (k === "save") OpsPanel.save();
+  else if (k === "clearInfo") { Account.data.infoBuy = {}; Account.saveNow(); OpsPanel.show("情報屋で買った情報を、未購入に戻しました。"); }
+  else if (k === "clearWeek") { delete Account.data.btkWeek; Account.saveNow(); OpsPanel.show("挑戦状の今週の購入数を0にしました。"); }
+}, true);
