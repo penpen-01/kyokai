@@ -2386,6 +2386,7 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .kp-stage .kp-man .kp-img{position:absolute;left:0;top:3%;width:100%;height:auto;transform-origin:50% 100%;animation:kpbreath 3.6s ease-in-out infinite;user-select:none;-webkit-user-drag:none}
 .kp-man.hop .kp-img{animation:kphop .42s ease-out,kpbreath 3.6s ease-in-out .42s infinite}
 .kp-man:focus-visible{outline:2px solid #ffd59a;outline-offset:-2px}
+.kp-man.asleep .kp-img{animation:none}   /* 眠っている間は息の上下を止める */
 @keyframes kpbreath{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-1.2%) scaleY(1.012)}}
 @keyframes kphop{0%{transform:translateY(0)}35%{transform:translateY(-7%)}70%{transform:translateY(1%)}100%{transform:translateY(0)}}
 .kp-stage .kp-bubble{position:absolute;left:10px;right:10px;bottom:10px;min-height:30%;box-sizing:border-box;padding:10px 14px 12px;border-radius:12px;cursor:pointer;

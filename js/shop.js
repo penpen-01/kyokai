@@ -489,15 +489,20 @@ const Keeper = {
     this.tapUntil = now + 350;
     const el = document.querySelector(".kp-man"); if (el) { el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
     if (typeof Sound !== "undefined") Sound.play("click");
-    const k = this.cur(), sleepy = k && this.has(k, "sleep") && now - (this.lastAct || now) >= KEEPER_SLEEP;
+    const k = this.cur(), moody = k && this.has(k, "shy");   // 照れる・怒る・眠るのは、その絵がある店員（ルゥ）だけ
+    const sleepy = k && this.has(k, "sleep") && now - (this.lastAct || now) >= KEEPER_SLEEP;
     this.lastAct = now;
     if (sleepy) { this.taps = 0; this.q = [{ scene: "wake", mood: "yawn" }]; return this.next(true); }
     this.taps = now - (this.tapAt || 0) <= 3000 ? (this.taps || 0) + 1 : 1; this.tapAt = now;
-    this.q = [this.taps >= 6 ? { scene: "angry", mood: "angry" } : this.taps >= 3 ? { scene: "shy", mood: "shy" } : { scene: "tap" }];
+    // 眠たげな子なので、ふだんは素っ気なく返すだけ。続けて押すと、4〜7回目でたまに（3割）照れて、8回目からは怒る
+    const it = !moody ? { scene: "tap" } : this.taps >= 8 ? { scene: "angry", mood: "angry" } : this.taps >= 4 && Math.random() < 0.3 ? { scene: "shy", mood: "shy" } : { scene: "tap" };
+    if (it.scene === "shy") this.taps = 0;   // 照れたら数え直し（照れたあと、すぐ怒らない）
+    this.q = [it];
     this.next(true);
   },
   /* 店員の顔のあたりを左右になでた */
   pet() {
+    const k = this.cur(); if (!k || !this.has(k, "dere")) return;   // なでるのは、デレの絵がある店員（ルゥ）だけ
     const now = Date.now(); this.petUntil = now + 600; this.lastAct = now; this.taps = 0;
     if (now < (this.petCool || 0)) return; this.petCool = now + 2500;
     if (typeof Sound !== "undefined") Sound.play("click");
@@ -526,7 +531,8 @@ const Keeper = {
     this.say(t, it.mood, it.extra || "");
   },
   say(t, mood, extra) {
-    this.lastAct = Date.now();
+    this.lastAct = Date.now(); this.nap = "";
+    document.querySelectorAll(".kp-man.asleep").forEach(m => m.classList.remove("asleep"));
     this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true;
     if (mood) { this.mood = mood; this.moodUntil = Date.now() + Math.max(1800, t.length * 45 + 1400); } else this.mood = null;
     this.paintText();
@@ -556,7 +562,7 @@ const Keeper = {
     const img = document.querySelector(".kp-img"); if (!img) return;
     this.timers.forEach(clearInterval); this.timers = [];
     const k = this.cur();
-    this.lastAct = Date.now();
+    this.lastAct = Date.now(); this.nap = "";
     document.querySelectorAll(".kp-man").forEach(m => this.bindPet(m));
     if (this.q.length && !this.typing) this.next(true); else this.paintText();
     let blinkAt = Date.now() + 1500 + Math.random() * 3000, blinkTo = 0, tick = 0;
@@ -574,6 +580,13 @@ const Keeper = {
           if (now > blinkAt) { blinkTo = now + 130; blinkAt = now + 2200 + Math.random() * 3800; }
           if (now < blinkTo) f = "blink";
           else if (sleepy && still >= KEEPER_DOZE) f = "doze";                    // うとうと
+        }
+        // 眠っている間：体の上下（息）を止めて、吹き出しは「…」。うとうとしている間は吹き出しを空に
+        const st = sleepy && still >= KEEPER_SLEEP ? "sleep" : sleepy && still >= KEEPER_DOZE ? "doze" : "";
+        if (st !== this.nap) {
+          this.nap = st;
+          document.querySelectorAll(".kp-man").forEach(m => m.classList.toggle("asleep", st === "sleep"));
+          if (st) { this.text = this.shown = st === "sleep" ? "…すぅ…" : ""; this.extra = ""; this.paintText(); }
         }
       }
       const want = this.src(k, f); if (img.getAttribute("src") !== want) img.setAttribute("src", want);
