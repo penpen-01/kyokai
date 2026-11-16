@@ -638,7 +638,8 @@ const KEEPER_SCENES = {
   poor:    { label: "魔石が足りない" },
   dis:     { label: "分解した" },
   tap:     { label: "店員を押した" },
-  rich:    { label: "魔石をたくさん持っている" }
+  rich:    { label: "魔石をたくさん持っている" },
+  complete:{ label: "交換できるカードを全部集め終えた", hint: "今日のおすすめの代わりにも話します" }
 };
 const QUEST_TYPES = {
   winLv:  { label: "CPUに勝つ（強さを選ぶ）", lv: true, text: (n, q) => `CPU（${CPU_LV_NAMES[q.lv] || "中級"}）に${n}回勝つ` },
