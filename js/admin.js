@@ -98,7 +98,7 @@ const Admin = {
       <div class="fgroup">
         <span class="gl">G（ゴールド）</span>
         <div class="cfg">
-          ${Object.entries(CONFIG_INFO).filter(([, v]) => v.group === "eco").map(([k, v]) => `<div class="item">
+          ${Object.entries(CONFIG_INFO).filter(([k, v]) => v.group === "eco" && !k.startsWith("MAKO_")).map(([k, v]) => `<div class="item">
             <label for="f-cfg-${k}">${v.label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>
             ${stepper("cfg-" + k, cfg[k], v.label)}
           </div>`).join("")}
@@ -278,7 +278,11 @@ const Admin = {
     const L = DATA.skins = DATA.skins || [];
     const K = { sleeve: "スリーブ", frame: "アイコンの枠", icon: "限定アイコン", bg: "対戦の背景", home: "ホームの背景", keeper: "店員", art: "別イラスト（カードの絵）", bgm: "BGM" };
     const opt = (o, cur) => Object.entries(o).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(v)}</option>`).join("");
-    return `<div class="fgroup"><span class="gl">スキン</span>
+    const mako = ["MAKO_U", "MAKO_L"].map(k => `<div class="item"><label for="f-cfg-${k}">${CONFIG_INFO[k].label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>${stepper("cfg-" + k, DATA.config[k] ?? DEFAULT_CONFIG[k], CONFIG_INFO[k].label)}</div>`).join("");
+    return `<div class="fgroup"><span class="gl">魔光加工の値段</span>
+        <p class="hint">カード一覧・デッキ編成のカードの詳細で買う「光」の値段です（カード1種類・光1種類ごと）。UR風はSR以下に、レジェンド風はUR以下に付けられます。</p>
+        <div class="cfg">${mako}</div></div>
+      <div class="fgroup"><span class="gl">スキン</span>
         <p class="hint">ショップの「スキン」で魔石で売る見た目の品です。「最初から持っている」にした品は、全員が持っていて選び直せます（今の初期の絵など）。絵の場所は ui/xxx.webp のように書きます（絵は Claude に渡せば置きます）。絵がない品は「準備中」として並びます。限定アイコンは「カードのID」にボスなどのカードのIDを書くと、その絵がアイコンになります。店員は「店員のID」に dorgan・weiss・ruu などを書きます。カードの光とスタンプの値段は、それぞれの設定・スタンプの欄で決めます。</p></div>
       ${Object.entries(K).map(([kind, label]) => `<div class="fgroup"><span class="gl">${label}</span>
         ${L.map((x, i) => x.kind !== kind ? "" : `<div class="inf-ed"><div class="frow">
@@ -371,7 +375,7 @@ const Admin = {
         <div class="frow">
           <label class="fl">名前<input class="txt" data-kp="name" maxlength="20" value="${esc(k.name || "")}"></label>
           <label class="fl">肩書き<input class="txt" data-kp="title" maxlength="30" value="${esc(k.title || "")}"></label>
-          <label class="fl">魔石の値段（スキンとして買うとき。最初の店員は0）<input class="txt" type="number" min="0" data-kp="price" value="${+k.price || 0}" style="max-width:140px"></label>
+          <span class="hint">値段は「スキン」の「店員」の欄で決めます（いま魔石${(((DATA.skins || []).find(s => s.kind === "keeper" && s.ref === k.id) || {}).price || 0).toLocaleString()}）。</span>
         </div>
         <p class="hint">内部の名前：${esc(k.id)}（絵の名前に使います。変えられません）</p>
         ${Object.entries(KEEPER_SCENES).map(([s, info]) => { const v = (k.lines[s] || []).join("\n");

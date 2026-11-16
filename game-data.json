@@ -1,5 +1,5 @@
 {
- "version": 178,
+ "version": 179,
  "updated": "2026-11-17",
  "config": {
   "PLAYER_HP": 20,
@@ -50,8 +50,8 @@
   "STONE_TICKET": 300,
   "SHOP_FEATURE_OFF": 20,
   "STONE_PER_GOLD": 3,
-  "MAKO_U": 3000,
-  "MAKO_L": 5000,
+  "MAKO_U": 5000,
+  "MAKO_L": 10000,
   "SKIN_ON": 0,
   "INFO_HOURS": 24,
   "CHARM_HARD": 3000,
@@ -1741,7 +1741,7 @@
    "id": "copel",
    "name": "コペル",
    "title": "ゼンマイ人形の店番",
-   "price": 3000,
+   "price": 10000,
    "lines": {
     "enter": [
      "いらっしゃいませ、お客様。本日のご用件を、どうぞ",
@@ -1798,7 +1798,7 @@
    "id": "mike",
    "name": "ミケ",
    "title": "番頭",
-   "price": 3000,
+   "price": 10000,
    "lines": {
     "enter": [
      "おう、いらっしゃい。ゆっくり見ていきな",
