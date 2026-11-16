@@ -11,11 +11,10 @@
 const SHOP_CATS = [
   { id: "trade", ready: true }, { id: "dis", ready: true }, { id: "ticket", ready: true },
   { id: "slot", ready: true },
-  { id: "skin", ready: false, ic: "skin", name: "カードのスキン", sub: "好きなカードの絵を変える" },
-  { id: "icon", ready: false, ic: "icon", name: "アイコン", sub: "プレイヤーの顔を変える" },
-  { id: "sleeve", ready: false, ic: "sleeve", name: "スリーブ", sub: "カードの裏の模様" },
-  { id: "field", ready: false, ic: "field", name: "バトル場", sub: "対戦の舞台を変える" },
-  { id: "limited", ready: false, ic: "star", name: "期間限定", sub: "いまだけの交換" }
+  // 準備中の売り場（絵付きで「準備中」として並べる）
+  { id: "info", ready: false, ic: "star", name: "情報屋", sub: "ボスの攻略情報を買う" },
+  { id: "skin", ready: false, ic: "skin", name: "スキン", sub: "店員やカードの見た目を変える" },
+  { id: "limited", ready: false, ic: "star", name: "限定カード", sub: "いまだけ・ここだけのカード" }
 ];
 const SHOP_IC = {
   trade: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="9" height="13" rx="1.5"/><rect x="12" y="6" width="9" height="13" rx="1.5" transform="rotate(8 16.5 12.5)"/><path d="M7.5 9.5l1.5 2-1.5 2-1.5-2z"/></svg>',
@@ -195,17 +194,17 @@ const Shop = {
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
       ${Keeper.stageHTML()}
       <div class="sh-cats">
-        <button type="button" class="sh-cat wide c-trade" data-act="shopTrade" ${use ? "" : "disabled"}>
-          <span class="sh-ic">${SHOP_IC.trade}</span><b>カードと交換</b><small>好きなカードを魔石で1枚ずつ</small><span class="go" aria-hidden="true">›</span></button>
-        <button type="button" class="sh-cat c-dis" data-act="shopDis" ${use ? "" : "disabled"}>
-          <span class="sh-ic">${SHOP_IC.dis}</span><b>分解</b><small>${surN ? `ダブり${surN}枚 ・ 最大+${surS}` : "ダブりはありません"}</small>${surN ? `<i class="sh-badge">${surN}</i>` : ""}</button>
-        <div class="sh-cat c-ticket">
-          <span class="sh-ic">${SHOP_IC.ticket}</span><b>パック券</b><small>魔石${tc}で1枚 ・ 所持${Account.tickets}枚</small>
+        <button type="button" class="sh-cat art wide c-trade" data-act="shopTrade" ${use ? "" : "disabled"}>
+          <span class="sh-art" style="background-image:url('ui/shop-trade.webp')" aria-hidden="true"></span><b>カードと交換</b><small>好きなカードを魔石で1枚ずつ</small><span class="go" aria-hidden="true">›</span></button>
+        <button type="button" class="sh-cat art c-dis" data-act="shopDis" ${use ? "" : "disabled"}>
+          <span class="sh-art" style="background-image:url('ui/shop-dis.webp')" aria-hidden="true"></span><b>分解</b><small>${surN ? `ダブり${surN}枚 ・ 最大+${surS}` : "ダブりはありません"}</small>${surN ? `<i class="sh-badge">${surN}</i>` : ""}</button>
+        <div class="sh-cat art c-ticket">
+          <span class="sh-art" style="background-image:url('ui/shop-ticket.webp')" aria-hidden="true"></span><b>パック券</b><small>魔石${tc}で1枚 ・ 所持${Account.tickets}枚</small>
           <button type="button" class="btn sm primary" data-act="shopTicket" ${use && Account.stones >= tc ? "" : "disabled"}>交換する</button></div>
-        <div class="sh-cat c-slot">
-          <span class="sh-ic">${SHOP_IC.slot}</span><b>デッキ枠</b><small>${slotLeft > 0 ? `魔石${slotCost}で1つ増やす（マイデッキ・限定構築とも）・今 ${Decks.max("mine")}個` : `もう増やせません（${Decks.max("mine")}個）`}</small>
+        <div class="sh-cat art c-slot">
+          <span class="sh-art" style="background-image:url('ui/shop-slot.webp')" aria-hidden="true"></span><b>デッキ枠</b><small>${slotLeft > 0 ? `魔石${slotCost}で1つ増やす ・ 今${Decks.max("mine")}個` : `もう増やせません（${Decks.max("mine")}個）`}</small>
           <button type="button" class="btn sm primary" data-act="shopSlot" ${use && slotLeft > 0 && Account.stones >= slotCost ? "" : "disabled"}>増やす</button></div>
-        ${soon ? fut.map(x => `<div class="sh-cat soon"><span class="sh-ic">${SHOP_IC[x.ic] || SHOP_IC.star}</span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("") : ""}
+        ${fut.map(x => `<div class="sh-cat art soon"><span class="sh-art" style="background-image:url('ui/shop-${x.id}.webp')" aria-hidden="true"></span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("")}
       </div>
       <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
       ${this.detailHTML()}

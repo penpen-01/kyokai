@@ -2402,3 +2402,17 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .kp-mini .kp-bubble{flex:1;min-width:0;position:relative;padding:8px 12px;border-radius:12px 12px 12px 4px;background:rgba(28,20,14,.92);border:1px solid rgba(232,168,90,.5);color:#f5ead8;font-size:13.5px;cursor:pointer}
 .offb{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:#e8893a;color:#1d1209;white-space:nowrap;z-index:2}
 @media (prefers-reduced-motion:reduce){.kp-stage .kp-man .kp-img,.kp-more{animation:none!important}}
+
+/* 売り場のタイル（絵つき）：上に絵、下に名前と説明。カード交換だけは横長で、絵が左 */
+.sh-cat.art{padding:0 0 12px;gap:3px;overflow:hidden;min-height:0;background:linear-gradient(180deg,#2a2018,#17110c);border:1px solid rgba(232,168,90,.35)}
+.sh-cat.art > :not(.sh-art):not(.sh-badge):not(.sh-soon):not(.go){margin-inline:12px}
+.sh-art{display:block;aspect-ratio:16/10;background:#120d09 50% 50%/cover no-repeat;margin-bottom:6px;transition:transform .35s ease}
+.sh-cat.art:hover .sh-art{transform:scale(1.04)}
+.sh-cat.art.wide{display:grid;grid-template-columns:42% 1fr;grid-template-rows:auto auto 1fr;column-gap:12px;padding:0;min-height:120px}
+.sh-cat.art.wide .sh-art{grid-row:1/4;aspect-ratio:auto;height:100%;margin:0}
+.sh-cat.art.wide > b{margin:16px 36px 0 0}
+.sh-cat.art.wide > small{margin:0 36px 14px 0}
+.sh-cat.art .sh-badge{z-index:2}
+.sh-cat.art.soon{border-style:dashed;cursor:default}
+.sh-cat.art.soon .sh-art{filter:grayscale(.65) brightness(.6)}
+.sh-cat.art.soon .sh-soon{position:absolute;right:8px;top:8px;z-index:2;background:rgba(10,8,6,.75)}
