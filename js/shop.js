@@ -407,12 +407,11 @@ const Keeper = {
       if (st >= KEEPER_RICH) bag.push("rich");
       if (h >= 5 && h < 11) bag.push("morning");
       if (h >= 22 || h < 5) bag.push("night");
-      if (Shop.complete()) bag.push("complete");
       scene = bag[Math.floor(Math.random() * bag.length)];
     }
     this.q = [{ scene }];
     const f = Shop.feature();
-    if (!f && Shop.complete() && scene !== "complete") this.q.push({ scene: "complete", mood: "happy" });   // 全部集めた人には、おすすめの代わりにひとこと
+    if (!f && Shop.complete()) this.q.push({ scene: "complete", mood: "happy" });   // 全部集めた人には、おすすめの代わりにひとこと
     if (f && Shop.offPct()) this.q.push({ scene: "feature", mood: "offer", vars: { card: f.name, off: Shop.offPct() }, extra: `<button type="button" class="kp-go" data-act="shopFeature" data-id="${esc(f.id)}">《${esc(f.name)}》を見る ›</button>` });
     this.shown = ""; this.extra = ""; this.typing = false; this.talking = false;
   },
