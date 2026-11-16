@@ -2436,3 +2436,12 @@ button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
 .ops-f{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-size:13px}
 .ops-q{display:flex;gap:6px;flex-wrap:wrap}
 .ops-flags{display:flex;flex-direction:column;gap:6px;margin:8px 0 12px}
+
+/* 両替 */
+.exch-art{display:flex!important;align-items:center;justify-content:center;gap:6%;background:radial-gradient(circle at 50% 45%,#3a2a52,#160f22 70%)!important}
+.exch-art img{width:30%;height:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.exch-art i{font-style:normal;font-size:28px;font-weight:800;color:#f0b25e}
+.exch-now{display:flex;align-items:center;justify-content:center;gap:14px;font-size:20px;margin:8px 0}
+.exch-now span{display:inline-flex;align-items:center;gap:6px}
+.exch-now i{font-style:normal;color:#f0b25e;font-weight:800}
+.exch-btns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}

@@ -40,6 +40,30 @@ const Shop = {
   usable() { return ["ready", "offline"].includes(Account.status); },
   getRate(r) { return Math.max(0, CONFIG["STONE_GET_" + STONE_KEY[r]] || 0); },
   costRate(r) { return Math.max(0, CONFIG["STONE_COST_" + STONE_KEY[r]] || 0); },
+  /* 両替：魔石 → G（rate 個で 1G。損をする交換にして、パック→分解→両替でGが増え続けないようにする） */
+  exch: null,
+  rate() { return Math.max(1, Math.floor(CONFIG.STONE_PER_GOLD || 3)); },
+  exchHTML() {
+    const e = this.exch; if (!e) return "";
+    const r = this.rate(), max = Math.floor(Account.stones / r), g = Math.max(0, Math.min(max, e.g || 0));
+    return `<div class="dmodal" data-act="exchClose"><div class="dmodal-in confirmbox" role="dialog" aria-label="両替" data-act="noop">
+      <b class="dm-name">魔石を G に両替</b>
+      <p class="dm-text">魔石${r}個で 1G になります。G を魔石に戻すことはできません。</p>
+      <div class="exch-now"><span>${curIcon("stone")}<b>${(g * r).toLocaleString()}</b></span><i>→</i><span>${curIcon("gold")}<b>${g.toLocaleString()}G</b></span></div>
+      <div class="exch-btns">${[-100, -10, 10, 100, 1000].map(v => `<button type="button" class="btn sm" data-act="exchAdd" data-v="${v}">${v > 0 ? "+" : ""}${v}G</button>`).join("")}<button type="button" class="btn sm" data-act="exchAdd" data-v="max">最大（${max.toLocaleString()}G）</button></div>
+      <p class="hint">所持 魔石 ${Account.stones.toLocaleString()} → ${(Account.stones - g * r).toLocaleString()} ・ G ${Account.gold.toLocaleString()} → ${(Account.gold + g).toLocaleString()}</p>
+      <div class="pre-btns"><button type="button" class="btn primary" data-act="exchYes" ${g > 0 && this.usable() ? "" : "disabled"}>両替する</button><button type="button" class="btn" data-act="exchClose">やめる</button></div>
+    </div></div>`;
+  },
+  exchange() {
+    const e = this.exch; if (!e || !this.usable()) return;
+    const r = this.rate(), g = Math.max(0, Math.min(Math.floor(Account.stones / r), e.g || 0));
+    if (!g) return;
+    Account.data.stones -= g * r; Account.data.gold = (Account.data.gold || 0) + g;
+    Account.saveNow(); Sound.play("click");
+    this.exch = null; Keeper.react("buy", "happy");
+    this.show(`魔石${(g * r).toLocaleString()}個を、${g.toLocaleString()}G に両替しました。`);
+  },
   /* そのカードの交換に要る魔石（今日のおすすめは割引） */
   offPct() { return Math.max(0, Math.min(90, CONFIG.SHOP_FEATURE_OFF ?? 20)); },
   costOf(c) { const base = this.costRate(c.rarity), f = this.feature(); return f && f.id === c.id && this.offPct() ? Math.ceil(base * (100 - this.offPct()) / 100) : base; },
@@ -205,12 +229,14 @@ const Shop = {
         <div class="sh-cat art c-slot">
           <span class="sh-art" style="background-image:url('ui/shop-slot.webp')" aria-hidden="true"></span><b>デッキ枠</b><small>${slotLeft > 0 ? `魔石${slotCost}で1つ増やす ・ 今${Decks.max("mine")}個` : `もう増やせません（${Decks.max("mine")}個）`}</small>
           <button type="button" class="btn sm primary" data-act="shopSlot" ${use && slotLeft > 0 && Account.stones >= slotCost ? "" : "disabled"}>増やす</button></div>
+        <button type="button" class="sh-cat art c-exch" data-act="exchOpen" ${use ? "" : "disabled"}><span class="sh-art exch-art" aria-hidden="true"><img src="ui/cur-stone.webp" alt=""><i>→</i><img src="ui/cur-gold.webp" alt=""></span><b>両替</b><small>魔石${this.rate()}個で1G</small></button>
         <button type="button" class="sh-cat art c-info" data-act="shopInfo" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-info.webp')" aria-hidden="true"></span><b>情報屋</b><small>攻略の情報や、ボス戦の品をGで</small></button>
         ${fut.map(x => `<div class="sh-cat art soon"><span class="sh-art" style="background-image:url('ui/shop-${x.id}.webp')" aria-hidden="true"></span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("")}
       </div>
       <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
       ${this.detailHTML()}
       ${this.hubAskHTML(tc, slotCost)}
+      ${this.exchHTML()}
     </div>`, "start", true);
   },
   /* パック券・デッキ枠を交換する前の確認（魔石は戻せないので） */
@@ -329,6 +355,10 @@ const Shop = {
   handleAct(act, el) {
     switch (act) {
       case "kpTap": Keeper.tap(); return true;
+      case "exchOpen": this.exch = { g: Math.min(100, Math.floor(Account.stones / this.rate())) }; this.show(); return true;
+      case "exchClose": this.exch = null; this.show(); return true;
+      case "exchAdd": if (this.exch) { const max = Math.floor(Account.stones / this.rate()); const v = el.dataset.v; this.exch.g = v === "max" ? max : Math.max(0, Math.min(max, this.exch.g + +v)); this.show(); } return true;
+      case "exchYes": this.exchange(); return true;
       case "shopInfo": this.infoAsk = null; this.infoRead = null; this.msg = null; this.showInfo(); return true;
       case "infoAsk": this.infoAsk = { kind: el.dataset.kind, id: el.dataset.id }; this.showInfo(); return true;
       case "infoNo": this.infoAsk = null; this.showInfo(); return true;

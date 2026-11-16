@@ -1,5 +1,5 @@
 {
- "version": 153,
+ "version": 154,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -61,7 +61,8 @@
   "CHARM_HP": 20,
   "BCHAL_HARD": 6000,
   "BCHAL_EX": 10000,
-  "BCHAL_WEEK": 3
+  "BCHAL_WEEK": 3,
+  "STONE_PER_GOLD": 3
  },
  "packs": [
   {
