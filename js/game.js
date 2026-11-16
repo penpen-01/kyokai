@@ -2086,13 +2086,13 @@ function showStart() {
       <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}<button type="button" class="deckplate" data-act="decks" aria-label="使うデッキ：${esc(deck ? deck.name : "未選択")}（デッキ編成へ）">${HOME_ICON.decks}<span>${esc(deck ? deck.name : "デッキ未選択")}</span></button>${adminOn() ? `<button type="button" class="admin-badge" data-ops="open" title="運営用アカウント：押すと、G・魔石などを好きに変えられる">運営</button>` : ""}</div>
       <div class="hb-me">
         ${goldOK ? `<button type="button" class="homeicon" data-act="profile" data-from="start" aria-label="プロフィール（名前・称号・アイコン・スタンプ）">
-          <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : `<span class="glyph">任</span>`}</span></button>` : ""}
+          <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : DEFAULT_AVATAR_HTML}</span></button>` : ""}
         ${goldOK ? (() => { const t = typeof Titles !== "undefined" ? Titles.curName() : ""; return `<button type="button" class="titleplate ${t ? "" : "none"}" data-act="profile" data-from="start" aria-label="称号：${esc(t || "なし")}（プロフィールへ）"><span>${esc(t || "称号を付ける")}</span></button>`; })() : ""}
       </div>
       <div class="hb-right">
-        ${goldOK ? `<button type="button" class="iconbtn" data-act="inboxMail" aria-label="メール">${HOME_ICON.envelope}${Inbox.mailBadge()}</button>` : ""}
-        <button type="button" class="iconbtn" data-act="inboxNews" aria-label="お知らせ">${HOME_ICON.bell}${Inbox.newsBadge()}</button>
-        <button type="button" class="iconbtn" data-act="options" aria-label="オプション">${HOME_ICON.gear}</button>
+        ${goldOK ? `<button type="button" class="iconbtn art" data-act="inboxMail" aria-label="メール"><img src="ui/btn-mail.webp" alt="" draggable="false">${Inbox.mailBadge()}</button>` : ""}
+        <button type="button" class="iconbtn art" data-act="inboxNews" aria-label="お知らせ"><img src="ui/btn-bell.webp" alt="" draggable="false">${Inbox.newsBadge()}</button>
+        <button type="button" class="iconbtn art" data-act="options" aria-label="オプション"><img src="ui/btn-gear.webp" alt="" draggable="false"></button>
       </div>
       ${goldOK ? questBoardSafe() : ""}
     </div>

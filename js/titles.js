@@ -195,7 +195,7 @@ const Profile = {
     openOverlay(`<div class="panel wide profile">
       <div class="topbar"><button type="button" class="btn sm" data-act="${back}">← 戻る</button><b>プロフィール</b></div>
       <div class="pf-card">
-        <span class="pf-face">${icon ? iconImgHTML(icon) : `<span class="glyph">任</span>`}</span>
+        <span class="pf-face">${icon ? iconImgHTML(icon) : DEFAULT_AVATAR_HTML}</span>
         <span class="pf-who"><b>${esc(playerName())}</b><small>${t ? esc(t.name) : "称号なし"}</small></span>
         <button type="button" class="btn sm" data-act="nameEdit">名前を変える</button>
       </div>
@@ -222,7 +222,7 @@ const Profile = {
         <div class="seg">${["all", ...RARITY_ORDER].map(r => `<button type="button" data-act="pfIr" data-v="${r}" aria-pressed="${this.ir === r}">${r === "all" ? "全レア" : RARITY_SHORT[r]}</button>`).join("")}</div>
       </div>
       <div class="iconpick">
-        <button type="button" class="iconopt auto ${cur ? "" : "on"}" data-act="iconPick" data-id="" aria-label="おまかせ"><span class="iface"><span class="glyph">任</span></span><small>おまかせ</small></button>
+        <button type="button" class="iconopt auto ${cur ? "" : "on"}" data-act="iconPick" data-id="" aria-label="おまかせ"><span class="iface">${DEFAULT_AVATAR_HTML}</span><small>おまかせ</small></button>
         ${list.map(opt).join("") || `<p class="hint">条件に合うアイコンはありません</p>`}
       </div>`;
   },
