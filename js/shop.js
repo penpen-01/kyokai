@@ -441,7 +441,7 @@ const Keeper = {
   /* 店に入ったとき：あいさつ → 今日のおすすめ */
   enter() {
     const k = this.cur(); if (!k) return;
-    let seen = false; try { seen = localStorage.getItem("kyokai-shop-seen") === "1"; localStorage.setItem("kyokai-shop-seen", "1"); } catch (e) {}
+    const seen = this.seen(k);
     const h = new Date().getHours(), st = Account.stones || 0;
     // はじめての来店だけは必ず自己紹介。ほかは「ふだんのあいさつ」を重さ2、当てはまる特別なあいさつ（朝・夜・魔石が多い）を重さ1ずつで抽選する
     //  例：魔石が多いだけ → ふだん2/3・魔石1/3。朝で魔石も多い → ふだん1/2・朝1/4・魔石1/4（どの人もふだんのあいさつが一番多く出る）
@@ -460,8 +460,23 @@ const Keeper = {
     this.shown = ""; this.extra = ""; this.typing = false; this.talking = false;
   },
   /* 買い物・分解などの反応（次に描かれた画面で話す） */
-  react(scene, mood) { if (!this.cur()) return; this.q = [{ scene, mood }]; this.shown = ""; this.extra = ""; this.typing = false; this.talking = false; },
+  /* 店員ごとに「初めて会った」かどうか。初めてなら覚える（ドルガンは前からの記録も見る） */
+  seen(k) {
+    const key = "kyokai-shop-seen-" + k.id;
+    try {
+      const was = localStorage.getItem(key) === "1" || (k.id === "dorgan" && localStorage.getItem("kyokai-shop-seen") === "1");
+      localStorage.setItem(key, "1"); return was;
+    } catch (e) { return true; }
+  },
+  /* 買い物などの反応。ただし、その店員に初めて会ったとき（店員を着替えた直後など）は、反応より自己紹介を先に */
+  react(scene, mood) {
+    const k = this.cur(); if (!k) return;
+    this.q = this.seen(k) ? [{ scene, mood }] : [{ scene: "first" }];
+    this.shown = ""; this.extra = ""; this.typing = false; this.talking = false;
+  },
   tap() {
+    if (Date.now() < (this.tapUntil || 0)) return;   // 連打で表情がパタパタ変わらないように、少し間をあける
+    this.tapUntil = Date.now() + 900;
     const el = document.querySelector(".kp-man"); if (el) { el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
     if (typeof Sound !== "undefined") Sound.play("click");
     this.q = [{ scene: "tap" }]; this.next(true);
@@ -511,7 +526,7 @@ const Keeper = {
       if (this.mood && now > this.moodUntil) this.mood = null;
       let f = "idle";
       if (this.mood) f = this.mood;
-      else if (this.talking) f = ["talk1", "talk2", "talk1", "idle"][Math.floor(tick / 2) % 4];   // 口だけ、約0.18秒ごとに動かす
+      else if (this.talking) f = ["talk1", "idle", "talk2", "idle"][Math.floor(tick / 3) % 4];   // 口だけ、約0.27秒ごとにゆっくり動かす
       else {
         if (now > blinkAt) { blinkTo = now + 130; blinkAt = now + 2200 + Math.random() * 3800; }
         if (now < blinkTo) f = "blink";
