@@ -1,5 +1,5 @@
 {
- "version": 165,
+ "version": 166,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -9165,22 +9165,6 @@
    "price": 0,
    "art": "ui/bg-home.webp",
    "default": true
-  },
-  {
-   "id": "ic-nezal",
-   "kind": "icon",
-   "name": "虚ろなる境界王ネザル",
-   "desc": "上級の隠しボスの顔。",
-   "price": 3000,
-   "card": "b-nezal"
-  },
-  {
-   "id": "ic-yomi",
-   "kind": "icon",
-   "name": "冥府の剣鬼 黄泉丸",
-   "desc": "超級の隠しボスの顔。",
-   "price": 3000,
-   "card": "b-yomimaru"
   },
   {
    "id": "kp-dorgan",
