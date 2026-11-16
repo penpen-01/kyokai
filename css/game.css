@@ -2460,7 +2460,7 @@ button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
 
 /* ---------- プロフィール ---------- */
 .pf-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
-.pf-face{width:64px;height:64px;border-radius:50%;overflow:hidden;flex:none;background:#20243a;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold)}
+.pf-face{position:relative;width:64px;height:64px;border-radius:50%;overflow:hidden;flex:none;background:#20243a;display:flex;align-items:center;justify-content:center;border:2px solid var(--gold)}
 .pf-face img{width:100%;height:100%;object-fit:cover}
 .pf-who{flex:1;min-width:0;display:flex;flex-direction:column}
 .pf-who b{font-size:18px}
