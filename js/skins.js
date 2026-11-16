@@ -7,6 +7,7 @@
 
 let SKINS = [];
 const SKIN_KINDS = { sleeve: "スリーブ", frame: "アイコンの枠", icon: "限定アイコン", bg: "対戦の背景", home: "ホームの背景", keeper: "店員", holo: "カードの光", stamp: "スタンプ", bgm: "BGM" };
+const SKIN_TAB = { sleeve: "スリーブ", frame: "枠", icon: "アイコン", bg: "対戦背景", home: "ホーム背景", keeper: "店員", holo: "カードの光", stamp: "スタンプ", bgm: "BGM" };   // タブは短い名前（3列×3段にそろえる）
 const EQUIP_KINDS = ["sleeve", "bg", "home", "frame"];   // 1つを選んで付ける種類
 let HOLO_SET = new Set();   // 光らせているカード（cardHTML が見る）
 
@@ -57,7 +58,7 @@ const Skins = {
   show(msg) {
     if (msg !== undefined) Shop.msg = msg;
     const st = Account.stones || 0, use = Shop.usable();
-    const tabs = Object.entries(SKIN_KINDS).map(([k, l]) => `<button type="button" role="tab" data-act="skTab" data-v="${k}" aria-pressed="${this.kind === k}">${l}</button>`).join("");
+    const tabs = Object.keys(SKIN_KINDS).map(k => `<button type="button" role="tab" data-act="skTab" data-v="${k}" aria-pressed="${this.kind === k}" aria-label="${SKIN_KINDS[k]}">${SKIN_TAB[k]}</button>`).join("");
     const k = this.kind;
     let body = "";
     if (k === "holo") body = this.holoHTML(st, use);
@@ -72,7 +73,8 @@ const Skins = {
       ${Shop.noteHTML()}
       ${Keeper.miniHTML()}
       ${Shop.msg ? `<p class="shopmsg" role="status">${esc(Shop.msg)}</p>` : ""}
-      <div class="seg sk-tabs" role="tablist">${tabs}</div>
+      <div class="sk-tabs" role="tablist">${tabs}</div>
+      <p class="sk-kind">${esc(SKIN_KINDS[k])}</p>
       ${body}
       ${ax ? `<div class="dmodal" data-act="skNo"><div class="dmodal-in confirmbox" role="alertdialog" aria-label="買う前の確認" data-act="noop">
           <b class="dm-name">「${esc(ax.name)}」を買いますか？</b>

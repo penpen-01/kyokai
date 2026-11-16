@@ -2562,3 +2562,12 @@ html.eco .card.holo .shine,html.nofx .card.holo .shine{display:none}
 .sk-note{padding:10px 12px;border-radius:10px;background:rgba(14,10,8,.82);border:1px solid rgba(232,168,90,.25);opacity:1}
 .sk-empty{background:rgba(14,10,8,.82);border-radius:10px}
 .c-skin .sh-soon{z-index:2;background:rgba(10,8,6,.75)}
+
+/* スキンのタブ：同じ幅のボタンを3列×3段（広い画面では9つを1段） */
+.sk-tabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:8px 0 6px}
+@media (min-width:720px){.sk-tabs{grid-template-columns:repeat(9,minmax(0,1fr))}}
+.sk-tabs button{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:8px 4px;border-radius:10px;font-size:13px;font-weight:700;white-space:nowrap;
+  background:rgba(14,10,8,.82);border:1px solid rgba(232,168,90,.3);color:#e9dcc4}
+.sk-tabs button[aria-pressed="true"]{background:linear-gradient(180deg,#e3b64f,#b8862e);color:#1d1209;border-color:#f0c766}
+.sk-tabs button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.sk-kind{margin:4px 0 8px;font-family:var(--f-display);font-size:16px;color:#f3d58e;letter-spacing:.06em;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.8)}
