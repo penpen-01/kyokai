@@ -10,9 +10,11 @@
 
 const SEN_SET = 3, SEN_ROUNDS = 10, SEN_WIN = 7, SEN_LOSE = 2;
 const SEN_W = { common: 50, rare: 30, sr: 14, ur: 5, legend: 1 };          // ふだんのレア度の重み
-const SEN_W_BOOST = { common: 30, rare: 30, sr: 24, ur: 12, legend: 4 };   // 最後の CPU のデッキ
+/* CPU のデッキの質（boost）：0＝プレイヤーと同じ、1＝2勝目から、2＝5勝目から、3＝最後の相手 */
+const SEN_W_BOOSTS = [SEN_W, { common: 42, rare: 31, sr: 19, ur: 6, legend: 2 }, { common: 36, rare: 31, sr: 22, ur: 8, legend: 3 }, { common: 30, rare: 30, sr: 24, ur: 12, legend: 4 }];
+const senBoost = w => w >= SEN_WIN - 1 ? 3 : w >= 5 ? 2 : w >= 2 ? 1 : 0;
 /* その回の1枚目のレア度の下限（0〜9回目） */
-const senFloor = (r, boost) => r >= 9 ? "legend" : r >= 8 ? "ur" : r >= 6 ? "sr" : boost && r >= 4 ? "sr" : "";
+const senFloor = (r, boost) => r >= 9 ? "legend" : r >= 8 ? "ur" : r >= 6 ? "sr" : (+boost >= 2 && r >= 4) || (+boost >= 3 && r >= 2) ? "sr" : "";
 /* 勝ち数ごとの CPU の強さ */
 const senLevel = w => w >= 5 ? (typeof exOpen !== "function" || exOpen() ? "ex" : "hard") : w >= 2 ? "hard" : "normal";
 let SEN = { rewards: [], ban: [] };   // 工房の「選定戦」（報酬・出さないカード）
@@ -38,7 +40,7 @@ const Sentei = {
   },
   /* r回目の候補：3枚のセットを2つ。deck は今までに選んだカード（3枚に達したカードは出さない） */
   offer(r, deck = {}, boost = false, pool = this.pool()) {
-    const w = boost ? SEN_W_BOOST : SEN_W, used = new Set(), sets = [];
+    const w = SEN_W_BOOSTS[Math.max(0, Math.min(3, +boost || 0))], used = new Set(), sets = [];
     const free = c => (deck[c.id] || 0) < 3 && !used.has(c.id);
     for (let s = 0; s < 2; s++) {
       const set = [], bands = [0, 1, 2].sort(() => Math.random() - .5);
@@ -58,17 +60,21 @@ const Sentei = {
     }
     return sets;
   },
-  /* CPU の選び方：レア度が高いほど、重いカードが多すぎないほどよい */
-  score(set, deck) {
-    const heavy = Object.entries(deck).reduce((a, [id, n]) => a + (DEF[id] && DEF[id].cost >= 5 ? n : 0), 0);
+  /* CPU の選び方：レア度が高いほど、重いカードが多すぎないほど、今までに選んだカードと同じ世界が多いほどよい
+     （世界：4回目までは気にせず、5回目からは多い2つの世界に寄せる） */
+  score(set, deck, r = 0) {
+    let heavy = 0; const wc = {};
+    Object.entries(deck).forEach(([id, n]) => { const c = DEF[id]; if (!c) return; if (c.cost >= 5) heavy += n; wc[c.world] = (wc[c.world] || 0) + n; });
+    const top = Object.entries(wc).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]);
     return set.reduce((a, id) => { const c = DEF[id]; if (!c) return a;
-      return a + RARITY_ORDER.indexOf(c.rarity) * 1.2 + (c.cost >= 5 && heavy >= 8 ? -1.5 : 0) + (c.cost <= 2 ? .3 : 0); }, 0) + Math.random() * .8;
+      const world = r >= 4 ? (top.includes(c.world) ? .9 : -.6) : (wc[c.world] || 0) * .05;
+      return a + RARITY_ORDER.indexOf(c.rarity) * 1.2 + (c.cost >= 5 && heavy >= 8 ? -1.5 : 0) + (c.cost <= 2 ? .3 : 0) + world; }, 0) + Math.random() * .8;
   },
-  botDeck(boost = false) {
+  botDeck(boost = 0) {
     const deck = {}, pool = this.pool();
     for (let r = 0; r < SEN_ROUNDS; r++) {
       const sets = this.offer(r, deck, boost, pool);
-      const pick = sets.length > 1 && this.score(sets[1], deck) > this.score(sets[0], deck) ? sets[1] : sets[0];
+      const pick = sets.length > 1 && this.score(sets[1], deck, r) > this.score(sets[0], deck, r) ? sets[1] : sets[0];
       pick.forEach(id => { deck[id] = (deck[id] || 0) + 1; });
     }
     return deck;
@@ -110,7 +116,7 @@ const Sentei = {
     if (R.fight) { const q = this.settleQuit(true); if (q && q.done) return this.showEnd(q); R = this.run(); if (!R) return this.show(); }   // 前の対戦を途中でやめていた
     const lv = senLevel(R.w), last = R.w === SEN_WIN - 1, n = R.w + R.l + 1;
     R.fight = 1; Account.saveNow();   // 途中でやめたら負けに数える目印
-    const opp = { name: last ? "選定戦 最後の相手" : `選定戦 ${n}戦目`, cards: this.botDeck(last) }; const k = this.keyOf(opp.cards); if (k) { opp.key = k; opp.icon = k; }
+    const opp = { name: last ? "選定戦 最後の相手" : `選定戦 ${n}戦目`, cards: this.botDeck(senBoost(R.w)) }; const k = this.keyOf(opp.cards); if (k) { opp.key = k; opp.icon = k; }
     startBattle({ kind: "sen", level: lv, mine: this.myDeck(), opp, reward: 0, streak: false, extra: { senN: n, senLast: last } });
   },
   /* 対戦が終わった（giveReward から1回だけ） */
