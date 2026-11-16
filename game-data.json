@@ -1,5 +1,5 @@
 {
- "version": 161,
+ "version": 162,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -2395,42 +2395,6 @@
   {
    "id": "s06",
    "text": "考え中…",
-   "free": true,
-   "price": 0
-  },
-  {
-   "id": "s07",
-   "text": "ナイス！",
-   "free": true,
-   "price": 0
-  },
-  {
-   "id": "s08",
-   "text": "おつかれさま！",
-   "free": true,
-   "price": 0
-  },
-  {
-   "id": "s09",
-   "text": "強すぎ…",
-   "free": true,
-   "price": 0
-  },
-  {
-   "id": "s10",
-   "text": "ごめん！",
-   "free": true,
-   "price": 0
-  },
-  {
-   "id": "s11",
-   "text": "いい勝負！",
-   "free": true,
-   "price": 0
-  },
-  {
-   "id": "s12",
-   "text": "ふふん",
    "free": true,
    "price": 0
   }
