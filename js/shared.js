@@ -662,7 +662,17 @@ const TITLE_CONDS = {
   onlineGame: { label: "友達と対戦する", n: true, text: n => `友達と通算${n}回対戦する` },
   packs:      { label: "パックを開ける", n: true, text: n => `パックを通算${n}回開ける` },
   kinds:      { label: "カードの種類を集める", n: true, text: n => `カードを${n}種類持つ` },
-  complete:   { label: "交換所のカードを全部3枚ずつ集める", text: () => "交換所のカードを、全部3枚ずつ集める" },
+  complete:   { label: "1つのパックのカードを全部3枚ずつ集める", set: true, text: (n, t) => `${((typeof PACKS !== "undefined" && PACKS.length ? PACKS : typeof DATA !== "undefined" && DATA && DATA.packs || []).find(p => p.id === t.set) || {}).name || "そのパック"}のカードを、全部3枚ずつ集める` },
+  games:      { label: "対戦する（CPU・友達どちらも）", n: true, text: n => `通算${n}回対戦する` },
+  losses:     { label: "対戦に負ける", n: true, text: n => `対戦に通算${n}回負ける` },
+  play:       { label: "カードを使う", n: true, text: n => `カードを通算${n}枚使う` },
+  spell:      { label: "魔法を使う", n: true, text: n => `魔法を通算${n}枚使う` },
+  char:       { label: "キャラを出す", n: true, text: n => `キャラを通算${n}体出す` },
+  kill:       { label: "相手のキャラを倒す", n: true, text: n => `相手のキャラを通算${n}体倒す` },
+  lost:       { label: "自分のキャラが倒される", n: true, text: n => `自分のキャラが通算${n}体倒される` },
+  face:       { label: "相手プレイヤーにダメージを与える", n: true, text: n => `相手プレイヤーに通算${n}ダメージを与える` },
+  maxHit:     { label: "一度に大きなダメージを与える", n: true, text: n => `一度に${n}以上のダメージを与える` },
+  freeze:     { label: "凍結させる", n: true, text: n => `相手のキャラを通算${n}回凍結させる` },
   stoneUse:   { label: "魔石を使う", n: true, text: n => `魔石を通算${n}使う` },
   trade:      { label: "カードを魔石と交換する", n: true, text: n => `カードを通算${n}回交換する` },
   dis:        { label: "カードを分解する", n: true, text: n => `カードを通算${n}枚分解する` },
@@ -874,7 +884,7 @@ function normalizeData(data) {
   const titles = (Array.isArray(d.titles) ? d.titles : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id)).slice(0, 300).map(x => {
     const c = x.cond && TITLE_CONDS[x.cond.type] ? x.cond : { type: "gift" }, T = TITLE_CONDS[c.type];
     return { id: x.id, name: String(x.name || "称号").slice(0, 12), desc: String(x.desc || "").slice(0, 60),
-      cond: { type: c.type, ...(T.n ? { n: Math.max(1, Math.floor(+c.n || 1)) } : {}), ...(T.lv ? { lv: CPU_LV_NAMES[c.lv] ? c.lv : c.type === "bossWin" ? "hard" : "normal" } : {}) },
+      cond: { type: c.type, ...(T.n ? { n: Math.max(1, Math.floor(+c.n || 1)) } : {}), ...(T.lv ? { lv: CPU_LV_NAMES[c.lv] ? c.lv : c.type === "bossWin" ? "hard" : "normal" } : {}), ...(T.set ? { set: /^[\w-]{1,40}$/.test(c.set || "") ? c.set : "pack1" } : {}) },
       ...(x.hidden ? { hidden: true } : {}) };
   });
   return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles };

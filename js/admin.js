@@ -286,6 +286,7 @@ const Admin = {
             <label class="fl">手に入れ方<select class="txt" data-ttl="${i}:type">${opt(TITLE_CONDS, x.cond.type)}</select></label>
             ${T.n ? `<label class="fl">回数<input class="txt" type="number" min="1" data-ttl="${i}:n" value="${+x.cond.n || 1}" style="max-width:110px"></label>` : ""}
             ${T.lv ? `<label class="fl">強さ<select class="txt" data-ttl="${i}:lv">${opt(x.cond.type === "bossWin" ? { hard: "上級", ex: "超級" } : CPU_LV_NAMES, x.cond.lv)}</select></label>` : ""}
+            ${T.set ? `<label class="fl">パック<select class="txt" data-ttl="${i}:set">${opt(Object.fromEntries((DATA.packs || []).map(p => [p.id, p.name])), x.cond.set)}</select></label>` : ""}
             <label class="ownchk"><input type="checkbox" data-ttl="${i}:hidden" ${x.hidden ? "checked" : ""}> 条件を隠す</label>
           </div>
           <label class="fl">説明（プロフィールに出る一言。60文字まで）<input class="txt" data-ttl="${i}:desc" maxlength="60" value="${esc(x.desc || "")}"></label>
@@ -714,7 +715,8 @@ document.addEventListener("change", e => {
   if (f === "name") x.name = t.value.trim().slice(0, 12);
   else if (f === "desc") x.desc = t.value.trim().slice(0, 60);
   else if (f === "hidden") { if (t.checked) x.hidden = true; else delete x.hidden; }
-  else if (f === "type") { const T = TITLE_CONDS[t.value]; x.cond = { type: t.value, ...(T.n ? { n: x.cond.n || 10 } : {}), ...(T.lv ? { lv: t.value === "bossWin" ? "hard" : "normal" } : {}) }; }
+  else if (f === "type") { const T = TITLE_CONDS[t.value]; x.cond = { type: t.value, ...(T.n ? { n: x.cond.n || 10 } : {}), ...(T.lv ? { lv: t.value === "bossWin" ? "hard" : "normal" } : {}), ...(T.set ? { set: "pack1" } : {}) }; }
+  else if (f === "set") x.cond.set = t.value;
   else if (f === "n") x.cond.n = Math.max(1, Math.floor(+t.value || 1));
   else if (f === "lv") x.cond.lv = t.value;
   Admin.touch(["type", "n", "lv"].includes(f) ? Admin.renderEco : null);

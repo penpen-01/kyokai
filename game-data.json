@@ -1,5 +1,5 @@
 {
- "version": 155,
+ "version": 156,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -8674,12 +8674,66 @@
    }
   },
   {
+   "id": "t-streak1",
+   "name": "連勝の芽",
+   "desc": "CPU戦で勝ち、次の勝利へ。",
+   "cond": {
+    "type": "streak",
+    "n": 1
+   }
+  },
+  {
    "id": "t-streak",
    "name": "連勝街道",
    "desc": "CPU戦で10連勝した。",
    "cond": {
     "type": "streak",
     "n": 10
+   }
+  },
+  {
+   "id": "t-streak20",
+   "name": "破竹の勢い",
+   "desc": "CPU戦で20連勝した。",
+   "cond": {
+    "type": "streak",
+    "n": 20
+   }
+  },
+  {
+   "id": "t-streak30",
+   "name": "常勝の召喚士",
+   "desc": "CPU戦で30連勝した。",
+   "cond": {
+    "type": "streak",
+    "n": 30
+   }
+  },
+  {
+   "id": "t-streak50",
+   "name": "不敗神話",
+   "desc": "CPU戦で50連勝した。",
+   "cond": {
+    "type": "streak",
+    "n": 50
+   }
+  },
+  {
+   "id": "t-streak100",
+   "name": "百戦百勝",
+   "desc": "CPU戦で100連勝した。",
+   "cond": {
+    "type": "streak",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-streak200",
+   "name": "境界の覇王",
+   "desc": "CPU戦で200連勝した。もはや誰も止められない。",
+   "cond": {
+    "type": "streak",
+    "n": 200
    }
   },
   {
@@ -8723,6 +8777,186 @@
    }
   },
   {
+   "id": "t-games100",
+   "name": "百戦錬磨",
+   "desc": "100回対戦した。",
+   "cond": {
+    "type": "games",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-games1000",
+   "name": "歴戦の召喚士",
+   "desc": "1000回対戦した。",
+   "cond": {
+    "type": "games",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-loss10",
+   "name": "七転び八起き",
+   "desc": "10回負けても、また立ち上がった。",
+   "cond": {
+    "type": "losses",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-loss100",
+   "name": "負けを知る者",
+   "desc": "100回の敗北が、あなたを強くした。",
+   "cond": {
+    "type": "losses",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-play100",
+   "name": "札使い",
+   "desc": "カードを100枚使った。",
+   "cond": {
+    "type": "play",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-play1000",
+   "name": "千の札を操る者",
+   "desc": "カードを1000枚使った。",
+   "cond": {
+    "type": "play",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-play10000",
+   "name": "万札の主",
+   "desc": "カードを1万枚使った。",
+   "cond": {
+    "type": "play",
+    "n": 10000
+   }
+  },
+  {
+   "id": "t-spell100",
+   "name": "魔法使いの卵",
+   "desc": "魔法を100枚使った。",
+   "cond": {
+    "type": "spell",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-spell1000",
+   "name": "大魔導士",
+   "desc": "魔法を1000枚使った。",
+   "cond": {
+    "type": "spell",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-char100",
+   "name": "召喚の心得",
+   "desc": "キャラを100体呼び出した。",
+   "cond": {
+    "type": "char",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-char1000",
+   "name": "軍団長",
+   "desc": "キャラを1000体呼び出した。",
+   "cond": {
+    "type": "char",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-kill100",
+   "name": "討伐者",
+   "desc": "相手のキャラを100体倒した。",
+   "cond": {
+    "type": "kill",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-kill1000",
+   "name": "殲滅者",
+   "desc": "相手のキャラを1000体倒した。",
+   "cond": {
+    "type": "kill",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-lost100",
+   "name": "屍を越えて",
+   "desc": "仲間が100体倒れても、戦い続けた。",
+   "cond": {
+    "type": "lost",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-lost1000",
+   "name": "不屈の指揮官",
+   "desc": "仲間が1000体倒れても、戦い続けた。",
+   "cond": {
+    "type": "lost",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-face1000",
+   "name": "千の傷を刻む者",
+   "desc": "相手プレイヤーに合計1000ダメージを与えた。",
+   "cond": {
+    "type": "face",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-hit10",
+   "name": "会心の一撃",
+   "desc": "一度に10以上のダメージを与えた。",
+   "cond": {
+    "type": "maxHit",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-hit20",
+   "name": "必殺の一撃",
+   "desc": "一度に20以上のダメージを与えた。",
+   "cond": {
+    "type": "maxHit",
+    "n": 20
+   }
+  },
+  {
+   "id": "t-hit30",
+   "name": "境界を穿つ一撃",
+   "desc": "一度に30以上のダメージを与えた。",
+   "cond": {
+    "type": "maxHit",
+    "n": 30
+   }
+  },
+  {
+   "id": "t-freeze100",
+   "name": "氷結術師",
+   "desc": "相手のキャラを100回凍結させた。",
+   "cond": {
+    "type": "freeze",
+    "n": 100
+   }
+  },
+  {
    "id": "t-pack100",
    "name": "封を解く者",
    "desc": "パックを100回開けた。",
@@ -8743,9 +8977,37 @@
   {
    "id": "t-complete",
    "name": "完全なる図鑑",
-   "desc": "交換所のカードを、すべて3枚ずつそろえた。",
+   "desc": "第1弾のカードを、すべて3枚ずつそろえた。",
    "cond": {
-    "type": "complete"
+    "type": "complete",
+    "set": "pack1"
+   }
+  },
+  {
+   "id": "t-comp21",
+   "name": "機神の図鑑",
+   "desc": "機神起動のカードを、すべて3枚ずつそろえた。",
+   "cond": {
+    "type": "complete",
+    "set": "pack2-1"
+   }
+  },
+  {
+   "id": "t-comp22",
+   "name": "天剣の図鑑",
+   "desc": "天剣抜刀のカードを、すべて3枚ずつそろえた。",
+   "cond": {
+    "type": "complete",
+    "set": "pack2-2"
+   }
+  },
+  {
+   "id": "t-comp23",
+   "name": "夢幻の図鑑",
+   "desc": "夢幻奇譚のカードを、すべて3枚ずつそろえた。",
+   "cond": {
+    "type": "complete",
+    "set": "pack2-3"
    }
   },
   {
@@ -8773,6 +9035,42 @@
    "cond": {
     "type": "stoneUse",
     "n": 10000
+   }
+  },
+  {
+   "id": "t-stone10m",
+   "name": "鍛冶屋のお得意様",
+   "desc": "魔石を通算10万使った。",
+   "cond": {
+    "type": "stoneUse",
+    "n": 100000
+   }
+  },
+  {
+   "id": "t-stone100m",
+   "name": "炉を支える者",
+   "desc": "魔石を通算100万使った。",
+   "cond": {
+    "type": "stoneUse",
+    "n": 1000000
+   }
+  },
+  {
+   "id": "t-stone500m",
+   "name": "魔石の大富豪",
+   "desc": "魔石を通算500万使った。",
+   "cond": {
+    "type": "stoneUse",
+    "n": 5000000
+   }
+  },
+  {
+   "id": "t-stone1000m",
+   "name": "境界の大パトロン",
+   "desc": "魔石を通算1000万使った。ドルガンも頭が上がらない。",
+   "cond": {
+    "type": "stoneUse",
+    "n": 10000000
    }
   },
   {
