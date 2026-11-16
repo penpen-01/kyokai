@@ -277,6 +277,7 @@ const Admin = {
     return `<div class="fgroup">
         <span class="gl">情報屋</span>
         <p class="hint">ショップの情報屋で売る情報です。「今の状態」以外は、買ってから設定の時間（今は${DATA.config.INFO_HOURS || 24}時間）読めます。本文に <b>{BOSS_RATE}</b> のように設定の名前を書くと、その数字が入ります。「超級のみ」にした情報は、超級のボスを公開している間だけ並びます。弱体の御札・挑戦状の値段は「G・ログインボーナス」の欄で変えます。</p>
+        <p class="callout"><b>見直すタイミング</b>CPUのデッキを変えたとき（CPUのデッキ帳）、ボスやボスの限定レジェンドを足したり調整したとき（ボスの秘密・限定レジェンド）、新しいパックやパック開放戦を出したとき（噂の強カード・開放戦の攻略）、カードの数値を変えたとき（その名前が出てくる情報）は、ここの文も直してください。</p>
       </div>
       ${Object.entries(INFO_CATS).map(([cat, label]) => `<div class="fgroup"><span class="gl">${esc(label)}</span>
         ${L.map((x, i) => x.cat !== cat ? "" : `<div class="inf-ed">
