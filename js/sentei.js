@@ -186,9 +186,10 @@ const Sentei = {
       const n = this.count(R.deck), floor = senFloor(R.r);
       body = `<div class="sen-head"><b>${R.r + 1} / ${SEN_ROUNDS} 回目</b><span>デッキ ${n} / ${SEN_ROUNDS * SEN_SET}枚</span></div>
         ${floor ? `<p class="sen-floor">この回は、どちらのセットにも<b>${RARITY[floor]}${floor === "legend" ? "" : "以上"}</b>が入っています</p>` : ""}
-        <div class="sen-offer">${(R.offer || []).map((set, i) => `<div class="sen-set">
+        <div class="sen-offer">${(R.offer || []).map((set, i) => `<div class="sen-set ${this.sel === i ? "sel" : ""}">
           <div class="sen-cards">${set.map(id => DEF[id] ? `<button type="button" class="sen-card" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true })}${R.deck[id] ? `<span class="sen-have">×${R.deck[id]}</span>` : ""}</button>` : "").join("")}</div>
-          <button type="button" class="btn primary" data-act="senPick" data-v="${i}">このセットにする</button></div>`).join("")}</div>
+          <button type="button" class="btn ${this.sel === i ? "primary" : ""}" data-act="senPick" data-v="${i}">${this.sel === i ? "このセットに決める" : "このセットを選ぶ"}</button></div>`).join("")}</div>
+        ${this.sel != null ? `<p class="hint sen-confirm">もう一度押すと決まります。もう片方を押すと、選び直せます。</p>` : ""}
         <p class="hint">カードを押すと効果を見られます。</p>
         ${n ? `<span class="gl">今のデッキ</span>${this.curveHTML(R.deck)}${this.listHTML(R.deck)}` : ""}`;
     } else {
@@ -229,7 +230,7 @@ const Sentei = {
     switch (act) {
       case "senOpen": this.retireAsk = false; this.show(); return true;
       case "senStart": this.start(); return true;
-      case "senPick": this.pick(+el.dataset.v); return true;
+      case "senPick": { const i = +el.dataset.v; if (this.sel === i) { this.sel = null; this.pick(i); } else { this.sel = i; Sound.play("click"); this.show(); } return true; }   // 押し間違えないように、2回押して決める
       case "senFight": this.fight(); return true;
       case "senRetire": this.retireAsk = true; this.show(); return true;
       case "senRetireNo": this.retireAsk = false; this.show(); return true;
