@@ -420,7 +420,7 @@ const Shop = {
    背景の上に店員の絵を重ね、まばたき・口パク・表情で動かす。セリフは工房の「ショップの店員」（KEEPERS）から。
    絵は ui/keeper/<店員のid>-<表情>.webp（idle まばたき前の顔 / blink / talk1 / talk2 / happy / trouble / offer） */
 const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "offer"];
-const KEEPER_ART = ["dorgan"];   // 絵がそろっている店員
+const KEEPER_ART = ["dorgan", "weiss"];   // 絵がそろっている店員
 const KEEPER_RICH = 5000;        // これ以上魔石を持っていると「魔石が多い」のあいさつが出ることがある
 const Keeper = {
   q: [], text: "", extra: "", shown: "", mood: null, moodUntil: 0, talking: false, timers: [], cache: {},
