@@ -2408,6 +2408,7 @@ function showResult(res) {
       + (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
     : B && B.kind === "tutorial" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度チュートリアル</button>`
     : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
+    : B && B.kind === "boss" && B.ticket ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">情報屋へ（挑戦状 残り${(Account.data && Account.data.btk && Account.data.btk[B.boss]) || 0}枚）</button>`
     : `<button type="button" class="btn primary res-main" data-act="cpuAgain">同じ強さでもう一度</button>`;
   const sub = [
     !online && !(B && B.kind === "gate" && r.gate) && !(B && B.kind === "tutorial") ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
@@ -2579,6 +2580,7 @@ function battleAgain() {
   else if (k === "world") startWorldGame(CPU_LEVEL);
   else if (k === "gate") { if (gatePacks().some(p => p.id === GATE.pack)) startGateGame(); else showGate(); }
   else if (k === "boss" && S.battle.test) startBossTest(S.battle.boss || "ex");
+  else if (k === "boss" && S.battle.ticket) { Shop.infoAsk = null; Shop.infoRead = null; Shop.msg = null; Shop.showInfo(); }   // 挑戦状の戦い：情報屋に戻る（続けて挑むなら、そこで「挑む」）
   else startCpuGame(k === "boss" ? (S.battle.boss || "hard") : CPU_LEVEL);
 }
 
@@ -2611,7 +2613,7 @@ function startBossGame(mine, lv = "hard", test = false, ticket = false) {
   // 弱体の御札（情報屋）：持っていれば、このボス戦で使ってなくなる
   const charm = !test && Account.data && Account.data.charm && Account.data.charm[lv];
   if (charm) { delete Account.data.charm[lv]; Account.saveNow(); }
-  bossIntro(B, () => startBattle({ kind: "boss", level: lv === "ex" ? "ex" : "hard", mine, opp: { ...deck, icon: B.face }, oppName: B.name, reward: test ? 0 : CONFIG[REWARD_KEY[lv]], streak: false, extra: { boss: lv, ...(test ? { test: true } : {}) },
+  bossIntro(B, () => startBattle({ kind: "boss", level: lv === "ex" ? "ex" : "hard", mine, opp: { ...deck, icon: B.face }, oppName: B.name, reward: test ? 0 : CONFIG[REWARD_KEY[lv]], streak: false, extra: { boss: lv, ...(test ? { test: true } : {}), ...(ticket ? { ticket: true } : {}) },
     setup: S => {
       const b = S.players[1];
       b.hp = charm ? (CONFIG.CHARM_HP || 20) : (CONFIG[B.cfg + "HP"] || B.hp); b.maxHp = b.hp;
