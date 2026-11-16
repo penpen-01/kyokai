@@ -24,7 +24,7 @@ const Titles = {
     switch (c.type) {
       case "winAny": return st.wins || 0;
       case "winLv": return (st.winLv || {})[c.lv] || 0;
-      case "streak": return st.streakMax || 0;
+      case "streak": return st.streakHiMax || 0;
       case "bossWin": {   // 記録を始める前にボスを倒した人：限定レジェンドを持っていれば1回とみなす
         const B = BOSSES[c.lv] || BOSSES.hard, had = B.legends.some(id => (Account.data.cards || {})[id] > 0) ? 1 : 0;
         return Math.max((st.bossWin || {})[c.lv] || 0, had);
@@ -82,7 +82,10 @@ const Titles = {
     const s = (S.stats || [])[me] || {};
     this.bump("games"); this.bump(res === "win" ? "wins" : res === "lose" ? "losses" : "draws");
     if (MODE === "cpu" && res === "win" && (!B || B.kind === "cpu")) this.bumpIn("winLv", CPU_LEVEL);
-    if (r && r.cpu) this.max("streakMax", r.wins || 0);
+    // 上級以上の連勝（ボス戦も含む。初級・中級の対戦は数えも途切れもしない。負け・引き分けで0に戻る）
+    if (MODE === "cpu" && (!B || B.kind === "cpu" || B.kind === "boss") && (CPU_LEVEL === "hard" || CPU_LEVEL === "ex")) {
+      const st = this.st(); st.streakHi = res === "win" ? (st.streakHi || 0) + 1 : 0; this.max("streakHiMax", st.streakHi);
+    }
     if (B && B.kind === "boss" && res === "win") this.bumpIn("bossWin", B.boss === "ex" ? "ex" : "hard");
     if (MODE === "online" && r && r.online && !r.online.short) { this.bump("onlineGame"); if (res === "win") this.bump("onlineWin"); }
     ["spell", "char", "kill", "lost", "face", "freeze"].forEach(k => this.bump(k, s[k] || 0));

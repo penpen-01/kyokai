@@ -656,7 +656,7 @@ const INFO_PEEKS = { pityHard: "上級のボスが必ず現れるまでの勝ち
 const TITLE_CONDS = {
   winAny:     { label: "対戦に勝つ（通算）", n: true, text: n => `対戦に通算${n}回勝つ` },
   winLv:      { label: "CPUに勝つ（強さを選ぶ）", n: true, lv: true, text: (n, t) => `CPU（${CPU_LV_NAMES[t.lv] || "中級"}）に通算${n}回勝つ` },
-  streak:     { label: "CPU戦で連勝する", n: true, text: n => `CPU戦で${n}連勝する` },
+  streak:     { label: "CPU戦（上級以上）で連勝する", n: true, text: n => `上級以上のCPU戦で${n}連勝する` },
   bossWin:    { label: "隠しボスに勝つ（上級か超級）", n: true, lv: true, text: (n, t) => `${t.lv === "ex" ? "超級" : "上級"}の隠しボスに通算${n}回勝つ` },
   onlineWin:  { label: "友達との対戦に勝つ", n: true, text: n => `友達との対戦に通算${n}回勝つ` },
   onlineGame: { label: "友達と対戦する", n: true, text: n => `友達と通算${n}回対戦する` },
