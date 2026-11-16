@@ -376,6 +376,7 @@ const Shop = {
    絵は ui/keeper/<店員のid>-<表情>.webp（idle まばたき前の顔 / blink / talk1 / talk2 / happy / trouble / offer） */
 const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "offer"];
 const KEEPER_ART = ["dorgan"];   // 絵がそろっている店員
+const KEEPER_RICH = 5000;        // これ以上魔石を持っていると「魔石が多い」のあいさつが出ることがある
 const Keeper = {
   q: [], text: "", extra: "", shown: "", mood: null, moodUntil: 0, talking: false, timers: [], cache: {},
   cur() {
@@ -397,7 +398,16 @@ const Keeper = {
     const k = this.cur(); if (!k) return;
     let seen = false; try { seen = localStorage.getItem("kyokai-shop-seen") === "1"; localStorage.setItem("kyokai-shop-seen", "1"); } catch (e) {}
     const h = new Date().getHours(), st = Account.stones || 0;
-    const scene = !seen ? "first" : st >= 5000 && Math.random() < 0.4 ? "rich" : h >= 5 && h < 11 && Math.random() < 0.5 ? "morning" : (h >= 22 || h < 5) && Math.random() < 0.5 ? "night" : "enter";
+    // はじめての来店だけは必ず自己紹介。ほかは「ふだんのあいさつ」を重さ2、当てはまる特別なあいさつ（朝・夜・魔石が多い）を重さ1ずつで抽選する
+    //  例：魔石が多いだけ → ふだん2/3・魔石1/3。朝で魔石も多い → ふだん1/2・朝1/4・魔石1/4（どの人もふだんのあいさつが一番多く出る）
+    let scene = "first";
+    if (seen) {
+      const bag = ["enter", "enter"];
+      if (st >= KEEPER_RICH) bag.push("rich");
+      if (h >= 5 && h < 11) bag.push("morning");
+      if (h >= 22 || h < 5) bag.push("night");
+      scene = bag[Math.floor(Math.random() * bag.length)];
+    }
     this.q = [{ scene }];
     const f = Shop.feature();
     if (f && Shop.offPct()) this.q.push({ scene: "feature", mood: "offer", vars: { card: f.name, off: Shop.offPct() }, extra: `<button type="button" class="kp-go" data-act="shopFeature" data-id="${esc(f.id)}">《${esc(f.name)}》を見る ›</button>` });
@@ -455,7 +465,7 @@ const Keeper = {
       if (this.mood && now > this.moodUntil) this.mood = null;
       let f = "idle";
       if (this.mood) f = this.mood;
-      else if (this.talking) f = ["talk1", "talk2", "talk1", "idle"][tick % 4];
+      else if (this.talking) f = ["talk1", "talk2", "talk1", "idle"][Math.floor(tick / 2) % 4];   // 口だけ、約0.18秒ごとに動かす
       else {
         if (now > blinkAt) { blinkTo = now + 130; blinkAt = now + 2200 + Math.random() * 3800; }
         if (now < blinkTo) f = "blink";
