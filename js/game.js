@@ -2137,7 +2137,7 @@ function setPlayerName(n) {
 }
 function showName(msg) {
   openOverlay(`<div class="panel">
-    <div class="topbar"><button type="button" class="btn sm" data-act="options">← 戻る</button><b>プレイヤー名</b></div>
+    <div class="topbar"><button type="button" class="btn sm" data-act="${typeof Profile !== "undefined" && Profile.nameFrom ? "profile" : "options"}">← 戻る</button><b>プレイヤー名</b></div>
     <p class="lead small">対戦で表示される名前です（10文字まで）。友達と対戦するときも、この名前が相手に見えます。</p>
     <div class="obox"><div class="ofield"><label for="pl-name">名前</label>
       <input class="otxt" id="pl-name" maxlength="10" placeholder="例：見習いプレイヤー" value="${esc(playerName(""))}" autocomplete="nickname"></div>
@@ -2151,10 +2151,8 @@ function showOptions() {
     <div class="topbar"><button type="button" class="btn sm" data-act="optBack">← 戻る</button><b>オプション</b></div>
     <div class="optlist">
       <button type="button" class="optrow" data-act="profile" data-from="options"><b>プロフィール</b><small>名前・称号・アイコン・スタンプ</small></button>
-      <button type="button" class="optrow" data-act="nameEdit"><b>プレイヤー名</b><small>現在：${esc(playerName(`（未設定：${DEFAULT_NAME}）`))}</small></button>
       <button type="button" class="optrow" data-act="rules"><b>ルール</b><small>遊び方・カードの能力</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="serial"><b>シリアルコード</b><small>配られたコードでGやカードを受け取る</small></button>`}
-      ${Account.status === "none" ? "" : `<button type="button" class="optrow" data-act="icons" data-from="options"><b>アイコン</b><small>対戦で表示される顔を、持っているキャラカードの絵から選ぶ</small></button>`}
       <button type="button" class="optrow" data-act="account"><b>アカウント</b><small>引き継ぎコードの確認・別の端末から引き継ぐ</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="fbOpen"><b>ご意見・感想</b><small>不具合の報告や、ほしい機能を送る</small></button>`}
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>

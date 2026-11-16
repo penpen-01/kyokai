@@ -256,7 +256,8 @@ const Profile = {
   },
   handleAct(act, el) {
     switch (act) {
-      case "profile": this.show(el && el.dataset.from); return true;
+      case "profile": this.nameFrom = false; this.show(el && el.dataset.from); return true;
+      case "nameEdit": if (document.querySelector(".panel.profile")) { this.nameFrom = true; showName(); return true; } this.nameFrom = false; return false;
       case "pfTab": this.tab = el.dataset.v; this.show(); return true;
       case "pfIw": this.iw = el.dataset.v; this.show(); return true;
       case "pfIr": this.ir = el.dataset.v; this.show(); return true;

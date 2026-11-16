@@ -10,7 +10,8 @@ const Sound = {
   master: null,
   on: (() => { try { return localStorage.getItem(SOUND_KEY) !== "off"; } catch { return true; } })(),
   // マナーモード中も鳴らすか（オンにすると、iPhoneのロック画面に「再生中」の表示が出る）
-  loud: (() => { try { return localStorage.getItem(SOUND_KEY + "-loud") === "on"; } catch { return false; } })(),
+  // 設定はなくした（2026-11-16）。全員オフ＝マナーモードでは鳴らない
+  loud: (() => { try { localStorage.removeItem(SOUND_KEY + "-loud"); } catch {} return false; })(),
   sessionType() { return this.on && this.loud ? "playback" : "ambient"; },
   lastAt: {},
 
@@ -148,7 +149,7 @@ Sound.showPanel = function () {
       <h3>効果音</h3>
       ${sw("sound", this.on, "効果音", this.on ? "" : "オフにすると BGM も止まります")}
       <div class="snd-row"><span>テスト音</span><button type="button" class="btn sm" data-act="soundTest">鳴らす</button></div>
-      ${navigator.audioSession ? sw("soundLoud", this.loud, "マナーモード中も鳴らす", "オンにすると、ロック画面に「再生中」と出ます") : ""}
+
     </section>
     ${B ? `<section class="snd-card">
       <h3>BGM</h3>
