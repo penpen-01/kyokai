@@ -222,6 +222,9 @@ body{
   padding:calc(24px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left, 0px));
 }
 .overlay.solid{background:var(--bg)}
+/* パソコン：縦のスクロールバーが出たり消えたりすると、中身の幅が変わって画面全体が左右に小刻みに揺れることがある。
+   スクロールバーの分の場所を左右に常に空けておいて、出入りしても中身が動かないようにする（スマホはスクロールバーが場所を取らないので関係ない） */
+@media (hover:hover) and (pointer:fine){.overlay{scrollbar-gutter:stable both-edges}}
 .panel{width:100%;max-width:420px;margin:auto;display:flex;flex-direction:column;gap:14px}
 .panel.wide{max-width:720px}
 .worlds{display:flex;gap:8px}
