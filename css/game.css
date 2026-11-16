@@ -2571,10 +2571,36 @@ button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
 .sk-hcard .card{width:100%;max-width:120px}
 .sk-hcard .btn{display:inline-flex;align-items:center;gap:3px;font-size:11px}
 .sk-stamp{display:flex;flex-direction:column;gap:6px;align-items:center}
-.card.holo .shine{position:absolute;inset:0;pointer-events:none;z-index:3;border-radius:inherit;mix-blend-mode:screen;
-  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;animation:holoflow 3.2s linear infinite}
-@keyframes holoflow{from{background-position:120% 0}to{background-position:-120% 0}}
-html.eco .card.holo .shine,html.nofx .card.holo .shine{display:none}
+/* 魔光加工（2026-11-17）：枠の色（レア度）はそのままで、光だけ UR・レジェンドと同じものを重ねる */
+.card.mako .shine{position:absolute;inset:-40%;z-index:4;pointer-events:none;transform:translateX(-60%);animation:legendsweep 3.6s ease-in-out infinite}
+.card.mk-u .shine{background:linear-gradient(115deg,transparent 42%,rgba(255,236,170,.6) 50%,transparent 58%)}
+.card.mk-u{box-shadow:0 0 6px rgba(255,214,120,.6)}
+.card.mk-u .art::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,226,140,.28) 48%,rgba(255,248,224,.4) 50%,rgba(255,226,140,.28) 52%,transparent 70%) 0 0/320% 320% no-repeat;animation:urgold 3.8s ease-in-out infinite}
+.card.mk-l .shine{background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.65) 50%,transparent 60%);animation-duration:3s}
+.card.mk-l{box-shadow:0 0 6px rgba(255,120,200,.55),0 0 12px rgba(120,200,255,.35)}
+.card.mk-l .art::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:url("../ui/holo.webp") 0 0/70cqw 70cqw repeat;mix-blend-mode:color-dodge;opacity:.5;
+  -webkit-mask:linear-gradient(115deg,rgba(0,0,0,.35) 0%,#000 40%,rgba(0,0,0,.35) 60%,rgba(0,0,0,.35) 100%) 0 0/300% 300%;
+          mask:linear-gradient(115deg,rgba(0,0,0,.35) 0%,#000 40%,rgba(0,0,0,.35) 60%,rgba(0,0,0,.35) 100%) 0 0/300% 300%;
+  animation:holo 4s ease-in-out infinite}
+html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art::after,html.nofx .card.mako .art::after{display:none}
+@media (prefers-reduced-motion:reduce){.card.mako .shine,.card.mako .art::after{animation:none}}
+/* カードの詳細の「魔光加工」「イラスト」 */
+.mako-box{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;border:1px solid rgba(180,150,255,.35);background:rgba(120,100,220,.08)}
+.mk-row{display:flex;flex-direction:column;gap:5px}
+.mk-h{font-size:12px;font-weight:700;color:#d9ceff;letter-spacing:.08em}
+.mk-opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.mk-opt{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:44px;padding:5px 4px;border-radius:8px;text-align:center;
+  background:rgba(10,12,24,.7);border:1px solid rgba(180,150,255,.3);color:#e6e0ff}
+.mk-opt b{font-size:12.5px;line-height:1.25}
+.mk-opt small{display:inline-flex;align-items:center;gap:2px;font-size:10.5px;color:#a9a2c9}
+.mk-opt small .cur-ic{width:1.2em;height:1.2em}
+.mk-opt.on{background:linear-gradient(180deg,#8f7ae8,#5b46b8);border-color:#cbbcff;color:#fff}
+.mk-opt.on small{color:#efeaff}
+.mk-opt:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.sk-pic.art{aspect-ratio:auto;background:none;overflow:visible;width:62%;margin:0 auto}
+.sk-pic.art .card{width:100%}
 .sk-act .sh-soon{position:static;transform:none}
 .sk-note{padding:10px 12px;border-radius:10px;background:rgba(14,10,8,.82);border:1px solid rgba(232,168,90,.25);opacity:1}
 .sk-empty{background:rgba(14,10,8,.82);border-radius:10px}

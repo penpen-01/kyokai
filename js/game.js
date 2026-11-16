@@ -93,7 +93,7 @@ function newGame(names, decks) {
 }
 function mkPlayer(name, deck) {
   const icon = deck.icon && DEF[deck.icon] && DEF[deck.icon].type === "char" && DEF[deck.icon].art ? deck.icon : null;
-  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [], ...(icon ? { icon } : {}), ...(typeof deck.title === "string" && deck.title ? { title: deck.title.slice(0, 12) } : {}), ...(typeof deck.sleeve === "string" ? { sleeve: deck.sleeve } : {}), ...(typeof deck.frame === "string" ? { frame: deck.frame } : {}) };
+  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [], ...(icon ? { icon } : {}), ...(typeof deck.title === "string" && deck.title ? { title: deck.title.slice(0, 12) } : {}), ...(typeof deck.sleeve === "string" ? { sleeve: deck.sleeve } : {}), ...(typeof deck.frame === "string" ? { frame: deck.frame } : {}), ...(deck.look && typeof deck.look === "object" && typeof Skins !== "undefined" && Object.keys(Skins.cleanLook(deck.look)).length ? { look: Skins.cleanLook(deck.look) } : {}) };
 }
 
 const RPS = { g: "グー", c: "チョキ", p: "パー" };
@@ -1442,7 +1442,7 @@ function fieldHTML(pi) {
       ui.mode === "target" && Object.values(ui.picked).includes(u.uid) ? "sel" : "",
       ui.sel && ui.sel.kind === "unit" && ui.sel.uid === u.uid ? "sel" : ""
     ].join(" ");
-    s += `<div class="slot">${cardHTML(DEF[u.id], { unit: u, cls, showCost: false, attrs: `data-uid="${u.uid}" data-owner="${pi}"` })}</div>`;
+    s += `<div class="slot">${cardHTML(DEF[u.id], { unit: u, pi, cls, showCost: false, attrs: `data-uid="${u.uid}" data-owner="${pi}"` })}</div>`;
   }
   return `<div class="field" data-zone="${pi}" style="--cols:${CONFIG.FIELD_MAX}">${s}</div>`;
 }
@@ -1630,7 +1630,7 @@ function detailHTML(id, unit, owner, full) {
     ? `<div class="sh-stats">攻撃 ${unit ? unit.atk : d.atk} ／ 体力 ${unit ? `${unit.hp}/${unit.maxHp}` : d.hp}${unit && unit.frozen ? "（凍結：次のターンは攻撃できません）" : unit && !unit.ready && owner === ME ? "（このターンは攻撃できません）" : ""}</div>`
     : "";
   return `
-    <div class="sheet-card">${cardHTML(d, { unit, static: true })}</div>
+    <div class="sheet-card">${cardHTML(d, { unit, static: true, pi: owner })}</div>
     <div class="sheet-body">
       <div class="sh-name">${esc(d.name)}</div>
       <div class="sh-meta">${WORLDS[d.world]} ・ ${TYPES[d.type]} ・ コスト${d.cost}</div>
@@ -2249,6 +2249,7 @@ function showCardList() {
         <span class="pmeta">${Account.status === "free" ? "" : `所持 ${Account.owned(d.id)}枚 ・ `}1デッキに${cardLimit(d, CONFIG)}枚まで</span>
         ${cardSourcesHTML(d)}
         ${typeof Shop !== "undefined" && !S ? Shop.tradeHTML(d) : ""}
+        ${typeof Skins !== "undefined" && !S ? Skins.detailHTML(d) : ""}
         <button type="button" class="btn" data-act="clClose">閉じる</button></div></div></div>` : ""}
   </div>`, null, !S);
   if (keep) o.scrollTop = y;
@@ -2294,7 +2295,7 @@ function showGrave(pi) {
   if (!S) return;
   if (pi != null) GRAVE_TAB = pi;
   const t = GRAVE_TAB == null ? OP : GRAVE_TAB, g = graveOf(t);
-  const cell = id => DEF[id] ? `<button type="button" class="gv-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}">${cardHTML(DEF[id], { static: true })}</button>` : "";
+  const cell = id => DEF[id] ? `<button type="button" class="gv-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}">${cardHTML(DEF[id], { static: true, pi: t })}</button>` : "";
   const sec = (label, ids, none) => `<h3 class="sec">${label}<small class="hint">${ids.length}枚</small></h3>${ids.length ? `<div class="gv-grid">${ids.slice().reverse().map(cell).join("")}</div>` : `<p class="hint">${none}</p>`}`;
   openOverlay(`<div class="panel wide gvp">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>墓地</b></div>

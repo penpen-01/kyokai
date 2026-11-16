@@ -121,7 +121,14 @@ const Account = {
       // スキン（js/skins.js）：買った品・付けている品・光らせるカード（1＝光らせる、0＝買ったが外している）・店員
       skins: Array.isArray(d.skins) ? [...new Set(d.skins.filter(x => /^[\w-]{1,40}$/.test(x)))] : [],
       equip: Object.fromEntries(Object.entries(d.equip || {}).filter(([k, v]) => /^\w{1,12}$/.test(k) && /^[\w-]{1,40}$/.test(v))),
-      holo: Object.fromEntries(Object.entries(d.holo || {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && (v === 0 || v === 1))),
+      // 魔光加工：カードごとに、買った光（u＝UR風、l＝レジェンド風）と付けている光（on）。昔の holo（1/0）はレジェンド風として引き継ぐ
+      mako: (() => { const o = {};
+        Object.entries(d.holo || {}).forEach(([k, v]) => { if (/^[\w-]{1,40}$/.test(k) && (v === 0 || v === 1)) o[k] = { l: 1, on: v === 1 ? "l" : "" }; });
+        Object.entries(d.mako || {}).forEach(([k, v]) => { if (!/^[\w-]{1,40}$/.test(k) || !v || typeof v !== "object") return;
+          const x = { ...(v.u ? { u: 1 } : {}), ...(v.l ? { l: 1 } : {}) }; if (!x.u && !x.l) return; x.on = (v.on === "u" && x.u) || (v.on === "l" && x.l) ? v.on : ""; o[k] = x; });
+        return o; })(),
+      // 別イラスト：カードごとに、使っている別イラストのスキン（なければ元の絵）
+      alt: Object.fromEntries(Object.entries(d.alt || {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && /^[\w-]{1,40}$/.test(v))),
       ...(typeof d.keeper === "string" && /^[\w-]{1,40}$/.test(d.keeper) ? { keeper: d.keeper } : {}),
       // 称号・スタンプ・アイコン（js/titles.js）：通算の記録、手に入れた称号、付けている称号、持っていくスタンプ、買ったスタンプ、お気に入りと最近使ったアイコン
       st: (() => { const o = {}; Object.entries(d.st || {}).forEach(([k, v]) => { if (!/^\w{1,20}$/.test(k)) return; if (v && typeof v === "object") { const m = {}; Object.entries(v).forEach(([a, b]) => { if (/^\w{1,20}$/.test(a) && +b > 0) m[a] = Math.floor(+b); }); o[k] = m; } else if (+v > 0) o[k] = Math.floor(+v); }); return o; })(),

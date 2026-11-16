@@ -155,7 +155,7 @@ const Vfx = {
     const d = DEF[id]; if (!d) return;
     const w = document.createElement("div");
     w.className = "castshow v-reveal";
-    w.innerHTML = `<div class="castlabel">${esc(S && S.players[pi] ? S.players[pi].name : "")}の${esc(label)}</div><div class="castcard">${cardHTML(d)}</div>`;
+    w.innerHTML = `<div class="castlabel">${esc(S && S.players[pi] ? S.players[pi].name : "")}の${esc(label)}</div><div class="castcard">${cardHTML(d, { pi })}</div>`;
     this.layer().appendChild(w);
     setTimeout(() => w.remove(), R ? 800 : 1300);
     Sound.play("destroy");
@@ -167,7 +167,7 @@ const Vfx = {
     const list = String(ids || "").split(",").filter(id => DEF[id]);
     const w = document.createElement("div");
     w.className = "v-peek";
-    w.innerHTML = `<div class="castlabel">相手の手札</div><div class="v-peek-row">${list.length ? list.map(id => `<div class="castcard">${cardHTML(DEF[id])}</div>`).join("") : "<p>0枚</p>"}</div>`;
+    w.innerHTML = `<div class="castlabel">相手の手札</div><div class="v-peek-row">${list.length ? list.map(id => `<div class="castcard">${cardHTML(DEF[id], { pi: OP })}</div>`).join("") : "<p>0枚</p>"}</div>`;
     this.layer().appendChild(w);
     setTimeout(() => w.remove(), R ? 1200 : 2000);
     Motion.hold(R ? 800 : 1700);

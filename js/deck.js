@@ -180,7 +180,7 @@ const Decks = {
     // sample：サンプルデッキ（所持に関係なく組んだデッキ）。勝ってもGはもらえない
     const icon = Account.icon();
     const title = typeof Titles !== "undefined" ? Titles.curName() : "";
-    return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}), ...(title ? { title } : {}), ...(typeof Skins !== "undefined" ? Skins.deckLook() : {}) };
+    return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}), ...(title ? { title } : {}), ...(typeof Skins !== "undefined" ? Skins.deckLook(d.cards) : {}) };
   },
   randomPreset(level) {
     const ok0 = PRESETS.filter(p => !hiddenDeck(p) && deckProblems(p, DEF, CONFIG).length === 0);
@@ -593,6 +593,7 @@ const Decks = {
           </div>
           ${!unb && k > this.owned(c.id) ? `<span class="hint">持っていない分（${k - this.owned(c.id)}枚）が入っています。そろうまで、このデッキは対戦に使えません。</span>` : ""}` : ""}
           ${this.unbound(ed || this.find(this.viewing)) ? "" : Shop.tradeHTML(c)}
+          ${this.unbound(ed || this.find(this.viewing)) || typeof Skins === "undefined" ? "" : Skins.detailHTML(c)}
           ${this.keyBtn(c)}
           <button type="button" class="btn" data-act="deckDetailClose">閉じる</button>
         </div>

@@ -86,7 +86,7 @@ const Motion = {
     const w = document.createElement("div");
     w.className = "castshow";
     w.innerHTML = `<div class="castlabel">${esc(S && S.players[pi] ? S.players[pi].name : "相手")}が${d.type === "char" ? "召喚" : "使用"}</div>
-      <div class="castcard">${cardHTML(d)}</div>`;
+      <div class="castcard">${cardHTML(d, { pi })}</div>`;
     $("#fx").appendChild(w);
     setTimeout(() => w.remove(), this.reduced ? 900 : 1250);
     this.hold(this.reduced ? 500 : 800);

@@ -1,5 +1,5 @@
 {
- "version": 176,
+ "version": 177,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -64,8 +64,9 @@
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
   "SAMPLE_DECKS": true,
-  "HOLO_PRICE": 3000,
-  "SKIN_ON": 0
+  "SKIN_ON": 0,
+  "MAKO_U": 3000,
+  "MAKO_L": 5000
  },
  "packs": [
   {
@@ -9504,6 +9505,33 @@
    "name": "新しい曲",
    "desc": "準備中",
    "price": 5000
+  },
+  {
+   "id": "art-godgear",
+   "kind": "art",
+   "name": "機神起動",
+   "desc": "第2弾-1のパックを飾った、合体機神ゴッドギアの絵。",
+   "price": 8000,
+   "card": "m2-godgear",
+   "art": "ui/alt/alt-godgear.webp"
+  },
+  {
+   "id": "art-kensei",
+   "kind": "art",
+   "name": "天剣抜刀",
+   "desc": "第2弾-2のパックを飾った、剣聖ヴァルトールの絵。",
+   "price": 8000,
+   "card": "y2-kensei",
+   "art": "ui/alt/alt-kensei.webp"
+  },
+  {
+   "id": "art-tamamo",
+   "kind": "art",
+   "name": "夢幻奇譚",
+   "desc": "第2弾-3のパックを飾った、白面九尾タマモの絵。",
+   "price": 8000,
+   "card": "f2-tamamo",
+   "art": "ui/alt/alt-tamamo.webp"
   }
  ]
 }

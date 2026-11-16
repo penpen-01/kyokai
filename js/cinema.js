@@ -91,7 +91,7 @@ const Cinema = {
   /* お互いのデッキの代表カードが斜めから飛び込んでぶつかり、はじけて左右に分かれ、VS */
   intro() {
     Sound.play("open");
-    const kc = (pi, cls) => { const c = this.keyCard(pi); return c ? `<div class="cv-kc ${cls}">${cardHTML(c, { static: true })}</div>` : ""; };
+    const kc = (pi, cls) => { const c = this.keyCard(pi); return c ? `<div class="cv-kc ${cls}">${cardHTML(c, { static: true, pi })}</div>` : ""; };
     this.layer("intro", this.bands(`<div class="cv-clash">${kc(OP, "op")}${kc(ME, "me")}<i class="cv-boom"></i></div><div class="cv-vs" aria-label="VS">VS</div>`));
     if (!Motion.reduced) { setTimeout(() => Sound.play("destroy"), 480); setTimeout(() => Sound.play("hit"), 1050); }
     return Motion.reduced ? 1200 : 2900;

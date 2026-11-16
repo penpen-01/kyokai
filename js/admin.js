@@ -276,7 +276,7 @@ const Admin = {
   /* ---------- スキン ---------- */
   skinsHTML() {
     const L = DATA.skins = DATA.skins || [];
-    const K = { sleeve: "スリーブ", frame: "アイコンの枠", icon: "限定アイコン", bg: "対戦の背景", home: "ホームの背景", keeper: "店員", bgm: "BGM" };
+    const K = { sleeve: "スリーブ", frame: "アイコンの枠", icon: "限定アイコン", bg: "対戦の背景", home: "ホームの背景", keeper: "店員", art: "別イラスト（カードの絵）", bgm: "BGM" };
     const opt = (o, cur) => Object.entries(o).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(v)}</option>`).join("");
     return `<div class="fgroup"><span class="gl">スキン</span>
         <p class="hint">ショップの「スキン」で魔石で売る見た目の品です。「最初から持っている」にした品は、全員が持っていて選び直せます（今の初期の絵など）。絵の場所は ui/xxx.webp のように書きます（絵は Claude に渡せば置きます）。絵がない品は「準備中」として並びます。限定アイコンは「カードのID」にボスなどのカードのIDを書くと、その絵がアイコンになります。店員は「店員のID」に dorgan・weiss・ruu などを書きます。カードの光とスタンプの値段は、それぞれの設定・スタンプの欄で決めます。</p></div>
@@ -286,6 +286,7 @@ const Admin = {
           <label class="fl">魔石<input class="txt" type="number" min="0" data-skn="${i}:price" value="${+x.price || 0}" style="max-width:110px"></label>
           ${kind === "icon" ? `<label class="fl">カードのID<input class="txt" data-skn="${i}:card" value="${esc(x.card || "")}" style="max-width:160px"></label>`
             : kind === "keeper" ? `<label class="fl">店員のID<input class="txt" data-skn="${i}:ref" value="${esc(x.ref || "")}" style="max-width:140px"></label>`
+            : kind === "art" ? `<label class="fl">カードのID<input class="txt" data-skn="${i}:card" value="${esc(x.card || "")}" style="max-width:160px"></label><label class="fl">絵の場所<input class="txt" data-skn="${i}:art" value="${esc(x.art || "")}" placeholder="ui/alt/xxx.webp"></label>`
             : `<label class="fl">絵の場所<input class="txt" data-skn="${i}:art" value="${esc(x.art || "")}" placeholder="ui/xxx.webp"></label>`}
           <label class="ownchk"><input type="checkbox" data-skn="${i}:default" ${x.default ? "checked" : ""}> 最初から持っている</label>
           <button type="button" class="btn sm danger" data-act="sknDel" data-i="${i}">消す</button></div>

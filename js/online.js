@@ -216,7 +216,7 @@ const Online = {
     if (this.mySample) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
-    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), ...(deck.sleeve ? { sleeve: deck.sleeve } : {}), ...(deck.frame ? { frame: deck.frame } : {}), by: this.uid, at: Date.now() });
+    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), ...(deck.sleeve ? { sleeve: deck.sleeve } : {}), ...(deck.frame ? { frame: deck.frame } : {}), ...(deck.look ? { look: deck.look } : {}), by: this.uid, at: Date.now() });
     this.watchRoom();
     this.showConnecting("対戦を準備しています");
   },
@@ -309,12 +309,12 @@ const Online = {
     if (why) return this.showDeckPick(why);
     const icon = Account.icon(), sample = !!(d.free && Decks.sampleOK());
     const title = typeof Titles !== "undefined" ? Titles.curName() : "";
-    const deck = { name: d.name, cards: { ...d.cards }, ...(sample ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}), ...(title ? { title } : {}), ...(typeof Skins !== "undefined" ? Skins.deckLook() : {}) };
+    const deck = { name: d.name, cards: { ...d.cards }, ...(sample ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}), ...(title ? { title } : {}), ...(typeof Skins !== "undefined" ? Skins.deckLook(d.cards) : {}) };
     if (sample && !this.mySample) Decks.useSample();
     this.myDeck = deck; this.mySample = sample;
     Decks.select(d.id);
     store.set(ROOM_KEY, { code: this.code, role: this.role, sample });
-    if (this.role === "guest") Net.push(`rooms/${this.code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), ...(deck.sleeve ? { sleeve: deck.sleeve } : {}), ...(deck.frame ? { frame: deck.frame } : {}), by: this.uid, at: Date.now() });
+    if (this.role === "guest") Net.push(`rooms/${this.code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), ...(deck.sleeve ? { sleeve: deck.sleeve } : {}), ...(deck.frame ? { frame: deck.frame } : {}), ...(deck.look ? { look: deck.look } : {}), by: this.uid, at: Date.now() });
     Net.update(`rooms/${this.code}/dchg`, { [this.role]: Date.now() }).catch(e => console.error(e));
     toast(`次の対戦は「${deck.name}」で戦います`);
     if (S && S.over) showResult(myResult()); else $("#overlay").hidden = true;
@@ -379,7 +379,7 @@ const Online = {
       Object.entries(cleanDeckCards(a.cards)).forEach(([id, n]) => { if (DEF[id]) cards[id] = n; });
       const icon = typeof a.icon === "string" && DEF[a.icon] && DEF[a.icon].type === "char" ? a.icon : null;
       // 相手の見た目（スリーブ・枠）は、売り場にある絵だけ受け取る
-      const skinLook = x => { const ok = (k, v) => typeof v === "string" && typeof SKINS !== "undefined" && SKINS.some(s => s.kind === k && s.art === v); return { ...(ok("sleeve", x.sleeve) ? { sleeve: x.sleeve } : {}), ...(ok("frame", x.frame) ? { frame: x.frame } : {}) }; };
+      const skinLook = x => { const ok = (k, v) => typeof v === "string" && typeof SKINS !== "undefined" && SKINS.some(s => s.kind === k && s.art === v); const lk = typeof Skins !== "undefined" ? Skins.cleanLook(x.look) : {}; return { ...(ok("sleeve", x.sleeve) ? { sleeve: x.sleeve } : {}), ...(ok("frame", x.frame) ? { frame: x.frame } : {}), ...(Object.keys(lk).length ? { look: lk } : {}) }; };
       this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by, ...(icon ? { icon } : {}), ...(typeof a.key === "string" && DEF[a.key] ? { key: a.key } : {}), ...(typeof a.title === "string" && a.title ? { title: a.title.slice(0, 12) } : {}), ...skinLook(a) };
       if (S && S.over) { this.oppDeckChanged = true; toast("相手がデッキを変更しました"); const rd = $(".res-deck"); if (rd && !rd.querySelector("small")) rd.insertAdjacentHTML("beforeend", "<small>相手はデッキを変更しました</small>"); }   // 参加者の dchg は書き込めないので、デッキの操作で知る
       if (!S && this.room && this.room.guest && this.room.status === "waiting") this.startGame();
