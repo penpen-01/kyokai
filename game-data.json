@@ -1,5 +1,5 @@
 {
- "version": 149,
+ "version": 150,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -4451,7 +4451,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 1,
      "when": "turnStart",
      "act": "dmg",
      "to": "enemyRand"
