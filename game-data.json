@@ -1,5 +1,5 @@
 {
- "version": 168,
+ "version": 169,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -9236,6 +9236,54 @@
    "price": 0,
    "art": "ui/bg-battle.webp",
    "default": true
+  },
+  {
+   "id": "bg-kishin",
+   "kind": "bg",
+   "name": "機神の工場",
+   "desc": "歯車と蒸気の巨大な工場の床。",
+   "price": 3000,
+   "art": "ui/bg/bg-kishin.webp"
+  },
+  {
+   "id": "bg-shinwa",
+   "kind": "bg",
+   "name": "天空の神殿",
+   "desc": "雲の上の白い大理石の床。",
+   "price": 3000,
+   "art": "ui/bg/bg-shinwa.webp"
+  },
+  {
+   "id": "bg-gensou",
+   "kind": "bg",
+   "name": "魔法の森",
+   "desc": "苔むした石と光るきのこの広場。",
+   "price": 3000,
+   "art": "ui/bg/bg-gensou.webp"
+  },
+  {
+   "id": "bg-nezal",
+   "kind": "bg",
+   "name": "虚ろなる裂け目",
+   "desc": "世界の裂け目に浮かぶ黒い石の床。",
+   "price": 3000,
+   "art": "ui/bg/bg-nezal.webp"
+  },
+  {
+   "id": "bg-meifu",
+   "kind": "bg",
+   "name": "冥府の川辺",
+   "desc": "青白い川が流れる死者の国の祭壇。",
+   "price": 3000,
+   "art": "ui/bg/bg-meifu.webp"
+  },
+  {
+   "id": "bg-ryu",
+   "kind": "bg",
+   "name": "竜の巣",
+   "desc": "溶岩と財宝が眠る火山の奥。",
+   "price": 3000,
+   "art": "ui/bg/bg-ryu.webp"
   },
   {
    "id": "hm-default",
