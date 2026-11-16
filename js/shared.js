@@ -652,6 +652,25 @@ const KEEPER_SCENES = {
 /* 情報屋で売る情報の種類。peek＝買ったその時だけ見られる「今の状態」、ほかは買ってから INFO_HOURS 時間読める */
 const INFO_CATS = { peek: "今の状態（買ったその時だけ）", boss: "ボスの秘密", legend: "限定レジェンドの解説と考察", cpu: "CPUのデッキ帳", card: "噂の強カード", gate: "パック開放戦の攻略" };
 const INFO_PEEKS = { pityHard: "上級のボスが必ず現れるまでの勝ち数", pityEx: "超級のボスが必ず現れるまでの勝ち数", tomorrow: "明日のおすすめ（交換所）" };
+/* 称号の手に入れ方。n＝回数、lv＝強さ（winLv・bossWin のとき）。通算の数は、記録を始めた日（2026-11-16）からの分 */
+const TITLE_CONDS = {
+  winAny:     { label: "対戦に勝つ（通算）", n: true, text: n => `対戦に通算${n}回勝つ` },
+  winLv:      { label: "CPUに勝つ（強さを選ぶ）", n: true, lv: true, text: (n, t) => `CPU（${CPU_LV_NAMES[t.lv] || "中級"}）に通算${n}回勝つ` },
+  streak:     { label: "CPU戦で連勝する", n: true, text: n => `CPU戦で${n}連勝する` },
+  bossWin:    { label: "隠しボスに勝つ（上級か超級）", n: true, lv: true, text: (n, t) => `${t.lv === "ex" ? "超級" : "上級"}の隠しボスに通算${n}回勝つ` },
+  onlineWin:  { label: "友達との対戦に勝つ", n: true, text: n => `友達との対戦に通算${n}回勝つ` },
+  onlineGame: { label: "友達と対戦する", n: true, text: n => `友達と通算${n}回対戦する` },
+  packs:      { label: "パックを開ける", n: true, text: n => `パックを通算${n}回開ける` },
+  kinds:      { label: "カードの種類を集める", n: true, text: n => `カードを${n}種類持つ` },
+  complete:   { label: "交換所のカードを全部3枚ずつ集める", text: () => "交換所のカードを、全部3枚ずつ集める" },
+  stoneUse:   { label: "魔石を使う", n: true, text: n => `魔石を通算${n}使う` },
+  trade:      { label: "カードを魔石と交換する", n: true, text: n => `カードを通算${n}回交換する` },
+  dis:        { label: "カードを分解する", n: true, text: n => `カードを通算${n}枚分解する` },
+  info:       { label: "情報屋で買う", n: true, text: n => `情報屋で通算${n}回買う` },
+  quest:      { label: "クエストを達成して受け取る", n: true, text: n => `クエストの報酬を通算${n}回受け取る` },
+  login:      { label: "ログインボーナスを受け取る", n: true, text: n => `ログインボーナスを通算${n}日受け取る` },
+  gift:       { label: "配布だけ（メール・シリアル・イベント）", text: () => "特別な配布で手に入る" }
+};
 const QUEST_TYPES = {
   winLv:  { label: "CPUに勝つ（強さを選ぶ）", lv: true, text: (n, q) => `CPU（${CPU_LV_NAMES[q.lv] || "中級"}）に${n}回勝つ` },
   boss:   { label: "隠しボスに勝つ（上級か超級を選ぶ）", lv: true, text: (n, q) => `${q.lv === "ex" ? "超級" : "上級"}の隠しボスに${n}回勝つ` },
@@ -851,7 +870,14 @@ function normalizeData(data) {
   const info = (Array.isArray(d.info) ? d.info : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id) && INFO_CATS[x.cat]).slice(0, 200).map(x => ({
     id: x.id, cat: x.cat, title: String(x.title || "情報").slice(0, 40), sub: String(x.sub || "").slice(0, 60), price: Math.max(0, Math.floor(+x.price || 0)),
     ...(x.ex ? { ex: true } : {}), ...(x.cat === "peek" ? { peek: INFO_PEEKS[x.peek] ? x.peek : "pityHard" } : { body: String(x.body || "").slice(0, 4000) }) }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info };
+  // 称号（名前・説明・手に入れ方）。hidden＝手に入れるまで条件を「？？？」にする
+  const titles = (Array.isArray(d.titles) ? d.titles : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id)).slice(0, 300).map(x => {
+    const c = x.cond && TITLE_CONDS[x.cond.type] ? x.cond : { type: "gift" }, T = TITLE_CONDS[c.type];
+    return { id: x.id, name: String(x.name || "称号").slice(0, 12), desc: String(x.desc || "").slice(0, 60),
+      cond: { type: c.type, ...(T.n ? { n: Math.max(1, Math.floor(+c.n || 1)) } : {}), ...(T.lv ? { lv: CPU_LV_NAMES[c.lv] ? c.lv : c.type === "bossWin" ? "hard" : "normal" } : {}) },
+      ...(x.hidden ? { hidden: true } : {}) };
+  });
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles };
 }
 
 function cleanDeckCards(cards) {

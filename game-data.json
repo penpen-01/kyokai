@@ -1,5 +1,5 @@
 {
- "version": 154,
+ "version": 155,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -8621,6 +8621,168 @@
    "sub": "相手「九尾の化かし宴」の傾向と組み方",
    "price": 100,
    "body": "ルール：30枚すべて幻想のカードで組んだデッキだけ使える。\n\n相手は狐の魔法でコストを下げた白面九尾タマモや、夜会の大魔女ヴァルプルギス、相手キャラをすべて手札に戻す「おとぎ話の幕引き」を使う。\n\n・幕引きで盤面をまとめて戻されるので、一度に全部を出し切らない。\n・タマモは隠密で狙えないが、全体ダメージは当たる。\n・相手が魔法を何枚も重ねたあとは、タマモが来ると思って構えておく。"
+  }
+ ],
+ "titles": [
+  {
+   "id": "t-first",
+   "name": "初陣",
+   "desc": "はじめての勝利。すべてはここから。",
+   "cond": {
+    "type": "winAny",
+    "n": 1
+   }
+  },
+  {
+   "id": "t-easy",
+   "name": "見習い召喚士",
+   "desc": "初級のCPUを相手に腕を磨いた。",
+   "cond": {
+    "type": "winLv",
+    "lv": "easy",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-normal",
+   "name": "一人前の召喚士",
+   "desc": "中級のCPUにも負けない。",
+   "cond": {
+    "type": "winLv",
+    "lv": "normal",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-hard",
+   "name": "熟練の召喚士",
+   "desc": "上級のCPUを何度も退けた。",
+   "cond": {
+    "type": "winLv",
+    "lv": "hard",
+    "n": 30
+   }
+  },
+  {
+   "id": "t-ex",
+   "name": "超越者",
+   "desc": "超級のCPUを何度も退けた。",
+   "cond": {
+    "type": "winLv",
+    "lv": "ex",
+    "n": 30
+   }
+  },
+  {
+   "id": "t-streak",
+   "name": "連勝街道",
+   "desc": "CPU戦で10連勝した。",
+   "cond": {
+    "type": "streak",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-nezal1",
+   "name": "境界を越えし者",
+   "desc": "虚ろなる境界王ネザルを倒した。",
+   "cond": {
+    "type": "bossWin",
+    "lv": "hard",
+    "n": 1
+   }
+  },
+  {
+   "id": "t-nezal10",
+   "name": "境界王の宿敵",
+   "desc": "境界王ネザルを10回倒した。",
+   "cond": {
+    "type": "bossWin",
+    "lv": "hard",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-yomi1",
+   "name": "冥府帰り",
+   "desc": "冥府の剣鬼 黄泉丸を倒した。",
+   "cond": {
+    "type": "bossWin",
+    "lv": "ex",
+    "n": 1
+   }
+  },
+  {
+   "id": "t-yomi10",
+   "name": "剣鬼殺し",
+   "desc": "黄泉丸を10回斬り伏せた。",
+   "cond": {
+    "type": "bossWin",
+    "lv": "ex",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-pack100",
+   "name": "封を解く者",
+   "desc": "パックを100回開けた。",
+   "cond": {
+    "type": "packs",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-pack1000",
+   "name": "千の封を解く者",
+   "desc": "パックを1000回開けた。",
+   "cond": {
+    "type": "packs",
+    "n": 1000
+   }
+  },
+  {
+   "id": "t-complete",
+   "name": "完全なる図鑑",
+   "desc": "交換所のカードを、すべて3枚ずつそろえた。",
+   "cond": {
+    "type": "complete"
+   }
+  },
+  {
+   "id": "t-friend10",
+   "name": "友との誓い",
+   "desc": "友達との対戦で10回勝った。",
+   "cond": {
+    "type": "onlineWin",
+    "n": 10
+   }
+  },
+  {
+   "id": "t-friend100",
+   "name": "好敵手",
+   "desc": "友達と100回戦った。",
+   "cond": {
+    "type": "onlineGame",
+    "n": 100
+   }
+  },
+  {
+   "id": "t-stone",
+   "name": "鍛冶屋の上客",
+   "desc": "魔石を通算1万使った。",
+   "cond": {
+    "type": "stoneUse",
+    "n": 10000
+   }
+  },
+  {
+   "id": "t-info",
+   "name": "情報通",
+   "desc": "情報屋で20回買い物をした。",
+   "cond": {
+    "type": "info",
+    "n": 20
+   }
   }
  ]
 }

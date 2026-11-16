@@ -90,7 +90,7 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["season", "シーズン（リセット）"]];
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["titles", "称号"], ["season", "シーズン（リセット）"]];
     const sub = this.ecoSub || "money";
     const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
     const S = {};
@@ -199,6 +199,7 @@ const Admin = {
       </div>`;
     S.keeper = this.keeperHTML();
     S.info = this.infoHTML();
+    S.titles = this.titlesHTML();
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -269,6 +270,29 @@ const Admin = {
         <div class="qe-list">${DATA.quests.length ? DATA.quests.map((x, i) => this.qRowHTML("quests", i, x, { dates: true })).join("") : `<p class="hint">まだありません。</p>`}</div>
         <button type="button" class="btn sm" data-act="qeAdd" data-v="quests">＋ 期間限定クエストを足す</button>
       </div>`;
+  },
+  /* ---------- 称号 ---------- */
+  titlesHTML() {
+    const L = DATA.titles = DATA.titles || [];
+    const opt = (o, cur) => Object.entries(o).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(typeof v === "string" ? v : v.label)}</option>`).join("");
+    return `<div class="fgroup">
+        <span class="gl">称号</span>
+        <p class="hint">プレイヤーが手に入れる称号です。名前は12文字まで。条件を満たすと自動で手に入り、画面の上にお知らせが出ます。「配布だけ」はメールやシリアルで配る称号です。「条件を隠す」にすると、手に入れるまでプロフィールに条件が「？？？」と出ます。通算の回数は、記録を始めた日（2026年11月16日）からの分を数えます。</p>
+      </div>
+      ${L.map((x, i) => { x.cond = x.cond || { type: "gift" }; const T = TITLE_CONDS[x.cond.type] || TITLE_CONDS.gift;
+        return `<div class="fgroup inf-ed">
+          <div class="frow">
+            <label class="fl">名前<input class="txt" data-ttl="${i}:name" maxlength="12" value="${esc(x.name || "")}" style="max-width:200px"></label>
+            <label class="fl">手に入れ方<select class="txt" data-ttl="${i}:type">${opt(TITLE_CONDS, x.cond.type)}</select></label>
+            ${T.n ? `<label class="fl">回数<input class="txt" type="number" min="1" data-ttl="${i}:n" value="${+x.cond.n || 1}" style="max-width:110px"></label>` : ""}
+            ${T.lv ? `<label class="fl">強さ<select class="txt" data-ttl="${i}:lv">${opt(x.cond.type === "bossWin" ? { hard: "上級", ex: "超級" } : CPU_LV_NAMES, x.cond.lv)}</select></label>` : ""}
+            <label class="ownchk"><input type="checkbox" data-ttl="${i}:hidden" ${x.hidden ? "checked" : ""}> 条件を隠す</label>
+          </div>
+          <label class="fl">説明（プロフィールに出る一言。60文字まで）<input class="txt" data-ttl="${i}:desc" maxlength="60" value="${esc(x.desc || "")}"></label>
+          <p class="hint">条件：${esc(T.text(x.cond.n || 1, x.cond))}</p>
+          <p>${this.confirm && this.confirm.kind === "title" && this.confirm.id === x.id ? `<b>消しますか？</b> <button type="button" class="btn sm danger" data-act="ttlDelYes" data-id="${esc(x.id)}">消す</button> <button type="button" class="btn sm" data-act="cancelConfirm">やめる</button>` : `<button type="button" class="btn sm danger" data-act="ttlDel" data-id="${esc(x.id)}">この称号を消す</button>`}</p>
+        </div>`; }).join("")}
+      <div class="fgroup"><button type="button" class="btn sm" data-act="ttlAdd">＋ 称号を足す</button></div>`;
   },
   /* ---------- 情報屋の情報 ---------- */
   infoHTML() {
@@ -533,6 +557,9 @@ const Admin = {
         return true;
       }
       case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
+      case "ttlAdd": DATA.titles = DATA.titles || []; DATA.titles.push({ id: "t" + Date.now().toString(36), name: "新しい称号", desc: "", cond: { type: "winAny", n: 10 } }); this.touch(this.renderEco); return true;
+      case "ttlDel": this.confirm = { kind: "title", id: el.dataset.id }; this.renderEco(); return true;
+      case "ttlDelYes": DATA.titles = (DATA.titles || []).filter(x => x.id !== el.dataset.id); this.confirm = null; this.touch(this.renderEco); return true;
       case "infAdd": { const cat = el.dataset.v; DATA.info = DATA.info || []; DATA.info.push({ id: "i" + Date.now().toString(36), cat, title: "新しい情報", sub: "", price: 100, ...(cat === "peek" ? { peek: "pityHard" } : { body: "" }) }); this.touch(this.renderEco); return true; }
       case "infDel": this.confirm = { kind: "info", id: el.dataset.id }; this.renderEco(); return true;
       case "infDelYes": DATA.info = (DATA.info || []).filter(x => x.id !== el.dataset.id); this.confirm = null; this.touch(this.renderEco); return true;
@@ -677,4 +704,18 @@ document.addEventListener("change", e => {
   else if (f === "cat") { x.cat = t.value; if (x.cat === "peek") { x.peek = x.peek || "pityHard"; } else if (x.body == null) x.body = ""; }
   else x[f] = f === "body" ? t.value : t.value.trim();
   Admin.touch(f === "cat" ? Admin.renderEco : null);
+});
+
+/* 称号の欄 */
+document.addEventListener("change", e => {
+  const t = e.target, k = t && t.dataset && t.dataset.ttl; if (!k || typeof DATA === "undefined" || !DATA.titles) return;
+  const [i, f] = k.split(":"), x = DATA.titles[+i]; if (!x) return;
+  x.cond = x.cond || { type: "gift" };
+  if (f === "name") x.name = t.value.trim().slice(0, 12);
+  else if (f === "desc") x.desc = t.value.trim().slice(0, 60);
+  else if (f === "hidden") { if (t.checked) x.hidden = true; else delete x.hidden; }
+  else if (f === "type") { const T = TITLE_CONDS[t.value]; x.cond = { type: t.value, ...(T.n ? { n: x.cond.n || 10 } : {}), ...(T.lv ? { lv: t.value === "bossWin" ? "hard" : "normal" } : {}) }; }
+  else if (f === "n") x.cond.n = Math.max(1, Math.floor(+t.value || 1));
+  else if (f === "lv") x.cond.lv = t.value;
+  Admin.touch(["type", "n", "lv"].includes(f) ? Admin.renderEco : null);
 });
