@@ -278,6 +278,7 @@ const Admin = {
     return `<div class="fgroup">
         <span class="gl">称号</span>
         <p class="hint">プレイヤーが手に入れる称号です。名前は12文字まで。条件を満たすと自動で手に入り、画面の上にお知らせが出ます。「配布だけ」はメールやシリアルで配る称号です。「条件を隠す」にすると、手に入れるまでプロフィールに条件が「？？？」と出ます。通算の回数は、記録を始めた日（2026年11月16日）からの分を数えます。</p>
+        <p class="callout"><b>見直すタイミング</b>新しいボスを出したとき（そのボスを倒す称号）、新しいパックを出したとき（そのパックの図鑑の称号）、新しい売り場や遊び方を足したとき（それに合う称号）は、ここにも足してください。</p>
       </div>
       ${L.map((x, i) => { x.cond = x.cond || { type: "gift" }; const T = TITLE_CONDS[x.cond.type] || TITLE_CONDS.gift;
         return `<div class="fgroup inf-ed">
