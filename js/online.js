@@ -601,8 +601,13 @@ document.addEventListener("keydown", e => {
    ・運営（オーナー）は、メンテナンス画面の「メンテナンス中」の文字を7回続けて押すと、この端末だけ入れる */
 const Maint = {
   pending: false, taps: 0,
-  pass() { try { return localStorage.getItem("kyokai-maint-pass") === "1"; } catch (e) { return false; } },
-  on(cfg = CONFIG) { return !!(cfg && +cfg.MAINT) && !this.pass() && !adminOn(); },
+  /* 連打で入れるのは、今回のメンテナンスの間だけ（12時間で切れる。メンテナンスが終わったら消す） */
+  pass() { try { const t = +localStorage.getItem("kyokai-maint-pass") || 0; return t > 1 && Date.now() - t < 12 * 3600e3; } catch (e) { return false; } },
+  on(cfg = CONFIG) {
+    const m = !!(cfg && +cfg.MAINT);
+    if (!m) { try { localStorage.removeItem("kyokai-maint-pass"); } catch (e) {} }
+    return m && !this.pass() && !adminOn();
+  },
   screen() {
     this.pending = true;
     openOverlay(`<div class="panel maint">
@@ -626,7 +631,9 @@ const Maint = {
   handleAct(act) {
     if (act === "maintCheck") { this.check(false); return true; }
     if (act === "maintTap") {
-      if (++this.taps >= 7) { try { localStorage.setItem("kyokai-maint-pass", "1"); } catch (e) {} this.pending = false; toast("運営として入ります（この端末だけ）"); setTimeout(() => location.reload(), 700); }
+      // 3秒の間に7回続けて押したときだけ（ゆっくり押していると数え直す）
+      const now = Date.now(); if (now - (this.tapAt || 0) > 3000) this.taps = 0; if (!this.taps) this.tapAt = now;
+      if (++this.taps >= 7) { try { localStorage.setItem("kyokai-maint-pass", String(Date.now())); } catch (e) {} this.pending = false; toast("運営として入ります（この端末だけ）"); setTimeout(() => location.reload(), 700); }
       return true;
     }
     return false;
