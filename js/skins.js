@@ -135,7 +135,8 @@ const Skins = {
     let body = "";
     if (k === "stamp") body = this.stampHTML(st, use);
     else {
-      const L = this.list(k);
+      // 絵がそろっていない店員と、まだ開放していない弾のカードの別イラストは並べない（ネタばれ防止）
+      const L = this.list(k).filter(s => !(s.kind === "keeper" && !this.ready(s)) && !(s.kind === "art" && !cardShown(DEF[s.card])));
       body = L.length ? `<div class="sk-grid">${L.map(s => this.itemHTML(s, st, use)).join("")}</div>` : `<p class="sk-empty">準備中です。もうしばらくお待ちください。</p>`;
     }
     const a = this.ask, ax = a && (a.kind === "stamp" ? (() => { const s = STAMPS.find(x => x.id === a.id); return s && { name: `スタンプ「${s.text}」`, price: s.price }; })() : this.get(a.id));
@@ -169,7 +170,8 @@ const Skins = {
     else if (s.kind === "art") { const use = (Account.data.alt || {})[s.card] === s.id;
       btn = use ? `<button type="button" class="btn sm" data-act="skArt" data-id="${esc(s.id)}" data-v="">元の絵に戻す</button>` : `<button type="button" class="btn sm" data-act="skArt" data-id="${esc(s.id)}" data-v="1">使う</button>`; }
     else btn = on ? `<span class="sk-on">使用中</span>` : `<button type="button" class="btn sm" data-act="skEquip" data-id="${esc(s.id)}">使う</button>`;
-    return `<div class="sk-item ${on ? "on" : ""} ${ready ? "" : "soon"}">${pic}<b>${esc(s.name)}</b>${s.desc ? `<small>${esc(s.desc)}</small>` : ""}<span class="sk-act">${btn}</span></div>`;
+    const note = s.kind === "art" && !(Account.owned(s.card) > 0) ? `<small class="sk-warn">まだ持っていないカードです。手に入れると、この絵で出ます。</small>` : "";
+    return `<div class="sk-item ${on ? "on" : ""} ${ready ? "" : "soon"}">${pic}<b>${esc(s.name)}</b>${s.desc ? `<small>${esc(s.desc)}</small>` : ""}${note}<span class="sk-act">${btn}</span></div>`;
   },
   stampHTML(st, use) {
     const L = STAMPS.filter(s => !s.free);
