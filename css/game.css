@@ -2374,3 +2374,31 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 /* パック開封：重ねたパックや、めくる演出が横にはみ出して、画面が左右に滑らないようにする */
 #overlay:has(.openstage){overflow-x:hidden}
 .openstage{overflow-x:hidden;overflow-x:clip}
+
+/* ---------- ショップの店員（背景の上に店員、下に会話の窓） ---------- */
+.kp-stage{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:4/3;width:min(100%,calc(min(62vh,460px) * 4 / 3));margin-inline:auto;
+  background:#1a1410 url("../ui/shop-room.webp") 50% 0/cover no-repeat;box-shadow:inset 0 0 0 1px rgba(255,220,170,.18),0 8px 24px rgba(0,0,0,.45)}
+/* 店員の下半分は会話の窓の後ろに隠れる（窓の上端あたりで切る） */
+.kp-man{all:unset;cursor:pointer;position:absolute;left:50%;top:0;height:74%;width:58%;transform:translateX(-50%);overflow:hidden;-webkit-tap-highlight-color:transparent}
+.kp-stage .kp-man .kp-img{position:absolute;left:0;top:3%;width:100%;height:auto;transform-origin:50% 100%;animation:kpbreath 3.6s ease-in-out infinite;user-select:none;-webkit-user-drag:none}
+.kp-man.hop .kp-img{animation:kphop .42s ease-out,kpbreath 3.6s ease-in-out .42s infinite}
+.kp-man:focus-visible{outline:2px solid #ffd59a;outline-offset:-2px}
+@keyframes kpbreath{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-1.2%) scaleY(1.012)}}
+@keyframes kphop{0%{transform:translateY(0)}35%{transform:translateY(-7%)}70%{transform:translateY(1%)}100%{transform:translateY(0)}}
+.kp-stage .kp-bubble{position:absolute;left:10px;right:10px;bottom:10px;min-height:30%;box-sizing:border-box;padding:10px 14px 12px;border-radius:12px;cursor:pointer;
+  background:linear-gradient(180deg,rgba(28,20,14,.92),rgba(18,13,9,.96));border:1px solid rgba(232,168,90,.55);box-shadow:0 4px 18px rgba(0,0,0,.5);
+  display:flex;flex-direction:column;gap:4px;color:#f5ead8;font-size:14.5px;line-height:1.6}
+.kp-name{font-family:var(--f-display);font-size:13px;color:#f0b25e;letter-spacing:.06em;display:flex;align-items:baseline;gap:8px}
+.kp-name small{font-family:var(--f-body,inherit);font-size:10.5px;color:#b9a68c;letter-spacing:0;font-weight:500}
+.kp-text{min-height:1.6em;white-space:pre-wrap}
+.kp-extra:empty{display:none}
+.kp-go{all:unset;cursor:pointer;align-self:flex-start;margin-top:2px;padding:4px 12px;border-radius:999px;background:#e8893a;color:#1d1209;font-weight:800;font-size:13px}
+.kp-go:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.kp-more{position:absolute;right:12px;bottom:8px;width:0;height:0;border:6px solid transparent;border-top-color:#f0b25e;border-bottom:0;animation:kpmore 1s ease-in-out infinite;opacity:.8}
+@keyframes kpmore{50%{transform:translateY(3px)}}
+.kp-mini{display:flex;align-items:flex-end;gap:10px}
+.kp-mini .kp-man{position:relative;left:auto;transform:none;height:64px;width:64px;aspect-ratio:auto;border-radius:50%;flex:none;background:#2a1f16;border:2px solid rgba(232,168,90,.6)}
+.kp-mini .kp-img{position:absolute;width:250%;max-width:none;left:-75%;top:-4%}
+.kp-mini .kp-bubble{flex:1;min-width:0;position:relative;padding:8px 12px;border-radius:12px 12px 12px 4px;background:rgba(28,20,14,.92);border:1px solid rgba(232,168,90,.5);color:#f5ead8;font-size:13.5px;cursor:pointer}
+.offb{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;background:#e8893a;color:#1d1209;white-space:nowrap;z-index:2}
+@media (prefers-reduced-motion:reduce){.kp-stage .kp-man .kp-img,.kp-more{animation:none!important}}

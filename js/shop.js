@@ -41,6 +41,9 @@ const Shop = {
   usable() { return ["ready", "offline"].includes(Account.status); },
   getRate(r) { return Math.max(0, CONFIG["STONE_GET_" + STONE_KEY[r]] || 0); },
   costRate(r) { return Math.max(0, CONFIG["STONE_COST_" + STONE_KEY[r]] || 0); },
+  /* そのカードの交換に要る魔石（今日のおすすめは割引） */
+  offPct() { return Math.max(0, Math.min(90, CONFIG.SHOP_FEATURE_OFF ?? 20)); },
+  costOf(c) { const base = this.costRate(c.rarity), f = this.feature(); return f && f.id === c.id && this.offPct() ? Math.ceil(base * (100 - this.offPct()) / 100) : base; },
   ticketCost() { return Math.max(0, CONFIG.STONE_TICKET || 0); },
   cap() { return CONFIG.COPY_MAX || 3; },
 
@@ -73,14 +76,16 @@ const Shop = {
     Account.saveNow();
     Sound.play("flip");
     this.sel = {};
+    Keeper.react("dis", "happy");
     this.showDismantle(`${n}枚を分解して、魔石を${s}個手に入れました（所持 ${Account.stones}）。`);
   },
 
   buyTicket() {
     if (!this.usable()) return;
     const cost = this.ticketCost();
-    if (Account.stones < cost) return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`);
+    if (Account.stones < cost) { Keeper.react("poor", "trouble"); return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`); }
     Account.data.stones -= cost;
+    Keeper.react("buy", "happy");
     Account.data.tickets = Account.tickets + 1;
     Account.saveNow();
     Sound.play("click");
@@ -92,8 +97,9 @@ const Shop = {
     if (!this.usable()) return;
     const cost = CONFIG.DECK_SLOT_COST ?? 1500;
     if (Account.deckSlots >= (CONFIG.DECK_SLOT_MAX ?? 10)) return this.show("デッキ枠はもう増やせません。");
-    if (Account.stones < cost) return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`);
+    if (Account.stones < cost) { Keeper.react("poor", "trouble"); return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`); }
     Account.data.stones -= cost;
+    Keeper.react("buy", "happy");
     Account.data.deckSlots = Account.deckSlots + 1;
     Account.saveNow();
     Sound.play("click");
@@ -102,9 +108,10 @@ const Shop = {
   buy(id) {
     const c = DEF[id];
     if (!this.usable() || !c) return;
-    const cost = this.costRate(c.rarity);
+    const cost = this.costOf(c);
     if (Account.owned(id) >= this.cap()) return this.showTrade(`${c.name}はもう${this.cap()}枚持っています。`);
-    if (Account.stones < cost) return this.showTrade(`魔石が足りません（あと${cost - Account.stones}個）。`);
+    if (Account.stones < cost) { Keeper.react("poor", "trouble"); return this.showTrade(`魔石が足りません（あと${cost - Account.stones}個）。`); }
+    Keeper.react("buy", "happy");
     Account.data.stones -= cost;
     Account.data.cards[id] = (Account.data.cards[id] || 0) + 1;
     if (typeof Quest !== "undefined") Quest.add("trade", 1);
@@ -120,7 +127,7 @@ const Shop = {
   canTrade(c) { return this.usable() && !!c && this.pool().some(x => x.id === c.id); },
   tradeHTML(c) {
     if (!this.canTrade(c)) return "";
-    const own = Account.owned(c.id), cost = this.costRate(c.rarity), cap = this.cap();
+    const own = Account.owned(c.id), cost = this.costOf(c), cap = this.cap();
     if (own >= cap) return "";
     const short = Account.stones < cost;
     if (this.tradeAsk === c.id) return `<div class="trade ask">
@@ -136,7 +143,7 @@ const Shop = {
   trade(id) {
     const c = DEF[id]; this.tradeAsk = null;
     if (!this.canTrade(c)) return;
-    const cost = this.costRate(c.rarity);
+    const cost = this.costOf(c);
     if (Account.owned(id) >= this.cap()) toast(`${c.name}はもう${this.cap()}枚持っています`);
     else if (Account.stones < cost) toast(`魔石が足りません（あと${cost - Account.stones}個）`);
     else {
@@ -184,12 +191,7 @@ const Shop = {
       <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
       ${this.noteHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
-      ${f ? `<button type="button" class="sh-hero r-${f.rarity}" data-act="shopFeature" data-id="${esc(f.id)}" ${f.art ? `style="--art:url('${esc(f.art)}')"` : ""}>
-        <span class="sh-hero-bg" ${f.art ? `style="background-image:url('${esc(f.art)}')"` : ""}></span>
-        <span class="sh-hero-in"><small>今日のおすすめ</small><b>${esc(f.name)}</b>
-          <span class="sh-hero-meta"><i class="rtag r-${f.rarity}">${RARITY_SHORT[f.rarity]}</i>${curIcon("stone")}${this.costRate(f.rarity)}${Account.owned(f.id) ? ` ・ 所持${Account.owned(f.id)}枚` : " ・ 未所持"}</span>
-          <span class="sh-hero-go">見る ›</span></span>
-      </button>` : ""}
+      ${Keeper.stageHTML()}
       <div class="sh-cats">
         <button type="button" class="sh-cat wide c-trade" data-act="shopTrade" ${use ? "" : "disabled"}>
           <span class="sh-ic">${SHOP_IC.trade}</span><b>カードと交換</b><small>好きなカードを魔石で1枚ずつ</small><span class="go" aria-hidden="true">›</span></button>
@@ -233,6 +235,7 @@ const Shop = {
     openOverlay(`<div class="panel wide shop">
       <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>カードと交換</b>${stoneTag(Account.stones)}</div>
       ${this.noteHTML()}
+      ${Keeper.miniHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
       <section class="shopsec">
         <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.costRate(r)}</span>`).join("")}</p>
@@ -241,9 +244,9 @@ const Shop = {
           <label class="shopneed"><input type="checkbox" data-act="shopNeed" ${this.onlyNeed ? "checked" : ""}> ${cap}枚持っているカードを隠す</label>
         </div>
         <div class="dgrid">${list.length ? list.map(c => {
-          const own = Account.owned(c.id), cost = this.costRate(c.rarity);
+          const own = Account.owned(c.id), cost = this.costOf(c);
           return `<button type="button" class="dtile ${own >= cap ? "unowned" : ""}" data-act="shopDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">
-            ${cardHTML(c, { static: true, cls: own <= 0 ? "dim" : "" })}<span class="dbadge ${Account.stones >= cost && own < cap ? "in" : ""}">${cost}</span></button>`;
+            ${cardHTML(c, { static: true, cls: own <= 0 ? "dim" : "" })}<span class="dbadge ${Account.stones >= cost && own < cap ? "in" : ""}">${cost}</span>${cost < this.costRate(c.rarity) ? `<span class="offb">${this.offPct()}%引き</span>` : ""}</button>`;
         }).join("") : `<p class="hint">条件に合うカードはありません。</p>`}</div>
       </section>
       ${this.detailHTML()}
@@ -263,6 +266,7 @@ const Shop = {
     openOverlay(`<div class="panel wide shop">
       <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b>${stoneTag(Account.stones)}</div>
       ${this.noteHTML()}
+      ${Keeper.miniHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
       <p class="callout"><b>分解できるのはダブりだけ</b>同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>
       <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.getRate(r)}</span>`).join("")}</p>
@@ -301,7 +305,7 @@ const Shop = {
   detailHTML() {
     const c = this.detailId && DEF[this.detailId];
     if (!c) return "";
-    const own = Account.owned(c.id), cost = this.costRate(c.rarity), cap = this.cap();
+    const own = Account.owned(c.id), cost = this.costOf(c), cap = this.cap();
     const ok = this.usable() && own < cap && Account.stones >= cost;
     const label = own >= cap ? `${cap}枚持っています` : Account.stones < cost ? `魔石が足りません（あと${cost - Account.stones}）` : `魔石${cost}で交換する`;
     return `<div class="dmodal" data-act="shopDetailClose">
@@ -321,7 +325,9 @@ const Shop = {
 
   handleAct(act, el) {
     switch (act) {
-      case "shop": this.msg = null; this.detailId = null; this.hubAsk = null; this.show(); return true;
+      case "kpTap": Keeper.tap(); return true;
+      case "kpNext": Keeper.next(); return true;
+      case "shop": Keeper.enter(); this.msg = null; this.detailId = null; this.hubAsk = null; this.show(); return true;
       case "shopMain": this.msg = null; this.detailId = null; this.show(); return true;
       case "shopTrade": this.msg = null; this.detailId = null; this.showTrade(); return true;
       case "shopFeature": this.msg = null; this.rar = "all"; this.detailId = el.dataset.id; this.showTrade(); return true;
@@ -362,5 +368,110 @@ const Shop = {
       case "tradeYes": this.trade(el.dataset.id); return true;
     }
     return false;
+  }
+};
+
+/* ---------- ショップの店員 ----------
+   背景の上に店員の絵を重ね、まばたき・口パク・表情で動かす。セリフは工房の「ショップの店員」（KEEPERS）から。
+   絵は ui/keeper/<店員のid>-<表情>.webp（idle まばたき前の顔 / blink / talk1 / talk2 / happy / trouble / offer） */
+const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "offer"];
+const KEEPER_ART = ["dorgan"];   // 絵がそろっている店員
+const Keeper = {
+  q: [], text: "", extra: "", shown: "", mood: null, moodUntil: 0, talking: false, timers: [], cache: {},
+  cur() {
+    const L = (typeof KEEPERS !== "undefined" ? KEEPERS : []).filter(k => KEEPER_ART.includes(k.id) || (k.art && k.art.idle));
+    const want = Account.data && Account.data.keeper;
+    return L.find(k => k.id === want) || L[0] || null;
+  },
+  src(k, f) { return (k.art && k.art[f]) || `ui/keeper/${k.id}-${f}.webp`; },
+  preload(k) { if (this.cache[k.id]) return; this.cache[k.id] = KEEPER_FRAMES.map(f => { const im = new Image(); im.src = this.src(k, f); return im; }); },
+  /* セリフを1つ選ぶ（{card}・{off} を置き換える） */
+  line(scene, vars = {}) {
+    const k = this.cur(); const L = (k && k.lines && k.lines[scene]) || [];
+    if (!L.length) return "";
+    const t = L[Math.floor(Math.random() * L.length)];
+    return t.replace(/\{card\}/g, vars.card || "").replace(/\{off\}/g, vars.off ?? "");
+  },
+  /* 店に入ったとき：あいさつ → 今日のおすすめ */
+  enter() {
+    const k = this.cur(); if (!k) return;
+    let seen = false; try { seen = localStorage.getItem("kyokai-shop-seen") === "1"; localStorage.setItem("kyokai-shop-seen", "1"); } catch (e) {}
+    const h = new Date().getHours(), st = Account.stones || 0;
+    const scene = !seen ? "first" : st >= 5000 && Math.random() < 0.4 ? "rich" : h >= 5 && h < 11 && Math.random() < 0.5 ? "morning" : (h >= 22 || h < 5) && Math.random() < 0.5 ? "night" : "enter";
+    this.q = [{ scene }];
+    const f = Shop.feature();
+    if (f && Shop.offPct()) this.q.push({ scene: "feature", mood: "offer", vars: { card: f.name, off: Shop.offPct() }, extra: `<button type="button" class="kp-go" data-act="shopFeature" data-id="${esc(f.id)}">《${esc(f.name)}》を見る ›</button>` });
+    this.shown = ""; this.extra = ""; this.typing = false; this.talking = false;
+  },
+  /* 買い物・分解などの反応（次に描かれた画面で話す） */
+  react(scene, mood) { if (!this.cur()) return; this.q = [{ scene, mood }]; this.shown = ""; this.extra = ""; this.typing = false; this.talking = false; },
+  tap() {
+    const el = document.querySelector(".kp-man"); if (el) { el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
+    if (typeof Sound !== "undefined") Sound.play("click");
+    this.q = [{ scene: "tap" }]; this.next(true);
+  },
+  /* 吹き出しを押した：書いている途中なら全部出す。書き終わっていたら次のセリフへ */
+  next(force) {
+    if (!force && this.typing) { this.finishTyping(); return; }
+    const it = this.q.shift(); if (!it) return;
+    const t = this.line(it.scene, it.vars); if (!t) return this.next(true);
+    this.say(t, it.mood, it.extra || "");
+  },
+  say(t, mood, extra) {
+    this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true;
+    if (mood) { this.mood = mood; this.moodUntil = Date.now() + Math.max(1800, t.length * 45 + 1400); } else this.mood = null;
+    this.paintText();
+  },
+  finishTyping() { this.shown = this.text; this.typing = false; this.talking = false; this.paintText(); },
+  paintText() {
+    document.querySelectorAll(".kp-text").forEach(el => { el.textContent = this.shown; });
+    document.querySelectorAll(".kp-extra").forEach(el => { el.innerHTML = !this.typing ? this.extra : ""; });
+  },
+  stageHTML() {
+    const k = this.cur(); if (!k) return "";
+    this.preload(k); setTimeout(() => this.mount(), 0);
+    return `<div class="kp-stage">
+      <button type="button" class="kp-man" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
+      <div class="kp-bubble" data-act="kpNext" role="status" aria-live="polite"><b class="kp-name">${esc(k.name)}${k.title ? `<small>${esc(k.title)}</small>` : ""}</b><span class="kp-text">${esc(this.shown)}</span><span class="kp-extra">${this.typing ? "" : this.extra}</span><i class="kp-more" aria-hidden="true"></i></div>
+    </div>`;
+  },
+  /* 交換・分解の画面：話すことがあるときだけ、小さく顔と吹き出しを出す */
+  miniHTML() {
+    const k = this.cur(); if (!k || (!this.q.length && !this.shown)) return "";
+    this.preload(k); setTimeout(() => this.mount(), 0);
+    return `<div class="kp-mini"><button type="button" class="kp-man" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
+      <div class="kp-bubble" data-act="kpNext" role="status" aria-live="polite"><span class="kp-text">${esc(this.shown)}</span><span class="kp-extra"></span></div></div>`;
+  },
+  /* 描かれた画面で動かし始める（画面が描き直されると止まる） */
+  mount() {
+    const img = document.querySelector(".kp-img"); if (!img) return;
+    this.timers.forEach(clearInterval); this.timers = [];
+    const k = this.cur();
+    if (this.q.length && !this.typing) this.next(true); else this.paintText();
+    let blinkAt = Date.now() + 1500 + Math.random() * 3000, blinkTo = 0, tick = 0;
+    const loop = setInterval(() => {
+      if (!img.isConnected) { clearInterval(loop); clearInterval(typer); return; }
+      const now = Date.now(); tick++;
+      if (this.mood && now > this.moodUntil) this.mood = null;
+      let f = "idle";
+      if (this.mood) f = this.mood;
+      else if (this.talking) f = ["talk1", "talk2", "talk1", "idle"][tick % 4];
+      else {
+        if (now > blinkAt) { blinkTo = now + 130; blinkAt = now + 2200 + Math.random() * 3800; }
+        if (now < blinkTo) f = "blink";
+      }
+      const want = this.src(k, f); if (img.getAttribute("src") !== want) img.setAttribute("src", want);
+    }, 90);
+    const typer = setInterval(() => {
+      if (!img.isConnected) return;
+      if (!this.typing) return;
+      this.shown = this.text.slice(0, this.shown.length + 1);
+      document.querySelectorAll(".kp-text").forEach(el => { el.textContent = this.shown; });
+      if (this.shown.length >= this.text.length) {
+        this.typing = false; this.talking = false; this.paintText();
+        if (this.q.length) setTimeout(() => { if (!this.typing && img.isConnected) this.next(true); }, 1800);
+      }
+    }, 40);
+    this.timers.push(loop, typer);
   }
 };
