@@ -2561,3 +2561,4 @@ html.eco .card.holo .shine,html.nofx .card.holo .shine{display:none}
 .sk-act .sh-soon{position:static;transform:none}
 .sk-note{padding:10px 12px;border-radius:10px;background:rgba(14,10,8,.82);border:1px solid rgba(232,168,90,.25);opacity:1}
 .sk-empty{background:rgba(14,10,8,.82);border-radius:10px}
+.c-skin .sh-soon{z-index:2;background:rgba(10,8,6,.75)}

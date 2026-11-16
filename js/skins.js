@@ -143,7 +143,7 @@ const Skins = {
   },
   handleAct(act, el) {
     switch (act) {
-      case "shopSkins": Shop.msg = null; this.ask = null; this.show(); return true;
+      case "shopSkins": if (!CONFIG.SKIN_ON && !adminOn()) return true; Shop.msg = null; this.ask = null; this.show(); return true;
       case "skTab": this.kind = el.dataset.v; Shop.msg = null; this.show(); return true;
       case "skAsk": this.ask = { kind: el.dataset.kind, id: el.dataset.id }; this.show(); return true;
       case "skNo": this.ask = null; this.show(); return true;

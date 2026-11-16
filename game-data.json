@@ -1,5 +1,5 @@
 {
- "version": 164,
+ "version": 165,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -64,7 +64,8 @@
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
   "SAMPLE_DECKS": true,
-  "HOLO_PRICE": 3000
+  "HOLO_PRICE": 3000,
+  "SKIN_ON": 0
  },
  "packs": [
   {
