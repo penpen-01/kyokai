@@ -1,5 +1,5 @@
 {
- "version": 170,
+ "version": 171,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -9293,6 +9293,30 @@
    "price": 0,
    "art": "ui/bg-home.webp",
    "default": true
+  },
+  {
+   "id": "hm-shinwa",
+   "kind": "home",
+   "name": "天空の回廊",
+   "desc": "雲海と朝日が見える神殿の回廊。",
+   "price": 3000,
+   "art": "ui/home/hm-shinwa.webp"
+  },
+  {
+   "id": "hm-gensou",
+   "kind": "home",
+   "name": "大樹の隠れ家",
+   "desc": "光る森へ続く、木のうろの部屋。",
+   "price": 3000,
+   "art": "ui/home/hm-gensou.webp"
+  },
+  {
+   "id": "hm-kishin",
+   "kind": "home",
+   "name": "機神の制御室",
+   "desc": "煙突の町を見下ろす工場の制御室。",
+   "price": 3000,
+   "art": "ui/home/hm-kishin.webp"
   },
   {
    "id": "kp-dorgan",
