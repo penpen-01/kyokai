@@ -1,5 +1,5 @@
 {
- "version": 166,
+ "version": 167,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -9139,6 +9139,30 @@
    "price": 0,
    "art": "ui/card-back.webp",
    "default": true
+  },
+  {
+   "id": "sl-kuro",
+   "kind": "sleeve",
+   "name": "黒金の紋章",
+   "desc": "黒地に金の装飾。落ち着いた紋章。",
+   "price": 3000,
+   "art": "ui/sleeve/sl-kuro.webp"
+  },
+  {
+   "id": "sl-guren",
+   "kind": "sleeve",
+   "name": "紅蓮の紋章",
+   "desc": "赤い光が走る紋章。",
+   "price": 3000,
+   "art": "ui/sleeve/sl-guren.webp"
+  },
+  {
+   "id": "sl-maou",
+   "kind": "sleeve",
+   "name": "境界の魔王",
+   "desc": "三つの世界を見下ろす魔王の紋章。",
+   "price": 5000,
+   "art": "ui/sleeve/sl-maou.webp"
   },
   {
    "id": "fr-default",
