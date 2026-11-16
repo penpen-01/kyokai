@@ -1,5 +1,5 @@
 {
- "version": 162,
+ "version": 163,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -2366,37 +2366,43 @@
    "id": "s01",
    "text": "よろしく！",
    "free": true,
-   "price": 0
+   "price": 0,
+   "art": "ui/stamp/s01.webp"
   },
   {
    "id": "s02",
    "text": "ありがとう！",
    "free": true,
-   "price": 0
+   "price": 0,
+   "art": "ui/stamp/s02.webp"
   },
   {
    "id": "s03",
    "text": "やるな！",
    "free": true,
-   "price": 0
+   "price": 0,
+   "art": "ui/stamp/s03.webp"
   },
   {
    "id": "s04",
    "text": "まだまだ！",
    "free": true,
-   "price": 0
+   "price": 0,
+   "art": "ui/stamp/s04.webp"
   },
   {
    "id": "s05",
    "text": "しまった…",
    "free": true,
-   "price": 0
+   "price": 0,
+   "art": "ui/stamp/s05.webp"
   },
   {
    "id": "s06",
    "text": "考え中…",
    "free": true,
-   "price": 0
+   "price": 0,
+   "art": "ui/stamp/s06.webp"
   }
  ],
  "cards": [

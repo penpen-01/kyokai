@@ -140,7 +140,7 @@ const Stamps = {
     const set = this.set().map(id => STAMPS.find(s => s.id === id)).filter(Boolean);
     const el = document.createElement("div");
     el.className = "stamp-menu"; el.setAttribute("role", "menu");
-    el.innerHTML = set.length ? set.map(s => `<button type="button" class="stamp-item" data-act="stampSend" data-id="${esc(s.id)}" role="menuitem">${this.html(s)}</button>`).join("")
+    el.innerHTML = set.length ? set.map(s => `<button type="button" class="stamp-item ${s.art ? "art" : ""}" data-act="stampSend" data-id="${esc(s.id)}" role="menuitem">${this.html(s)}</button>`).join("")
       + `<button type="button" class="stamp-mute" data-act="stampMute">${this.isMuted() ? "相手のスタンプ：表示しない" : "相手のスタンプ：表示する"}</button>`
       : `<p class="hint">スタンプを持っていません</p>`;
     document.body.appendChild(el);
@@ -173,7 +173,7 @@ const Stamps = {
     if (pi !== ME && this.isMuted()) return;
     const av = document.querySelector(`.avatar[data-player="${pi}"]`);
     const el = document.createElement("div");
-    el.className = `stamp-pop ${pi === ME ? "me" : "op"}`; el.innerHTML = this.html(s);
+    el.className = `stamp-pop ${pi === ME ? "me" : "op"} ${s.art ? "art" : ""}`; el.innerHTML = this.html(s);
     if (av) { const r = av.getBoundingClientRect(); el.style.left = Math.min(innerWidth - 150, r.right + 8) + "px"; el.style.top = (pi === ME ? r.top - 20 : r.top + 6) + "px"; }
     document.body.appendChild(el);
     if (typeof Sound !== "undefined") Sound.play("click");
@@ -230,9 +230,9 @@ const Profile = {
     const set = Stamps.set(), own = Stamps.ownedList();
     return `<p class="hint">対戦に持っていくスタンプを、${STAMP_MAX}個まで選びます（押すと入れたり外したりできます）。対戦中は、自分の情報欄の吹き出しのボタンから送れます。</p>
       <p class="pf-sub">持っていく（${set.length} / ${STAMP_MAX}）</p>
-      <div class="stamp-grid">${set.map(id => STAMPS.find(s => s.id === id)).filter(Boolean).map(s => `<button type="button" class="stamp-item on" data-act="stampPick" data-id="${esc(s.id)}">${Stamps.html(s)}</button>`).join("")}</div>
+      <div class="stamp-grid">${set.map(id => STAMPS.find(s => s.id === id)).filter(Boolean).map(s => `<button type="button" class="stamp-item on ${s.art ? "art" : ""}" data-act="stampPick" data-id="${esc(s.id)}">${Stamps.html(s)}</button>`).join("")}</div>
       <p class="pf-sub">持っているスタンプ（${own.length}）</p>
-      <div class="stamp-grid">${own.map(s => `<button type="button" class="stamp-item ${set.includes(s.id) ? "on" : ""}" data-act="stampPick" data-id="${esc(s.id)}">${Stamps.html(s)}</button>`).join("")}</div>
+      <div class="stamp-grid">${own.map(s => `<button type="button" class="stamp-item ${set.includes(s.id) ? "on" : ""} ${s.art ? "art" : ""}" data-act="stampPick" data-id="${esc(s.id)}">${Stamps.html(s)}</button>`).join("")}</div>
       <label class="ownchk"><input type="checkbox" data-act="stampMuteChk" ${Stamps.isMuted() ? "checked" : ""}> 相手のスタンプを表示しない</label>`;
   },
   pickIcon(id) {
