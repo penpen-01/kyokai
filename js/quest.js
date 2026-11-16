@@ -72,7 +72,7 @@ const Quest = {
     if (!S || sample || this.doneGid === S.gid) return;
     if (S.battle && (S.battle.kind === "tutorial" || S.battle.test)) return;   // 検証の対戦も数えない   // チュートリアルはクエストに数えない（くり返して稼げないように）
     this.doneGid = S.gid;
-    const me = MODE === "online" && typeof Online !== "undefined" ? Online.me : ME;
+    const me = ME;   // 友達対戦でも ME が自分（部屋主0・参加者1）
     const st = (S.stats || [])[me] || {};
     const cpu = MODE === "cpu", B = S.battle;
     this.add("battle", 1);
@@ -87,6 +87,7 @@ const Quest = {
     const x = L.find(q => q.id === id);
     if (!x || !this.done(kind, x) || this.got(kind, x)) return;
     this.box(kind).got.push(x.id);
+    if (typeof Titles !== "undefined") Titles.bump("quest");
     if (x.gold) Account.data.gold += x.gold;
     if (x.stones) Account.data.stones = (Account.data.stones || 0) + x.stones;
     if (x.tickets) Account.data.tickets = (Account.data.tickets || 0) + x.tickets;

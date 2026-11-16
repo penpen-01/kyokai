@@ -152,7 +152,7 @@ const Online = {
 
   reset() {
     this.unsubs.forEach(f => { try { f(); } catch {} });
-    Object.assign(this, { role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, myDeck: null, guestDeck: null });
+    Object.assign(this, { role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
     clearTimeout(this.pendingTimer);
   },
 
@@ -216,7 +216,7 @@ const Online = {
     if (this.mySample) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
-    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), by: this.uid, at: Date.now() });
+    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), by: this.uid, at: Date.now() });
     this.watchRoom();
     this.showConnecting("対戦を準備しています");
   },
@@ -253,6 +253,9 @@ const Online = {
     this.oppOnline = !ou || !!(room.presence && room.presence[ou]);
     this.oppLeft = !!(ou && room.left && room.left[ou]);
 
+    // 相手（部屋主）のスタンプ
+    if (this.role === "guest" && room.stamp && room.stamp.at !== this.seenStamp) { const first = this.seenStamp === undefined; this.seenStamp = room.stamp.at; if (!first && typeof Stamps !== "undefined" && Date.now() - (room.stamp.at || 0) < 15000 + Math.abs(this.skew || 0)) Stamps.show(OP, room.stamp.id); }
+    else if (this.seenStamp === undefined) this.seenStamp = room.stamp ? room.stamp.at : null;
     // 相手がデッキを変えたら知らせる（中身は見せない）
     const oc = room.dchg && room.dchg[this.role === "host" ? "guest" : "host"];
     if (oc && oc !== this.seenOppDchg) {
@@ -272,6 +275,12 @@ const Online = {
     }
   },
 
+  /* スタンプを送る（参加者は操作として、部屋主は部屋の stamp に書く） */
+  sendStamp(id) {
+    if (!this.code) return;
+    if (this.role === "guest") Net.push(`rooms/${this.code}/actions`, { t: "stamp", id, by: this.uid, at: Date.now() });
+    else Net.update(`rooms/${this.code}`, { stamp: { id, at: Date.now() } }).catch(e => console.error(e));
+  },
   /* ---------- 対戦の合間にデッキを変える ---------- */
   deckOK(d) {
     if (!d) return "デッキが見つかりません";
@@ -299,12 +308,13 @@ const Online = {
     const d = Decks.find(id), why = this.deckOK(d);
     if (why) return this.showDeckPick(why);
     const icon = Account.icon(), sample = !!(d.free && Decks.sampleOK());
-    const deck = { name: d.name, cards: { ...d.cards }, ...(sample ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}) };
+    const title = typeof Titles !== "undefined" ? Titles.curName() : "";
+    const deck = { name: d.name, cards: { ...d.cards }, ...(sample ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}), ...(title ? { title } : {}) };
     if (sample && !this.mySample) Decks.useSample();
     this.myDeck = deck; this.mySample = sample;
     Decks.select(d.id);
     store.set(ROOM_KEY, { code: this.code, role: this.role, sample });
-    if (this.role === "guest") Net.push(`rooms/${this.code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), by: this.uid, at: Date.now() });
+    if (this.role === "guest") Net.push(`rooms/${this.code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), by: this.uid, at: Date.now() });
     Net.update(`rooms/${this.code}/dchg`, { [this.role]: Date.now() }).catch(e => console.error(e));
     toast(`次の対戦は「${deck.name}」で戦います`);
     if (S && S.over) showResult(myResult()); else $("#overlay").hidden = true;
@@ -368,10 +378,12 @@ const Online = {
       const cards = {};
       Object.entries(cleanDeckCards(a.cards)).forEach(([id, n]) => { if (DEF[id]) cards[id] = n; });
       const icon = typeof a.icon === "string" && DEF[a.icon] && DEF[a.icon].type === "char" ? a.icon : null;
-      this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by, ...(icon ? { icon } : {}), ...(typeof a.key === "string" && DEF[a.key] ? { key: a.key } : {}) };
+      this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by, ...(icon ? { icon } : {}), ...(typeof a.key === "string" && DEF[a.key] ? { key: a.key } : {}), ...(typeof a.title === "string" && a.title ? { title: a.title.slice(0, 12) } : {}) };
+      if (S && S.over) { this.oppDeckChanged = true; toast("相手がデッキを変更しました"); const rd = $(".res-deck"); if (rd && !rd.querySelector("small")) rd.insertAdjacentHTML("beforeend", "<small>相手はデッキを変更しました</small>"); }   // 参加者の dchg は書き込めないので、デッキの操作で知る
       if (!S && this.room && this.room.guest && this.room.status === "waiting") this.startGame();
       return;
     }
+    if (a.t === "stamp" && this.room && a.by === this.room.guest) { if (typeof Stamps !== "undefined") Stamps.show(OP, a.id); return; }
     if (!S || !this.room || a.by !== this.room.guest) return;
     let done = false;
     if (S.phase === "rps" && a.t === "rps") done = rpsPick(1, a.v);

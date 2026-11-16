@@ -22,7 +22,7 @@ const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-const snap = () => JSON.stringify({ config: DATA.config, cards: DATA.cards, packs: DATA.packs, decks: DATA.decks, serials: DATA.serials, news: DATA.news, mail: DATA.mail, login: DATA.login, picks: DATA.picks, quests: DATA.quests, daily: DATA.daily, beginner: DATA.beginner });
+const snap = () => JSON.stringify({ config: DATA.config, cards: DATA.cards, packs: DATA.packs, decks: DATA.decks, serials: DATA.serials, news: DATA.news, mail: DATA.mail, login: DATA.login, picks: DATA.picks, quests: DATA.quests, daily: DATA.daily, beginner: DATA.beginner, keepers: DATA.keepers, info: DATA.info, titles: DATA.titles, stamps: DATA.stamps });
 const curCard = () => DATA.cards.find(c => c.id === curId) || null;
 const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const fmtBytes = n => n > 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n / 1024)) + "KB";
@@ -46,6 +46,7 @@ async function boot() {
     if (!DATA.news.length && published) DATA.news = published.news;
     if (!DATA.mail.length && published) DATA.mail = published.mail;
     if (!DATA.picks.length && published) DATA.picks = published.picks;
+    ["keepers", "info", "titles", "stamps"].forEach(k => { if (!(DATA[k] || []).length && published && (published[k] || []).length) DATA[k] = published[k]; });
     exportedSnap = draft._exportedSnap || (published ? JSON.stringify({ config: published.config, cards: published.cards }) : "");
   } else if (published) {
     DATA = published;
@@ -726,6 +727,7 @@ function act(name, el) {
       if (!b) { notice = "戻せる編集内容はありません。"; renderStatus(); break; }
       pendingImport = normalizeData(b);
       if (!pendingImport.decks.length) pendingImport.decks = DATA.decks;
+      ["keepers", "info", "titles", "stamps"].forEach(k => { if (!(pendingImport[k] || []).length && (DATA[k] || []).length) pendingImport[k] = DATA[k]; });
       openModal(`<div class="dialog" role="dialog"><h3>以前の編集内容に戻しますか？</h3>
         <p>今の内容は、以前このブラウザで編集していた内容（${pendingImport.cards.length}種）で置き換わります。古い形式のデータは、新しい形式（投入上限・レア度）に変換されます。</p>
         <div class="acts"><button type="button" class="btn" data-act="closeModal">やめる</button><button type="button" class="btn primary" data-act="importYes">戻す</button></div></div>`);
@@ -748,7 +750,9 @@ function flushSave() {
 
 /* ---------- 書き出し・読み込み ---------- */
 function exportJSON() {
-  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, packs: DATA.packs || [], decks: DATA.decks || [], serials: DATA.serials || [], news: DATA.news || [], mail: DATA.mail || [], login: DATA.login || [], picks: DATA.picks || [], quests: DATA.quests || [], daily: DATA.daily || [], beginner: DATA.beginner || [], cards: DATA.cards.map(c => {
+  const out = { version: (DATA.version || 0) + 1, updated: today(), config: DATA.config, packs: DATA.packs || [], decks: DATA.decks || [], serials: DATA.serials || [], news: DATA.news || [], mail: DATA.mail || [], login: DATA.login || [], picks: DATA.picks || [], quests: DATA.quests || [], daily: DATA.daily || [], beginner: DATA.beginner || [],
+    // 店員・情報屋・称号・スタンプ（書き出しに入れ忘れると、公開したときに消えてしまう）
+    keepers: DATA.keepers || [], info: DATA.info || [], titles: DATA.titles || [], stamps: DATA.stamps || [], cards: DATA.cards.map(c => {
     const o = { id: c.id, name: c.name, world: c.world, type: c.type, cost: c.cost };
     if (c.type === "char") { o.atk = c.atk; o.hp = c.hp; }
     Object.assign(o, { glyph: c.glyph, limit: c.limit, rarity: c.rarity, keywords: c.type === "char" ? c.keywords : [], effects: c.effects });

@@ -887,7 +887,10 @@ function normalizeData(data) {
       cond: { type: c.type, ...(T.n ? { n: Math.max(1, Math.floor(+c.n || 1)) } : {}), ...(T.lv ? { lv: CPU_LV_NAMES[c.lv] ? c.lv : c.type === "bossWin" ? "hard" : "normal" } : {}), ...(T.set ? { set: /^[\w-]{1,40}$/.test(c.set || "") ? c.set : "pack1" } : {}) },
       ...(x.hidden ? { hidden: true } : {}) };
   });
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles };
+  // スタンプ（文字だけ、または絵。free＝最初から持っている）
+  const stamps = (Array.isArray(d.stamps) ? d.stamps : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id)).slice(0, 200).map(x => ({
+    id: x.id, text: String(x.text || "").slice(0, 12), ...(typeof x.art === "string" && x.art ? { art: x.art.slice(0, 300) } : {}), ...(x.free ? { free: true } : {}), price: Math.max(0, Math.floor(+x.price || 0)) }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps };
 }
 
 function cleanDeckCards(cards) {

@@ -118,6 +118,14 @@ const Account = {
       ...(d.charm && (d.charm.hard || d.charm.ex) ? { charm: { ...(d.charm.hard ? { hard: true } : {}), ...(d.charm.ex ? { ex: true } : {}) } } : {}),
       btk: { hard: Math.max(0, Math.floor(+(d.btk && d.btk.hard) || 0)), ex: Math.max(0, Math.floor(+(d.btk && d.btk.ex) || 0)) },
       ...(d.btkWeek && /^\d{4}-\d{2}-\d{2}$/.test(d.btkWeek.w) ? { btkWeek: { w: d.btkWeek.w, hard: Math.max(0, Math.floor(+d.btkWeek.hard || 0)), ex: Math.max(0, Math.floor(+d.btkWeek.ex || 0)) } } : {}),
+      // 称号・スタンプ・アイコン（js/titles.js）：通算の記録、手に入れた称号、付けている称号、持っていくスタンプ、買ったスタンプ、お気に入りと最近使ったアイコン
+      st: (() => { const o = {}; Object.entries(d.st || {}).forEach(([k, v]) => { if (!/^\w{1,20}$/.test(k)) return; if (v && typeof v === "object") { const m = {}; Object.entries(v).forEach(([a, b]) => { if (/^\w{1,20}$/.test(a) && +b > 0) m[a] = Math.floor(+b); }); o[k] = m; } else if (+v > 0) o[k] = Math.floor(+v); }); return o; })(),
+      titles: Array.isArray(d.titles) ? [...new Set(d.titles.filter(x => /^[\w-]{1,40}$/.test(x)))] : [],
+      ...(typeof d.title === "string" && /^[\w-]{1,40}$/.test(d.title) ? { title: d.title } : {}),
+      ...(Array.isArray(d.stampSet) ? { stampSet: d.stampSet.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 6) } : {}),
+      ...(Array.isArray(d.stampOwn) ? { stampOwn: d.stampOwn.filter(x => /^[\w-]{1,40}$/.test(x)) } : {}),
+      ...(Array.isArray(d.iconFav) ? { iconFav: d.iconFav.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 30) } : {}),
+      ...(Array.isArray(d.iconRecent) ? { iconRecent: d.iconRecent.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 12) } : {}),
       // 友達との対戦でGを受け取った回数（1日ごと）
       ...(d.onlDay && /^\d{4}-\d{2}-\d{2}$/.test(d.onlDay.d) ? { onlDay: { d: d.onlDay.d, n: Math.max(0, Math.floor(+d.onlDay.n || 0)) } } : {}),
       // 隠しボス：最後に会ってから上級で勝った回数（天井用）と、次の上級戦でボスが出るか

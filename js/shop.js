@@ -59,7 +59,7 @@ const Shop = {
     const e = this.exch; if (!e || !this.usable()) return;
     const r = this.rate(), g = Math.max(0, Math.min(Math.floor(Account.stones / r), e.g || 0));
     if (!g) return;
-    Account.data.stones -= g * r; Account.data.gold = (Account.data.gold || 0) + g;
+    Account.data.stones -= g * r; Account.data.gold = (Account.data.gold || 0) + g; Titles.bump("stoneUse", g * r);
     Account.saveNow(); Sound.play("click");
     this.exch = null; Keeper.react("buy", "happy");
     this.show(`魔石${(g * r).toLocaleString()}個を、${g.toLocaleString()}G に両替しました。`);
@@ -97,6 +97,7 @@ const Shop = {
     let n = 0, s = 0;
     list.forEach(x => { Account.data.cards[x.c.id] -= x.k; n += x.k; s += x.k * this.getRate(x.c.rarity); });
     if (typeof Quest !== "undefined") Quest.add("dis", n);
+    Titles.bump("dis", n);
     Account.data.stones = Account.stones + s;
     Account.saveNow();
     Sound.play("flip");
@@ -111,7 +112,7 @@ const Shop = {
     if (Account.stones < cost) { Keeper.react("poor", "trouble"); return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`); }
     Account.data.stones -= cost;
     Keeper.react("buy", "happy");
-    Account.data.tickets = Account.tickets + 1;
+    Account.data.tickets = Account.tickets + 1; Titles.bump("stoneUse", cost);
     Account.saveNow();
     Sound.play("click");
     this.show(`パック券を1枚手に入れました（所持${Account.tickets}枚）。パックの画面で使えます。`);
@@ -125,7 +126,7 @@ const Shop = {
     if (Account.stones < cost) { Keeper.react("poor", "trouble"); return this.show(`魔石が足りません（あと${cost - Account.stones}個）。`); }
     Account.data.stones -= cost;
     Keeper.react("buy", "happy");
-    Account.data.deckSlots = Account.deckSlots + 1;
+    Account.data.deckSlots = Account.deckSlots + 1; Titles.bump("stoneUse", cost);
     Account.saveNow();
     Sound.play("click");
     this.show(`デッキ枠が1つ増えました（マイデッキ・限定構築とも ${Decks.max("mine")}個まで）。`);
@@ -140,6 +141,7 @@ const Shop = {
     Account.data.stones -= cost;
     Account.data.cards[id] = (Account.data.cards[id] || 0) + 1;
     if (typeof Quest !== "undefined") Quest.add("trade", 1);
+    Titles.bump("trade"); Titles.bump("stoneUse", cost);
     Account.saveNow();
     Sound.play(RARITY_ORDER.indexOf(c.rarity) >= 2 ? "rare" : "flip", RARITY_ORDER.indexOf(c.rarity));
     this.detailId = null;
@@ -175,6 +177,7 @@ const Shop = {
       Account.data.stones -= cost;
       Account.data.cards[id] = (Account.data.cards[id] || 0) + 1;
       if (typeof Quest !== "undefined") Quest.add("trade", 1);
+      Titles.bump("trade"); Titles.bump("stoneUse", cost);
       Account.saveNow();
       Sound.play(RARITY_ORDER.indexOf(c.rarity) >= 2 ? "rare" : "flip", RARITY_ORDER.indexOf(c.rarity));
       toast(`${c.name}を手に入れました（所持${Account.owned(id)}枚）`);
@@ -562,7 +565,7 @@ Object.assign(Shop, {
     if (a.kind === "info") {
       const x = this.infoList().find(i => i.id === a.id); if (!x) return this.showInfo();
       if (Account.gold < x.price) return this.showInfo(`G が足りません（あと${x.price - Account.gold}G）。`);
-      Account.data.gold -= x.price;
+      Account.data.gold -= x.price; Titles.bump("info");
       if (x.cat === "peek") { this.infoRead = { id: x.id, peek: this.peekText(x) }; }
       else { Account.data.infoBuy = Account.data.infoBuy || {}; Account.data.infoBuy[x.id] = Date.now() + (CONFIG.INFO_HOURS || 24) * 3600e3; this.infoRead = { id: x.id }; }
       Account.saveNow(); Sound.play("click");
@@ -580,7 +583,7 @@ Object.assign(Shop, {
       w[g.lv] = (w[g.lv] || 0) + 1; Account.data.btkWeek = w;
       Account.data.btk = { hard: 0, ex: 0, ...(Account.data.btk || {}) }; Account.data.btk[g.lv]++;
     }
-    Account.data.gold -= g.price;
+    Account.data.gold -= g.price; Titles.bump("info");
     Account.saveNow(); Sound.play("click");
     this.showInfo(`「${g.title}」を買いました。`);
   },

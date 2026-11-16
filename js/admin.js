@@ -90,7 +90,7 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["titles", "称号"], ["season", "シーズン（リセット）"]];
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["titles", "称号"], ["stamps", "スタンプ"], ["season", "シーズン（リセット）"]];
     const sub = this.ecoSub || "money";
     const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
     const S = {};
@@ -200,6 +200,7 @@ const Admin = {
     S.keeper = this.keeperHTML();
     S.info = this.infoHTML();
     S.titles = this.titlesHTML();
+    S.stamps = this.stampsHTML();
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -270,6 +271,20 @@ const Admin = {
         <div class="qe-list">${DATA.quests.length ? DATA.quests.map((x, i) => this.qRowHTML("quests", i, x, { dates: true })).join("") : `<p class="hint">まだありません。</p>`}</div>
         <button type="button" class="btn sm" data-act="qeAdd" data-v="quests">＋ 期間限定クエストを足す</button>
       </div>`;
+  },
+  /* ---------- スタンプ ---------- */
+  stampsHTML() {
+    const L = DATA.stamps = DATA.stamps || [];
+    return `<div class="fgroup"><span class="gl">スタンプ</span>
+        <p class="hint">対戦中に送れるスタンプです。文字は12文字まで。絵を使うときは「絵の場所」に ui/stamp/xxx.webp のように書きます（絵は Claude に渡せば置きます）。「最初から持っている」にしないものは、あとでショップで売る予定です。</p></div>
+      <div class="fgroup">${L.map((x, i) => `<div class="frow inf-ed">
+          <label class="fl">文字<input class="txt" data-stp="${i}:text" maxlength="12" value="${esc(x.text || "")}" style="max-width:180px"></label>
+          <label class="fl">絵の場所（なければ文字だけ）<input class="txt" data-stp="${i}:art" value="${esc(x.art || "")}" placeholder="ui/stamp/xxx.webp"></label>
+          <label class="fl">値段（魔石）<input class="txt" type="number" min="0" data-stp="${i}:price" value="${+x.price || 0}" style="max-width:110px"></label>
+          <label class="ownchk"><input type="checkbox" data-stp="${i}:free" ${x.free ? "checked" : ""}> 最初から持っている</label>
+          <button type="button" class="btn sm danger" data-act="stpDel" data-i="${i}">消す</button>
+        </div>`).join("")}
+        <button type="button" class="btn sm" data-act="stpAdd">＋ スタンプを足す</button></div>`;
   },
   /* ---------- 称号 ---------- */
   titlesHTML() {
@@ -559,6 +574,8 @@ const Admin = {
         return true;
       }
       case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
+      case "stpAdd": DATA.stamps = DATA.stamps || []; DATA.stamps.push({ id: "s" + Date.now().toString(36), text: "新しいスタンプ", free: true, price: 0 }); this.touch(this.renderEco); return true;
+      case "stpDel": (DATA.stamps || []).splice(+el.dataset.i, 1); this.touch(this.renderEco); return true;
       case "ttlAdd": DATA.titles = DATA.titles || []; DATA.titles.push({ id: "t" + Date.now().toString(36), name: "新しい称号", desc: "", cond: { type: "winAny", n: 10 } }); this.touch(this.renderEco); return true;
       case "ttlDel": this.confirm = { kind: "title", id: el.dataset.id }; this.renderEco(); return true;
       case "ttlDelYes": DATA.titles = (DATA.titles || []).filter(x => x.id !== el.dataset.id); this.confirm = null; this.touch(this.renderEco); return true;
@@ -721,4 +738,15 @@ document.addEventListener("change", e => {
   else if (f === "n") x.cond.n = Math.max(1, Math.floor(+t.value || 1));
   else if (f === "lv") x.cond.lv = t.value;
   Admin.touch(["type", "n", "lv"].includes(f) ? Admin.renderEco : null);
+});
+
+/* スタンプの欄 */
+document.addEventListener("change", e => {
+  const t = e.target, k = t && t.dataset && t.dataset.stp; if (!k || typeof DATA === "undefined" || !DATA.stamps) return;
+  const [i, f] = k.split(":"), x = DATA.stamps[+i]; if (!x) return;
+  if (f === "free") { if (t.checked) x.free = true; else delete x.free; }
+  else if (f === "price") x.price = Math.max(0, Math.floor(+t.value || 0));
+  else if (f === "art") { const v = t.value.trim(); if (v) x.art = v; else delete x.art; }
+  else x.text = t.value.trim().slice(0, 12);
+  Admin.touch(null);
 });

@@ -51,6 +51,7 @@ async function loadCardData() {
   PACKS = data.packs;
   SERIALS = data.serials;
   NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner; KEEPERS = data.keepers || []; INFO = data.info || [];
+  if (typeof TITLES !== "undefined") { TITLES = data.titles || []; STAMPS = data.stamps || []; }
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
@@ -91,7 +92,7 @@ function newGame(names, decks) {
 }
 function mkPlayer(name, deck) {
   const icon = deck.icon && DEF[deck.icon] && DEF[deck.icon].type === "char" && DEF[deck.icon].art ? deck.icon : null;
-  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [], ...(icon ? { icon } : {}) };
+  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [], ...(icon ? { icon } : {}), ...(typeof deck.title === "string" && deck.title ? { title: deck.title.slice(0, 12) } : {}) };
 }
 
 const RPS = { g: "グー", c: "チョキ", p: "パー" };
@@ -911,11 +912,14 @@ function hitUnit(u, n) {
   if (n > 0 && shielded(u)) { u.shieldUsed = true; fx(unitSel(u.uid), "聖盾", "heal"); log(`${cname(u.id)}の聖盾がダメージを防いだ。`); return 0; }
   const dmg = Math.max(0, n - armorOf(u));
   u.hp -= dmg;
+  if (dmg > 0) { const o = S.players.findIndex(p => p.field.includes(u)); if (o >= 0) statMax(opp(o), "maxHit", dmg); }
   fx(unitSel(u.uid), dmg < n ? `-${dmg}（装甲）` : "-" + dmg, "dmg");
   if (dmg > 0 && u.hp > 0) { const pi = S.players.findIndex(p => p.field.includes(u)); if (pi >= 0) queueTrig(pi, "survive", u); }
   return dmg;
 }
-function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); if (n > 0) stat(opp(pi), "face", n); }
+function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); if (n > 0) { stat(opp(pi), "face", n); statMax(opp(pi), "maxHit", n); } }
+/* 一番大きかった値を残す（称号の「一度に大きなダメージ」） */
+function statMax(pi, k, n) { if (!S || pi == null || pi < 0) return; const st = S.stats || (S.stats = [{}, {}]); if (n > (st[pi][k] || 0)) st[pi][k] = n; }
 /* クエスト用の数（この対戦で何をしたか）。S の中に持つので、CPU の読みの中の数は捨てられ、対人戦でも両方に届く */
 function stat(pi, k, n = 1) { if (!S || pi == null) return; const st = S.stats || (S.stats = [{}, {}]); st[pi][k] = (st[pi][k] || 0) + n; }
 const ownerOf = u => S.players.findIndex(p => p.field.includes(u));
@@ -966,7 +970,7 @@ function fireTrig(t) {
 }
 /* キャラが場から消えたとき（倒れた・代償で破壊された） */
 function onDeath(pi, u) {
-  stat(opp(pi), "kill");
+  stat(opp(pi), "kill"); stat(pi, "lost");
   const p = S.players[u.owner != null ? u.owner : pi];   // 奪われたキャラは元の持ち主の墓地へ
   (p.grave || (p.grave = [])).push(u.id); p.lastG = u.id;   // この対戦で破壊された自分のキャラ（復活の効果で使う）
   queueTrig(pi, "death", u);
@@ -1372,7 +1376,7 @@ function pbarHTML(pi) {
   const extra = `${gearN ? `<i class="cnt-gear">歯車 ${gearN}</i>` : ""}${usedN ? `<i class="cnt-used">使用 ${usedN}枚</i>` : ""}`;
   const left = pi === OP
     ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i>手札 ${p.hand.length}</i><i>山札 ${p.deck.length}</i>${extra}</span>`
-    : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i>${extra}</span>`;
+    : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}${typeof Stamps !== "undefined" ? Stamps.btnHTML() : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i>${extra}</span>`;
   const hp = Math.max(0, p.hp);
   return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.phase === "play" && S.turn === pi && !S.over ? "active" : ""}">
     <div class="pl-left">${left}</div>
@@ -1382,7 +1386,7 @@ function pbarHTML(pi) {
       ${hp <= 5 ? `<span class="hpglow" aria-hidden="true"></span>` : ""}<span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
     <div class="pl-right">
-      <div class="pname"><b>${esc(p.name)}</b>${S.phase === "play" && S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
+      <div class="pname"><b>${esc(p.name)}</b>${p.title && pi !== ME ? `<small class="ptitle">${esc(p.title)}</small>` : ""}${S.phase === "play" && S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
       <div class="energy" aria-label="エナジー ${p.e}/${p.maxE}"><span class="pips">${pips}</span><span class="etext">${p.e}<small>/${p.maxE}</small></span></div>
     </div></div>`;
 }
@@ -1531,7 +1535,7 @@ function pregameHTML() {
   const wait = typeof Online !== "undefined" && MODE === "online" && Online.blocked();
   const face = pi => { const id = playerIcon(pi); return `<span class="pg-face">${id ? iconImgHTML(id) : `<span class="glyph">召</span>`}</span>`; };
   const plate = (pi, status) => { const p = S.players[pi];
-    return `<div class="pg-plate ${pi === ME ? "me" : "op"}">${face(pi)}<span class="pg-name"><b>${esc(p.name)}</b><small>${esc(p.deckName || "")}</small></span>${status ? `<span class="pg-st">${status}</span>` : ""}</div>`; };
+    return `<div class="pg-plate ${pi === ME ? "me" : "op"}">${face(pi)}<span class="pg-name"><b>${esc(p.name)}</b>${p.title ? `<em class="pg-title">${esc(p.title)}</em>` : ""}<small>${esc(p.deckName || "")}</small></span>${status ? `<span class="pg-st">${status}</span>` : ""}</div>`; };
   const dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
   let body = "", opSt = "", meSt = "", ph = S.phase;
   const last = S.rps.last;
@@ -2081,7 +2085,7 @@ function showStart() {
     <div class="homebar">
       <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}${adminOn() ? `<button type="button" class="admin-badge" data-ops="open" title="運営用アカウント：押すと、G・魔石などを好きに変えられる">運営</button>` : ""}</div>
       <div class="hb-me">
-        ${goldOK ? `<button type="button" class="homeicon" data-act="icons" data-from="start" aria-label="アイコンを変える">
+        ${goldOK ? `<button type="button" class="homeicon" data-act="profile" data-from="start" aria-label="プロフィール（名前・称号・アイコン・スタンプ）">
           <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : `<span class="glyph">任</span>`}</span></button>` : ""}
         <button type="button" class="deckplate" data-act="decks" aria-label="使うデッキ：${esc(deck ? deck.name : "未選択")}（デッキ編成へ）">${HOME_ICON.decks}<span>${esc(deck ? deck.name : "デッキ未選択")}</span></button>
       </div>
@@ -2146,6 +2150,7 @@ function showOptions() {
   openOverlay(`<div class="panel">
     <div class="topbar"><button type="button" class="btn sm" data-act="optBack">← 戻る</button><b>オプション</b></div>
     <div class="optlist">
+      <button type="button" class="optrow" data-act="profile" data-from="options"><b>プロフィール</b><small>名前・称号・アイコン・スタンプ</small></button>
       <button type="button" class="optrow" data-act="nameEdit"><b>プレイヤー名</b><small>現在：${esc(playerName(`（未設定：${DEFAULT_NAME}）`))}</small></button>
       <button type="button" class="optrow" data-act="rules"><b>ルール</b><small>遊び方・カードの能力</small></button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="optrow" data-act="serial"><b>シリアルコード</b><small>配られたコードでGやカードを受け取る</small></button>`}
@@ -2365,6 +2370,7 @@ function giveReward(res) {
     if (B.kind === "gate" && res === "win") r.gate = gateReward();
     if (B.kind === "tutorial") r.tut = Tut.reward(res);
   }
+  if (counts && !(B && B.kind === "tutorial") && typeof Titles !== "undefined") Titles.onGame(res, r, B);   // 通算の記録（称号）
   if (r.g) Account.addGold(r.g);       // 連勝数も一緒に保存される
   else if (counts) Account.saveNow();   // 負け：連勝が0になったこと・ボスの天井などを保存
   rewarded[S.gid] = r;   // 勝ち負けの音は決着の演出（Finale）で鳴らす
@@ -2933,6 +2939,7 @@ function handleAct(act, el) {
     case "bgmPreview": BgmSet.preview = BgmSet.preview === el.dataset.v ? null : el.dataset.v; Sound.listOpen = true; Sound.unlock(); BgmSet.tick(); Sound.showPanel(); break;
     default:
       if (Splash.handleAct(act, el)) return;
+      if (typeof Profile !== "undefined" && Profile.handleAct(act, el)) return;
       if (Account.handleAct(act, el)) return;
       if (Feedback.handleAct(act, el)) return;
       if (Serial.handleAct(act, el)) return;
