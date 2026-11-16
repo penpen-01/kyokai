@@ -90,7 +90,7 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["titles", "称号"], ["stamps", "スタンプ"], ["season", "シーズン（リセット）"]];
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["info", "情報屋"], ["titles", "称号"], ["stamps", "スタンプ"], ["skins", "スキン"], ["season", "シーズン（リセット）"]];
     const sub = this.ecoSub || "money";
     const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
     const S = {};
@@ -201,6 +201,7 @@ const Admin = {
     S.info = this.infoHTML();
     S.titles = this.titlesHTML();
     S.stamps = this.stampsHTML();
+    S.skins = this.skinsHTML();
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -271,6 +272,25 @@ const Admin = {
         <div class="qe-list">${DATA.quests.length ? DATA.quests.map((x, i) => this.qRowHTML("quests", i, x, { dates: true })).join("") : `<p class="hint">まだありません。</p>`}</div>
         <button type="button" class="btn sm" data-act="qeAdd" data-v="quests">＋ 期間限定クエストを足す</button>
       </div>`;
+  },
+  /* ---------- スキン ---------- */
+  skinsHTML() {
+    const L = DATA.skins = DATA.skins || [];
+    const K = { sleeve: "スリーブ", frame: "アイコンの枠", icon: "限定アイコン", bg: "対戦の背景", home: "ホームの背景", keeper: "店員", bgm: "BGM" };
+    const opt = (o, cur) => Object.entries(o).map(([k, v]) => `<option value="${k}" ${cur === k ? "selected" : ""}>${esc(v)}</option>`).join("");
+    return `<div class="fgroup"><span class="gl">スキン</span>
+        <p class="hint">ショップの「スキン」で魔石で売る見た目の品です。「最初から持っている」にした品は、全員が持っていて選び直せます（今の初期の絵など）。絵の場所は ui/xxx.webp のように書きます（絵は Claude に渡せば置きます）。絵がない品は「準備中」として並びます。限定アイコンは「カードのID」にボスなどのカードのIDを書くと、その絵がアイコンになります。店員は「店員のID」に dorgan・weiss・ruu などを書きます。カードの光とスタンプの値段は、それぞれの設定・スタンプの欄で決めます。</p></div>
+      ${Object.entries(K).map(([kind, label]) => `<div class="fgroup"><span class="gl">${label}</span>
+        ${L.map((x, i) => x.kind !== kind ? "" : `<div class="inf-ed"><div class="frow">
+          <label class="fl">名前<input class="txt" data-skn="${i}:name" maxlength="30" value="${esc(x.name || "")}"></label>
+          <label class="fl">魔石<input class="txt" type="number" min="0" data-skn="${i}:price" value="${+x.price || 0}" style="max-width:110px"></label>
+          ${kind === "icon" ? `<label class="fl">カードのID<input class="txt" data-skn="${i}:card" value="${esc(x.card || "")}" style="max-width:160px"></label>`
+            : kind === "keeper" ? `<label class="fl">店員のID<input class="txt" data-skn="${i}:ref" value="${esc(x.ref || "")}" style="max-width:140px"></label>`
+            : `<label class="fl">絵の場所<input class="txt" data-skn="${i}:art" value="${esc(x.art || "")}" placeholder="ui/xxx.webp"></label>`}
+          <label class="ownchk"><input type="checkbox" data-skn="${i}:default" ${x.default ? "checked" : ""}> 最初から持っている</label>
+          <button type="button" class="btn sm danger" data-act="sknDel" data-i="${i}">消す</button></div>
+          <label class="fl">説明<input class="txt" data-skn="${i}:desc" maxlength="80" value="${esc(x.desc || "")}"></label></div>`).join("")}
+        <button type="button" class="btn sm" data-act="sknAdd" data-v="${kind}">＋ ${label}を足す</button></div>`).join("")}`;
   },
   /* ---------- スタンプ ---------- */
   stampsHTML() {
@@ -574,6 +594,8 @@ const Admin = {
         return true;
       }
       case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
+      case "sknAdd": DATA.skins = DATA.skins || []; DATA.skins.push({ id: "k" + Date.now().toString(36), kind: el.dataset.v, name: "新しいスキン", price: 5000 }); this.touch(this.renderEco); return true;
+      case "sknDel": (DATA.skins || []).splice(+el.dataset.i, 1); this.touch(this.renderEco); return true;
       case "stpAdd": DATA.stamps = DATA.stamps || []; DATA.stamps.push({ id: "s" + Date.now().toString(36), text: "新しいスタンプ", free: true, price: 0 }); this.touch(this.renderEco); return true;
       case "stpDel": (DATA.stamps || []).splice(+el.dataset.i, 1); this.touch(this.renderEco); return true;
       case "ttlAdd": DATA.titles = DATA.titles || []; DATA.titles.push({ id: "t" + Date.now().toString(36), name: "新しい称号", desc: "", cond: { type: "winAny", n: 10 } }); this.touch(this.renderEco); return true;
@@ -748,5 +770,15 @@ document.addEventListener("change", e => {
   else if (f === "price") x.price = Math.max(0, Math.floor(+t.value || 0));
   else if (f === "art") { const v = t.value.trim(); if (v) x.art = v; else delete x.art; }
   else x.text = t.value.trim().slice(0, 12);
+  Admin.touch(null);
+});
+
+/* スキンの欄 */
+document.addEventListener("change", e => {
+  const t = e.target, k = t && t.dataset && t.dataset.skn; if (!k || typeof DATA === "undefined" || !DATA.skins) return;
+  const [i, f] = k.split(":"), x = DATA.skins[+i]; if (!x) return;
+  if (f === "default") { if (t.checked) x.default = true; else delete x.default; }
+  else if (f === "price") x.price = Math.max(0, Math.floor(+t.value || 0));
+  else { const v = t.value.trim(); if (v || f === "name") x[f] = v; else delete x[f]; }
   Admin.touch(null);
 });

@@ -180,7 +180,7 @@ const Decks = {
     // sample：サンプルデッキ（所持に関係なく組んだデッキ）。勝ってもGはもらえない
     const icon = Account.icon();
     const title = typeof Titles !== "undefined" ? Titles.curName() : "";
-    return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}), ...(title ? { title } : {}) };
+    return { name: d.name, cards: { ...d.cards }, ...(d.free && this.sampleOK() ? { sample: true } : {}), ...(icon ? { icon } : {}), ...(d.key ? { key: d.key } : {}), ...(title ? { title } : {}), ...(typeof Skins !== "undefined" ? Skins.deckLook() : {}) };
   },
   randomPreset(level) {
     const ok0 = PRESETS.filter(p => !hiddenDeck(p) && deckProblems(p, DEF, CONFIG).length === 0);

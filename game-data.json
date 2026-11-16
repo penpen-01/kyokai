@@ -1,5 +1,5 @@
 {
- "version": 163,
+ "version": 164,
  "updated": "2026-11-16",
  "config": {
   "PLAYER_HP": 20,
@@ -63,7 +63,8 @@
   "ADMINS": [
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
-  "SAMPLE_DECKS": true
+  "SAMPLE_DECKS": true,
+  "HOLO_PRICE": 3000
  },
  "packs": [
   {
@@ -9126,6 +9127,91 @@
    ],
    "boss": true,
    "art": "art/b-y-zantetsu-4d8f6f87a6.webp"
+  }
+ ],
+ "skins": [
+  {
+   "id": "sl-default",
+   "kind": "sleeve",
+   "name": "境界の紋章",
+   "desc": "最初のスリーブ。三つの世界の紋章。",
+   "price": 0,
+   "art": "ui/card-back.webp",
+   "default": true
+  },
+  {
+   "id": "fr-default",
+   "kind": "frame",
+   "name": "金のひし形",
+   "desc": "最初の枠。",
+   "price": 0,
+   "default": true
+  },
+  {
+   "id": "bg-default",
+   "kind": "bg",
+   "name": "境界の戦場",
+   "desc": "最初の対戦の背景。",
+   "price": 0,
+   "art": "ui/bg-battle.webp",
+   "default": true
+  },
+  {
+   "id": "hm-default",
+   "kind": "home",
+   "name": "境界の大広間",
+   "desc": "最初のホームの背景。",
+   "price": 0,
+   "art": "ui/bg-home.webp",
+   "default": true
+  },
+  {
+   "id": "ic-nezal",
+   "kind": "icon",
+   "name": "虚ろなる境界王ネザル",
+   "desc": "上級の隠しボスの顔。",
+   "price": 3000,
+   "card": "b-nezal"
+  },
+  {
+   "id": "ic-yomi",
+   "kind": "icon",
+   "name": "冥府の剣鬼 黄泉丸",
+   "desc": "超級の隠しボスの顔。",
+   "price": 3000,
+   "card": "b-yomimaru"
+  },
+  {
+   "id": "kp-dorgan",
+   "kind": "keeper",
+   "name": "ドルガン",
+   "desc": "ドワーフの鍛冶屋。最初の店員。",
+   "price": 0,
+   "ref": "dorgan",
+   "default": true
+  },
+  {
+   "id": "kp-weiss",
+   "kind": "keeper",
+   "name": "ヴァイス",
+   "desc": "眼鏡の竜人。千年生きる物知りの学者。",
+   "price": 10000,
+   "ref": "weiss"
+  },
+  {
+   "id": "kp-ruu",
+   "kind": "keeper",
+   "name": "ルゥ",
+   "desc": "眠たげな小さな店番。",
+   "price": 10000,
+   "ref": "ruu"
+  },
+  {
+   "id": "bgm-1",
+   "kind": "bgm",
+   "name": "新しい曲",
+   "desc": "準備中",
+   "price": 5000
   }
  ]
 }

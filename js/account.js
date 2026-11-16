@@ -118,6 +118,11 @@ const Account = {
       ...(d.charm && (d.charm.hard || d.charm.ex) ? { charm: { ...(d.charm.hard ? { hard: true } : {}), ...(d.charm.ex ? { ex: true } : {}) } } : {}),
       btk: { hard: Math.max(0, Math.floor(+(d.btk && d.btk.hard) || 0)), ex: Math.max(0, Math.floor(+(d.btk && d.btk.ex) || 0)) },
       ...(d.btkWeek && /^\d{4}-\d{2}-\d{2}$/.test(d.btkWeek.w) ? { btkWeek: { w: d.btkWeek.w, hard: Math.max(0, Math.floor(+d.btkWeek.hard || 0)), ex: Math.max(0, Math.floor(+d.btkWeek.ex || 0)) } } : {}),
+      // スキン（js/skins.js）：買った品・付けている品・光らせるカード（1＝光らせる、0＝買ったが外している）・店員
+      skins: Array.isArray(d.skins) ? [...new Set(d.skins.filter(x => /^[\w-]{1,40}$/.test(x)))] : [],
+      equip: Object.fromEntries(Object.entries(d.equip || {}).filter(([k, v]) => /^\w{1,12}$/.test(k) && /^[\w-]{1,40}$/.test(v))),
+      holo: Object.fromEntries(Object.entries(d.holo || {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && (v === 0 || v === 1))),
+      ...(typeof d.keeper === "string" && /^[\w-]{1,40}$/.test(d.keeper) ? { keeper: d.keeper } : {}),
       // 称号・スタンプ・アイコン（js/titles.js）：通算の記録、手に入れた称号、付けている称号、持っていくスタンプ、買ったスタンプ、お気に入りと最近使ったアイコン
       st: (() => { const o = {}; Object.entries(d.st || {}).forEach(([k, v]) => { if (!/^\w{1,20}$/.test(k)) return; if (v && typeof v === "object") { const m = {}; Object.entries(v).forEach(([a, b]) => { if (/^\w{1,20}$/.test(a) && +b > 0) m[a] = Math.floor(+b); }); o[k] = m; } else if (+v > 0) o[k] = Math.floor(+v); }); return o; })(),
       titles: Array.isArray(d.titles) ? [...new Set(d.titles.filter(x => /^[\w-]{1,40}$/.test(x)))] : [],
@@ -334,7 +339,9 @@ const Account = {
   // アイコンにできるカード：持っているキャラカードのうち、絵があるもの（試遊は全部・接続できないときはスターター）
   iconChoices() {
     const ok = c => c && c.type === "char" && c.art && c.limit > 0;
-    return CARDS.filter(c => ok(c) && (this.status === "free" || this.owned(c.id) > 0))
+    // スキンで買った限定アイコン（ボスの顔など）も選べる
+    const extra = typeof Skins !== "undefined" ? SKINS.filter(s => s.kind === "icon" && s.card && Skins.owned(s)).map(s => DEF[s.card]).filter(c => c && c.art) : [];
+    return [...extra, ...CARDS.filter(c => ok(c) && (this.status === "free" || this.owned(c.id) > 0))]
       .sort((a, b) => RARITY_ORDER.indexOf(b.rarity) - RARITY_ORDER.indexOf(a.rarity) || b.cost - a.cost);
   },
   // 今のアイコン（選んでいない・もう持っていないときは null ＝ デッキでいちばんレアなキャラ）

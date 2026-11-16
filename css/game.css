@@ -25,7 +25,7 @@ body{
   /* Gemini の絵（ui/bg-battle.webp）。高さに合わせて敷く（縦の位置が依頼文の%どおりになる）。横長の画面では外側を暗い色で埋める */
   background:
     radial-gradient(130% 70% at 50% 50%, transparent 60%, rgba(0,0,0,.45) 100%),
-    url("../ui/bg-battle.webp") center/auto 100% no-repeat,
+    var(--battlebg, url("../ui/bg-battle.webp")) center/auto 100% no-repeat,
     #0a0c18;
 }
 
@@ -134,7 +134,7 @@ body{
 
 .pile,.log,.endbtn{position:relative}
 .pile{flex:none;width:42px;display:flex;flex-direction:column;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
-.pback{width:36px;height:50px;border-radius:3px;display:block;background:#14183a url("../ui/card-back.webp") center/cover no-repeat;
+.pback{width:36px;height:50px;border-radius:3px;display:block;background:#14183a var(--sleeve, url("../ui/card-back.webp")) center/cover no-repeat;
   box-shadow:2px 2px 0 #12152a, 3px 3px 0 #b08a3e, 5px 5px 0 #0c0f1f, 0 4px 10px rgba(0,0,0,.5)}
 .pile b{font-size:12px;line-height:1;color:var(--fg)}
 .log{
@@ -708,7 +708,7 @@ body{
 @keyframes spfront{0%,24.9%{opacity:1}25%,74.9%{opacity:0}75%,100%{opacity:1}}
 @keyframes spback{0%,24.9%{opacity:0}25%,74.9%{opacity:1}75%,100%{opacity:0}}
 .sp-face .card{width:100%}
-.sp-backface{position:absolute;inset:0;transform:rotateY(180deg);border-radius:7px;background:#14183a url("../ui/card-back.webp") center/cover no-repeat}
+.sp-backface{position:absolute;inset:0;transform:rotateY(180deg);border-radius:7px;background:#14183a var(--sleeve, url("../ui/card-back.webp")) center/cover no-repeat}
 .sp-shade{position:absolute;inset:0;background:radial-gradient(62% 26% at 50% 50%, rgba(7,8,15,.82), rgba(7,8,15,.45) 60%, transparent 100%),linear-gradient(transparent 75%, rgba(7,8,15,.8));pointer-events:none}
 .sp-motes{position:absolute;inset:0;pointer-events:none}
 .sp-motes i{position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:#ffe7a3;box-shadow:0 0 10px #ffd56a;opacity:0;animation:spmote linear infinite}
@@ -754,7 +754,7 @@ body{
 /* ---- ホームの背景（仮。Gemini の絵ができたら差し替える）と飾り棚 ---- */
 .homebg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
   /* Gemini の絵（ui/bg-home.webp）。絵は高さの22〜71%の帯にあり、ちょうど飾り棚の後ろに来る */
-  background:url("../ui/bg-home.webp") center/cover no-repeat, #04071a}
+  background:var(--homebg, url("../ui/bg-home.webp")) center/cover no-repeat, #04071a}
 .homemain{position:relative}
 .showcase{position:relative;isolation:isolate;flex:1;min-height:200px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
 .showcase:active{cursor:grabbing}
@@ -831,7 +831,7 @@ body{
 .os-back:focus-visible,.os-card:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
 .os-card .card{width:100%;cursor:pointer}
 .os-back{position:relative;border-radius:7% / 5%;overflow:hidden;animation:slidein .35s cubic-bezier(.2,.8,.3,1);
-  background:#14183a url("../ui/card-back.webp") center/cover no-repeat;   /* カードの裏面（Gemini） */
+  background:#14183a var(--sleeve, url("../ui/card-back.webp")) center/cover no-repeat;   /* カードの裏面（Gemini） */
   box-shadow:0 14px 36px rgba(0,0,0,.6)}
 @keyframes slidein{from{transform:translateX(60%) rotate(8deg);opacity:0}to{transform:none;opacity:1}}
 /* SR以上は裏のまま光る（色はレア度） */
@@ -1020,7 +1020,7 @@ body{
 .cv-ocard.me .cv-oin{animation-delay:.67s}
 @keyframes cvflip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
 .cv-oback,.cv-ofront{position:absolute;inset:0;border-radius:8px}
-.cv-oback{background:#14183a url("../ui/card-back.webp") center/cover;opacity:0;animation:cvbackoff .5s .55s step-end both}
+.cv-oback{background:#14183a var(--sleeve, url("../ui/card-back.webp")) center/cover;opacity:0;animation:cvbackoff .5s .55s step-end both}
 .cv-ocard.me .cv-oback{animation-delay:.67s}
 @keyframes cvbackoff{0%{opacity:1}50%,100%{opacity:0}}
 .cv-ofront{display:grid;place-items:center;animation:cvfronton .5s .55s step-end both}
@@ -1166,7 +1166,7 @@ body{
 .cutin.reduced,.cutin.reduced *{animation-duration:.01ms!important;animation-delay:0s!important}
 .cutin.reduced{background:rgba(4,5,12,.35)}
 /* ---- ドロー：山札から飛ぶカードの裏面 ---- */
-.drawfly{position:fixed;z-index:3;border-radius:4px;pointer-events:none;background:#14183a url("../ui/card-back.webp") center/cover no-repeat;box-shadow:0 6px 18px rgba(0,0,0,.6),0 0 12px rgba(140,180,255,.5)}
+.drawfly{position:fixed;z-index:3;border-radius:4px;pointer-events:none;background:#14183a var(--sleeve, url("../ui/card-back.webp")) center/cover no-repeat;box-shadow:0 6px 18px rgba(0,0,0,.6),0 0 12px rgba(140,180,255,.5)}
 
 /* =========================================================
    画面の見た目の底上げ（2026-11-03）
@@ -2524,3 +2524,40 @@ button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
 .iconbtn.art[data-act="options"]:active img{transform:rotate(30deg) scale(.92)}
 .iconbtn.art:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
 .hface,.pf-face,.iface{position:relative}
+
+/* ---------- スキン ---------- */
+.frame-skin{position:absolute;inset:-12%;width:124%;height:124%;object-fit:contain;pointer-events:none;z-index:2}
+.avatar .frame-skin{inset:-6%;width:112%;height:112%}
+.sk-tabs{flex-wrap:wrap;margin:8px 0 10px}
+.sk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.sk-item{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:12px;background:rgba(28,20,14,.78);border:1px solid rgba(232,168,90,.25)}
+.sk-item.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
+.sk-item.soon{opacity:.6;border-style:dashed}
+.sk-item b{font-size:14px}
+.sk-item small{font-size:11px;opacity:.75;line-height:1.45}
+.sk-act{margin-top:auto;padding-top:4px;display:flex;align-items:center;gap:6px}
+.sk-act .btn{display:inline-flex;align-items:center;gap:4px}
+.sk-on{font-size:12px;font-weight:800;color:#f3d58e}
+.sk-own{font-size:11px;color:#9fd8a0}
+.sk-pic{display:block;aspect-ratio:4/3;border-radius:8px;background:#120d09 50% 50%/cover no-repeat;position:relative;overflow:hidden}
+.sk-pic.sleeve{aspect-ratio:5/7;width:62%;margin:0 auto;background-size:cover}
+.sk-pic.icon{aspect-ratio:1;width:64%;margin:0 auto;border-radius:50%;border:2px solid var(--gold)}
+.sk-pic.keeper{background-size:auto 150%;background-position:50% 4%}
+.sk-pic.frame{aspect-ratio:1;width:64%;margin:0 auto;background:none;overflow:visible;display:grid;place-items:center}
+.sk-pic.frame img{position:absolute;inset:-6%;width:112%;height:112%;object-fit:contain;z-index:2}
+.sk-pic.frame .halo{position:absolute;left:50%;top:50%;width:76%;height:76%;transform:translate(-50%,-50%) rotate(45deg);border-radius:6px;background:linear-gradient(135deg,#3a2c12,#141020);box-shadow:0 0 0 1.5px #c79a44, 0 0 0 4px #1a1424}
+.sk-pic.frame .sk-face{position:absolute;inset:12%;border-radius:50%;overflow:hidden}
+.sk-pic.none{background:repeating-linear-gradient(45deg,#1a140e,#1a140e 8px,#221a12 8px,#221a12 16px)}
+.sk-empty{padding:24px 12px;text-align:center;opacity:.75}
+.sk-holo{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:8px}
+.sk-hcard{display:flex;flex-direction:column;gap:6px;align-items:center}
+.sk-hcard .card{width:100%;max-width:120px}
+.sk-hcard .btn{display:inline-flex;align-items:center;gap:3px;font-size:11px}
+.sk-stamp{display:flex;flex-direction:column;gap:6px;align-items:center}
+.card.holo .shine{position:absolute;inset:0;pointer-events:none;z-index:3;border-radius:inherit;mix-blend-mode:screen;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.45) 50%,transparent 65%);background-size:250% 100%;animation:holoflow 3.2s linear infinite}
+@keyframes holoflow{from{background-position:120% 0}to{background-position:-120% 0}}
+html.eco .card.holo .shine,html.nofx .card.holo .shine{display:none}
+.sk-act .sh-soon{position:static;transform:none}
+.sk-note{padding:10px 12px;border-radius:10px;background:rgba(14,10,8,.82);border:1px solid rgba(232,168,90,.25);opacity:1}
+.sk-empty{background:rgba(14,10,8,.82);border-radius:10px}

@@ -13,7 +13,7 @@ const SHOP_CATS = [
   { id: "slot", ready: true },
   // 準備中の売り場（絵付きで「準備中」として並べる）
   { id: "info", ready: true },
-  { id: "skin", ready: false, ic: "skin", name: "スキン", sub: "店員やカードの見た目を変える" },
+  { id: "skin", ready: true },
   { id: "limited", ready: false, ic: "star", name: "限定カード", sub: "いまだけ・ここだけのカード" }
 ];
 const SHOP_IC = {
@@ -234,6 +234,7 @@ const Shop = {
           <button type="button" class="btn sm primary" data-act="shopSlot" ${use && slotLeft > 0 && Account.stones >= slotCost ? "" : "disabled"}>増やす</button></div>
         <button type="button" class="sh-cat art c-exch" data-act="exchOpen" ${use ? "" : "disabled"}><span class="sh-art exch-art" aria-hidden="true"><img src="ui/cur-stone.webp" alt=""><i>→</i><img src="ui/cur-gold.webp" alt=""></span><b>両替</b><small>魔石${this.rate()}個で1G</small></button>
         <button type="button" class="sh-cat art c-info" data-act="shopInfo" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-info.webp')" aria-hidden="true"></span><b>情報屋</b><small>攻略の情報や、ボス戦の品をGで</small></button>
+        <button type="button" class="sh-cat art c-skin" data-act="shopSkins" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-skin.webp')" aria-hidden="true"></span><b>スキン</b><small>スリーブ・背景・店員などの見た目を魔石で</small></button>
         ${fut.map(x => `<div class="sh-cat art soon"><span class="sh-art" style="background-image:url('ui/shop-${x.id}.webp')" aria-hidden="true"></span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("")}
       </div>
       <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>

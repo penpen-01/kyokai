@@ -311,7 +311,7 @@ const DEFAULT_CONFIG = {
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
-  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
+  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, HOLO_PRICE: 3000, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
   SEASON: "beta", STARTER_DECK: "starter", MAINT_NOTE: "", ADMINS: [],
   SAMPLE_DECKS: true   // ベータ用：所持に関係なく全カードで組める「サンプルデッキ」を許可
 };
@@ -369,6 +369,7 @@ const CONFIG_INFO = {
   STONE_TICKET:      { label: "パック券1枚に必要な魔石", min: 0, max: 100000, group: "eco", step: 10 },
   SHOP_FEATURE_OFF:  { label: "ショップの今日のおすすめの割引（%）", min: 0, max: 90, group: "eco" },
   STONE_PER_GOLD:    { label: "両替：1Gにするのに必要な魔石（2以下にすると、パック→分解→両替でGが増え続けるので注意）", min: 1, max: 1000, group: "eco" },
+  HOLO_PRICE:        { label: "スキン：カードの光（1種類）の魔石", min: 0, max: 10000000, group: "eco", step: 100 },
   INFO_HOURS:        { label: "情報屋：攻略の情報を買ってから読める時間（時間）", min: 1, max: 720, group: "eco" },
   CHARM_HARD:        { label: "情報屋：弱体の御札（上級）のG", min: 0, max: 1000000, group: "eco", step: 100 },
   CHARM_EX:          { label: "情報屋：弱体の御札（超級）のG", min: 0, max: 1000000, group: "eco", step: 100 },
@@ -617,10 +618,10 @@ function cardHTML(card, o = {}) {
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
   const guard = card.type === "char" && kwl.includes("guard");
-  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${o.cls || ""}" ${o.attrs || ""} ${o.hidden || !card.id ? "" : `data-cid="${esc(card.id)}"`} aria-label="${esc(card.name)}">
+  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${typeof HOLO_SET !== "undefined" && HOLO_SET.has(card.id) && !o.hidden ? "holo" : ""} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${o.cls || ""}" ${o.attrs || ""} ${o.hidden || !card.id ? "" : `data-cid="${esc(card.id)}"`} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
     <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span><span class="gem" aria-hidden="true"></span>
-    ${["ur", "legend"].includes(card.rarity) ? `<span class="shine" aria-hidden="true"></span>` : ""}
+    ${["ur", "legend"].includes(card.rarity) || (typeof HOLO_SET !== "undefined" && HOLO_SET.has(card.id) && !o.hidden) ? `<span class="shine" aria-hidden="true"></span>` : ""}
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
     ${o.count ? `<span class="gearcnt" aria-label="${o.count}枚">×${o.count}</span>` : ""}
@@ -892,7 +893,12 @@ function normalizeData(data) {
   // スタンプ（文字だけ、または絵。free＝最初から持っている）
   const stamps = (Array.isArray(d.stamps) ? d.stamps : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id)).slice(0, 200).map(x => ({
     id: x.id, text: String(x.text || "").slice(0, 12), ...(typeof x.art === "string" && x.art ? { art: x.art.slice(0, 300) } : {}), ...(x.free ? { free: true } : {}), price: Math.max(0, Math.floor(+x.price || 0)) }));
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps };
+  // スキン（見た目の品）
+  const skins = (Array.isArray(d.skins) ? d.skins : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id) && ["sleeve", "frame", "icon", "bg", "home", "keeper", "bgm"].includes(x.kind)).slice(0, 300).map(x => ({
+    id: x.id, kind: x.kind, name: String(x.name || "スキン").slice(0, 30), desc: String(x.desc || "").slice(0, 80), price: Math.max(0, Math.floor(+x.price || 0)),
+    ...(typeof x.art === "string" && x.art ? { art: x.art.slice(0, 300) } : {}), ...(x.default ? { default: true } : {}),
+    ...(typeof x.ref === "string" && x.ref ? { ref: x.ref.slice(0, 40) } : {}), ...(typeof x.card === "string" && x.card ? { card: x.card.slice(0, 40) } : {}) }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps, skins };
 }
 
 function cleanDeckCards(cards) {

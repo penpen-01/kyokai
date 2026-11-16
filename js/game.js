@@ -52,6 +52,7 @@ async function loadCardData() {
   SERIALS = data.serials;
   NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner; KEEPERS = data.keepers || []; INFO = data.info || [];
   if (typeof TITLES !== "undefined") { TITLES = data.titles || []; STAMPS = data.stamps || []; }
+  if (typeof SKINS !== "undefined") SKINS = data.skins || [];
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
@@ -92,7 +93,7 @@ function newGame(names, decks) {
 }
 function mkPlayer(name, deck) {
   const icon = deck.icon && DEF[deck.icon] && DEF[deck.icon].type === "char" && DEF[deck.icon].art ? deck.icon : null;
-  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [], ...(icon ? { icon } : {}), ...(typeof deck.title === "string" && deck.title ? { title: deck.title.slice(0, 12) } : {}) };
+  return { name, deckName: deck.name, deck: buildPile(deck), hp: CONFIG.PLAYER_HP, maxE: 0, e: 0, hand: [], field: [], ...(icon ? { icon } : {}), ...(typeof deck.title === "string" && deck.title ? { title: deck.title.slice(0, 12) } : {}), ...(typeof deck.sleeve === "string" ? { sleeve: deck.sleeve } : {}), ...(typeof deck.frame === "string" ? { frame: deck.frame } : {}) };
 }
 
 const RPS = { g: "グー", c: "チョキ", p: "パー" };
@@ -1378,10 +1379,12 @@ function pbarHTML(pi) {
     ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i>手札 ${p.hand.length}</i><i>山札 ${p.deck.length}</i>${extra}</span>`
     : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}${typeof Stamps !== "undefined" ? Stamps.btnHTML() : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i>${extra}</span>`;
   const hp = Math.max(0, p.hp);
-  return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.phase === "play" && S.turn === pi && !S.over ? "active" : ""}">
+  // スキン：その人のスリーブ（手札の裏）とアイコンの枠
+  const look = p.sleeve ? ` style="--sleeve:url('${esc(p.sleeve)}')"` : pi === OP ? ` style="--sleeve:url('ui/card-back.webp')"` : "";
+  return `<div class="pbar ${pi === OP ? "op" : "me"} ${S.phase === "play" && S.turn === pi && !S.over ? "active" : ""}"${look}>
     <div class="pl-left">${left}</div>
     <button type="button" class="avatar ${tgt ? "tgt" : ""} ${S.over && resultShown && S.winner !== "draw" && S.winner !== pi ? "fin-broken" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
-      <span class="halo" aria-hidden="true"></span>
+      ${p.frame ? `<img class="frame-skin" src="${esc(p.frame)}" alt="" aria-hidden="true">` : `<span class="halo" aria-hidden="true"></span>`}
       <span class="face">${art ? iconImgHTML(icon) : `<span class="glyph">召</span>`}</span>
       ${hp <= 5 ? `<span class="hpglow" aria-hidden="true"></span>` : ""}<span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
@@ -2072,6 +2075,7 @@ const HOME_ICON = {
 
 /* ホーム：上の段（所持・アイコン・設定）→ 背景の絵を見せる空き → 対戦の2つのボタン → 下のメニュー（片手で届くように下へ寄せる） */
 function showStart() {
+  if (typeof Skins !== "undefined") try { Skins.apply(); } catch (e) { console.error(e); }
   if (typeof Maint !== "undefined" && Maint.pending && !Maint.pass()) { Maint.screen(); return; }   // メンテナンスが始まった
   if (typeof Inbox !== "undefined" && Inbox.checkLogin()) return;   // 今日初めて開いたら、先にログインボーナス
   const deck = Decks.selected();
@@ -2086,7 +2090,7 @@ function showStart() {
       <div class="hb-left">${goldOK ? `${goldTag(Account.gold)}${stoneTag(Account.stones)}` : ""}<button type="button" class="deckplate" data-act="decks" aria-label="使うデッキ：${esc(deck ? deck.name : "未選択")}（デッキ編成へ）">${HOME_ICON.decks}<span>${esc(deck ? deck.name : "デッキ未選択")}</span></button>${adminOn() ? `<button type="button" class="admin-badge" data-ops="open" title="運営用アカウント：押すと、G・魔石などを好きに変えられる">運営</button>` : ""}</div>
       <div class="hb-me">
         ${goldOK ? `<button type="button" class="homeicon" data-act="profile" data-from="start" aria-label="プロフィール（名前・称号・アイコン・スタンプ）">
-          <span class="halo" aria-hidden="true"></span><span class="hface">${icon ? iconImgHTML(icon) : DEFAULT_AVATAR_HTML}</span></button>` : ""}
+          ${typeof Skins !== "undefined" && Skins.frameArt() ? `<img class="frame-skin" src="${esc(Skins.frameArt())}" alt="" aria-hidden="true">` : `<span class="halo" aria-hidden="true"></span>`}<span class="hface">${icon ? iconImgHTML(icon) : DEFAULT_AVATAR_HTML}</span></button>` : ""}
         ${goldOK ? (() => { const t = typeof Titles !== "undefined" ? Titles.curName() : ""; return `<button type="button" class="titleplate ${t ? "" : "none"}" data-act="profile" data-from="start" aria-label="称号：${esc(t || "なし")}（プロフィールへ）"><span>${esc(t || "称号を付ける")}</span></button>`; })() : ""}
       </div>
       <div class="hb-right">
@@ -2938,6 +2942,7 @@ function handleAct(act, el) {
     default:
       if (Splash.handleAct(act, el)) return;
       if (typeof Profile !== "undefined" && Profile.handleAct(act, el)) return;
+      if (typeof Skins !== "undefined" && Skins.handleAct(act, el)) return;
       if (Account.handleAct(act, el)) return;
       if (Feedback.handleAct(act, el)) return;
       if (Serial.handleAct(act, el)) return;
