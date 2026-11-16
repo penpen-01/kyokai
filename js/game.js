@@ -50,12 +50,13 @@ async function loadCardData() {
   PRESETS = data.decks;
   PACKS = data.packs;
   SERIALS = data.serials;
-  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner;
+  NEWS = data.news; MAIL = data.mail; LOGIN = data.login; PICKS = data.picks || []; QUESTS = data.quests || []; QUEST_DAILY = data.daily; QUEST_BEGIN = data.beginner; KEEPERS = data.keepers || [];
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
 const dataKey = () => `${DATA_INFO.version}-${DATA_INFO.updated}-${CARDS.length}`;
 let SERIALS = []; // シリアルコード（ハッシュ）
+let KEEPERS = [];   // ショップの店員（js/shop.js）
 let NEWS = [], MAIL = [], LOGIN = [], PICKS = [], QUESTS = [], QUEST_DAILY = null, QUEST_BEGIN = null;   // QUESTS：期間限定クエスト（js/quest.js）   // お知らせ・メール（js/inbox.js）
 let PRESETS = []; // サンプルデッキ（game-data.json の decks）
 

@@ -626,6 +626,19 @@ const hiddenDeck = d => ["test", "gate", "gift", "boss"].includes(d.level) || (d
 /* ---------- クエスト ----------
    type＝何をするか。lv はCPUの強さ（winLv のとき）。数はクエストごとに決める */
 const CPU_LV_NAMES = { easy: "初級", normal: "中級", hard: "上級", ex: "超級" };
+/* ショップの店員：場面ごとのセリフ（工房で直せる）。{card}＝今日のおすすめのカード名、{off}＝割引の％ */
+const KEEPER_SCENES = {
+  enter:   { label: "来店（ふだん）" },
+  first:   { label: "はじめての来店", hint: "店員の自己紹介と、店の使い方" },
+  morning: { label: "朝の来店（5〜10時）" },
+  night:   { label: "夜の来店（22〜4時）" },
+  feature: { label: "今日のおすすめ", hint: "{card}＝おすすめのカード名、{off}＝割引の％" },
+  buy:     { label: "買い物をした" },
+  poor:    { label: "魔石が足りない" },
+  dis:     { label: "分解した" },
+  tap:     { label: "店員を押した" },
+  rich:    { label: "魔石をたくさん持っている" }
+};
 const QUEST_TYPES = {
   winLv:  { label: "CPUに勝つ（強さを選ぶ）", lv: true, text: (n, q) => `CPU（${CPU_LV_NAMES[q.lv] || "中級"}）に${n}回勝つ` },
   boss:   { label: "隠しボスに勝つ（上級か超級を選ぶ）", lv: true, text: (n, q) => `${q.lv === "ex" ? "超級" : "上級"}の隠しボスに${n}回勝つ` },
@@ -815,7 +828,13 @@ function normalizeData(data) {
   const daily = qList(d.daily, DAILY_POOL);        // デイリーの候補（毎日この中から DAILY_N 個）
   const beginner = qList(d.beginner, BEGINNER);    // 初心者歓迎（上から順）
   const quests = (Array.isArray(d.quests) ? d.quests : []).filter(x => x && x.id && QUEST_TYPES[x.type]).map(x => ({ ...qItem(x), from: date(x.from), until: date(x.until) }));   // 期間限定
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner };
+  // ショップの店員（1人目が最初からいる店員。ほかはスキンとして魔石で買える）
+  const keepers = (Array.isArray(d.keepers) ? d.keepers : []).filter(x => x && /^[\w-]{1,30}$/.test(x.id)).slice(0, 30).map(x => ({
+    id: x.id, name: String(x.name || "店員").slice(0, 20), title: String(x.title || "").slice(0, 30), price: Math.max(0, Math.floor(+x.price || 0)),
+    ...(x.art && typeof x.art === "object" ? { art: Object.fromEntries(Object.entries(x.art).filter(([k, v]) => /^\w{1,20}$/.test(k) && typeof v === "string").map(([k, v]) => [k, v.slice(0, 300)])) } : {}),
+    lines: Object.fromEntries(Object.keys(KEEPER_SCENES).map(k => [k, (Array.isArray(x.lines && x.lines[k]) ? x.lines[k] : []).map(t => String(t).trim().slice(0, 120)).filter(Boolean).slice(0, 20)]))
+  }));
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers };
 }
 
 function cleanDeckCards(cards) {

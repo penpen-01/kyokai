@@ -90,7 +90,7 @@ const Admin = {
     const cfg = DATA.config;
     const decks = DATA.decks || [];
     const cards = Object.fromEntries(DATA.cards.map(c => [c.id, c]));
-    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["season", "シーズン（リセット）"]];
+    const SUBS = [["money", "G・ログインボーナス"], ["cpu", "CPU・デッキ"], ["mail", "メール・お知らせ・配布"], ["ops", "メンテナンス・運営"], ["keeper", "ショップの店員"], ["season", "シーズン（リセット）"]];
     const sub = this.ecoSub || "money";
     const nav = `<div class="seg ecosub" role="tablist">${SUBS.map(([k, l]) => `<button type="button" role="tab" data-act="ecoSub" data-v="${k}" aria-pressed="${sub === k}">${l}</button>`).join("")}</div>`;
     const S = {};
@@ -197,6 +197,7 @@ const Admin = {
         <p class="hint">登録済み：${(cfg.ADMINS || []).length}件 ${(cfg.ADMINS || []).length ? `<button type="button" class="btn sm danger" data-act="adminClear">全部消す</button>` : ""}</p>
         <p class="hint">引き継ぎコードは、運営に使う端末のゲームで「設定（歯車）」→「アカウント」に出ます。登録したら「公開する」を押して、その端末でゲームを開き直してください（ホームに「運営」と出ます）。</p>
       </div>`;
+    S.keeper = this.keeperHTML();
     S.season = `
       <div class="fgroup">
         <span class="gl">シーズン</span>
@@ -266,6 +267,30 @@ const Admin = {
         <p class="hint">期間中だけ「期間限定」に出ます。日付を空にすると、始まり＝すぐ／終わり＝ずっと。</p>
         <div class="qe-list">${DATA.quests.length ? DATA.quests.map((x, i) => this.qRowHTML("quests", i, x, { dates: true })).join("") : `<p class="hint">まだありません。</p>`}</div>
         <button type="button" class="btn sm" data-act="qeAdd" data-v="quests">＋ 期間限定クエストを足す</button>
+      </div>`;
+  },
+  /* ---------- ショップの店員とセリフ ---------- */
+  keeperHTML() {
+    const L = DATA.keepers = DATA.keepers || [];
+    if (!L.length) return `<div class="fgroup"><p class="hint">店員がいません。</p><button type="button" class="btn sm primary" data-act="kpAdd">＋ 店員を足す</button></div>`;
+    const i = Math.min(this.kpI || 0, L.length - 1), k = L[i];
+    k.lines = k.lines || {};
+    return `<div class="fgroup">
+        <span class="gl">ショップの店員</span>
+        <p class="hint">ショップに立つ店員と、場面ごとのセリフです。<b>1行に1つのセリフ</b>を書き、その場面になると行の中から1つがランダムに出ます。いちばん上の店員が最初からいる店員で、ほかの店員はスキンとして魔石で買えるようにする予定です。</p>
+        <div class="seg">${L.map((x, j) => `<button type="button" data-act="kpSel" data-v="${j}" aria-pressed="${j === i}">${esc(x.name || "店員")}</button>`).join("")}<button type="button" data-act="kpAdd">＋ 足す</button></div>
+      </div>
+      <div class="fgroup">
+        <div class="frow">
+          <label class="fl">名前<input class="txt" data-kp="name" maxlength="20" value="${esc(k.name || "")}"></label>
+          <label class="fl">肩書き<input class="txt" data-kp="title" maxlength="30" value="${esc(k.title || "")}"></label>
+          <label class="fl">魔石の値段（スキンとして買うとき。最初の店員は0）<input class="txt" type="number" min="0" data-kp="price" value="${+k.price || 0}" style="max-width:140px"></label>
+        </div>
+        <p class="hint">内部の名前：${esc(k.id)}（絵の名前に使います。変えられません）</p>
+        ${Object.entries(KEEPER_SCENES).map(([s, info]) => { const v = (k.lines[s] || []).join("\n");
+          return `<label class="fl" for="kp-${s}">${esc(info.label)}（${(k.lines[s] || []).length}個）${info.hint ? `<small class="hint"> ${esc(info.hint)}</small>` : ""}</label>
+            <textarea class="txt" id="kp-${s}" data-kpl="${s}" rows="${Math.max(2, (k.lines[s] || []).length + 1)}">${esc(v)}</textarea>`; }).join("")}
+        ${i > 0 ? `<p>${this.confirm && this.confirm.kind === "keeper" ? `<b>「${esc(k.name)}」を消しますか？</b> <button type="button" class="btn sm danger" data-act="kpDelYes">消す</button> <button type="button" class="btn sm" data-act="cancelConfirm">やめる</button>` : `<button type="button" class="btn sm danger" data-act="kpDel">この店員を消す</button>`}</p>` : ""}
       </div>`;
   },
   qeSet(key, value) {
@@ -483,6 +508,10 @@ const Admin = {
         return true;
       }
       case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
+      case "kpSel": this.kpI = +el.dataset.v; this.confirm = null; this.renderEco(); return true;
+      case "kpAdd": { const L = DATA.keepers = DATA.keepers || []; L.push({ id: "k" + Date.now().toString(36), name: "新しい店員", title: "", price: 3000, lines: {} }); this.kpI = L.length - 1; this.touch(this.renderEco); return true; }
+      case "kpDel": this.confirm = { kind: "keeper" }; this.renderEco(); return true;
+      case "kpDelYes": { const L = DATA.keepers || []; if ((this.kpI || 0) > 0) L.splice(this.kpI, 1); this.kpI = 0; this.confirm = null; this.touch(this.renderEco); return true; }
       case "cpuAdd": {
         const d = codeToDeck($("#cpu-code").value);
         if (!d) { this.importMsg = "デッキコードを読み取れませんでした"; this.renderEco(); return true; }
@@ -595,3 +624,18 @@ document.addEventListener("change", e => {
 /* クエストタブの欄を変えたら、その場で反映 */
 document.addEventListener("change", e => { const k = e.target && e.target.dataset && e.target.dataset.qe; if (k) Admin.qeSet(k, e.target.value); });
 document.addEventListener("change", e => { if (e.target && e.target.id === "maint-note" && typeof DATA !== "undefined") { DATA.config.MAINT_NOTE = e.target.value.slice(0, 80); Admin.touch(() => {}); } });
+
+/* ショップの店員：名前などの欄と、セリフ（1行1つ） */
+document.addEventListener("change", e => {
+  const t = e.target; if (!t || !t.dataset || typeof DATA === "undefined" || !DATA.keepers) return;
+  const k = DATA.keepers[Math.min(Admin.kpI || 0, DATA.keepers.length - 1)]; if (!k) return;
+  if (t.dataset.kp) {
+    const f = t.dataset.kp;
+    if (f === "price") k.price = Math.max(0, Math.floor(+t.value || 0)); else k[f] = t.value.trim().slice(0, f === "name" ? 20 : 30);
+    Admin.touch(f === "name" ? Admin.renderEco : null);
+  } else if (t.dataset.kpl) {
+    k.lines = k.lines || {};
+    k.lines[t.dataset.kpl] = t.value.split("\n").map(x => x.trim().slice(0, 120)).filter(Boolean).slice(0, 20);
+    Admin.touch(Admin.renderEco);
+  }
+});
