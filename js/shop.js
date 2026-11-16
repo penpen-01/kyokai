@@ -448,6 +448,7 @@ const Keeper = {
   /* 店に入ったとき：あいさつ → 今日のおすすめ */
   enter() {
     const k = this.cur(); if (!k) return;
+    this.who = k.id;
     const seen = this.seen(k);
     const h = new Date().getHours(), st = Account.stones || 0;
     // はじめての来店だけは必ず自己紹介。ほかは「ふだんのあいさつ」を重さ2、当てはまる特別なあいさつ（朝・夜・魔石が多い）を重さ1ずつで抽選する
@@ -478,6 +479,7 @@ const Keeper = {
   /* 買い物などの反応。ただし、その店員に初めて会ったとき（店員を着替えた直後など）は、反応より自己紹介を先に */
   react(scene, mood) {
     const k = this.cur(); if (!k) return;
+    this.who = k.id;
     this.q = this.seen(k) ? [{ scene, mood }] : [{ scene: "first" }];
     this.shown = ""; this.extra = ""; this.typing = false; this.talking = false;
   },
@@ -542,8 +544,16 @@ const Keeper = {
     document.querySelectorAll(".kp-text").forEach(el => { el.textContent = this.shown; });
     document.querySelectorAll(".kp-extra").forEach(el => { el.innerHTML = !this.typing ? this.extra : ""; });
   },
+  /* 店員を着替えたあと：前の店員の話の続きは捨てて、新しい店員があいさつする（初めてなら自己紹介） */
+  sync(k) {
+    if (this.who === k.id) return;
+    this.who = k.id; this.mood = null; this.nap = "";
+    this.q = [{ scene: this.seen(k) ? "enter" : "first" }];
+    this.text = this.shown = this.extra = ""; this.typing = false; this.talking = false;
+  },
   stageHTML() {
     const k = this.cur(); if (!k) return "";
+    this.sync(k);
     this.preload(k); setTimeout(() => this.mount(), 0);
     return `<div class="kp-stage">
       <button type="button" class="kp-man" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
@@ -552,7 +562,9 @@ const Keeper = {
   },
   /* 交換・分解の画面：話すことがあるときだけ、小さく顔と吹き出しを出す */
   miniHTML() {
-    const k = this.cur(); if (!k || (!this.q.length && !this.shown)) return "";
+    const k = this.cur(); if (!k) return "";
+    this.sync(k);
+    if (!this.q.length && !this.shown) return "";
     this.preload(k); setTimeout(() => this.mount(), 0);
     return `<div class="kp-mini"><button type="button" class="kp-man" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
       <div class="kp-bubble" data-act="kpNext" role="status" aria-live="polite"><span class="kp-text">${esc(this.shown)}</span><span class="kp-extra"></span></div></div>`;
