@@ -420,7 +420,11 @@ const Shop = {
    背景の上に店員の絵を重ね、まばたき・口パク・表情で動かす。セリフは工房の「ショップの店員」（KEEPERS）から。
    絵は ui/keeper/<店員のid>-<表情>.webp（idle まばたき前の顔 / blink / talk1 / talk2 / happy / trouble / offer） */
 const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "offer"];
-const KEEPER_ART = ["dorgan", "weiss"];   // 絵がそろっている店員
+/* 店員ごとの追加の表情（絵がある店員だけ）。ない店員は KEEPER_FALLBACK の表情で代わりにする */
+const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere"] };
+const KEEPER_FALLBACK = { sleep: "blink", doze: "idle", yawn: "talk1", shy: "happy", angry: "trouble", dere: "happy" };
+const KEEPER_DOZE = 10000, KEEPER_SLEEP = 20000;   // 何もしないと、うとうと（10秒）→ 眠る（20秒）。眠る絵のある店員だけ
+const KEEPER_ART = ["dorgan", "weiss", "ruu"];   // 絵がそろっている店員
 const KEEPER_RICH = 5000;        // これ以上魔石を持っていると「魔石が多い」のあいさつが出ることがある
 const Keeper = {
   q: [], text: "", extra: "", shown: "", mood: null, moodUntil: 0, talking: false, timers: [], cache: {},
@@ -429,11 +433,14 @@ const Keeper = {
     const want = Account.data && Account.data.keeper;
     return L.find(k => k.id === want) || L[0] || null;
   },
-  src(k, f) { return (k.art && k.art[f]) || `ui/keeper/${k.id}-${f}.webp`; },
-  preload(k) { if (this.cache[k.id]) return; this.cache[k.id] = KEEPER_FRAMES.map(f => { const im = new Image(); im.src = this.src(k, f); return im; }); },
+  frames(k) { return KEEPER_FRAMES.concat(KEEPER_EXTRA[k.id] || []); },
+  has(k, f) { return this.frames(k).includes(f) || !!(k.art && k.art[f]); },
+  src(k, f) { if (!this.has(k, f)) f = KEEPER_FALLBACK[f] || "idle"; return (k.art && k.art[f]) || `ui/keeper/${k.id}-${f}.webp`; },
+  preload(k) { if (this.cache[k.id]) return; this.cache[k.id] = this.frames(k).map(f => { const im = new Image(); im.src = this.src(k, f); return im; }); },
   /* セリフを1つ選ぶ（{card}・{off} を置き換える） */
   line(scene, vars = {}) {
-    const k = this.cur(); const L = (k && k.lines && k.lines[scene]) || [];
+    const k = this.cur(); let L = (k && k.lines && k.lines[scene]) || [];
+    if (!L.length && ["shy", "angry", "pet", "wake"].includes(scene)) L = (k && k.lines && k.lines.tap) || [];   // 書いていなければ「押した」のセリフで代わりに
     if (!L.length) return "";
     const t = L[Math.floor(Math.random() * L.length)];
     return t.replace(/\{card\}/g, vars.card || "").replace(/\{off\}/g, vars.off ?? "");
@@ -474,12 +481,42 @@ const Keeper = {
     this.q = this.seen(k) ? [{ scene, mood }] : [{ scene: "first" }];
     this.shown = ""; this.extra = ""; this.typing = false; this.talking = false;
   },
+  /* 店員を押した。眠っていたら起きる。3秒以内に続けて押すと、3回目から恥ずかしがり、6回目から怒る */
   tap() {
-    if (Date.now() < (this.tapUntil || 0)) return;   // 連打で表情がパタパタ変わらないように、少し間をあける
-    this.tapUntil = Date.now() + 900;
+    const now = Date.now();
+    if (now < (this.petUntil || 0)) return;          // なでた直後の「押した」は数えない
+    if (now < (this.tapUntil || 0)) return;          // 連打で表情がパタパタ変わらないように、少し間をあける
+    this.tapUntil = now + 350;
     const el = document.querySelector(".kp-man"); if (el) { el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
     if (typeof Sound !== "undefined") Sound.play("click");
-    this.q = [{ scene: "tap" }]; this.next(true);
+    const k = this.cur(), sleepy = k && this.has(k, "sleep") && now - (this.lastAct || now) >= KEEPER_SLEEP;
+    this.lastAct = now;
+    if (sleepy) { this.taps = 0; this.q = [{ scene: "wake", mood: "yawn" }]; return this.next(true); }
+    this.taps = now - (this.tapAt || 0) <= 3000 ? (this.taps || 0) + 1 : 1; this.tapAt = now;
+    this.q = [this.taps >= 6 ? { scene: "angry", mood: "angry" } : this.taps >= 3 ? { scene: "shy", mood: "shy" } : { scene: "tap" }];
+    this.next(true);
+  },
+  /* 店員の顔のあたりを左右になでた */
+  pet() {
+    const now = Date.now(); this.petUntil = now + 600; this.lastAct = now; this.taps = 0;
+    if (now < (this.petCool || 0)) return; this.petCool = now + 2500;
+    if (typeof Sound !== "undefined") Sound.play("click");
+    this.q = [{ scene: "pet", mood: "dere" }]; this.next(true);
+  },
+  /* 指（マウス）で左右に2往復ほどこすったら「なでた」 */
+  bindPet(man) {
+    if (!man || man._pet) return; man._pet = true;
+    let d = null;
+    man.addEventListener("pointerdown", e => { d = { x: e.clientX, dir: 0, turns: 0, id: e.pointerId }; });
+    man.addEventListener("pointermove", e => {
+      if (!d || d.id !== e.pointerId) return;
+      const dx = e.clientX - d.x; if (Math.abs(dx) < 12) return;
+      const dir = Math.sign(dx); if (d.dir && dir !== d.dir) d.turns++;
+      d.dir = dir; d.x = e.clientX;
+      if (d.turns >= 3) { d = null; this.pet(); }
+    });
+    const end = () => { d = null; };
+    man.addEventListener("pointerup", end); man.addEventListener("pointercancel", end); man.addEventListener("pointerleave", end);
   },
   /* 吹き出しを押した：書いている途中なら全部出す。書き終わっていたら次のセリフへ */
   next(force) {
@@ -489,6 +526,7 @@ const Keeper = {
     this.say(t, it.mood, it.extra || "");
   },
   say(t, mood, extra) {
+    this.lastAct = Date.now();
     this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true;
     if (mood) { this.mood = mood; this.moodUntil = Date.now() + Math.max(1800, t.length * 45 + 1400); } else this.mood = null;
     this.paintText();
@@ -518,6 +556,8 @@ const Keeper = {
     const img = document.querySelector(".kp-img"); if (!img) return;
     this.timers.forEach(clearInterval); this.timers = [];
     const k = this.cur();
+    this.lastAct = Date.now();
+    document.querySelectorAll(".kp-man").forEach(m => this.bindPet(m));
     if (this.q.length && !this.typing) this.next(true); else this.paintText();
     let blinkAt = Date.now() + 1500 + Math.random() * 3000, blinkTo = 0, tick = 0;
     const loop = setInterval(() => {
@@ -528,8 +568,13 @@ const Keeper = {
       if (this.mood) f = this.mood;
       else if (this.talking) f = ["talk1", "idle", "talk2", "idle"][Math.floor(tick / 3) % 4];   // 口だけ、約0.27秒ごとにゆっくり動かす
       else {
-        if (now > blinkAt) { blinkTo = now + 130; blinkAt = now + 2200 + Math.random() * 3800; }
-        if (now < blinkTo) f = "blink";
+        const still = now - (this.lastAct || now), sleepy = this.has(k, "sleep");
+        if (sleepy && still >= KEEPER_SLEEP) f = "sleep";                       // 放っておくと眠ってしまう
+        else {
+          if (now > blinkAt) { blinkTo = now + 130; blinkAt = now + 2200 + Math.random() * 3800; }
+          if (now < blinkTo) f = "blink";
+          else if (sleepy && still >= KEEPER_DOZE) f = "doze";                    // うとうと
+        }
       }
       const want = this.src(k, f); if (img.getAttribute("src") !== want) img.setAttribute("src", want);
     }, 90);
