@@ -215,7 +215,7 @@ const Packs = {
         const list = pool.filter(c => c.rarity === r).sort(byCost);
         if (!list.length) return "";
         return `<h3 class="sec"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${RARITY[r]}<small class="hint">${list.length}種</small></h3>
-          <div class="pl-grid">${list.map(c => `<button type="button" class="pl-card" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${cardHTML(c, { static: true })}${Account.owned(c.id) ? `<span class="pl-own">所持${Account.owned(c.id)}</span>` : ""}</button>`).join("")}</div>`;
+          <div class="pl-grid">${list.map(c => `<button type="button" class="pl-card" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${cardHTML(c, { look: null, static: true })}${Account.owned(c.id) ? `<span class="pl-own">所持${Account.owned(c.id)}</span>` : ""}</button>`).join("")}</div>`;
       }).join("")}
       ${this.detailHTML()}
     </div>`, "start", true);
@@ -261,7 +261,7 @@ const Packs = {
       </div>
       <div class="os-slot r-${c.rarity} ${L.faceUp ? "shown" : ""} ${burst ? "burst" : ""}">
         ${L.faceUp
-          ? `<button type="button" class="os-card" data-act="packNext" aria-label="次へ">${cardHTML(c, { static: true })}</button>
+          ? `<button type="button" class="os-card" data-act="packNext" aria-label="次へ">${cardHTML(c, { look: null, static: true })}</button>
              <div class="os-info">
                <span class="rtag r-${c.rarity}">${RARITY[c.rarity]}</span>${x.isNew ? `<span class="newtag">NEW</span>` : ""}
                <b>${esc(c.name)}</b>
@@ -288,7 +288,7 @@ const Packs = {
       const lim = cardLimit(c, CONFIG), pips = Math.max(1, Math.min(lim, 3));
       const pip = Array.from({ length: pips }, (_, i) => `<i class="${i < after ? "on" : ""} ${i === after - 1 ? "nw" : ""}"></i>`).join("");
       return `<button type="button" class="rs-card r-${c.rarity}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}の効果を見る">
-        <span class="rs-fr">${cardHTML(c, { static: true })}${x.isNew ? `<span class="rs-new">NEW</span>` : ""}</span>
+        <span class="rs-fr">${cardHTML(c, { look: null, static: true })}${x.isNew ? `<span class="rs-new">NEW</span>` : ""}</span>
         <span class="rs-tag"><i class="rtag r-${c.rarity}">${RARITY_SHORT[c.rarity]}</i><b>${esc(c.name)}</b></span>
         <span class="rs-own">${x.isNew ? `<em>はじめて手に入れた</em>` : `所持 ${before}<span aria-hidden="true">→</span><b>${after}</b>`}<span class="rs-pip" aria-label="デッキに入れられるのは${lim}枚まで">${pip}</span>${after > CONFIG.COPY_MAX ? `<small>余り${after - CONFIG.COPY_MAX}</small>` : ""}</span>
       </button>`;
@@ -320,7 +320,7 @@ const Packs = {
     L.shown = true;
     let k = 0;
     const cell = x => { const c = DEF[x.id];
-      return `<button type="button" class="mslot r-${c.rarity} ${play ? "wait" : ""}" data-n="${k++}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${x.isNew ? `<span class="newtag">NEW</span>` : ""}${cardHTML(c, { static: true })}</button>`; };
+      return `<button type="button" class="mslot r-${c.rarity} ${play ? "wait" : ""}" data-n="${k++}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${x.isNew ? `<span class="newtag">NEW</span>` : ""}${cardHTML(c, { look: null, static: true })}</button>`; };
     const again = L.byTicket
       ? `<button type="button" class="btn primary" data-act="packOpenTicket10" data-id="${esc(L.pack.id)}" ${Account.tickets >= 10 ? "" : "disabled"}>もう10パック（パック券 残り${Account.tickets}枚）</button>`
       : `<button type="button" class="btn primary" data-act="packOpen10" data-id="${esc(L.pack.id)}" ${Account.gold >= L.pack.price * 10 ? "" : "disabled"}>もう10パック（${L.pack.price * 10}G）</button>`;
@@ -370,7 +370,7 @@ const Packs = {
     if (!c) return "";
     return `<div class="dmodal" data-act="packDetailClose">
       <div class="dmodal-in" role="dialog" aria-label="${esc(c.name)}" data-act="noop">
-        <div class="dmodal-card">${cardHTML(c, { static: true })}</div>
+        <div class="dmodal-card">${cardHTML(c, { look: null, static: true })}</div>
         <div class="dmodal-body">
           <b class="dm-name">${esc(c.name)}</b>
           <span class="pmeta">${RARITY[c.rarity]} ・ ${WORLDS[c.world]} ・ ${TYPES[c.type]} ・ コスト${c.cost}${c.type === "char" ? ` ・ ${c.atk}/${c.hp}` : ""}</span>

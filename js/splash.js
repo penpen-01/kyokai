@@ -48,7 +48,7 @@ const Splash = {
     // 回る速さ（秒）と向き。速さをマイナスにすると CSS では無効になって回らなくなるので、向きは別に指定する
     const rot = ((i * 47) % 50) - 25, spin = 5 + (i % 4) * 1.5, dir = i % 2 ? "normal" : "reverse";
     return `<div class="sp-fall l${layer}" style="--x:${x}%;--s:${L.s};--d:${dur}s;--dl:${delay.toFixed(2)}s;--r:${rot}deg;--o:${L.o};--b:${L.b}px;--spin:${spin}s;--dir:${dir}">
-      <div class="sp-spin"><div class="sp-face" data-id="${esc(card.id)}">${cardHTML(card, { static: true })}</div><div class="sp-backface"></div></div></div>`;
+      <div class="sp-spin"><div class="sp-face" data-id="${esc(card.id)}">${cardHTML(card, { look: null, static: true })}</div><div class="sp-backface"></div></div></div>`;
   },
 
   show() {
@@ -86,7 +86,7 @@ const Splash = {
       const now = new Set([...rain.querySelectorAll(".sp-face")].map(el => el.dataset.id));
       const c = this.randomCard(now), face = f.querySelector(".sp-face");
       face.dataset.id = c.id;
-      face.innerHTML = cardHTML(c, { static: true });
+      face.innerHTML = cardHTML(c, { look: null, static: true });
     });
   },
 
