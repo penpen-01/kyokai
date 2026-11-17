@@ -172,6 +172,7 @@ const Sentei = {
     const L = Object.entries(deck).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || RARITY_ORDER.indexOf(b[0].rarity) - RARITY_ORDER.indexOf(a[0].rarity));
     return `<div class="sen-list">${L.map(([c, n]) => `<button type="button" class="sen-row cdlink r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i><b>${esc(c.name)}</b><small>${RARITY_SHORT[c.rarity] || ""}</small><em>×${n}</em></button>`).join("")}</div>`;
   },
+  banner(t) { return `<div class="sen-banner"><b>${t}</b></div>`; },
   show(msg) {
     const quit = this.settleQuit();
     if (quit && quit.done) return this.showEnd(quit);
@@ -179,7 +180,7 @@ const Sentei = {
     const R = this.run(), fee = this.fee();
     let body;
     if (!R) {
-      body = `<p class="callout"><b>選定戦とは</b>3枚ずつの2つのセットから1つを選ぶのを${SEN_ROUNDS}回くり返して、その場で${SEN_ROUNDS * SEN_SET}枚のデッキを作ります。そのデッキで CPU と戦い、<b>${SEN_WIN}勝</b>するか<b>${SEN_LOSE}敗</b>したら終わり。${this.beta() ? "" : "勝った数で報酬が決まります。"}</p>
+      body = `${this.banner("選定戦")}<p class="callout"><b>選定戦とは</b>3枚ずつの2つのセットから1つを選ぶのを${SEN_ROUNDS}回くり返して、その場で${SEN_ROUNDS * SEN_SET}枚のデッキを作ります。そのデッキで CPU と戦い、<b>${SEN_WIN}勝</b>するか<b>${SEN_LOSE}敗</b>したら終わり。${this.beta() ? "" : "勝った数で報酬が決まります。"}</p>
         ${this.beta() ? `<p class="callout warn"><b>β版</b>いまは試しに遊べる版です。入場料はかかりませんが、報酬もありません。</p>` : ""}
         <ul class="sen-rules">
           <li>候補には、開放している弾のカードが出ます（持っていないカードも使えます）</li>
@@ -193,7 +194,7 @@ const Sentei = {
         ${Account.gold < fee ? `<p class="hint">Gが足りません（所持 ${Account.gold.toLocaleString()}G）</p>` : ""}`;
     } else if (R.st === "pick") {
       const n = this.count(R.deck), floor = senFloor(R.r);
-      body = `<div class="sen-head"><b>${R.r + 1} / ${SEN_ROUNDS} 回目</b><span>デッキ ${n} / ${SEN_ROUNDS * SEN_SET}枚</span></div>
+      body = `${this.banner(`${R.r + 1} / ${SEN_ROUNDS} 回目`)}<div class="sen-head"><span></span><span>デッキ ${n} / ${SEN_ROUNDS * SEN_SET}枚</span></div>
         ${floor ? `<p class="sen-floor">この回は、どちらのセットにも<b>${RARITY[floor]}${floor === "legend" ? "" : "以上"}</b>が入っています</p>` : ""}
         <div class="sen-offer">${(R.offer || []).map((set, i) => `<div class="sen-set ${this.sel === i ? "sel" : ""}">
           <div class="sen-cards">${set.map(id => DEF[id] ? `<button type="button" class="sen-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true })}${R.deck[id] ? `<span class="sen-have">×${R.deck[id]}</span>` : ""}</button>` : "").join("")}</div>
@@ -203,7 +204,7 @@ const Sentei = {
         ${n ? `<span class="gl">今のデッキ</span>${this.curveHTML(R.deck)}${this.listHTML(R.deck)}` : ""}`;
     } else {
       const lv = senLevel(R.w), last = R.w === SEN_WIN - 1;
-      body = `${this.pipsHTML(R)}
+      body = `${this.banner(`${R.w}勝 ${R.l}敗`)}${this.pipsHTML(R)}
         <div class="sen-next"><small>次の相手</small><b>${last ? "最後の相手（カードの質が上がる）" : `${R.w + R.l + 1}戦目`}</b><span>CPU の強さ：${CPU_LEVELS[lv] ? CPU_LEVELS[lv].label : lv}</span></div>
         <button type="button" class="btn primary sen-go" data-act="senFight">対戦する</button>
         ${this.beta() ? "" : `<p class="hint">今 やめると：${this.rewardHTML(this.rewardOf(R.w))}</p>`}
@@ -223,7 +224,7 @@ const Sentei = {
   showEnd(x) {
     Sound.play(x.w >= 5 ? "rare" : "click", x.w >= 5 ? 3 : 0);
     openOverlay(`<div class="panel sen sen-end">
-      <div class="res-head"><span class="res-en">FINISH</span><b class="res-ja">${x.w}勝 ${x.l}敗</b></div>
+      ${this.banner(`${x.w}勝 ${x.l}敗`)}
       ${x.w >= SEN_WIN ? `<p class="sen-perfect">${SEN_WIN}勝達成！</p>` : x.retire ? `<p class="hint">ここでやめました。</p>` : ""}
       ${this.beta() ? `<p class="hint">β版のため、報酬はありません。</p>` : `<div class="sen-got"><small>報酬</small><b>${this.rewardHTML(x.reward)}</b></div>`}
       <div class="pre-btns"><button type="button" class="btn primary" data-act="senOpen">選定戦へ</button><button type="button" class="btn" data-act="toTitle">ホームへ</button></div>

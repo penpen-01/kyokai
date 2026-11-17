@@ -2628,7 +2628,7 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
 
 /* ---- 選定戦（2026-11-17） ---- */
 .panel.sen{max-width:560px}
-.sen .callout b{display:block;margin-bottom:4px}
+.sen .callout > b:first-child{display:block;margin-bottom:4px}
 .sen-rules{margin:0;padding-left:1.2em;font-size:13px;line-height:1.7;color:var(--muted,#b9bfd6)}
 .sen-go{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:48px;font-size:16px}
 .sen-table{display:flex;flex-direction:column;gap:3px;font-size:12.5px}
@@ -2819,3 +2819,16 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
   background:url("../ui/sen-head.webp") center/100% 100% no-repeat;font-size:clamp(20px,6.2vw,30px);letter-spacing:.12em;white-space:nowrap}
 .sd-rv-rps b{width:min(100%,400px);font-size:clamp(18px,5.6vw,26px)}
 .sd-screen .sd-st,.sd-screen .sd-h small,.sd-screen .sd-cnt,.sd-screen .sd-time,.sd-screen .sd-round,.sd-screen .sd-whose,.sd-screen .sen-curve b,.sd-screen .sen-curve small,.sd-screen .pg-hand span{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9)}
+/* 一人用の選定戦にも素材（背景・見出し・台座） */
+.overlay:has(.panel.sen){background:linear-gradient(180deg,rgba(6,5,14,.6),rgba(6,5,14,.3) 30%,rgba(6,5,14,.45) 70%,rgba(6,5,14,.75)),url("../ui/sen-bg.webp") center/cover no-repeat fixed,#0b0a17}
+.panel.sen{background:none;border:none;box-shadow:none}
+.sen-banner{display:flex;justify-content:center;margin:4px 0}
+.sen-banner b{display:grid;place-items:center;width:min(94%,440px);aspect-ratio:4.55;padding:0 18%;box-sizing:border-box;background:url("../ui/sen-head.webp") center/100% 100% no-repeat;
+  font-family:var(--f-display);font-size:clamp(20px,6.2vw,30px);letter-spacing:.1em;white-space:nowrap;color:#f3d58e;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+.sen-set{background:none;border:none;padding:0}
+.sen-set .sen-cards{background:url("../ui/sen-tray.webp") center/100% 100% no-repeat;padding:5.5% 4% 6%;filter:drop-shadow(0 6px 12px rgba(0,0,0,.55))}
+.sen-set.sel{box-shadow:none;border:none}
+.sen-set.sel .sen-cards{filter:drop-shadow(0 0 10px rgba(255,213,106,.8)) drop-shadow(0 6px 12px rgba(0,0,0,.55))}
+.panel.sen .hint,.panel.sen .sen-head,.panel.sen .sen-rules,.panel.sen .gl,.panel.sen .sen-curve b,.panel.sen .sen-curve small,.panel.sen .sen-confirm{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9)}
+.panel.sen .callout,.panel.sen .sen-table,.panel.sen .sen-list{background:rgba(10,10,22,.72);border-radius:10px}
+.panel.sen .sen-table{padding:4px}
