@@ -41,7 +41,9 @@ function setOpen(s) {
 /* 超級の隠しボス（冥府の剣鬼）の限定レジェンド：BOSS_EX_ON が 0 の間は、どこにも出さない（できあがるまで隠す。2026-11-13 オーナー） */
 const BOSS_EX_CARDS = ["b-y-valk", "b-y-murasame", "b-y-zantetsu"];
 const bossExOn = () => adminOn() || !!(typeof CONFIG !== "undefined" && CONFIG.BOSS_EX_ON);
-const cardShown = c => !!c && !(BOSS_EX_CARDS.includes(c.id) && !bossExOn()) && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
+/* ショップ限定カード（店員のカードなど）：LIMITED_ON が 0 の間は、持っている人と運営にしか見せない（2026-11-18） */
+const limitedOn = () => adminOn() || !!(typeof CONFIG !== "undefined" && CONFIG.LIMITED_ON);
+const cardShown = c => !!c && !(BOSS_EX_CARDS.includes(c.id) && !bossExOn()) && !(c.shop && !limitedOn() && !(typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0)) && (setOpen(c.set) || (typeof Account !== "undefined" && Account.data && Account.owned(c.id) > 0));
 /* パック開放戦のルール（パックごとに決める）。今は「世界限定」と「制限なし」。あとでレア度の制限・相手の特殊ルールなどを足す */
 const GATE_RULES = {
   world: { label: "世界限定", text: p => `使えるのは、30枚すべて${WORLDS[p.gateWorld] || "決めた世界"}のカードで組んだデッキだけ。`, deckOK: (p, d) => deckWorld(d) === p.gateWorld },
@@ -314,7 +316,7 @@ const DEFAULT_CONFIG = {
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
-  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, MAKO_U: 3000, MAKO_L: 5000, SEN_ON: 0, SEN_BETA: 1, SEN_FEE: 500, SKIN_ON: 0, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
+  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, MAKO_U: 3000, MAKO_L: 5000, SEN_ON: 0, SEN_BETA: 1, SEN_FEE: 500, SKIN_ON: 0, LIMITED_ON: 0, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
   SEASON: "beta", STARTER_DECK: "starter", MAINT_NOTE: "", ADMINS: [],
   SAMPLE_DECKS: true   // ベータ用：所持に関係なく全カードで組める「サンプルデッキ」を許可
 };
@@ -372,6 +374,7 @@ const CONFIG_INFO = {
   STONE_TICKET:      { label: "パック券1枚に必要な魔石", min: 0, max: 100000, group: "eco", step: 10 },
   SHOP_FEATURE_OFF:  { label: "ショップの今日のおすすめの割引（%）", min: 0, max: 90, group: "eco" },
   STONE_PER_GOLD:    { label: "両替：1Gにするのに必要な魔石（2以下にすると、パック→分解→両替でGが増え続けるので注意）", min: 1, max: 1000, group: "eco" },
+  LIMITED_ON:        { label: "ショップの限定カードの売り場を開く（1＝開く、0＝準備中。運営用アカウントはいつでも入れる）", min: 0, max: 1, group: "eco" },
   SKIN_ON:           { label: "スキンの売り場を開く（1＝開く、0＝準備中。運営用アカウントはいつでも入れる）", min: 0, max: 1, group: "eco" },
   SEN_ON:            { label: "選定戦を開く（1＝開く、0＝準備中。運営用アカウントは入れる）", min: 0, max: 1, group: "eco" },
   SEN_BETA:          { label: "選定戦をβ版にする（1＝入場料・報酬なし、0＝正式）", min: 0, max: 1, group: "eco" },
@@ -762,7 +765,7 @@ const BEGINNER = [
 const MAIL_TO = { all: "全員（これから始める人にも届く）", before: "送った日までに始めた人だけ", new: "送った日から後に始めた人（ずっと届く）" };
 /* 選択券で選べるカード */
 function pickPool(pk, defs) {
-  return defs.filter(c => c && !c.token && !c.boss && c.limit > 0 && pk.rarity.includes(c.rarity) && (!pk.sets.length || pk.sets.includes(c.set || "1")));
+  return defs.filter(c => c && !c.token && !c.boss && !c.shop && c.limit > 0 && pk.rarity.includes(c.rarity) && (!pk.sets.length || pk.sets.includes(c.set || "1")));
 }
 const DEFAULT_LOGIN = [{ gold: 50 }, { gold: 50 }, { stones: 20 }, { gold: 100 }, { gold: 50 }, { stones: 30 }, { tickets: 1 }];
 /* 効果1つの欠けを補う（追加の設定：card＝トークン、kw＝与える能力、world＝世界の絞り込み、ctype＝カードの種類） */
@@ -825,6 +828,7 @@ function normalizeData(data) {
     glyph: String(c.glyph || "？"),
     // 1デッキに入れられる上限（0なら使えない）。古い形式の copies（共通山札の枚数）からも読める
     boss: !!c.boss && !c.token,   // ボス限定：パックや交換では手に入らず、隠しボスを倒すと手に入る
+    ...(c.shop && !c.token && !c.boss ? { shop: true, ...(+c.shopPrice > 0 ? { shopPrice: Math.floor(+c.shopPrice) } : {}) } : {}),   // ショップ限定：ショップの「限定カード」で魔石と交換する
     token: !!c.token,   // トークン：効果で出すだけのカード（デッキに入らない・パックから出ない）
     limit: c.token ? 0 : Math.max(0, c.limit != null ? +c.limit || 0 : c.copies != null ? Math.min(3, +c.copies || 0) : 3),
     rarity: RARITY[c.rarity] ? c.rarity : (+c.cost >= 7 ? "legend" : +c.cost >= 5 ? "rare" : "common"),

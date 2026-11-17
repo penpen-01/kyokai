@@ -2343,6 +2343,7 @@ function cardSources(d) {
   for (const [lv, B] of Object.entries(typeof BOSSES !== "undefined" ? BOSSES : {}))
     if ((B.legends || []).includes(d.id)) out.push(`ボス限定：${lv === "ex" ? "超級" : "上級"}の隠しボス「${B.name}」を倒すと、限定レジェンド${(B.legends || []).length}種のうち1枚が手に入る`);
   if (d.boss) { if (!out.length) out.push("ボス限定：隠しボスを倒すと手に入る"); return out; }
+  if (d.shop) { out.push(`ショップ限定：ショップの「限定カード」で、魔石${typeof Shop !== "undefined" ? Shop.limitedPrice(d).toLocaleString() : ""}個で交換できる`); return out; }
   const packs = PACKS.filter(p => p.open && setOpen(p.set) && (p.cards.length ? p.cards.includes(d.id) : true));
   if (packs.length) out.push(`パック：${packs.map(p => `「${p.name}」`).join("")}から出る`);
   if (typeof Shop !== "undefined" && Shop.pool().some(c => c.id === d.id)) out.push(`交換所：魔石${Shop.costRate(d.rarity)}個で交換できる`);

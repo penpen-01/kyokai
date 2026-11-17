@@ -304,7 +304,7 @@ const Admin = {
     S0.ban = S0.ban || [];
     const cfgs = ["SEN_ON", "SEN_BETA", "SEN_FEE"].map(k => `<div class="item"><label for="f-cfg-${k}">${CONFIG_INFO[k].label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>${stepper("cfg-" + k, DATA.config[k] ?? DEFAULT_CONFIG[k], CONFIG_INFO[k].label)}</div>`).join("");
     const F = [["gold", "G"], ["stones", "魔石"], ["tickets", "パック券"], ["srTickets", "SR以上確定券"]];
-    const all = (DATA.cards || []).filter(c => c.limit > 0 && !c.token && !c.boss);
+    const all = (DATA.cards || []).filter(c => c.limit > 0 && !c.token && !c.boss && !c.shop);
     // 出禁の一覧：パック・レア度・種類で絞って、絵をタップで外す／戻す
     const F0 = this.senF || (this.senF = { set: "all", rar: "all", type: "all", only: false });
     const setKey = c => c.set || "1";

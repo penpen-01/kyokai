@@ -30,7 +30,7 @@ const Sentei = {
   /* ---------- ピック ---------- */
   pool() {
     const ban = new Set(SEN.ban || []);
-    return CARDS.filter(c => c.limit > 0 && !c.token && !c.boss && !ban.has(c.id) && cardShown(c));
+    return CARDS.filter(c => c.limit > 0 && !c.token && !c.boss && !c.shop && !ban.has(c.id) && cardShown(c));
   },
   band(c) { return c.cost <= 2 ? 0 : c.cost <= 4 ? 1 : 2; },   // 軽い・中くらい・重い
   rollRar(w, min) {
@@ -276,7 +276,7 @@ const SenDraft = {
   openedSets() { return [...new Set(CARDS.map(c => c.set || "1"))].filter(s => setOpen(s)); },
   poolFor(a, b) {
     const ban = new Set(SEN.ban || []), A = new Set(a || []), B = new Set(b || []);
-    return CARDS.filter(c => c.limit > 0 && !c.token && !c.boss && !ban.has(c.id) && A.has(c.set || "1") && B.has(c.set || "1") && !(typeof BOSS_EX_CARDS !== "undefined" && BOSS_EX_CARDS.includes(c.id)));
+    return CARDS.filter(c => c.limit > 0 && !c.token && !c.boss && !c.shop && !ban.has(c.id) && A.has(c.set || "1") && B.has(c.set || "1") && !(typeof BOSS_EX_CARDS !== "undefined" && BOSS_EX_CARDS.includes(c.id)));
   },
   /* ホスト：取り合いを始める（再戦のときも、ここからやり直す） */
   begin() {

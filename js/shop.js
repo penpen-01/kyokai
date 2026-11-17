@@ -14,7 +14,7 @@ const SHOP_CATS = [
   // 準備中の売り場（絵付きで「準備中」として並べる）
   { id: "info", ready: true },
   { id: "skin", ready: true },
-  { id: "limited", ready: false, ic: "star", name: "限定カード", sub: "いまだけ・ここだけのカード" }
+  { id: "limited", ready: false, ic: "star", name: "限定カード", sub: "ここでしか手に入らないカード" }   // 開いたら js の showLimited（LIMITED_ON）
 ];
 const SHOP_IC = {
   trade: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="9" height="13" rx="1.5"/><rect x="12" y="6" width="9" height="13" rx="1.5" transform="rotate(8 16.5 12.5)"/><path d="M7.5 9.5l1.5 2-1.5 2-1.5-2z"/></svg>',
@@ -215,7 +215,7 @@ const Shop = {
     const tc = this.ticketCost(), f = this.feature(), use = this.usable();
     const slotCost = CONFIG.DECK_SLOT_COST ?? 1500, slotLeft = (CONFIG.DECK_SLOT_MAX ?? 10) - Account.deckSlots;
     const soon = /[?&]shopsoon\b/.test(location.search);
-    const fut = SHOP_CATS.filter(x => !x.ready);
+    const fut = SHOP_CATS.filter(x => !x.ready && !(x.id === "limited" && limitedOn()));
     openOverlay(`<div class="panel wide shop shophub">
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
       ${Keeper.stageHTML()}</div>
@@ -235,6 +235,7 @@ const Shop = {
         <button type="button" class="sh-cat art c-info" data-act="shopInfo" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-info.webp')" aria-hidden="true"></span><b>情報屋</b><small>攻略の情報や、ボス戦の品をGで</small></button>
         ${CONFIG.SKIN_ON || adminOn() ? `<button type="button" class="sh-cat art c-skin" data-act="shopSkins" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-skin.webp')" aria-hidden="true"></span><b>スキン</b><small>スリーブ・背景・店員などの見た目を魔石で</small>${CONFIG.SKIN_ON ? "" : `<i class="sh-soon">運営のみ</i>`}</button>`
           : `<div class="sh-cat art soon"><span class="sh-art" style="background-image:url('ui/shop-skin.webp')" aria-hidden="true"></span><b>スキン</b><small>店員やカードの見た目を変える</small><i class="sh-soon">準備中</i></div>`}
+        ${limitedOn() ? `<button type="button" class="sh-cat art c-limited" data-act="shopLimited" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-limited.webp')" aria-hidden="true"></span><b>限定カード</b><small>ここでしか手に入らないカードを魔石で</small>${CONFIG.LIMITED_ON ? "" : `<i class="sh-soon">運営のみ</i>`}</button>` : ""}
         ${fut.map(x => `<div class="sh-cat art soon"><span class="sh-art" style="background-image:url('ui/shop-${x.id}.webp')" aria-hidden="true"></span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("")}
       </div>
       <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
@@ -243,6 +244,45 @@ const Shop = {
       ${this.exchHTML()}
     </div>`, "start", true);
   },
+  /* ---------- 限定カード（ショップでしか手に入らないカード。店員のカードなど） ---------- */
+  limitedList() { return CARDS.filter(c => c.shop && c.limit > 0 && !c.token).sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.cost - b.cost); },
+  // 値段：カードごとに決めた値段。なければレア度の標準（工房で変えられる）
+  limitedPrice(c) { return (c && c.shopPrice) || ({ common: 300, rare: 1000, sr: 3000, ur: 6000, legend: 12000 })[c && c.rarity] || 3000; },
+  showLimited(msg) {
+    this.view = "limited";
+    if (msg) toast(msg); this.msg = null;
+    const cap = this.cap(), use = this.usable(), L = this.limitedList();
+    const a = this.limAsk && L.find(c => c.id === this.limAsk);
+    openOverlay(`<div class="panel wide shop">
+      <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>限定カード</b>${stoneTag(Account.stones)}</div>
+      ${Keeper.miniHTML()}</div>
+      ${this.noteHTML()}
+      <p class="hint">ここでしか手に入らないカードです。パックからは出ません。1種類${cap}枚まで交換できます。カードを押すと効果を見られます。</p>
+      ${L.length ? `<div class="lim-grid">${L.map(c => {
+        const own = Account.owned(c.id), price = this.limitedPrice(c), full = own >= cap;
+        return `<div class="lim-item"><button type="button" class="lim-card cdlink" data-tk="${esc(c.id)}" aria-label="${esc(c.name)}（押すと効果）">${cardHTML(c, { static: true, cls: own <= 0 ? "dim" : "" })}</button>
+          <small>所持 ${own} / ${cap}</small>
+          ${full ? `<span class="sk-own">上限まで持っている</span>` : `<button type="button" class="btn sm ${Account.stones >= price ? "primary" : ""}" data-act="limAsk" data-id="${esc(c.id)}" ${use && Account.stones >= price ? "" : "disabled"}>${curIcon("stone")}${price.toLocaleString()}</button>`}</div>`;
+      }).join("")}</div>` : `<p class="sk-empty">準備中です。もうしばらくお待ちください。</p>`}
+      ${a ? `<div class="dmodal" data-act="limNo"><div class="dmodal-in confirmbox" role="alertdialog" aria-label="交換の確認" data-act="noop">
+        <b class="dm-name">《${esc(a.name)}》と交換しますか？</b>
+        <p class="dm-text">魔石<b>${this.limitedPrice(a).toLocaleString()}</b>個を使います（所持 ${Account.stones.toLocaleString()} → ${(Account.stones - this.limitedPrice(a)).toLocaleString()}）。使った魔石は元に戻せません。</p>
+        <div class="pre-btns"><button type="button" class="btn primary" data-act="limYes">交換する</button><button type="button" class="btn" data-act="limNo">やめる</button></div></div></div>` : ""}
+    </div>`, "start", true);
+  },
+  buyLimited(id) {
+    const c = this.limitedList().find(x => x.id === id);
+    if (!c || !this.usable() || !limitedOn()) return this.showLimited();
+    const price = this.limitedPrice(c);
+    if (Account.owned(c.id) >= this.cap()) return this.showLimited("もう上限まで持っています。");
+    if (Account.stones < price) { Keeper.react("poor", "trouble"); return this.showLimited(`魔石が足りません（あと${(price - Account.stones).toLocaleString()}個）。`); }
+    Account.data.stones -= price; Titles.bump("stoneUse", price);
+    Keeper.react("buy", "happy");
+    Account.addCards([c.id]);   // すぐ保存する
+    Sound.play("rare", 2);
+    this.showLimited(`《${c.name}》を手に入れました（所持${Account.owned(c.id)}枚）。`);
+  },
+
   /* パック券・デッキ枠を交換する前の確認（魔石は戻せないので） */
   hubAskHTML(tc, slotCost) {
     const k = this.hubAsk; if (!k) return "";
@@ -397,6 +437,10 @@ const Shop = {
       case "shopAskNo": this.ask = null; this.showDismantle(); return true;
       case "shopAskYes": { const a = this.ask; this.ask = null; if (a) this.dismantle(a.all ? null : this.sel); return true; }
       case "shopTicket": this.hubAsk = "ticket"; this.show(); return true;
+      case "shopLimited": if (!limitedOn()) return true; this.limAsk = null; this.showLimited(); return true;
+      case "limAsk": this.limAsk = el.dataset.id; this.showLimited(); return true;
+      case "limNo": this.limAsk = null; this.showLimited(); return true;
+      case "limYes": { const id = this.limAsk; this.limAsk = null; this.buyLimited(id); return true; }
       case "shopSlot": this.hubAsk = "slot"; this.show(); return true;
       case "shopHubNo": this.hubAsk = null; this.show(); return true;
       case "shopHubYes": { const k = this.hubAsk; this.hubAsk = null; if (k === "slot") this.buySlot(); else if (k === "ticket") this.buyTicket(); else this.show(); return true; }

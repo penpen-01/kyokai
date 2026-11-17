@@ -16,13 +16,13 @@ const CardFilter = {
   COSTS: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],   // 10 は「10以上」
   empty() { return { fav: [], type: [], world: [], cost: [], rarity: [], pack: [] }; },
   costKey(c) { return String(Math.min(10, Math.max(0, c.cost | 0))); },
-  packKey(c) { return c.boss ? "boss" : String(c.set || "1"); },
+  packKey(c) { return c.boss ? "boss" : c.shop ? "shop" : String(c.set || "1"); },
   packs(cards) {   // 今見えているカードがある弾だけ（まだ開放していない弾は出さない）
     const keys = [...new Set(cards.map(c => this.packKey(c)))];
-    const label = k => { if (k === "boss") return "ボス限定";
+    const label = k => { if (k === "boss") return "ボス限定"; if (k === "shop") return "ショップ限定";
       const p = (typeof PACKS !== "undefined" ? PACKS : []).find(x => String(x.set || (x.id === "pack1" ? "1" : "")) === k);
       return p ? p.name : `第${k}弾`; };
-    const order = k => k === "boss" ? "zz" : k;
+    const order = k => k === "boss" ? "zz" : k === "shop" ? "zy" : k;
     return keys.sort((a, b) => order(a).localeCompare(order(b))).map(k => [k, label(k)]);
   },
   match(c, f) {

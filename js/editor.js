@@ -241,6 +241,8 @@ function renderEditor() {
           </div>
           <label class="check"><input type="checkbox" data-token ${c.token ? "checked" : ""}><span><b>トークン</b><span>効果で出すだけのカード。デッキに入らず、パックからも出ません（投入上限は0になります）。</span></span></label>
           ${c.token ? "" : `<label class="check"><input type="checkbox" data-boss ${c.boss ? "checked" : ""}><span><b>ボス限定</b><span>パックやショップの交換では手に入らず、隠しボスを倒したときだけ手に入ります（パックの封入カードからは外してください）。</span></span></label>`}
+          ${c.token || c.boss ? "" : `<label class="check"><input type="checkbox" data-shoponly ${c.shop ? "checked" : ""}><span><b>ショップ限定</b><span>パックからは出ず、ショップの「限定カード」で魔石と交換して手に入ります（店員のカードなど。パックの封入カードからは外してください）。</span></span></label>
+            ${c.shop ? `<div class="field"><span class="lab">限定カードの値段（魔石）</span><input class="txt" type="number" min="0" step="100" data-shopprice value="${+c.shopPrice || ""}" placeholder="空ならレア度の標準" style="max-width:160px"></div>` : ""}`}
           <p class="hint">投入上限は、1つのデッキに何枚まで入れられるか。ルール設定の「同じカードを入れられる上限」（今は${DATA.config.COPY_MAX}枚）より大きくしても、そちらが優先されます。0にすると、データには残りますがデッキに入れられなくなります。</p>
           <div class="field grow">
             <span class="lab">レア度</span>
@@ -614,6 +616,8 @@ document.addEventListener("change", e => {
   if (t.dataset.ai && AiTools.input(t)) return;
   if (t.dataset.num) { setNum(t.dataset.num, t.value); return; }
   if (t.dataset.limitIn) { setCopies(t.dataset.limitIn, t.value); return; }
+  if (t.dataset.shoponly != null && t.type === "checkbox") { const c = curCard(); c.shop = t.checked; if (!t.checked) delete c.shopPrice; changed(); renderEditor(); renderList(); return; }
+  if (t.dataset.shopprice != null) { const c = curCard(), v = Math.max(0, Math.floor(+t.value || 0)); if (v) c.shopPrice = v; else delete c.shopPrice; changed(); return; }
   if (t.dataset.boss != null && t.type === "checkbox") { const c = curCard(); c.boss = t.checked; changed(); renderEditor(); renderList(); return; }
   if (t.dataset.token != null && t.type === "checkbox") {
     const c = curCard(); c.token = t.checked; if (c.token) c.limit = 0; else if (!c.limit) c.limit = 3;
@@ -761,6 +765,7 @@ function exportJSON() {
     if (c.type === "char" && c.armor) o.armor = c.armor;
     if (c.token) o.token = true;
     if (c.boss) o.boss = true;
+    if (c.shop && !c.boss && !c.token) { o.shop = true; if (+c.shopPrice > 0) o.shopPrice = Math.floor(+c.shopPrice); }
     if (c.pay) o.pay = c.pay;
     if (c.set) o.set = c.set;     // 弾（第1弾は書かない）
     if (c.gear) o.gear = c.gear;  // 歯車を使うカード
