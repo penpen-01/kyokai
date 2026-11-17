@@ -1,5 +1,5 @@
 {
- "version": 187,
+ "version": 188,
  "updated": "2026-11-18",
  "config": {
   "PLAYER_HP": 20,
@@ -2578,6 +2578,78 @@
    "art": "ui/stamp/s06.webp",
    "free": true,
    "price": 0
+  },
+  {
+   "id": "s-ruu",
+   "text": "…ねむい…",
+   "art": "ui/stamp/s-ruu.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-weiss",
+   "text": "計算どおりです",
+   "art": "ui/stamp/s-weiss.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-dorgan",
+   "text": "いいカードだな！",
+   "art": "ui/stamp/s-dorgan.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-kohaku",
+   "text": "化かされた？",
+   "art": "ui/stamp/s-kohaku.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-tamamo",
+   "text": "タマモ",
+   "art": "ui/stamp/s-tamamo.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-godgear",
+   "text": "合体完了！",
+   "art": "ui/stamp/s-godgear.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-nezal",
+   "text": "無駄だ",
+   "art": "ui/stamp/s-nezal.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-talos",
+   "text": "通さぬ",
+   "art": "ui/stamp/s-talos.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-nem",
+   "text": "おやすみ〜",
+   "art": "ui/stamp/s-nem.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-giant",
+   "text": "あれ？",
+   "art": "ui/stamp/s-giant.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-executor",
+   "text": "排除する",
+   "art": "ui/stamp/s-executor.webp",
+   "price": 1000
+  },
+  {
+   "id": "s-valtor",
+   "text": "いざ、尋常に",
+   "art": "ui/stamp/s-valtor.webp",
+   "price": 1000
   }
  ],
  "skins": [
