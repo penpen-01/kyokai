@@ -315,7 +315,7 @@ const Admin = {
     const unchecked = packs.filter(p => keys.includes(p.key) && !S0.checked.includes(p.key));
     const ban = new Set(S0.ban), q = (this.senQ || "").trim(), RARITY_ORDER = Object.keys(RARITY_SHORT);
     const shown = all.filter(c => (F0.set === "all" || setKey(c) === F0.set) && (F0.rar === "all" || c.rarity === F0.rar) && (F0.type === "all" || c.type === F0.type)
-      && (!F0.only || ban.has(c.id)) && (!q || c.name.includes(q) || c.id.includes(q)))
+      && (!F0.only || ban.has(c.id)) && (textHas(c.name, q) || textHas(c.id, q)))
       .sort((x, y) => x.cost - y.cost || RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity));
     const chip = (k, v, label) => `<button type="button" class="chip ${F0[k] === v ? "on" : ""}" data-act="senF" data-k="${k}" data-v="${v}">${label}</button>`;
     const banHTML = `<div class="fgroup"><span class="gl">選定戦に出さないカード（${S0.ban.length}枚）</span>
@@ -326,7 +326,7 @@ const Admin = {
           <div class="chips">${chip("rar", "all", "すべて")}${RARITY_ORDER.map(r => chip("rar", r, RARITY_SHORT[r])).join("")}<span class="sen-sp"></span>${chip("type", "all", "キャラも魔法も")}${chip("type", "char", "キャラ")}${chip("type", "spell", "魔法")}</div>
           <div class="chips"><label class="ownchk"><input type="checkbox" data-act="senOnly" ${F0.only ? "checked" : ""}> 出さないカードだけ見る</label>
             <input class="txt" id="sen-q" placeholder="名前で探す" value="${esc(this.senQ || "")}" autocomplete="off" style="max-width:180px"></div>
-          <div class="chips"><span class="hint">表示中の ${shown.length}枚：</span><button type="button" class="btn sm" data-act="senBulk" data-v="ban">全部 出さない</button><button type="button" class="btn sm" data-act="senBulk" data-v="ok">全部 出す</button></div>
+          <div class="chips"><span class="hint">表示中の <b id="sen-cnt">${shown.length}</b>枚：</span><button type="button" class="btn sm" data-act="senBulk" data-v="ban">全部 出さない</button><button type="button" class="btn sm" data-act="senBulk" data-v="ok">全部 出す</button></div>
         </div>
         <div class="sen-bgrid">${shown.map(c => `<button type="button" class="sen-bt ${ban.has(c.id) ? "ban" : ""} r-${c.rarity}" data-act="senToggle" data-v="${esc(c.id)}" title="${esc(c.name)}" aria-pressed="${ban.has(c.id)}">
           ${c.art ? `<img src="${esc(c.art)}" alt="" loading="lazy">` : `<span class="sen-bg0"></span>`}<i>${c.cost}</i><em>${RARITY_SHORT[c.rarity] || ""}</em><b>${esc(c.name)}</b></button>`).join("") || `<p class="hint">条件に合うカードはありません。</p>`}</div>
@@ -647,7 +647,7 @@ const Admin = {
       case "senOnly": { (this.senF || (this.senF = {})).only = el.checked; this.renderEco(); return true; }
       case "senToggle": { const b = DATA.sen.ban = DATA.sen.ban || [], id = el.dataset.v; DATA.sen.ban = b.includes(id) ? b.filter(x => x !== id) : [...b, id]; this.touch(this.renderEco); return true; }
       case "senBulk": {
-        const ids = [...document.querySelectorAll(".sen-bt")].map(x => x.dataset.v), b = new Set(DATA.sen.ban || []);
+        const ids = [...document.querySelectorAll(".sen-bt:not([hidden])")].map(x => x.dataset.v), b = new Set(DATA.sen.ban || []);
         ids.forEach(id => el.dataset.v === "ban" ? b.add(id) : b.delete(id)); DATA.sen.ban = [...b]; this.touch(this.renderEco); return true;
       }
       case "senChecked": { const c = DATA.sen.checked = DATA.sen.checked || []; if (!c.includes(el.dataset.v)) c.push(el.dataset.v); this.touch(this.renderEco); return true; }
@@ -847,8 +847,13 @@ document.addEventListener("change", e => {
   const [i, f] = k.split(":"), x = DATA.sen.rewards[+i]; if (!x) return;
   x[f] = Math.max(0, Math.floor(+t.value || 0)); Admin.touch(null);
 });
+// 出禁の名前検索：画面を作り直さず、絵の表示・非表示だけ切り替える（作り直すと日本語の入力が途切れて、検索が効かなかった）
+function senApplyQ() {
+  const q = Admin.senQ || ""; let n = 0;
+  document.querySelectorAll(".sen-bt").forEach(b => { const hit = textHas(b.title, q) || textHas(b.dataset.v, q); b.hidden = !hit; if (hit) n++; });
+  const c = document.getElementById("sen-cnt"); if (c) c.textContent = n;
+}
 document.addEventListener("input", e => {
   if (!e.target || e.target.id !== "sen-q" || typeof Admin === "undefined") return;
-  Admin.senQ = e.target.value; const pos = e.target.selectionStart; Admin.renderEco();
-  const n = document.getElementById("sen-q"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} }
+  Admin.senQ = e.target.value; senApplyQ();
 });

@@ -147,7 +147,7 @@ function listCards() {
   return DATA.cards
     .filter(c => filter === "all" || (filter === "token" ? c.token : c.type === filter && !c.token))
     .filter(inSet)
-    .filter(c => !q || c.name.includes(q) || cardText(c).includes(q))
+    .filter(c => textHas(c.name, q) || textHas(cardText(c), q))
     .slice().sort((a, b) => a.cost - b.cost || (a.type > b.type ? 1 : a.type < b.type ? -1 : 0) || a.name.localeCompare(b.name, "ja"));
 }
 function renderList() {

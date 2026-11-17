@@ -134,7 +134,7 @@ const WDecks = {
       .filter(c => f.world === "all" || c.world === f.world)
       .filter(c => f.rarity === "all" || c.rarity === f.rarity)
       .filter(c => f.cost === "all" || (f.cost === "7+" ? c.cost >= 7 : (([a, b]) => c.cost >= a && c.cost <= b)(f.cost.split("-").map(Number))))
-      .filter(c => !q || c.name.includes(q) || cardText(c).includes(q))
+      .filter(c => textHas(c.name, q) || textHas(cardText(c), q))
       .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja"));
     return list.length ? list.map(c => {
       const k = d.cards[c.id] || 0, max = this.limitOf(c);
