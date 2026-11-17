@@ -302,7 +302,7 @@ const Admin = {
   senHTML() {
     const S0 = DATA.sen = DATA.sen && Array.isArray(DATA.sen.rewards) && DATA.sen.rewards.length === 8 ? DATA.sen : (typeof normalizeData === "function" ? normalizeData({ sen: DATA.sen }).sen : { rewards: [], ban: [] });
     S0.ban = S0.ban || [];
-    const cfgs = ["SEN_ON", "SEN_FEE"].map(k => `<div class="item"><label for="f-cfg-${k}">${CONFIG_INFO[k].label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>${stepper("cfg-" + k, DATA.config[k] ?? DEFAULT_CONFIG[k], CONFIG_INFO[k].label)}</div>`).join("");
+    const cfgs = ["SEN_ON", "SEN_BETA", "SEN_FEE"].map(k => `<div class="item"><label for="f-cfg-${k}">${CONFIG_INFO[k].label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>${stepper("cfg-" + k, DATA.config[k] ?? DEFAULT_CONFIG[k], CONFIG_INFO[k].label)}</div>`).join("");
     const F = [["gold", "G"], ["stones", "魔石"], ["tickets", "パック券"], ["srTickets", "SR以上確定券"]];
     const q = (this.senQ || "").trim();
     const all = (DATA.cards || []).filter(c => c.limit > 0 && !c.token && !c.boss);

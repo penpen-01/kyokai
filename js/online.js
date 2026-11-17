@@ -53,7 +53,7 @@ const Online = {
       <div class="obox">
         <h3>部屋を作る</h3>
         <label class="ownchk"><input type="checkbox" id="onl-world" ${store.get(WORLD_RULE_KEY) === "1" ? "checked" : ""}> 世界限定ルール（2人とも、30枚すべて同じ世界のカードのデッキで戦う）</label>
-        ${typeof Sentei !== "undefined" && Sentei.on() ? `<label class="ownchk"><input type="checkbox" id="onl-sen"> 選定戦ルール（デッキは持ち込まない。2人で3枚ずつのセットを取り合って、その場で30枚のデッキを作る）</label>` : ""}
+        ${typeof Sentei !== "undefined" && Sentei.on() ? `<label class="ownchk"><input type="checkbox" id="onl-sen"> 選定戦ルール${Sentei.beta() ? "（β版・報酬なし）" : ""}（デッキは持ち込まない。2人で3枚ずつのセットを取り合って、その場で30枚のデッキを作る）</label>` : ""}
         <div class="ofield"><label for="onl-tl">1ターンの持ち時間（過ぎたら自動でターン終了）</label>
           <select class="otxt" id="onl-tl">${TURN_LIMITS.map(v => `<option value="${v}" ${v === this.prefLimit() ? "selected" : ""}>${v ? v + "秒" : "なし（時間制限なし）"}</option>`).join("")}</select></div>
         <button type="button" class="btn primary" data-act="onlCreate">部屋を作って合言葉を出す</button>

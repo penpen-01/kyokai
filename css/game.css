@@ -2803,3 +2803,4 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
 #app.sdmode{overflow:hidden;height:100%}
 html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:none}
 .sd-main > *{flex-shrink:0}
+.topbar b .beta{margin-left:6px;font-size:11px;padding:1px 6px;border-radius:99px;background:rgba(180,150,255,.25);color:#e2d8ff;vertical-align:middle}

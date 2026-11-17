@@ -21,9 +21,11 @@ let SEN = { rewards: [], ban: [] };   // 工房の「選定戦」（報酬・出
 
 const Sentei = {
   on() { return !!(CONFIG.SEN_ON || adminOn()); },
-  fee() { return Math.max(0, CONFIG.SEN_FEE ?? 500); },
+  /* β版（SEN_BETA=1）：入場料なし・報酬なし。仕組みを体験するだけ */
+  beta() { return !!CONFIG.SEN_BETA; },
+  fee() { return this.beta() ? 0 : Math.max(0, CONFIG.SEN_FEE ?? 500); },
   run() { return Account.data && Account.data.sen; },
-  rewardOf(w) { const L = SEN.rewards || []; return L[Math.min(w, L.length - 1)] || {}; },
+  rewardOf(w) { if (this.beta()) return {}; const L = SEN.rewards || []; return L[Math.min(w, L.length - 1)] || {}; },
 
   /* ---------- ピック ---------- */
   pool() {
@@ -177,16 +179,17 @@ const Sentei = {
     const R = this.run(), fee = this.fee();
     let body;
     if (!R) {
-      body = `<p class="callout"><b>選定戦とは</b>3枚ずつの2つのセットから1つを選ぶのを${SEN_ROUNDS}回くり返して、その場で${SEN_ROUNDS * SEN_SET}枚のデッキを作ります。そのデッキで CPU と戦い、<b>${SEN_WIN}勝</b>するか<b>${SEN_LOSE}敗</b>したら終わり。勝った数で報酬が決まります。</p>
+      body = `<p class="callout"><b>選定戦とは</b>3枚ずつの2つのセットから1つを選ぶのを${SEN_ROUNDS}回くり返して、その場で${SEN_ROUNDS * SEN_SET}枚のデッキを作ります。そのデッキで CPU と戦い、<b>${SEN_WIN}勝</b>するか<b>${SEN_LOSE}敗</b>したら終わり。${this.beta() ? "" : "勝った数で報酬が決まります。"}</p>
+        ${this.beta() ? `<p class="callout warn"><b>β版</b>いまは試しに遊べる版です。入場料はかかりませんが、報酬もありません。</p>` : ""}
         <ul class="sen-rules">
           <li>候補には、開放している弾のカードが出ます（持っていないカードも使えます）</li>
           <li>後半は、レア度の高いカードが必ず並びます（最後はレジェンド）</li>
           <li>CPU のデッキも同じ決まりで毎回作られます。勝ち進むほど CPU が強くなります</li>
           <li>作ったデッキは、この選定戦が終わるまで使えます</li>
         </ul>
-        <span class="gl">報酬</span>${this.tableHTML(-1)}
+        ${this.beta() ? "" : `<span class="gl">報酬</span>${this.tableHTML(-1)}`}
         ${Account.data && Account.data.senBest ? `<p class="hint">これまでの最高：${Account.data.senBest}勝</p>` : ""}
-        <button type="button" class="btn primary sen-go" data-act="senStart" ${Account.gold >= fee ? "" : "disabled"}>${curIcon("gold")}${fee.toLocaleString()}G で始める</button>
+        <button type="button" class="btn primary sen-go" data-act="senStart" ${Account.gold >= fee ? "" : "disabled"}>${fee ? `${curIcon("gold")}${fee.toLocaleString()}G で始める` : "始める（β版・無料）"}</button>
         ${Account.gold < fee ? `<p class="hint">Gが足りません（所持 ${Account.gold.toLocaleString()}G）</p>` : ""}`;
     } else if (R.st === "pick") {
       const n = this.count(R.deck), floor = senFloor(R.r);
@@ -203,16 +206,16 @@ const Sentei = {
       body = `${this.pipsHTML(R)}
         <div class="sen-next"><small>次の相手</small><b>${last ? "最後の相手（カードの質が上がる）" : `${R.w + R.l + 1}戦目`}</b><span>CPU の強さ：${CPU_LEVELS[lv] ? CPU_LEVELS[lv].label : lv}</span></div>
         <button type="button" class="btn primary sen-go" data-act="senFight">対戦する</button>
-        <p class="hint">今 やめると：${this.rewardHTML(this.rewardOf(R.w))}</p>
+        ${this.beta() ? "" : `<p class="hint">今 やめると：${this.rewardHTML(this.rewardOf(R.w))}</p>`}
         <span class="gl">選定戦のデッキ（${this.count(R.deck)}枚）</span>${this.curveHTML(R.deck)}${this.listHTML(R.deck)}
-        <span class="gl">報酬</span>${this.tableHTML(R.w)}
+        ${this.beta() ? "" : `<span class="gl">報酬</span>${this.tableHTML(R.w)}`}
         ${this.retireAsk ? `<div class="dmodal" data-act="senRetireNo"><div class="dmodal-in confirmbox" role="alertdialog" aria-label="選定戦をやめる" data-act="noop">
-            <b class="dm-name">選定戦をやめますか？</b><p class="dm-text">${R.w}勝の報酬（${this.rewardHTML(this.rewardOf(R.w))}）を受け取って終わります。デッキはなくなります。</p>
+            <b class="dm-name">選定戦をやめますか？</b><p class="dm-text">${this.beta() ? `${R.w}勝で終わります。` : `${R.w}勝の報酬（${this.rewardHTML(this.rewardOf(R.w))}）を受け取って終わります。`}デッキはなくなります。</p>
             <div class="pre-btns"><button type="button" class="btn" data-act="senRetireNo">続ける</button><button type="button" class="btn danger" data-act="senRetireYes">やめる</button></div></div></div>` : ""}
         <button type="button" class="btn sm" data-act="senRetire">ここでやめる</button>`;
     }
     openOverlay(`<div class="panel sen">
-      <div class="topbar"><button type="button" class="btn sm" data-act="solo">← 戻る</button><b>選定戦</b>${goldTag(Account.gold)}</div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="solo">← 戻る</button><b>選定戦${this.beta() ? `<small class="beta">β版</small>` : ""}</b>${goldTag(Account.gold)}</div>
       ${msg ? `<p class="shopmsg" role="status">${esc(msg)}</p>` : ""}
       ${body}
     </div>`, "start", true);
@@ -222,14 +225,14 @@ const Sentei = {
     openOverlay(`<div class="panel sen sen-end">
       <div class="res-head"><span class="res-en">FINISH</span><b class="res-ja">${x.w}勝 ${x.l}敗</b></div>
       ${x.w >= SEN_WIN ? `<p class="sen-perfect">${SEN_WIN}勝達成！</p>` : x.retire ? `<p class="hint">ここでやめました。</p>` : ""}
-      <div class="sen-got"><small>報酬</small><b>${this.rewardHTML(x.reward)}</b></div>
+      ${this.beta() ? `<p class="hint">β版のため、報酬はありません。</p>` : `<div class="sen-got"><small>報酬</small><b>${this.rewardHTML(x.reward)}</b></div>`}
       <div class="pre-btns"><button type="button" class="btn primary" data-act="senOpen">選定戦へ</button><button type="button" class="btn" data-act="toTitle">ホームへ</button></div>
     </div>`, "start", true);
   },
   /* 結果画面に出す */
   resultHTML(x) {
     if (!x) return "";
-    if (x.done) return `<div class="sen-res"><b>選定戦 終了：${x.w}勝 ${x.l}敗</b><small>報酬：${this.rewardHTML(x.reward)}</small></div>`;
+    if (x.done) return `<div class="sen-res"><b>選定戦 終了：${x.w}勝 ${x.l}敗</b><small>${this.beta() ? "β版のため報酬はありません" : `報酬：${this.rewardHTML(x.reward)}`}</small></div>`;
     return `<div class="sen-res">${this.pipsHTML(x)}<small>${x.w}勝 ${x.l}敗（${SEN_WIN}勝か${SEN_LOSE}敗で終わり）</small></div>`;
   },
   handleAct(act, el) {
@@ -417,7 +420,7 @@ const SenDraft = {
         <div class="sd-rv-in"><b>あなたのデッキに入ったカード</b>${this.cards(sh.mine)}
         <small>${sh.by === me ? "相手には、もう片方のセットが入りました" : "相手が選んだ残りのセットです"}</small></div></div>`;
     return `<div class="sd-screen ${anim ? "anim" : ""}">
-      <div class="sd-top"><span class="sd-tag">選定戦</span><span class="sd-vs"><small>VS</small><b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
+      <div class="sd-top"><span class="sd-tag">選定戦${Sentei.beta() ? "β" : ""}</span><span class="sd-vs"><small>VS</small><b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
         <button type="button" class="chip" data-act="menu">メニュー</button></div>
       <div class="sd-main st-${D.gone ? "gone" : D.st}">${main}</div>${reveal}
       ${typeof Online !== "undefined" ? Online.bannerHTML() : ""}

@@ -2384,7 +2384,9 @@ function giveReward(res) {
     Object.assign(r, Account.streakEnd(CPU_LEVEL, res === "win"), { cpu: true });
   }
   // 友達との対戦：勝ちでも負けでもGが出る。ただし短すぎる試合は出ない・1日の回数に上限（2台で結託して増やせないように）
-  if (MODE === "online" && counts) {
+  const senBeta = MODE === "online" && typeof Online !== "undefined" && Online.room && Online.room.rule === "sen" && typeof Sentei !== "undefined" && Sentei.beta();
+  if (senBeta) r.senBeta = true;
+  if (MODE === "online" && counts && !senBeta) {
     const minT = CONFIG.ONLINE_MIN_TURNS ?? 6, max = CONFIG.ONLINE_DAY_MAX ?? 10;
     const t = Decks.today(), od = Account.data.onlDay, used = od && od.d === t ? od.n : 0;
     r.online = { used, max };
@@ -2451,7 +2453,8 @@ function showResult(res) {
     S && S.practice ? "練習対戦なので、Gと連勝はつきません" : r.sample && res === "win" ? "サンプルデッキの対戦なので、Gはもらえません" : "",
     r.online && r.online.short ? `${r.online.short}ターン目まで続かなかった対戦なので、Gはもらえません` : "",
     r.online && r.online.capped ? `友達との対戦でGを受け取れるのは1日${r.online.max}回までです（今日の分は受け取り済み）` : "",
-    r.online && r.g ? `友達との対戦の報酬：今日 ${r.online.used}/${r.online.max}回目` : ""
+    r.online && r.g ? `友達との対戦の報酬：今日 ${r.online.used}/${r.online.max}回目` : "",
+    r.senBeta ? "選定戦β版のため、報酬はありません" : ""
   ].filter(Boolean);
   // 次にすること：大きいボタン1つ＋小さいボタン
   const again = online
@@ -2761,7 +2764,7 @@ function showSolo() {
     <div class="lvls">
       ${tile("start", "CPU戦", "初級・中級・上級の CPU と戦う。勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
       ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
-      ${typeof Sentei !== "undefined" && Sentei.on() ? tile("senOpen", "選定戦", `3枚ずつのセットを選んでその場でデッキを作り、${SEN_WIN}勝を目指す（入場料${Sentei.fee()}G）`, { art: art("f2-tamamo"), cls: "m-sen", tag: Sentei.run() ? "挑戦中" : CONFIG.SEN_ON ? "" : "運営のみ" }) : ""}
+      ${typeof Sentei !== "undefined" && Sentei.on() ? tile("senOpen", "選定戦", `3枚ずつのセットを選んでその場でデッキを作り、${SEN_WIN}勝を目指す${Sentei.beta() ? "（β版：無料・報酬なし）" : `（入場料${Sentei.fee()}G）`}`, { art: art("f2-tamamo"), cls: "m-sen", tag: Sentei.run() ? "挑戦中" : !CONFIG.SEN_ON ? "運営のみ" : Sentei.beta() ? "β版" : "" }) : ""}
       ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
       ${TUTORIAL_OPEN ? tile("tutorial", "チュートリアル", `遊び方を、実際に1戦しながら覚える（何度でも遊べる）${Tut.done() ? "" : `。初めてクリアするとパック券${TUT_REWARD.tickets}枚${TUT_REWARD.gold ? `と${TUT_REWARD.gold}G` : ""}`}`, { tag: Tut.done() ? "クリア済み" : "報酬あり", cls: "m-tut", art: art("squire") }) : ""}
       ${(() => { const g = gatePacks(), all = gatePacks(true);
