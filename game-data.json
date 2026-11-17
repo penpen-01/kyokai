@@ -1,5 +1,5 @@
 {
- "version": 186,
+ "version": 187,
  "updated": "2026-11-18",
  "config": {
   "PLAYER_HP": 20,
@@ -2897,7 +2897,28 @@
   ],
   "ban": [
    "f2-tamamo",
-   "m2-godgear"
+   "m2-godgear",
+   "m2-clock",
+   "x-factory",
+   "m2-box",
+   "m2-press",
+   "f2-susuki",
+   "f2-moonwalk",
+   "y2-gale",
+   "y2-feather",
+   "y2-tsubame",
+   "y2-spring",
+   "y2-horn",
+   "y2-feast",
+   "f2-sake",
+   "f2-mirror",
+   "f2-chorus"
+  ],
+  "checked": [
+   "1",
+   "2-1",
+   "2-2",
+   "2-3"
   ]
  },
  "cards": [
