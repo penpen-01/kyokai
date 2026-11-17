@@ -196,6 +196,8 @@ const Sentei = {
           <li>CPU のデッキも同じ決まりで毎回作られます。勝ち進むほど CPU が強くなります</li>
           <li>作ったデッキは、この選定戦が終わるまで使えます</li>
         </ul>
+        ${(() => { const L = (SEN.ban || []).filter(id => DEF[id] && cardShown(DEF[id])); return L.length ? `<button type="button" class="btn sm sen-bantgl" data-act="senBanList" aria-expanded="${!!this.banOpen}">選定戦に出ないカード（${L.length}枚）${this.banOpen ? "を閉じる" : "を見る"}</button>
+          ${this.banOpen ? this.gridHTML(Object.fromEntries(L.map(id => [id, 1]))) : ""}` : ""; })()}
         ${this.beta() ? "" : `<span class="gl">報酬</span>${this.tableHTML(-1)}`}
         ${Account.data && Account.data.senBest ? `<p class="hint">これまでの最高：${Account.data.senBest}勝</p>` : ""}
         <div class="sen-bot"><button type="button" class="btn primary sen-go" data-act="senStart" ${Account.gold >= fee ? "" : "disabled"}>${fee ? `${curIcon("gold")}${fee.toLocaleString()}G で始める` : "始める（β版・無料）"}</button>
@@ -252,6 +254,7 @@ const Sentei = {
       case "senPick": { const i = +el.dataset.v; if (this.sel === i) { this.sel = null; this.pick(i); } else { this.sel = i; Sound.play("click"); this.show(); } return true; }   // 押し間違えないように、2回押して決める
       case "senFight": this.fight(); return true;
       case "senRetire": this.retireAsk = true; this.show(); return true;
+      case "senBanList": this.banOpen = !this.banOpen; this.show(); return true;
       case "senRetireNo": this.retireAsk = false; this.show(); return true;
       case "senRetireYes": { this.retireAsk = false; const x = this.finish(true); if (x) this.showEnd(x); else this.show(); return true; }
     }

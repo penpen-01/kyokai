@@ -2888,3 +2888,4 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
   .shophub .sh-sticky .kp-stage{width:100%;aspect-ratio:auto;height:min(46dvh,400px);border-radius:0 0 14px 14px}
   .shophub .sh-sticky .kp-stage .kp-bubble{left:50%;right:auto;width:min(calc(100% - 20px),560px);transform:translateX(-50%)}
 }
+.sen-bantgl{align-self:flex-start}
