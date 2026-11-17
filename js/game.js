@@ -2434,7 +2434,7 @@ function showResult(res) {
   const again = online
     ? (Online.room && Online.room.rule === "sen" ? `<p class="res-deck">選定戦ルール：次の対戦も、カードを取り合ってデッキを作り直します</p>`
       : `<p class="res-deck">次のデッキ：<b>${esc((Online.myDeck && Online.myDeck.name) || (S.decks && S.decks[ME] && S.decks[ME].name) || "—")}</b>${Online.oppDeckChanged ? `<small>相手はデッキを変更しました</small>` : ""}</p>`)
-      + (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
+      + `<div id="res-again">${Online.againHTML()}</div>`
     : B && B.kind === "tutorial" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度チュートリアル</button>`
     : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
     : B && B.kind === "sen" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">${r.sen && r.sen.done ? "選定戦の結果へ" : "選定戦へ戻る"}</button>`

@@ -2738,3 +2738,32 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
 #app.sdmode{overflow-y:auto;padding-left:0;padding-right:0}
 #app.battle.sdmode::before{background:radial-gradient(120% 60% at 50% 20%,rgba(120,90,200,.28),transparent 70%),radial-gradient(90% 50% at 50% 100%,rgba(227,182,79,.12),transparent 70%),#0b0a17}
 #app.battle.sdmode::after{background:none}
+/* 選定戦の取り合い 2回目の調整：上の帯は固定、選ぶ画面は1画面に収める */
+.sd-screen{padding-top:0;gap:8px;min-height:100%}
+.sd-top{position:sticky;top:0;z-index:20;margin:0 -12px;border-radius:0;border-width:0 0 1px;padding:max(8px,env(safe-area-inset-top)) 12px 8px;background:rgba(10,10,22,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sd-tag{flex:none;font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(227,182,79,.2);color:#f3d58e}
+.sd-vs{flex:1;display:flex;align-items:baseline;flex-wrap:nowrap;gap:6px;min-width:0;overflow:hidden}
+.sd-vs > span{flex:none;font-size:12px}
+.sd-vs b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:none}
+.sd-vs em{flex:0 10 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sd-top .chip{flex:none;white-space:nowrap}
+.sd-pickhead{align-items:center;gap:8px}
+.sd-round{font-size:22px}
+.sd-round small{font-size:12px;margin-left:2px}
+.sd-whose{flex:1;font-size:17px;color:#d9d3c2}
+.sd-whose.me{color:#f3d58e}
+.sd-floor{flex:none;font-size:11px;font-weight:800;padding:2px 8px;border-radius:99px;background:rgba(180,150,255,.2);border:1px solid rgba(180,150,255,.5);color:#e2d8ff}
+.sd-offer{gap:8px}
+.sd-set{padding:6px;gap:6px}
+/* カードの大きさは、2つのセットが画面の高さに収まるように（高さ ≒ 幅×1.4） */
+.sd-set .sen-cards{grid-template-columns:repeat(3,min(31%,calc((100dvh - 250px) / 2 / 1.45)));justify-content:center}
+.sd-set .btn.sm{min-height:38px}
+.sd-foot{align-items:center}
+.sd-cnt{font-size:12px;color:var(--muted,#b9bfd6)}
+.sen-card .card,.sd-grid .card{touch-action:pan-y}
+.sd-tabs{display:grid!important;grid-template-columns:1fr 1fr}
+.sd-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+@media (min-width:520px){.sd-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.sd-grid .sen-card{position:relative}
+.res-ask{margin:0;text-align:center;font-size:13px;color:var(--muted,#b9bfd6)}.res-ask.on{color:#f3d58e;font-weight:700}
+.sd-tabs button[aria-pressed="true"]{background:linear-gradient(180deg,#e3b64f,#b8862e)!important;color:#1d1209!important}

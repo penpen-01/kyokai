@@ -358,10 +358,16 @@ const SenDraft = {
     const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || a[0].name.localeCompare(b[0].name));
     return `<div class="sd-mini">${L.map(([c, n]) => `<button type="button" class="sd-chip r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i>${esc(c.name)}${n > 1 ? `<em>×${n}</em>` : ""}</button>`).join("") || `<span class="hint">まだありません</span>`}</div>`;
   },
+  /* デッキを、コストの順に絵つきで並べる（同じカードは1枚にまとめて ×枚数） */
+  gridHTML(d) {
+    const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || RARITY_ORDER.indexOf(b[0].rarity) - RARITY_ORDER.indexOf(a[0].rarity));
+    return `<div class="sd-grid">${L.map(([c, n]) => `<button type="button" class="sen-card" data-tk="${esc(c.id)}" aria-label="${esc(c.name)} ${n}枚">${cardHTML(c, { static: true, look: null })}${n > 1 ? `<span class="sen-have">×${n}</span>` : ""}</button>`).join("")}</div>`;
+  },
   cards(ids, sel) { return `<div class="sen-cards">${ids.map(id => DEF[id] ? `<button type="button" class="sen-card" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true, look: null })}</button>` : "").join("")}</div>`; },
   screenHTML() {
     const D = S.draft, me = ME, op = OP, P = S.players[op], dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
     if (!this.timer) this.startTick();
+    if (S.gid !== this.gid) { this.gid = S.gid; this.tab = null; this.seenPick = undefined; this.sel = null; this.show = null; }   // 再戦：前の取り合いの続きを持ち越さない
     // 演出を毎回やり直さない（相手が選んだだけで、じゃんけんの手などが出直さないように）
     const key = `${S.gid}|${D.st}|${D.r}|${D.last ? D.last.hands.join("") : ""}`, anim = key !== this.animKey; this.animKey = key;
     // 前の回で自分に入ったカードを、次の候補の前に見せる
@@ -382,30 +388,26 @@ const SenDraft = {
           : `<div class="pg-rps">${Object.entries(RPS).map(([k, v], i) => `<button type="button" class="pg-hand" style="--i:${i}" data-act="sdRps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}
         <p class="sd-st">${D.hands[op] ? "相手は選びました" : `相手は考え中${dots}`}</p>${time}`;
     } else if (D.st === "pick") {
-      const my = D.chooser === me, floor = senFloor(D.r), d = D.decks[me];
-      main = `<div class="sd-row"><b class="sd-round">${D.r + 1}<small>/ ${SEN_ROUNDS}回目</small></b>${time}</div>
-        <div class="sd-turn ${my ? "me" : ""}"><b>${my ? "あなたが選ぶ番" : "相手が選ぶ番"}</b><small>選ばれなかったセットは、${my ? "相手" : "あなた"}のデッキに入ります${floor ? `。どちらにも${RARITY[floor]}${floor === "legend" ? "" : "以上"}が入っています` : ""}</small></div>
+      const my = D.chooser === me, floor = senFloor(D.r), n = Sentei.count(D.decks[me]);
+      main = `<div class="sd-row sd-pickhead"><b class="sd-round">${D.r + 1}<small>/${SEN_ROUNDS}</small></b><b class="sd-whose ${my ? "me" : ""}">${my ? "あなたの番" : "相手の番"}</b>${floor ? `<span class="sd-floor">${RARITY_SHORT[floor]}${floor === "legend" ? "" : "以上"}確定</span>` : ""}${time}</div>
         <div class="sd-offer">${(D.offer || []).map((set, i) => `<div class="sd-set ${my && this.sel === i ? "sel" : ""}">
           ${this.cards(set)}
-          ${my ? `<button type="button" class="btn ${this.sel === i ? "primary" : ""}" data-act="sdPick" data-v="${i}" ${wait ? "disabled" : ""}>${this.sel === i ? "このセットに決める" : "このセットを取る"}</button>` : ""}</div>`).join("")}</div>
-        ${my ? (this.sel != null ? `<p class="sd-st">もう一度押すと決まります</p>` : "") : `<p class="sd-st">相手が選んでいます${dots}</p>`}
-        <div class="sd-deck"><div class="sd-row"><b>あなたのデッキ</b><span>${Sentei.count(d)} / ${SEN_ROUNDS * SEN_SET}枚</span></div>${Sentei.curveHTML(d)}${this.mini(d)}</div>`;
+          ${my ? `<button type="button" class="btn sm ${this.sel === i ? "primary" : ""}" data-act="sdPick" data-v="${i}" ${wait ? "disabled" : ""}>${this.sel === i ? "決定" : "これを取る"}</button>` : ""}</div>`).join("")}</div>
+        <div class="sd-row sd-foot"><span class="sd-st">${my ? (this.sel != null ? "もう一度押すと決定" : "") : `相手が選んでいます${dots}`}</span><span class="sd-cnt">デッキ ${n}/${SEN_ROUNDS * SEN_SET}</span></div>`;
     } else {
-      const ok = D.ready[me];
-      main = `<div class="sd-h"><b>デッキ完成</b><small>お互いのデッキを確認してください。2人とも「確認した」を押すか、時間が来ると対戦が始まります。</small></div>
-        <div class="sd-row"><span class="sd-st">${D.ready[op] ? "相手は確認しました" : `相手は確認中${dots}`}</span>${time}</div>
-        <div class="sd-both">
-          <div class="sd-deck"><div class="sd-row"><b>あなたのデッキ</b><span>${Sentei.count(D.decks[me])}枚</span></div>${Sentei.curveHTML(D.decks[me])}${this.mini(D.decks[me])}</div>
-          <div class="sd-deck op"><div class="sd-row"><b>相手のデッキ</b><span>${Sentei.count(D.decks[op])}枚</span></div>${Sentei.curveHTML(D.decks[op])}${this.mini(D.decks[op])}</div>
-        </div>
-        <button type="button" class="btn primary sd-ready" data-act="sdReady" ${ok || wait ? "disabled" : ""}>${ok ? "確認しました（相手を待っています）" : "確認した"}</button>`;
+      const ok = D.ready[me], tab = this.tab === "op" ? op : me;
+      main = `<div class="sd-h"><b>デッキ完成</b></div>
+        <div class="sd-row"><span class="sd-st">${D.ready[op] ? "相手は確認済み" : `相手は確認中${dots}`}</span>${time}</div>
+        <div class="seg sd-tabs" role="tablist"><button type="button" role="tab" data-act="sdTab" data-v="me" aria-pressed="${tab === me}">あなた</button><button type="button" role="tab" data-act="sdTab" data-v="op" aria-pressed="${tab === op}">相手</button></div>
+        ${Sentei.curveHTML(D.decks[tab])}${this.gridHTML(D.decks[tab])}
+        <button type="button" class="btn primary sd-ready" data-act="sdReady" ${ok || wait ? "disabled" : ""}>${ok ? "相手を待っています" : "確認した"}</button>`;
     }
     const sh = this.show && Date.now() < this.show.until ? this.show : null;
     const reveal = sh ? `<div class="sd-reveal" role="status" data-act="sdShowClose">
         <div class="sd-rv-in"><b>あなたのデッキに入ったカード</b>${this.cards(sh.mine)}
         <small>${sh.by === me ? "相手には、もう片方のセットが入りました" : "相手が選んだ残りのセットです"}</small></div></div>` : "";
     return `<div class="sd-screen ${anim ? "anim" : ""}">
-      <div class="sd-top"><span class="sd-vs"><small>選定戦</small> VS <b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
+      <div class="sd-top"><span class="sd-tag">選定戦</span><span class="sd-vs"><span>VS</span><b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
         <button type="button" class="chip" data-act="menu">メニュー</button></div>
       <div class="sd-main">${main}</div>${reveal}
       ${typeof Online !== "undefined" ? Online.bannerHTML() : ""}
@@ -416,6 +418,7 @@ const SenDraft = {
       case "sdRps": this.send({ t: "drps", v: el.dataset.v }); return true;
       case "sdPick": { const i = +el.dataset.v; if (this.sel === i) { this.sel = null; this.send({ t: "dpick", i }); } else { this.sel = i; Sound.play("click"); render(); } return true; }
       case "sdReady": this.send({ t: "dready" }); return true;
+      case "sdTab": this.tab = el.dataset.v; render(); return true;
       case "sdShowClose": this.show = null; render(); return true;
     }
     return false;

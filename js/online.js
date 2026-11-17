@@ -130,7 +130,7 @@ const Online = {
       case "onlCopy":
         copyText(this.code).then(ok => this.lobbyMsg(ok ? "コピーしました" : "コピーできませんでした。合言葉を直接伝えてください"));
         break;
-      case "rematch": this.rematch(); break;
+      case "rematch": this.askAgain(); break;
       case "resume": this.resume(); break;
     }
   },
@@ -154,7 +154,7 @@ const Online = {
 
   reset() {
     this.unsubs.forEach(f => { try { f(); } catch {} });
-    Object.assign(this, { senRule: false, role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
+    Object.assign(this, { senRule: false, myAgain: null, seenAgain: null, role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
     clearTimeout(this.pendingTimer);
   },
 
@@ -272,6 +272,10 @@ const Online = {
       if (this.seenOppDchg !== undefined) { toast("相手がデッキを変更しました"); this.oppDeckChanged = true; const rd = $(".res-deck"); if (rd && !rd.querySelector("small")) rd.insertAdjacentHTML("beforeend", "<small>相手はデッキを変更しました</small>"); }
       this.seenOppDchg = oc;
     } else if (!oc && this.seenOppDchg === undefined) this.seenOppDchg = null;
+    // もう一度：相手が押したら知らせる
+    const ag = this.againOf(), opr = this.role === "host" ? "guest" : "host", agk = ag[opr] ? ag.g : null;
+    if (agk && agk !== this.seenAgain) { this.seenAgain = agk; toast("相手が「もう一度」を希望しています"); }
+    this.paintAgain();
     const netKey = `${this.oppOnline}|${this.oppLeft}`;
     const netChanged = netKey !== this.netKey;
     this.netKey = netKey;
@@ -339,6 +343,31 @@ const Online = {
     newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], [this.myDeck, this.guestDeck]);
   },
 
+  /* ---------- もう一度：2人とも押したら始まる（片方が押すと、もう片方に「受ける」が出る） ----------
+     部屋の again = { g: 対戦のID, host: true/false, guest: true/false }。書くのは部屋を作った人だけ（参加者は操作として送る） */
+  againOf() { const A = this.room && this.room.again; return A && S && A.g === S.gid ? A : {}; },
+  askAgain() {
+    if (!S || !S.over || this.oppLeft || this.closed) return;
+    if (this.role === "host") this.setAgain("host");
+    else { this.myAgain = S.gid; Net.push(`rooms/${this.code}/actions`, { t: "again", g: S.gid, by: this.uid, at: Date.now() }); this.paintAgain(); }
+  },
+  setAgain(who) {
+    if (this.role !== "host" || !S || !S.over) return;
+    const A = { ...this.againOf(), g: S.gid, [who]: true };
+    if (A.host && A.guest) { Net.update(`rooms/${this.code}`, { again: null }).catch(e => console.error(e)); return this.rematch(); }
+    if (this.room) this.room.again = A;
+    Net.update(`rooms/${this.code}`, { again: A }).catch(e => console.error(e));
+    this.paintAgain();
+  },
+  againHTML() {
+    if (this.oppLeft || this.closed) return `<p class="datainfo">相手が退出したので、もう一度は対戦できません</p>`;
+    const A = this.againOf(), me = this.role, op = me === "host" ? "guest" : "host";
+    const mine = A[me] || (me === "guest" && this.myAgain && S && this.myAgain === S.gid);
+    if (mine) return `<p class="res-ask">相手の返事を待っています<span class="pg-dots"><i></i><i></i><i></i></span></p>`;
+    if (A[op]) return `<p class="res-ask on">相手が「もう一度」を希望しています</p><button type="button" class="btn primary res-main" data-act="rematch">受けて、もう一度対戦</button>`;
+    return `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button><p class="datainfo">2人とも押すと始まります</p>`;
+  },
+  paintAgain() { const el = document.getElementById("res-again"); if (el) el.innerHTML = this.againHTML(); },
   rematch() {
     if (this.role !== "host" || !this.room || !this.room.guest || !S) return;
     if (this.oppLeft) return toast("相手が退出しているため、もう一度対戦できません");
@@ -398,6 +427,7 @@ const Online = {
       if (!S && this.room && this.room.guest && this.room.status === "waiting") this.startGame();
       return;
     }
+    if (a.t === "again" && this.room && a.by === this.room.guest) { if (S && S.over && a.g === S.gid) this.setAgain("guest"); return; }
     if (a.t === "stamp" && this.room && a.by === this.room.guest) { if (typeof Stamps !== "undefined") Stamps.show(OP, a.id); return; }
     if (!S || !this.room || a.by !== this.room.guest) return;
     let done = false;
