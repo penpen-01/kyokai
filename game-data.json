@@ -1,6 +1,6 @@
 {
- "version": 185,
- "updated": "2026-11-17",
+ "version": 186,
+ "updated": "2026-11-18",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -52,6 +52,9 @@
   "STONE_PER_GOLD": 3,
   "MAKO_U": 5000,
   "MAKO_L": 10000,
+  "SEN_ON": 1,
+  "SEN_BETA": 1,
+  "SEN_FEE": 3000,
   "SKIN_ON": 1,
   "INFO_HOURS": 24,
   "CHARM_HARD": 3000,
@@ -66,10 +69,7 @@
   "ADMINS": [
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
-  "SAMPLE_DECKS": true,
-  "SEN_ON": 1,
-  "SEN_FEE": 3000,
-  "SEN_BETA": 1
+  "SAMPLE_DECKS": true
  },
  "packs": [
   {
@@ -1249,6 +1249,24 @@
     "x-factory": 1,
     "x-overcharge": 2,
     "x-reboot": 1
+   },
+   "level": "test"
+  },
+  {
+   "id": "dkmwky1hzega",
+   "name": "亜空間",
+   "cards": {
+    "cmvy5b8qb40p": 2,
+    "crystal": 3,
+    "f2-storyteller": 3,
+    "m-hammer": 3,
+    "m2-disaster": 3,
+    "m2-transfer": 3,
+    "quantum": 3,
+    "x-emp": 3,
+    "x-overcharge": 3,
+    "x-reboot": 3,
+    "x-tochka": 1
    },
    "level": "test"
   }
@@ -2826,6 +2844,62 @@
    "card": "f2-tamamo"
   }
  ],
+ "sen": {
+  "rewards": [
+   {
+    "gold": 300,
+    "stones": 0,
+    "tickets": 0,
+    "srTickets": 0
+   },
+   {
+    "gold": 800,
+    "stones": 0,
+    "tickets": 0,
+    "srTickets": 0
+   },
+   {
+    "gold": 1500,
+    "stones": 0,
+    "tickets": 0,
+    "srTickets": 0
+   },
+   {
+    "gold": 2500,
+    "stones": 0,
+    "tickets": 1,
+    "srTickets": 0
+   },
+   {
+    "gold": 3500,
+    "stones": 200,
+    "tickets": 1,
+    "srTickets": 0
+   },
+   {
+    "gold": 5000,
+    "stones": 400,
+    "tickets": 2,
+    "srTickets": 0
+   },
+   {
+    "gold": 7000,
+    "stones": 600,
+    "tickets": 2,
+    "srTickets": 0
+   },
+   {
+    "gold": 10000,
+    "stones": 1000,
+    "tickets": 3,
+    "srTickets": 1
+   }
+  ],
+  "ban": [
+   "f2-tamamo",
+   "m2-godgear"
+  ]
+ },
  "cards": [
   {
    "id": "squire",
@@ -9548,61 +9622,5 @@
    "boss": true,
    "art": "art/b-y-zantetsu-4d8f6f87a6.webp"
   }
- ],
- "sen": {
-  "rewards": [
-   {
-    "gold": 300,
-    "stones": 0,
-    "tickets": 0,
-    "srTickets": 0
-   },
-   {
-    "gold": 800,
-    "stones": 0,
-    "tickets": 0,
-    "srTickets": 0
-   },
-   {
-    "gold": 1500,
-    "stones": 0,
-    "tickets": 0,
-    "srTickets": 0
-   },
-   {
-    "gold": 2500,
-    "stones": 0,
-    "tickets": 1,
-    "srTickets": 0
-   },
-   {
-    "gold": 3500,
-    "stones": 200,
-    "tickets": 1,
-    "srTickets": 0
-   },
-   {
-    "gold": 5000,
-    "stones": 400,
-    "tickets": 2,
-    "srTickets": 0
-   },
-   {
-    "gold": 7000,
-    "stones": 600,
-    "tickets": 2,
-    "srTickets": 0
-   },
-   {
-    "gold": 10000,
-    "stones": 1000,
-    "tickets": 3,
-    "srTickets": 1
-   }
-  ],
-  "ban": [
-   "f2-tamamo",
-   "m2-godgear"
-  ]
- }
+ ]
 }
