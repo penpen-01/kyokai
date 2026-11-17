@@ -2872,3 +2872,19 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 /* 小さい顔：丸ではなく角の丸い四角で、顔を真ん中に */
 .kp-mini .kp-man{border-radius:12px;width:68px;height:68px}
 .kp-mini .kp-img{width:var(--kw,250%);left:var(--kl,-75%);top:var(--kt,-4%)}
+/* ショップの入口：店員の舞台を囲む半透明の枠はやめて、舞台を上のバーのすぐ下に、画面の端から端まで（2026-11-18） */
+.shophub .sh-sticky{gap:0;padding-bottom:0}
+.shophub .sh-sticky::before{display:none}
+.overlay .shophub .sh-sticky > .topbar{background:transparent}
+.shophub .sh-sticky > .topbar::before{display:block;background:rgba(10,11,24,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.shophub .sh-sticky .kp-stage{box-shadow:0 10px 18px -8px rgba(0,0,0,.7)}
+@media (max-width:600px){
+  .shophub .sh-sticky .kp-stage{width:calc(100% + 2 * max(16px, env(safe-area-inset-left, 0px)));max-width:none;margin-inline:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));border-radius:0;
+    max-height:50dvh;aspect-ratio:auto;height:min(calc((100vw) * 3 / 4), 50dvh)}
+}
+/* パソコンなど横に広い画面：舞台を売り場の幅いっぱいに（横の隙間から売り場が透けないように）。店員は高さに合わせて同じ形のまま */
+.shophub .sh-sticky .kp-man{width:auto;aspect-ratio:1.045}
+@media (min-width:601px){
+  .shophub .sh-sticky .kp-stage{width:100%;aspect-ratio:auto;height:min(46dvh,400px);border-radius:0 0 14px 14px}
+  .shophub .sh-sticky .kp-stage .kp-bubble{left:50%;right:auto;width:min(calc(100% - 20px),560px);transform:translateX(-50%)}
+}

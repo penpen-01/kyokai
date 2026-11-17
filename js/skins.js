@@ -128,7 +128,7 @@ const Skins = {
 
   /* ---------- 売り場 ---------- */
   show(msg) {
-    if (msg !== undefined) Shop.msg = msg;
+    if (msg) toast(msg); Shop.msg = null;   // 買った知らせは上の紫の欄ではなく短い通知で（店員の場所を動かさない）
     const st = Account.stones || 0, use = Shop.usable();
     const tabs = Object.keys(SKIN_KINDS).map(k => `<button type="button" role="tab" data-act="skTab" data-v="${k}" aria-pressed="${this.kind === k}" aria-label="${SKIN_KINDS[k]}">${SKIN_TAB[k]}</button>`).join("");
     const k = this.kind;
@@ -141,9 +141,9 @@ const Skins = {
     }
     const a = this.ask, ax = a && (a.kind === "stamp" ? (() => { const s = STAMPS.find(x => x.id === a.id); return s && { name: `スタンプ「${s.text}」`, price: s.price }; })() : this.get(a.id));
     openOverlay(`<div class="panel wide shop">
-      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>スキン</b>${stoneTag(st)}</div>
+      <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>スキン</b>${stoneTag(st)}</div>
+      ${Keeper.miniHTML()}</div>
       ${Shop.noteHTML()}
-      ${Keeper.miniHTML()}
       ${Shop.msg ? `<p class="shopmsg" role="status">${esc(Shop.msg)}</p>` : ""}
       <div class="sk-tabs" role="tablist">${tabs}</div>
       <p class="sk-kind">${esc(SKIN_KINDS[k])}</p>
