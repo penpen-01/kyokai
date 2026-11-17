@@ -1489,6 +1489,12 @@ function morphInto(box, html) {
       if (oo.nodeType === 3 && nn.nodeType === 3) { if (oo.nodeValue !== nn.nodeValue) oo.nodeValue = nn.nodeValue; return; }
       if (oo.nodeType === 1 && nn.nodeType === 1 && oo.outerHTML === nn.outerHTML) return;
       if (sameEl(oo, nn)) walk(oo, nn, depth + 1);
+      else if (oo.nodeType === 1 && nn.nodeType === 1 && oo.nodeName === nn.nodeName && oo.nodeName !== "IMG" && oo.childNodes.length === nn.childNodes.length) {
+        // 選んだ印（class）が変わっただけなら、中の絵は作り直さない
+        [...oo.attributes].forEach(x => { if (!nn.hasAttribute(x.name)) oo.removeAttribute(x.name); });
+        [...nn.attributes].forEach(x => { if (oo.getAttribute(x.name) !== x.value) oo.setAttribute(x.name, x.value); });
+        walk(oo, nn, depth + 1);
+      }
       else oldP.replaceChild(nn, oo);
     });
   };

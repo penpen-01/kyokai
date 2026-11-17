@@ -107,7 +107,9 @@ const Sentei = {
     if (R.r >= SEN_ROUNDS || this.count(R.deck) >= SEN_ROUNDS * SEN_SET) { R.st = "play"; delete R.offer; }
     else R.offer = this.offer(R.r, R.deck);
     Account.saveNow(); Sound.play("flip", 1);
-    this.show();
+    // 次の候補の絵を先に読み込んでから差し替える（読み込み中にカードが一瞬消えないように。待つのは長くても0.4秒）
+    const arts = (R.offer || []).flat().map(id => DEF[id] && DEF[id].art).filter(Boolean);
+    Promise.race([Promise.all(arts.map(a => { const im = new Image(); im.src = a; return im.decode().catch(() => {}); })), new Promise(r => setTimeout(r, 400))]).then(() => this.show());
   },
   myDeck() {
     const R = this.run(), icon = Account.icon(), title = typeof Titles !== "undefined" ? Titles.curName() : "";
@@ -216,14 +218,17 @@ const Sentei = {
         ${this.retireAsk ? `<div class="dmodal" data-act="senRetireNo"><div class="dmodal-in confirmbox" role="alertdialog" aria-label="選定戦をやめる" data-act="noop">
             <b class="dm-name">選定戦をやめますか？</b><p class="dm-text">${this.beta() ? `${R.w}勝で終わります。` : `${R.w}勝の報酬（${this.rewardHTML(this.rewardOf(R.w))}）を受け取って終わります。`}デッキはなくなります。</p>
             <div class="pre-btns"><button type="button" class="btn" data-act="senRetireNo">続ける</button><button type="button" class="btn danger" data-act="senRetireYes">やめる</button></div></div></div>` : ""}
-        <button type="button" class="btn sm" data-act="senRetire">ここでやめる</button>
-        <div class="sen-bot"><button type="button" class="btn primary sen-go" data-act="senFight">対戦する</button></div>`;
+        <div class="sen-bot row"><button type="button" class="btn danger sen-quit" data-act="senRetire">やめる</button><button type="button" class="btn primary sen-go" data-act="senFight">対戦する</button></div>`;
     }
-    openOverlay(`<div class="panel sen${R && R.st === "pick" ? " sen-pick" : ""}">
+    const html = `<div class="panel sen${R && R.st === "pick" ? " sen-pick" : ""}">
       <div class="topbar"><button type="button" class="btn sm" data-act="solo">← 戻る</button><b>選定戦${this.beta() ? `<small class="beta">β版</small>` : ""}</b>${goldTag(Account.gold)}</div>
       ${msg ? `<p class="shopmsg" role="status">${esc(msg)}</p>` : ""}
       ${body}
-    </div>`, "start", true);
+    </div>`;
+    // 同じ選定戦の画面のあいだは、変わったところだけ書き換える（全部作り直すと、絵が一瞬消えてちらつく）
+    const o = $("#overlay");
+    if (!o.hidden && o.querySelector(":scope > .panel.sen:not(.sen-end)")) { morphInto(o, html); overlayFrom = "start"; }
+    else openOverlay(html, "start", true);
   },
   showEnd(x) {
     Sound.play(x.w >= 5 ? "rare" : "click", x.w >= 5 ? 3 : 0);
