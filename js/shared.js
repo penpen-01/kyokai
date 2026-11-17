@@ -8,6 +8,9 @@ if (typeof document !== "undefined") {
   document.addEventListener("compositionstart", () => { IME.on = true; }, true);
   document.addEventListener("compositionend", () => { IME.on = false; }, true);
 }
+/* 検索用：カタカナをひらがなに、英字を小文字にそろえる（「どらごん」で「ドラゴン」も見つかるように） */
+const kanaFold = s => String(s || "").normalize("NFKC").toLowerCase().replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60));
+const textHas = (text, q) => !q || kanaFold(text).includes(kanaFold(q));
 const WORLDS = { myth: "神話", fan: "幻想", mech: "機械" };
 // 無属性（境界の欠片など）。表示の名前だけ引けるようにして、一覧や絞り込み（Object.keys など）には出さない
 Object.defineProperty(WORLDS, "none", { value: "無属性", enumerable: false });

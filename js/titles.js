@@ -215,7 +215,7 @@ const Profile = {
     const all = Account.iconChoices(), cur = Account.icon(), d = Account.data;
     const fav = (d.iconFav || []).filter(id => all.some(c => c.id === id)), rec = (d.iconRecent || []).filter(id => all.some(c => c.id === id));
     const q = this.iq.trim();
-    const list = all.filter(c => (this.iw === "all" || (this.iw === "fav" ? fav.includes(c.id) : c.world === this.iw)) && (this.ir === "all" || c.rarity === this.ir) && (!q || c.name.includes(q)));
+    const list = all.filter(c => (this.iw === "all" || (this.iw === "fav" ? fav.includes(c.id) : c.world === this.iw)) && (this.ir === "all" || c.rarity === this.ir) && textHas(c.name, q));
     const opt = c => `<button type="button" class="iconopt r-${c.rarity} ${cur === c.id ? "on" : ""}" data-act="iconPick" data-id="${esc(c.id)}" aria-label="${esc(c.name)}"><span class="iface">${iconImgHTML(c.id)}</span><small>${esc(c.name)}</small>${fav.includes(c.id) ? `<i class="ifav" aria-label="お気に入り">★</i>` : ""}</button>`;
     const row = (label, ids) => ids.length ? `<p class="pf-sub">${label}</p><div class="iconpick">${ids.map(id => all.find(c => c.id === id)).filter(Boolean).map(opt).join("")}</div>` : "";
     return `<p class="hint">押すとそのアイコンにします。<b>長押し（パソコンは右クリック）でお気に入り</b>に入れたり外したりできます。持っているキャラカードの絵から選べます（${all.length}種）。</p>
@@ -286,7 +286,10 @@ const Profile = {
   ["pointerup", "pointercancel", "pointerleave"].forEach(ev => document.addEventListener(ev, () => clearTimeout(timer), true));
   document.addEventListener("click", e => { if (fired && e.target.closest && e.target.closest('[data-act="iconPick"]')) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
   document.addEventListener("contextmenu", e => { const el = e.target.closest && e.target.closest('[data-act="iconPick"]'); if (el && el.dataset.id) { e.preventDefault(); Profile.toggleFav(el.dataset.id); } });
-  document.addEventListener("input", e => { if (e.target && e.target.id === "pf-iq" && !(typeof IME !== "undefined" && IME.on)) { Profile.iq = e.target.value; const pos = e.target.selectionStart; Profile.show(); const n = document.getElementById("pf-iq"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } } });
+  // アイコンの検索：日本語の変換中は待ち、変換が終わったら絞り込む（前は変換が終わったときに絞り込み直していなかった）
+  const iqRun = t => { if (Profile.iq === t.value) return; Profile.iq = t.value; const pos = t.selectionStart; Profile.show(); const n = document.getElementById("pf-iq"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (er) {} } };
+  document.addEventListener("input", e => { if (e.target && e.target.id === "pf-iq" && !e.isComposing && !(typeof IME !== "undefined" && IME.on)) iqRun(e.target); });
+  document.addEventListener("compositionend", e => { if (e.target && e.target.id === "pf-iq") setTimeout(() => iqRun(e.target), 0); });
   document.addEventListener("change", e => { if (e.target && e.target.dataset && e.target.dataset.act === "stampMuteChk") Stamps.setMuted(e.target.checked); });
   document.addEventListener("pointerdown", e => { if (!(e.target.closest && e.target.closest(".stamp-menu, .stamp-btn"))) Stamps.closeMenu(); }, true);
 })();

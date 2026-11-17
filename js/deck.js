@@ -406,7 +406,7 @@ const Decks = {
       .filter(c => CardFilter.match(c, f))
       .filter(c => !this.isWorld(ed) || c.world === ed.world)
       .filter(c => !f.owned || unb || this.owned(c.id) > 0)
-      .filter(c => !q || c.name.includes(q) || cardText(c).includes(q))
+      .filter(c => textHas(c.name, q) || textHas(cardText(c), q))
       .sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "ja"));
   },
   poolHTML() {

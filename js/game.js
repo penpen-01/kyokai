@@ -2288,7 +2288,7 @@ function showCardList() {
   if (!CL.f) CL.f = CardFilter.empty();
   const list = usable.filter(c => CardFilter.match(c, CL.f)
       && (!CL.own || (CL.own === "y" ? Account.owned(c.id) > 0 : Account.owned(c.id) <= 0))
-      && (!q || c.name.includes(q) || cardText(c).includes(q)))
+      && (textHas(c.name, q) || textHas(cardText(c), q)))
     .sort((a, b) => a.cost - b.cost || (a.type > b.type ? 1 : -1) || a.name.localeCompare(b.name, "ja"));
   const chip = (k, v, label) => `<button type="button" data-act="clFilter" data-k="${k}" data-v="${v}" aria-pressed="${CL[k] === v}">${label}</button>`;
   const ownTxt = c => Account.status === "free" ? "" : `所持${Account.owned(c.id)}`;
