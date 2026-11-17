@@ -1,5 +1,5 @@
 {
- "version": 188,
+ "version": 189,
  "updated": "2026-11-18",
  "config": {
   "PLAYER_HP": 20,
@@ -9714,6 +9714,109 @@
    ],
    "boss": true,
    "art": "art/b-y-zantetsu-4d8f6f87a6.webp"
+  },
+  {
+   "id": "k-dorgan",
+   "name": "境界の鍛冶屋ドルガン",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "own1",
+     "kw": "armor"
+    },
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "atk",
+     "to": "own1"
+    }
+   ],
+   "shop": true,
+   "shopPrice": 3000,
+   "art": "art/k-dorgan-5090aa86d6.webp"
+  },
+  {
+   "id": "k-weiss",
+   "name": "記録係の竜人ヴァイス",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 6,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "when": "turnEnd",
+     "act": "draw",
+     "who": "self"
+    }
+   ],
+   "shop": true,
+   "shopPrice": 6000,
+   "art": "art/k-weiss-5c884a9217.webp"
+  },
+  {
+   "id": "k-ruu",
+   "name": "眠たげな店番ルゥ",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 6,
+   "hp": 6,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-button"
+    },
+    {
+     "kind": "wakeTimer",
+     "n": 2
+    }
+   ],
+   "shop": true,
+   "shopPrice": 12000,
+   "art": "art/k-ruu-333d0f7435.webp"
+  },
+  {
+   "id": "tk-button",
+   "name": "ボタンさん",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "sr",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "token": true,
+   "art": "art/tk-button-bbbbbb5563.webp"
   }
  ]
 }
