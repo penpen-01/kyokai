@@ -2832,3 +2832,27 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .panel.sen .hint,.panel.sen .sen-head,.panel.sen .sen-rules,.panel.sen .gl,.panel.sen .sen-curve b,.panel.sen .sen-curve small,.panel.sen .sen-confirm{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9)}
 .panel.sen .callout,.panel.sen .sen-table,.panel.sen .sen-list{background:rgba(10,10,22,.72);border-radius:10px}
 .panel.sen .sen-table{padding:4px}
+/* 一人用の選定戦：友達戦と同じ見せ方（2026-11-18）
+   ・始める／対戦するは下に固定　・ピックは1画面に収めてスクロールなし、下はコストグラフだけ */
+.overlay:has(.sen-bot){padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.sen-bot{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(16px,env(safe-area-inset-left,0px));
+  background:rgba(10,10,22,.94);border-top:1px solid rgba(255,255,255,.12);border-radius:14px 14px 0 0;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sen-bot .btn{width:100%;max-width:528px}
+.sen-bot .hint{margin:0}
+.panel.sen .sd-grid{padding:6px;border-radius:10px;background:rgba(10,10,22,.55)}
+/* ピック画面：スクロールしない */
+.overlay:has(.panel.sen-pick){overflow:hidden;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px)}
+.panel.sen-pick{margin-bottom:0;min-height:calc(100dvh - env(safe-area-inset-bottom,0px) - 8px);gap:8px}
+.panel.sen-pick .sen-banner{margin:0}
+.panel.sen-pick .sen-banner b{width:min(80%,380px)}
+.sen-pickhead{display:flex;align-items:center;gap:8px;font-size:13px;min-height:22px;text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9)}
+.sen-pickhead .sen-confirm{flex:1;text-align:center;font-weight:700}
+.sen-pickhead > span:last-child{margin-left:auto}
+.panel.sen-pick .sen-offer{flex:1;align-content:space-evenly;gap:8px}
+.panel.sen-pick .sen-set{gap:6px}
+.panel.sen-pick .sen-set .sen-cards{grid-template-columns:repeat(3,min(31%,calc((100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 420px) / 2 / 1.45)));justify-content:center}
+.panel.sen-pick .sen-set .btn{padding:8px;min-height:38px}
+.sen-pcurve .sen-curve{height:44px;padding:0 4px}
+@media (min-width:640px){.panel.sen-pick .sen-set .sen-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.sen .callout > b:not(:first-child){display:inline;margin:0}

@@ -89,6 +89,7 @@ const Sentei = {
 
   /* ---------- 進め方 ---------- */
   start() {
+    this.sel = null;
     if (!this.on() || this.run()) return this.show();
     const fee = this.fee();
     if (Account.gold < fee) { toast(`Gが足りません（あと${fee - Account.gold}G）`); return this.show(); }
@@ -172,6 +173,11 @@ const Sentei = {
     const L = Object.entries(deck).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || RARITY_ORDER.indexOf(b[0].rarity) - RARITY_ORDER.indexOf(a[0].rarity));
     return `<div class="sen-list">${L.map(([c, n]) => `<button type="button" class="sen-row cdlink r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i><b>${esc(c.name)}</b><small>${RARITY_SHORT[c.rarity] || ""}</small><em>×${n}</em></button>`).join("")}</div>`;
   },
+  /* デッキを、コストの順に絵つきで並べる（同じカードは1枚にまとめて ×枚数） */
+  gridHTML(d) {
+    const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || RARITY_ORDER.indexOf(b[0].rarity) - RARITY_ORDER.indexOf(a[0].rarity));
+    return `<div class="sd-grid">${L.map(([c, n]) => `<button type="button" class="sen-card cdlink" data-tk="${esc(c.id)}" aria-label="${esc(c.name)} ${n}枚">${cardHTML(c, { static: true, look: null })}${n > 1 ? `<span class="sen-have">×${n}</span>` : ""}</button>`).join("")}</div>`;
+  },
   banner(t) { return `<div class="sen-banner"><b>${t}</b></div>`; },
   show(msg) {
     const quit = this.settleQuit();
@@ -190,32 +196,30 @@ const Sentei = {
         </ul>
         ${this.beta() ? "" : `<span class="gl">報酬</span>${this.tableHTML(-1)}`}
         ${Account.data && Account.data.senBest ? `<p class="hint">これまでの最高：${Account.data.senBest}勝</p>` : ""}
-        <button type="button" class="btn primary sen-go" data-act="senStart" ${Account.gold >= fee ? "" : "disabled"}>${fee ? `${curIcon("gold")}${fee.toLocaleString()}G で始める` : "始める（β版・無料）"}</button>
-        ${Account.gold < fee ? `<p class="hint">Gが足りません（所持 ${Account.gold.toLocaleString()}G）</p>` : ""}`;
+        <div class="sen-bot"><button type="button" class="btn primary sen-go" data-act="senStart" ${Account.gold >= fee ? "" : "disabled"}>${fee ? `${curIcon("gold")}${fee.toLocaleString()}G で始める` : "始める（β版・無料）"}</button>
+        ${Account.gold < fee ? `<p class="hint">Gが足りません（所持 ${Account.gold.toLocaleString()}G）</p>` : ""}</div>`;
     } else if (R.st === "pick") {
       const n = this.count(R.deck), floor = senFloor(R.r);
-      body = `${this.banner(`${R.r + 1} / ${SEN_ROUNDS} 回目`)}<div class="sen-head"><span></span><span>デッキ ${n} / ${SEN_ROUNDS * SEN_SET}枚</span></div>
-        ${floor ? `<p class="sen-floor">この回は、どちらのセットにも<b>${RARITY[floor]}${floor === "legend" ? "" : "以上"}</b>が入っています</p>` : ""}
+      body = `${this.banner(`${R.r + 1} / ${SEN_ROUNDS} 回目`)}
+        <div class="sen-pickhead">${floor ? `<span class="sd-floor">${RARITY_SHORT[floor]}${floor === "legend" ? "" : "以上"}確定</span>` : ""}<span class="sen-confirm">${this.sel != null ? "もう一度押すと決定" : ""}</span><span>デッキ ${n}/${SEN_ROUNDS * SEN_SET}</span></div>
         <div class="sen-offer">${(R.offer || []).map((set, i) => `<div class="sen-set ${this.sel === i ? "sel" : ""}">
           <div class="sen-cards">${set.map(id => DEF[id] ? `<button type="button" class="sen-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true })}${R.deck[id] ? `<span class="sen-have">×${R.deck[id]}</span>` : ""}</button>` : "").join("")}</div>
-          <button type="button" class="btn ${this.sel === i ? "primary" : ""}" data-act="senPick" data-v="${i}">${this.sel === i ? "このセットに決める" : "このセットを選ぶ"}</button></div>`).join("")}</div>
-        ${this.sel != null ? `<p class="hint sen-confirm">もう一度押すと決まります。もう片方を押すと、選び直せます。</p>` : ""}
-        <p class="hint">カードを押すと効果を見られます。</p>
-        ${n ? `<span class="gl">今のデッキ</span>${this.curveHTML(R.deck)}${this.listHTML(R.deck)}` : ""}`;
+          <button type="button" class="btn sm ${this.sel === i ? "primary" : ""}" data-act="senPick" data-v="${i}">${this.sel === i ? "決定" : "これを取る"}</button></div>`).join("")}</div>
+        <div class="sen-pcurve">${this.curveHTML(R.deck)}</div>`;
     } else {
       const lv = senLevel(R.w), last = R.w === SEN_WIN - 1;
       body = `${this.banner(`${R.w}勝 ${R.l}敗`)}${this.pipsHTML(R)}
         <div class="sen-next"><small>次の相手</small><b>${last ? "最後の相手（カードの質が上がる）" : `${R.w + R.l + 1}戦目`}</b><span>CPU の強さ：${CPU_LEVELS[lv] ? CPU_LEVELS[lv].label : lv}</span></div>
-        <button type="button" class="btn primary sen-go" data-act="senFight">対戦する</button>
         ${this.beta() ? "" : `<p class="hint">今 やめると：${this.rewardHTML(this.rewardOf(R.w))}</p>`}
-        <span class="gl">選定戦のデッキ（${this.count(R.deck)}枚）</span>${this.curveHTML(R.deck)}${this.listHTML(R.deck)}
+        <span class="gl">選定戦のデッキ（${this.count(R.deck)}枚）</span>${this.curveHTML(R.deck)}${this.gridHTML(R.deck)}
         ${this.beta() ? "" : `<span class="gl">報酬</span>${this.tableHTML(R.w)}`}
         ${this.retireAsk ? `<div class="dmodal" data-act="senRetireNo"><div class="dmodal-in confirmbox" role="alertdialog" aria-label="選定戦をやめる" data-act="noop">
             <b class="dm-name">選定戦をやめますか？</b><p class="dm-text">${this.beta() ? `${R.w}勝で終わります。` : `${R.w}勝の報酬（${this.rewardHTML(this.rewardOf(R.w))}）を受け取って終わります。`}デッキはなくなります。</p>
             <div class="pre-btns"><button type="button" class="btn" data-act="senRetireNo">続ける</button><button type="button" class="btn danger" data-act="senRetireYes">やめる</button></div></div></div>` : ""}
-        <button type="button" class="btn sm" data-act="senRetire">ここでやめる</button>`;
+        <button type="button" class="btn sm" data-act="senRetire">ここでやめる</button>
+        <div class="sen-bot"><button type="button" class="btn primary sen-go" data-act="senFight">対戦する</button></div>`;
     }
-    openOverlay(`<div class="panel sen">
+    openOverlay(`<div class="panel sen${R && R.st === "pick" ? " sen-pick" : ""}">
       <div class="topbar"><button type="button" class="btn sm" data-act="solo">← 戻る</button><b>選定戦${this.beta() ? `<small class="beta">β版</small>` : ""}</b>${goldTag(Account.gold)}</div>
       ${msg ? `<p class="shopmsg" role="status">${esc(msg)}</p>` : ""}
       ${body}
@@ -362,11 +366,7 @@ const SenDraft = {
     const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || a[0].name.localeCompare(b[0].name));
     return `<div class="sd-mini">${L.map(([c, n]) => `<button type="button" class="sd-chip cdlink r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i>${esc(c.name)}${n > 1 ? `<em>×${n}</em>` : ""}</button>`).join("") || `<span class="hint">まだありません</span>`}</div>`;
   },
-  /* デッキを、コストの順に絵つきで並べる（同じカードは1枚にまとめて ×枚数） */
-  gridHTML(d) {
-    const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || RARITY_ORDER.indexOf(b[0].rarity) - RARITY_ORDER.indexOf(a[0].rarity));
-    return `<div class="sd-grid">${L.map(([c, n]) => `<button type="button" class="sen-card cdlink" data-tk="${esc(c.id)}" aria-label="${esc(c.name)} ${n}枚">${cardHTML(c, { static: true, look: null })}${n > 1 ? `<span class="sen-have">×${n}</span>` : ""}</button>`).join("")}</div>`;
-  },
+  gridHTML(d) { return Sentei.gridHTML(d); },
   cards(ids, sel) { return `<div class="sen-cards">${ids.map(id => DEF[id] ? `<button type="button" class="sen-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true, look: null })}</button>` : "").join("")}</div>`; },
   screenHTML() {
     const D = S.draft, me = ME, op = OP, P = S.players[op], dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
