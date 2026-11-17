@@ -168,7 +168,7 @@ const Sentei = {
   },
   listHTML(deck) {
     const L = Object.entries(deck).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || RARITY_ORDER.indexOf(b[0].rarity) - RARITY_ORDER.indexOf(a[0].rarity));
-    return `<div class="sen-list">${L.map(([c, n]) => `<button type="button" class="sen-row r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i><b>${esc(c.name)}</b><small>${RARITY_SHORT[c.rarity] || ""}</small><em>×${n}</em></button>`).join("")}</div>`;
+    return `<div class="sen-list">${L.map(([c, n]) => `<button type="button" class="sen-row cdlink r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i><b>${esc(c.name)}</b><small>${RARITY_SHORT[c.rarity] || ""}</small><em>×${n}</em></button>`).join("")}</div>`;
   },
   show(msg) {
     const quit = this.settleQuit();
@@ -193,7 +193,7 @@ const Sentei = {
       body = `<div class="sen-head"><b>${R.r + 1} / ${SEN_ROUNDS} 回目</b><span>デッキ ${n} / ${SEN_ROUNDS * SEN_SET}枚</span></div>
         ${floor ? `<p class="sen-floor">この回は、どちらのセットにも<b>${RARITY[floor]}${floor === "legend" ? "" : "以上"}</b>が入っています</p>` : ""}
         <div class="sen-offer">${(R.offer || []).map((set, i) => `<div class="sen-set ${this.sel === i ? "sel" : ""}">
-          <div class="sen-cards">${set.map(id => DEF[id] ? `<button type="button" class="sen-card" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true })}${R.deck[id] ? `<span class="sen-have">×${R.deck[id]}</span>` : ""}</button>` : "").join("")}</div>
+          <div class="sen-cards">${set.map(id => DEF[id] ? `<button type="button" class="sen-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true })}${R.deck[id] ? `<span class="sen-have">×${R.deck[id]}</span>` : ""}</button>` : "").join("")}</div>
           <button type="button" class="btn ${this.sel === i ? "primary" : ""}" data-act="senPick" data-v="${i}">${this.sel === i ? "このセットに決める" : "このセットを選ぶ"}</button></div>`).join("")}</div>
         ${this.sel != null ? `<p class="hint sen-confirm">もう一度押すと決まります。もう片方を押すと、選び直せます。</p>` : ""}
         <p class="hint">カードを押すと効果を見られます。</p>
@@ -296,7 +296,7 @@ const SenDraft = {
         else {
           const w = RPS_WIN[x] === y ? 0 : 1;
           D.last = { hands: [x, y], winner: w }; D.first = w; D.st = "pick"; D.r = 0; D.chooser = w;
-          D.offer = this.offer(); D.dl = Date.now() + SD_PICK_SEC * 1000;
+          D.offer = this.offer(); D.dl = Date.now() + (SD_PICK_SEC + SD_SHOW_SEC) * 1000;   // じゃんけんの結果を見せる分だけ足す
         }
       }
       render(); return true;
@@ -356,23 +356,28 @@ const SenDraft = {
   /* ---------- 画面：対戦の舞台は使わず、取り合い専用の画面（自分の名前は出さず、相手の名前だけ上に） ---------- */
   mini(d) {
     const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || a[0].name.localeCompare(b[0].name));
-    return `<div class="sd-mini">${L.map(([c, n]) => `<button type="button" class="sd-chip r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i>${esc(c.name)}${n > 1 ? `<em>×${n}</em>` : ""}</button>`).join("") || `<span class="hint">まだありません</span>`}</div>`;
+    return `<div class="sd-mini">${L.map(([c, n]) => `<button type="button" class="sd-chip cdlink r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i>${esc(c.name)}${n > 1 ? `<em>×${n}</em>` : ""}</button>`).join("") || `<span class="hint">まだありません</span>`}</div>`;
   },
   /* デッキを、コストの順に絵つきで並べる（同じカードは1枚にまとめて ×枚数） */
   gridHTML(d) {
     const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || RARITY_ORDER.indexOf(b[0].rarity) - RARITY_ORDER.indexOf(a[0].rarity));
-    return `<div class="sd-grid">${L.map(([c, n]) => `<button type="button" class="sen-card" data-tk="${esc(c.id)}" aria-label="${esc(c.name)} ${n}枚">${cardHTML(c, { static: true, look: null })}${n > 1 ? `<span class="sen-have">×${n}</span>` : ""}</button>`).join("")}</div>`;
+    return `<div class="sd-grid">${L.map(([c, n]) => `<button type="button" class="sen-card cdlink" data-tk="${esc(c.id)}" aria-label="${esc(c.name)} ${n}枚">${cardHTML(c, { static: true, look: null })}${n > 1 ? `<span class="sen-have">×${n}</span>` : ""}</button>`).join("")}</div>`;
   },
-  cards(ids, sel) { return `<div class="sen-cards">${ids.map(id => DEF[id] ? `<button type="button" class="sen-card" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true, look: null })}</button>` : "").join("")}</div>`; },
+  cards(ids, sel) { return `<div class="sen-cards">${ids.map(id => DEF[id] ? `<button type="button" class="sen-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true, look: null })}</button>` : "").join("")}</div>`; },
   screenHTML() {
     const D = S.draft, me = ME, op = OP, P = S.players[op], dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
     if (!this.timer) this.startTick();
-    if (S.gid !== this.gid) { this.gid = S.gid; this.tab = null; this.seenPick = undefined; this.sel = null; this.show = null; }   // 再戦：前の取り合いの続きを持ち越さない
+    if (S.gid !== this.gid) { this.gid = S.gid; this.tab = null; this.seenPick = undefined; this.seenRps = false; this.sel = null; this.show = null; }
+    // じゃんけんの結果（どちらが勝ったか）を見せる
+    if (D.st !== "rps" && D.last && D.last.winner != null && !this.seenRps) {
+      this.seenRps = true;
+      if (D.r === 0) { this.show = { rps: D.last, until: Date.now() + SD_SHOW_SEC * 1000 - 300 }; clearTimeout(this.showT); this.showT = setTimeout(() => { this.show = null; if (S && S.phase === "draft") render(); }, SD_SHOW_SEC * 1000 - 300); }
+    }   // 再戦：前の取り合いの続きを持ち越さない
     // 演出を毎回やり直さない（相手が選んだだけで、じゃんけんの手などが出直さないように）
     const key = `${S.gid}|${D.st}|${D.r}|${D.last ? D.last.hands.join("") : ""}`, anim = key !== this.animKey; this.animKey = key;
     // 前の回で自分に入ったカードを、次の候補の前に見せる
     if (D.lastPick && D.lastPick.r !== this.seenPick) {
-      const first = this.seenPick === undefined && D.r > 1; this.seenPick = D.lastPick.r;
+      const first = this.seenPick === undefined && D.r > 1 && !(this.show && this.show.rps); this.seenPick = D.lastPick.r;
       if (!first) { const lp = D.lastPick, mine = lp.by === me ? lp.take : lp.rest, theirs = lp.by === me ? lp.rest : lp.take;
         this.show = { mine, theirs, by: lp.by, until: Date.now() + SD_SHOW_SEC * 1000 - 300 };
         clearTimeout(this.showT); this.showT = setTimeout(() => { this.show = null; if (S && S.phase === "draft") render(); }, SD_SHOW_SEC * 1000 - 300); }
@@ -383,7 +388,7 @@ const SenDraft = {
     if (D.gone) main = `<div class="sd-h"><b>相手が退出しました</b><small>選定戦は中止です</small></div><button type="button" class="btn" data-act="toTitle">部屋を出る</button>`;
     else if (D.st === "rps") {
       const mine = D.hands[me];
-      main = `<div class="sd-h"><b>${D.last ? "あいこ！" : "じゃんけん"}</b><small>${D.last ? "もう一度" : "勝つと最初にセットを選べます。負けた人は、対戦の先攻・後攻を選べます。"}</small></div>
+      main = `<div class="sd-h"><b>${D.last ? "あいこ！" : "じゃんけん"}</b><small>${D.last ? "もう一度" : "勝てば先にピック／負ければ先攻・後攻を選べる"}</small></div>
         ${mine ? `<div class="pg-chosen">${rpsImg(mine)}<span>${RPS[mine]}</span></div><p class="pg-wait">相手を待っています${dots}</p>`
           : `<div class="pg-rps">${Object.entries(RPS).map(([k, v], i) => `<button type="button" class="pg-hand" style="--i:${i}" data-act="sdRps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}
         <p class="sd-st">${D.hands[op] ? "相手は選びました" : `相手は考え中${dots}`}</p>${time}`;
@@ -393,7 +398,8 @@ const SenDraft = {
         <div class="sd-offer">${(D.offer || []).map((set, i) => `<div class="sd-set ${my && this.sel === i ? "sel" : ""}">
           ${this.cards(set)}
           ${my ? `<button type="button" class="btn sm ${this.sel === i ? "primary" : ""}" data-act="sdPick" data-v="${i}" ${wait ? "disabled" : ""}>${this.sel === i ? "決定" : "これを取る"}</button>` : ""}</div>`).join("")}</div>
-        <div class="sd-row sd-foot"><span class="sd-st">${my ? (this.sel != null ? "もう一度押すと決定" : "") : `相手が選んでいます${dots}`}</span><span class="sd-cnt">デッキ ${n}/${SEN_ROUNDS * SEN_SET}</span></div>`;
+        <div class="sd-row sd-foot"><span class="sd-st">${my ? (this.sel != null ? "もう一度押すと決定" : "") : `相手が選んでいます${dots}`}</span><span class="sd-cnt">デッキ ${n}/${SEN_ROUNDS * SEN_SET}</span></div>
+        <div class="sd-curve">${Sentei.curveHTML(D.decks[me])}</div>`;
     } else {
       const ok = D.ready[me], tab = this.tab === "op" ? op : me;
       main = `<div class="sd-h"><b>デッキ完成</b></div>
@@ -403,13 +409,17 @@ const SenDraft = {
         <button type="button" class="btn primary sd-ready" data-act="sdReady" ${ok || wait ? "disabled" : ""}>${ok ? "相手を待っています" : "確認した"}</button>`;
     }
     const sh = this.show && Date.now() < this.show.until ? this.show : null;
-    const reveal = sh ? `<div class="sd-reveal" role="status" data-act="sdShowClose">
+    const reveal = !sh ? "" : sh.rps ? `<div class="sd-reveal" role="status" data-act="sdShowClose">
+        <div class="sd-rv-in sd-rv-rps ${sh.rps.winner === me ? "win" : ""}"><b>${sh.rps.winner === me ? "あなたの勝ち！" : "相手の勝ち"}</b>
+          <div class="sd-rv-hands"><span>${rpsImg(sh.rps.hands[me])}<small>あなた</small></span><i>VS</i><span>${rpsImg(sh.rps.hands[op])}<small>相手</small></span></div>
+          <small>${sh.rps.winner === me ? "あなたが最初にセットを選びます" : "相手が最初に選びます。対戦の先攻・後攻は、あなたが選べます"}</small></div></div>`
+      : `<div class="sd-reveal" role="status" data-act="sdShowClose">
         <div class="sd-rv-in"><b>あなたのデッキに入ったカード</b>${this.cards(sh.mine)}
-        <small>${sh.by === me ? "相手には、もう片方のセットが入りました" : "相手が選んだ残りのセットです"}</small></div></div>` : "";
+        <small>${sh.by === me ? "相手には、もう片方のセットが入りました" : "相手が選んだ残りのセットです"}</small></div></div>`;
     return `<div class="sd-screen ${anim ? "anim" : ""}">
-      <div class="sd-top"><span class="sd-tag">選定戦</span><span class="sd-vs"><span>VS</span><b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
+      <div class="sd-top"><span class="sd-tag">選定戦</span><span class="sd-vs"><small>VS</small><b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
         <button type="button" class="chip" data-act="menu">メニュー</button></div>
-      <div class="sd-main">${main}</div>${reveal}
+      <div class="sd-main st-${D.gone ? "gone" : D.st}">${main}</div>${reveal}
       ${typeof Online !== "undefined" ? Online.bannerHTML() : ""}
     </div>`;
   },

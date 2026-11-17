@@ -1476,6 +1476,29 @@ function preloadArts(ids) {
     const im = new Image(); im.src = d.art; artCache.set(d.art, im); if (im.decode) im.decode().catch(() => {}); });
 }
 let lastDraftHTML = "", lastPreHTML = "", lastPreKey = "";
+/* 画面の作り直しで、変わっていない所はそのまま残す（相手が選んだだけで、じゃんけんの手の絵などが読み込み直されて瞬かないように）。
+   同じ形の要素は中を比べて、違う所だけ入れ替える */
+function morphInto(box, html) {
+  const t = document.createElement("template"); t.innerHTML = html.trim();
+  const sameEl = (a, b) => a.nodeType === b.nodeType && a.nodeName === b.nodeName && (a.nodeType !== 1 || (a.attributes.length === b.attributes.length && [...a.attributes].every(x => b.getAttribute(x.name) === x.value)));
+  const walk = (oldP, newP, depth) => {
+    const o = [...oldP.childNodes], n = [...newP.childNodes];
+    if (o.length !== n.length || depth > 6) { oldP.replaceChildren(...n); return; }
+    n.forEach((nn, i) => {
+      const oo = o[i];
+      if (oo.nodeType === 3 && nn.nodeType === 3) { if (oo.nodeValue !== nn.nodeValue) oo.nodeValue = nn.nodeValue; return; }
+      if (oo.nodeType === 1 && nn.nodeType === 1 && oo.outerHTML === nn.outerHTML) return;
+      if (sameEl(oo, nn)) walk(oo, nn, depth + 1);
+      else oldP.replaceChild(nn, oo);
+    });
+  };
+  if (box.childNodes.length === 1 && t.content.childNodes.length === 1 && box.firstChild.nodeType === 1 && t.content.firstChild.nodeName === box.firstChild.nodeName) {
+    const a = box.firstChild, b = t.content.firstChild;
+    [...a.attributes].forEach(x => { if (!b.hasAttribute(x.name)) a.removeAttribute(x.name); });
+    [...b.attributes].forEach(x => { if (a.getAttribute(x.name) !== x.value) a.setAttribute(x.name, x.value); });
+    walk(a, b, 0);
+  } else box.replaceChildren(...t.content.childNodes);
+}
 function render() {
   if (!S || SIM) return;
   CARD_EAGER = true;
@@ -1492,7 +1515,7 @@ function render() {
   app.classList.add("battle");                       // 対戦前（じゃんけんなど）も同じ舞台を敷く
   app.classList.toggle("pre", S.phase !== "play");    // 対戦前は暗めに
   app.classList.toggle("sdmode", S.phase === "draft");   // 選定戦の取り合い：対戦の舞台は使わない
-  if (S.phase === "draft" && typeof SenDraft !== "undefined") { Mull.close(); $("#sheet").hidden = true; const h = SenDraft.screenHTML(); if (h !== lastDraftHTML) { lastDraftHTML = h; app.innerHTML = h; } return; }
+  if (S.phase === "draft" && typeof SenDraft !== "undefined") { Mull.close(); $("#sheet").hidden = true; const h = SenDraft.screenHTML(); if (h !== lastDraftHTML) { lastDraftHTML = h; morphInto(app, h); } return; }
   lastDraftHTML = "";
   // じゃんけん・先攻後攻は専用の画面。マリガンからは対戦の画面の上で行う（手札を配る演出：js/mull.js）
   if (S.phase === "rps" || S.phase === "choose") {
@@ -1500,7 +1523,7 @@ function render() {
     // 相手が手を選んだだけで、じゃんけんの手などの登場の動きが出直さないように（同じ場面の描き直しでは動かさない）
     const k = `${S.gid}|${S.phase}|${S.rps.round}|${S.rps.picks[ME] || ""}`, h = pregameHTML(k === lastPreKey);
     lastPreKey = k;
-    if (h !== lastPreHTML) { lastPreHTML = h; app.innerHTML = h; }
+    if (h !== lastPreHTML) { lastPreHTML = h; morphInto(app, h); }
     return;
   }
   lastPreHTML = "";
