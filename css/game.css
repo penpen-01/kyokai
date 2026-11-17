@@ -2809,3 +2809,13 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .sd-bot{flex:none;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);background:rgba(10,10,22,.94);border-top:1px solid rgba(255,255,255,.12);border-radius:14px 14px 0 0;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .sd-bot .sd-ready{width:100%}
 .sd-main.st-check{padding-bottom:12px}
+/* 選定戦の素材（Gemini）：背景＝儀式の間、セットの台座＝紫のトレイ、見出し＝翼の金の帯 */
+#app.battle.sdmode::before{background:linear-gradient(180deg,rgba(6,5,14,.55),rgba(6,5,14,.2) 30%,rgba(6,5,14,.35) 70%,rgba(6,5,14,.7)),url("../ui/sen-bg.webp") center/cover no-repeat,#0b0a17}
+.sd-set{background:none;border:none;padding:0}
+.sd-set .sen-cards{background:url("../ui/sen-tray.webp") center/100% 100% no-repeat;padding:5.5% 4% 6%;filter:drop-shadow(0 6px 12px rgba(0,0,0,.55))}
+.sd-set.sel{box-shadow:none}
+.sd-set.sel .sen-cards{filter:drop-shadow(0 0 10px rgba(255,213,106,.8)) drop-shadow(0 6px 12px rgba(0,0,0,.55))}
+.sd-h b,.sd-rv-rps b{display:grid;place-items:center;width:min(94%,440px);aspect-ratio:4.55;margin:0 auto;padding:0 18%;box-sizing:border-box;
+  background:url("../ui/sen-head.webp") center/100% 100% no-repeat;font-size:clamp(20px,6.2vw,30px);letter-spacing:.12em;white-space:nowrap}
+.sd-rv-rps b{width:min(100%,400px);font-size:clamp(18px,5.6vw,26px)}
+.sd-screen .sd-st,.sd-screen .sd-h small,.sd-screen .sd-cnt,.sd-screen .sd-time,.sd-screen .sd-round,.sd-screen .sd-whose,.sd-screen .sen-curve b,.sd-screen .sen-curve small,.sd-screen .pg-hand span{text-shadow:0 1px 3px #000,0 0 8px rgba(0,0,0,.9)}
