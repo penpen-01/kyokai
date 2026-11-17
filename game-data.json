@@ -1,5 +1,5 @@
 {
- "version": 182,
+ "version": 183,
  "updated": "2026-11-17",
  "config": {
   "PLAYER_HP": 20,
@@ -30,7 +30,7 @@
   "BOSS_RATE": 10,
   "BOSS_PITY": 15,
   "BOSS_HP": 25,
-  "MAINT": 1,
+  "MAINT": 0,
   "BOSS_EX_ON": 1,
   "BOSS_EX_RATE": 10,
   "BOSS_EX_PITY": 15,
@@ -67,7 +67,7 @@
    "b5738afee77a9fd7f6df6f279fc12cee0cc1631b9d154a3fdb46e3e5710ac266"
   ],
   "SAMPLE_DECKS": true,
-  "SEN_ON": 1,
+  "SEN_ON": 0,
   "SEN_FEE": 3000
  },
  "packs": [
