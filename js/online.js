@@ -53,6 +53,7 @@ const Online = {
       <div class="obox">
         <h3>部屋を作る</h3>
         <label class="ownchk"><input type="checkbox" id="onl-world" ${store.get(WORLD_RULE_KEY) === "1" ? "checked" : ""}> 世界限定ルール（2人とも、30枚すべて同じ世界のカードのデッキで戦う）</label>
+        ${typeof Sentei !== "undefined" && Sentei.on() ? `<label class="ownchk"><input type="checkbox" id="onl-sen"> 選定戦ルール（デッキは持ち込まない。2人で3枚ずつのセットを取り合って、その場で30枚のデッキを作る）</label>` : ""}
         <div class="ofield"><label for="onl-tl">1ターンの持ち時間（過ぎたら自動でターン終了）</label>
           <select class="otxt" id="onl-tl">${TURN_LIMITS.map(v => `<option value="${v}" ${v === this.prefLimit() ? "selected" : ""}>${v ? v + "秒" : "なし（時間制限なし）"}</option>`).join("")}</select></div>
         <button type="button" class="btn primary" data-act="onlCreate">部屋を作って合言葉を出す</button>
@@ -85,7 +86,8 @@ const Online = {
       <h2 class="title sm">相手を待っています</h2>
       <p class="lead">この合言葉を相手に伝えてください。相手が入力すると対戦が始まります。</p>
       <div class="roomcode" aria-label="合言葉">${esc(this.code)}</div>
-      ${store.get(WORLD_RULE_KEY) === "1" ? `<p class="callout"><b>世界限定ルール</b>相手も、30枚すべて同じ世界のカードのデッキで参加します。</p>` : ""}
+      ${this.senRule ? `<p class="callout"><b>選定戦ルール</b>デッキは使いません。相手が入ったら、じゃんけんのあと、2人でカードを取り合ってデッキを作ります。</p>` : ""}
+      ${!this.senRule && store.get(WORLD_RULE_KEY) === "1" ? `<p class="callout"><b>世界限定ルール</b>相手も、30枚すべて同じ世界のカードのデッキで参加します。</p>` : ""}
       <p class="lead small">1ターンの持ち時間：${this.prefLimit() ? `<b>${this.prefLimit()}秒</b>（過ぎたら自動でターン終了）` : "なし"}</p>
       <button type="button" class="btn" data-act="onlCopy">合言葉をコピー</button>
       <p class="onl-msg" id="onl-msg" role="status"></p>
@@ -152,16 +154,22 @@ const Online = {
 
   reset() {
     this.unsubs.forEach(f => { try { f(); } catch {} });
-    Object.assign(this, { role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
+    Object.assign(this, { senRule: false, role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
     clearTimeout(this.pendingTimer);
   },
 
   /* ---------- 部屋を作る（ホスト） ---------- */
+  /* 選定戦ルールのときに渡す「デッキ」：カードは空。名前・アイコン・称号・スリーブ・枠・開放している弾・魔光加工と別イラスト */
+  senMeta() {
+    const icon = Account.icon(), title = typeof Titles !== "undefined" ? Titles.curName() : "", lk = typeof Skins !== "undefined" ? Skins.deckLook() : {};
+    return { name: "選定戦", cards: {}, sen: true, opened: SenDraft.openedSets(), ...(icon ? { icon } : {}), ...(title ? { title } : {}), ...lk, ...(typeof Skins !== "undefined" ? { look: Skins.looks() } : {}) };
+  },
   async create() {
     const name = this.readName();
-    const deck = Decks.readyDeck(m => this.lobbyMsg(m));
+    const senRule = !!($("#onl-sen") && $("#onl-sen").checked);
+    const deck = senRule ? this.senMeta() : Decks.readyDeck(m => this.lobbyMsg(m));
     if (!deck) return;
-    const worldRule = !!($("#onl-world") && $("#onl-world").checked);
+    const worldRule = !senRule && !!($("#onl-world") && $("#onl-world").checked);
     store.set(WORLD_RULE_KEY, worldRule ? "1" : "0");
     const tl = $("#onl-tl") ? +$("#onl-tl").value : this.prefLimit();
     store.set(TURN_LIMIT_KEY, TURN_LIMITS.includes(tl) ? tl : 90);
@@ -177,12 +185,12 @@ const Online = {
     }
     if (!code) return this.lobbyMsg("部屋を作れませんでした。もう一度お試しください。");
     try {
-      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now(), tl: this.prefLimit(), ...(worldRule ? { rule: "world" } : {}) });
+      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now(), tl: this.prefLimit(), ...(senRule ? { rule: "sen" } : worldRule ? { rule: "world" } : {}) });
     } catch (e) {
       console.error(e);
       return this.lobbyMsg("部屋を作れませんでした（サーバーの設定を確認してください）。");
     }
-    this.role = "host"; this.code = code; this.myDeck = deck; this.guestDeck = null; this.mySample = !!deck.sample;
+    this.role = "host"; this.code = code; this.myDeck = deck; this.guestDeck = null; this.mySample = !!deck.sample; this.senRule = senRule;
     if (this.mySample) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "host", sample: this.mySample });
     this.watchRoom();
@@ -194,11 +202,13 @@ const Online = {
     const name = this.readName();
     const code = normCodeText(codeArg || ($("#onl-code") ? $("#onl-code").value : "")).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     if (code.length !== 4) return this.lobbyMsg("合言葉は4文字です。");
-    const deck = Decks.readyDeck(m => this.lobbyMsg(m));
-    if (!deck) return;
-    if (deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
     this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
+    const room0 = await Net.get(`rooms/${code}`);
+    const senRule = !!(room0 && room0.rule === "sen");
+    const deck = senRule ? this.senMeta() : Decks.readyDeck(m => this.lobbyMsg(m));
+    if (!deck) return;
+    if (deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
     this.reset();
     const room = await Net.get(`rooms/${code}`);
     if (!room || !room.host || room.status === "closed") return this.lobbyMsg("その合言葉の部屋は見つかりませんでした。");
@@ -212,11 +222,11 @@ const Online = {
       console.error(e);
       return this.lobbyMsg("参加できませんでした。");
     }
-    this.role = "guest"; this.code = code; this.myDeck = deck; this.mySample = !!deck.sample;
+    this.role = "guest"; this.code = code; this.myDeck = deck; this.mySample = !!deck.sample; this.senRule = senRule;
     if (this.mySample) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
-    Net.push(`rooms/${code}/actions`, { t: "deck", name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), ...(deck.sleeve ? { sleeve: deck.sleeve } : {}), ...(deck.frame ? { frame: deck.frame } : {}), ...(deck.look ? { look: deck.look } : {}), by: this.uid, at: Date.now() });
+    Net.push(`rooms/${code}/actions`, { t: "deck", ...(deck.sen ? { sen: 1, opened: deck.opened } : {}), name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), ...(deck.sleeve ? { sleeve: deck.sleeve } : {}), ...(deck.frame ? { frame: deck.frame } : {}), ...(deck.look ? { look: deck.look } : {}), by: this.uid, at: Date.now() });
     this.watchRoom();
     this.showConnecting("対戦を準備しています");
   },
@@ -267,7 +277,7 @@ const Online = {
     this.netKey = netKey;
     if (this.role === "host") {
       if (!S && room.guest && room.status === "waiting" && this.guestDeck) return this.startGame();
-      if (S && this.oppLeft && !prevOppLeft && !S.over) { forfeit(1, "退出した"); return; }
+      if (S && this.oppLeft && !prevOppLeft && !S.over) { if (S.phase === "draft") { S.draft.gone = true; render(); return; } forfeit(1, "退出した"); return; }
       if (S && netChanged && MODE === "online") render();
     } else {
       if (room.state) this.onState(room.state);
@@ -322,6 +332,7 @@ const Online = {
 
   startGame() {
     if (!this.guestDeck || this.guestDeck.by !== this.room.guest || !this.myDeck) return;
+    if (this.room.rule === "sen" && typeof SenDraft !== "undefined") { this.logSent = null; return SenDraft.begin(); }   // 選定戦：取り合いから
     MODE = "online"; setPerspective(0);
     $("#overlay").hidden = true;
     this.logSent = null;
@@ -334,6 +345,7 @@ const Online = {
     $("#overlay").hidden = true;
     this.logSent = null;
     this.oppDeckChanged = false;
+    if (this.room.rule === "sen" && typeof SenDraft !== "undefined") return SenDraft.begin();   // 選定戦：毎回デッキを作り直す
     newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], [this.myDeck || S.decks[0], this.guestDeck || S.decks[1]]);   // デッキを変えていれば、新しいデッキで
   },
 
@@ -357,6 +369,7 @@ const Online = {
       // じゃんけんでは、ゲストが選ぶまでホストの手を伏せる
       let out = S;
       if (S.phase === "rps" && S.rps.picks[0] && !S.rps.picks[1]) out = { ...S, rps: { ...S.rps, picks: ["?", null] } };
+      if (S.phase === "draft" && S.draft && S.draft.st === "rps" && S.draft.hands[0] && !S.draft.hands[1]) out = { ...S, draft: { ...S.draft, hands: ["?", null] } };
       // ログは増え続けて毎回の送信が重くなるので、前回から増えた分だけ送る（15回に1回と決着時はまとめて送り直す）
       const L = S.log || [];
       this.pubN = (this.pubN || 0) + 1;
@@ -380,7 +393,7 @@ const Online = {
       const icon = typeof a.icon === "string" && DEF[a.icon] && DEF[a.icon].type === "char" ? a.icon : null;
       // 相手の見た目（スリーブ・枠）は、売り場にある絵だけ受け取る
       const skinLook = x => { const ok = (k, v) => typeof v === "string" && typeof SKINS !== "undefined" && SKINS.some(s => s.kind === k && s.art === v); const lk = typeof Skins !== "undefined" ? Skins.cleanLook(x.look) : {}; return { ...(ok("sleeve", x.sleeve) ? { sleeve: x.sleeve } : {}), ...(ok("frame", x.frame) ? { frame: x.frame } : {}), ...(Object.keys(lk).length ? { look: lk } : {}) }; };
-      this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by, ...(icon ? { icon } : {}), ...(typeof a.key === "string" && DEF[a.key] ? { key: a.key } : {}), ...(typeof a.title === "string" && a.title ? { title: a.title.slice(0, 12) } : {}), ...skinLook(a) };
+      this.guestDeck = { name: String(a.name || "デッキ").slice(0, 16), cards, by: a.by, ...(a.sen ? { opened: (Array.isArray(a.opened) ? a.opened : Object.values(a.opened || {})).filter(x => typeof x === "string").slice(0, 30) } : {}), ...(icon ? { icon } : {}), ...(typeof a.key === "string" && DEF[a.key] ? { key: a.key } : {}), ...(typeof a.title === "string" && a.title ? { title: a.title.slice(0, 12) } : {}), ...skinLook(a) };
       if (S && S.over) { this.oppDeckChanged = true; toast("相手がデッキを変更しました"); const rd = $(".res-deck"); if (rd && !rd.querySelector("small")) rd.insertAdjacentHTML("beforeend", "<small>相手はデッキを変更しました</small>"); }   // 参加者の dchg は書き込めないので、デッキの操作で知る
       if (!S && this.room && this.room.guest && this.room.status === "waiting") this.startGame();
       return;
@@ -388,7 +401,8 @@ const Online = {
     if (a.t === "stamp" && this.room && a.by === this.room.guest) { if (typeof Stamps !== "undefined") Stamps.show(OP, a.id); return; }
     if (!S || !this.room || a.by !== this.room.guest) return;
     let done = false;
-    if (S.phase === "rps" && a.t === "rps") done = rpsPick(1, a.v);
+    if (S.phase === "draft" && (a.t === "drps" || a.t === "dpick")) done = typeof SenDraft !== "undefined" && SenDraft.act(1, { t: a.t, v: a.v, i: +a.i });
+    else if (S.phase === "rps" && a.t === "rps") done = rpsPick(1, a.v);
     else if (S.phase === "choose" && a.t === "choose") done = chooseOrder(1, !!a.first);
     else if (S.phase === "mulligan" && a.t === "mull") done = mulligan(1, !!a.redraw);
     else if (S.phase === "play" && S.turn === 1 && !S.over) {
@@ -446,7 +460,7 @@ const Online = {
 
   /* ---------- 退出・降参・復帰 ---------- */
   surrender() {
-    if (this.role === "host") { if (S && !S.over) forfeit(0, "降参した"); }
+    if (this.role === "host") { if (S && !S.over && S.phase !== "draft") forfeit(0, "降参した"); }
     // ゲストは退出の記録で、ホスト側に降参として扱われる
     toTitle();
   },

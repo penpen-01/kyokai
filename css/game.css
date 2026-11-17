@@ -2678,3 +2678,14 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
 .sen-res small{font-size:12px;color:var(--muted,#b9bfd6)}
 .sen-set.sel{border-color:#e3b64f;box-shadow:0 0 0 2px rgba(227,182,79,.6),0 0 16px rgba(227,182,79,.35)}
 .sen-confirm{text-align:center;color:#f3d58e}
+/* 友達との選定戦（取り合い） */
+.pg-draft .pg-center{max-width:560px;width:100%;margin:0 auto}
+.sd-offer{display:grid;grid-template-columns:1fr;gap:8px;width:100%}
+@media (min-width:640px){.sd-offer{grid-template-columns:1fr 1fr}}
+.sd-set{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:12px;background:rgba(10,12,24,.65);border:1px solid var(--line,rgba(255,255,255,.15))}
+.sd-set.sel{border-color:#e3b64f;box-shadow:0 0 0 2px rgba(227,182,79,.6),0 0 16px rgba(227,182,79,.35)}
+.sd-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%}
+.sd-time{font-weight:800;font-variant-numeric:tabular-nums;color:#f3d58e}
+.sd-time.low{color:#ff8080}
+.sd-last{margin:0;font-size:12px;color:var(--muted,#b9bfd6);text-align:center}
+#sd-deck .dmodal{z-index:90}

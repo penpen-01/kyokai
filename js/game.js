@@ -1487,11 +1487,11 @@ function render() {
   renderDeferred = false;
   clearDragLeftovers();
   hidePreview();
-  if (typeof Cinema !== "undefined") Cinema.watch();   // 試合開始・じゃんけん・先攻後攻・ターンの始めの大きな演出
+  if (typeof Cinema !== "undefined" && S.phase !== "draft") Cinema.watch();   // 試合開始・じゃんけん・先攻後攻・ターンの始めの大きな演出
   app.classList.add("battle");                       // 対戦前（じゃんけんなど）も同じ舞台を敷く
   app.classList.toggle("pre", S.phase !== "play");    // 対戦前は暗めに
   // じゃんけん・先攻後攻は専用の画面。マリガンからは対戦の画面の上で行う（手札を配る演出：js/mull.js）
-  if (S.phase === "rps" || S.phase === "choose") { Mull.close(); app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
+  if (S.phase === "rps" || S.phase === "choose" || S.phase === "draft") { Mull.close(); app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
   const tk = `${S.gid}-${S.turnNo}`;
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; }
   const me = S.players[ME];
@@ -1538,13 +1538,14 @@ const rpsImg = k => `<img class="rpsimg" src="ui/rps-${k}.webp" alt="" draggable
 function pregameHTML() {
   const me = S.players[ME], op = S.players[OP];
   const wait = typeof Online !== "undefined" && MODE === "online" && Online.blocked();
-  const face = pi => { const id = playerIcon(pi); return `<span class="pg-face">${id ? iconImgHTML(id) : `<span class="glyph">召</span>`}</span>`; };
+  const face = pi => { const id = playerIcon(pi); return `<span class="pg-face">${id ? iconImgHTML(id) : typeof DEFAULT_AVATAR_HTML !== "undefined" ? DEFAULT_AVATAR_HTML : `<span class="glyph">召</span>`}</span>`; };
   const plate = (pi, status) => { const p = S.players[pi];
     return `<div class="pg-plate ${pi === ME ? "me" : "op"}">${face(pi)}<span class="pg-name"><b>${esc(p.name)}</b>${p.title ? `<em class="pg-title">${esc(p.title)}</em>` : ""}<small>${esc(p.deckName || "")}</small></span>${status ? `<span class="pg-st">${status}</span>` : ""}</div>`; };
   const dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
   let body = "", opSt = "", meSt = "", ph = S.phase;
   const last = S.rps.last;
-  if (ph === "rps") {
+  if (ph === "draft" && typeof SenDraft !== "undefined") body = SenDraft.bodyHTML();
+  else if (ph === "rps") {
     const mine = S.rps.picks[ME];
     opSt = S.rps.picks[OP] ? `<em class="ok">選択済み</em>` : `<em>考え中${dots}</em>`;
     body = `<div class="pg-title"><b>${last ? "あいこ！" : "じゃんけん"}</b><small>${last ? "もう一度" : "勝てば先攻・後攻を選べる"}</small></div>
@@ -1552,7 +1553,9 @@ function pregameHTML() {
         : `<div class="pg-rps">${Object.entries(RPS).map(([k, v], i) => `<button type="button" class="pg-hand" style="--i:${i}" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}`;
   } else if (ph === "choose") {
     const win = S.rpsWinner === ME;
-    body = `<div class="pg-title ${win ? "win" : ""}"><b>${win ? "あなたの勝ち！" : "相手の勝ち"}</b><small>${win ? "先攻か後攻かを選んでください" : ""}</small></div>
+    body = S.sen ? `<div class="pg-title ${win ? "win" : ""}"><b>デッキ完成！</b><small>${win ? "じゃんけんに負けたあなたが、先攻か後攻かを選べます" : "じゃんけんに負けた相手が、先攻・後攻を選びます"}</small></div>`
+      : `<div class="pg-title ${win ? "win" : ""}"><b>${win ? "あなたの勝ち！" : "相手の勝ち"}</b><small>${win ? "先攻か後攻かを選んでください" : ""}</small></div>`;
+    body += `
       ${win ? `<div class="pg-order">
           <button type="button" class="pg-opt first" data-act="choose" data-v="1" ${wait ? "disabled" : ""}><span class="pg-oen">FIRST</span><b>先攻</b><small>先に動ける<br>最初のターンは引かない</small></button>
           <button type="button" class="pg-opt second" data-act="choose" data-v="0" ${wait ? "disabled" : ""}><span class="pg-oen">SECOND</span><b>後攻</b><small>「境界の欠片」で<br>1回だけエナジー+1</small></button>
@@ -2417,7 +2420,8 @@ function showResult(res) {
   ].filter(Boolean);
   // 次にすること：大きいボタン1つ＋小さいボタン
   const again = online
-    ? `<p class="res-deck">次のデッキ：<b>${esc((Online.myDeck && Online.myDeck.name) || (S.decks && S.decks[ME] && S.decks[ME].name) || "—")}</b>${Online.oppDeckChanged ? `<small>相手はデッキを変更しました</small>` : ""}</p>`
+    ? (Online.room && Online.room.rule === "sen" ? `<p class="res-deck">選定戦ルール：次の対戦も、カードを取り合ってデッキを作り直します</p>`
+      : `<p class="res-deck">次のデッキ：<b>${esc((Online.myDeck && Online.myDeck.name) || (S.decks && S.decks[ME] && S.decks[ME].name) || "—")}</b>${Online.oppDeckChanged ? `<small>相手はデッキを変更しました</small>` : ""}</p>`)
       + (Online.role === "host" ? `<button type="button" class="btn primary res-main" data-act="rematch">同じ相手ともう一度</button>` : `<p class="datainfo">もう一度対戦するときは、部屋を作った人が「同じ相手ともう一度」を押します</p>`)
     : B && B.kind === "tutorial" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度チュートリアル</button>`
     : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
@@ -2426,7 +2430,7 @@ function showResult(res) {
     : `<button type="button" class="btn primary res-main" data-act="cpuAgain">同じ強さでもう一度</button>`;
   const sub = [
     !online && !(B && B.kind === "gate" && r.gate) && !(B && ["tutorial", "sen"].includes(B.kind)) ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
-    online && !Online.oppLeft && !Online.closed ? `<button type="button" class="res-sub" data-act="onlDeck">${RES_IC.deck}<span>デッキ変更</span></button>` : "",
+    online && !Online.oppLeft && !Online.closed && !(Online.room && Online.room.rule === "sen") ? `<button type="button" class="res-sub" data-act="onlDeck">${RES_IC.deck}<span>デッキ変更</span></button>` : "",
     `<button type="button" class="res-sub" data-act="log">${RES_IC.log}<span>ログ</span></button>`,
     `<button type="button" class="res-sub" data-act="closeOverlay">${RES_IC.board}<span>盤面</span></button>`,
     `<button type="button" class="res-sub" data-act="toTitle">${RES_IC.home}<span>${online ? "部屋を出る" : "タイトル"}</span></button>`
