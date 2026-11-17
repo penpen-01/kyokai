@@ -2804,3 +2804,8 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
 html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:none}
 .sd-main > *{flex-shrink:0}
 .topbar b .beta{margin-left:6px;font-size:11px;padding:1px 6px;border-radius:99px;background:rgba(180,150,255,.25);color:#e2d8ff;vertical-align:middle}
+/* デッキ確認：カードの上を指でなぞってもスクロールできるように（#app .card の touch-action:none を上書き）。「確認した」は下に固定 */
+#app .sen-card .card,#app .sd-grid .card,#app .sd-chip{touch-action:pan-y}
+.sd-bot{flex:none;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);background:rgba(10,10,22,.94);border-top:1px solid rgba(255,255,255,.12);border-radius:14px 14px 0 0;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.sd-bot .sd-ready{width:100%}
+.sd-main.st-check{padding-bottom:12px}

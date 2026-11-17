@@ -387,7 +387,7 @@ const SenDraft = {
     }
     const wait = Online.blocked();
     const time = `<span class="sd-time">残り ${this.left()}秒</span>`;
-    let main;
+    let main, foot = "";   // foot：下に固定する欄（デッキ確認の「確認した」）
     if (D.gone) main = `<div class="sd-h"><b>相手が退出しました</b><small>選定戦は中止です</small></div><button type="button" class="btn" data-act="toTitle">部屋を出る</button>`;
     else if (D.st === "rps") {
       const mine = D.hands[me];
@@ -408,8 +408,8 @@ const SenDraft = {
       main = `<div class="sd-h"><b>デッキ完成</b></div>
         <div class="sd-row"><span class="sd-st">${D.ready[op] ? "相手は確認済み" : `相手は確認中${dots}`}</span>${time}</div>
         <div class="seg sd-tabs" role="tablist"><button type="button" role="tab" data-act="sdTab" data-v="me" aria-pressed="${tab === me}">あなた</button><button type="button" role="tab" data-act="sdTab" data-v="op" aria-pressed="${tab === op}">相手</button></div>
-        ${Sentei.curveHTML(D.decks[tab])}${this.gridHTML(D.decks[tab])}
-        <button type="button" class="btn primary sd-ready" data-act="sdReady" ${ok || wait ? "disabled" : ""}>${ok ? "相手を待っています" : "確認した"}</button>`;
+        ${Sentei.curveHTML(D.decks[tab])}${this.gridHTML(D.decks[tab])}`;
+      foot = `<div class="sd-bot"><button type="button" class="btn primary sd-ready" data-act="sdReady" ${ok || wait ? "disabled" : ""}>${ok ? "相手を待っています" : "確認した"}</button></div>`;
     }
     const sh = this.show && Date.now() < this.show.until ? this.show : null;
     const reveal = !sh ? "" : sh.rps ? `<div class="sd-reveal" role="status" data-act="sdShowClose">
@@ -422,7 +422,7 @@ const SenDraft = {
     return `<div class="sd-screen ${anim ? "anim" : ""}">
       <div class="sd-top"><span class="sd-tag">選定戦${Sentei.beta() ? "β" : ""}</span><span class="sd-vs"><small>VS</small><b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
         <button type="button" class="chip" data-act="menu">メニュー</button></div>
-      <div class="sd-main st-${D.gone ? "gone" : D.st}">${main}</div>${reveal}
+      <div class="sd-main st-${D.gone ? "gone" : D.st}">${main}</div>${foot}${reveal}
       ${typeof Online !== "undefined" ? Online.bannerHTML() : ""}
     </div>`;
   },
