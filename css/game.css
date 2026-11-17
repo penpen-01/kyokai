@@ -2791,3 +2791,15 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
 #app.battle.sdmode::before{background:
   radial-gradient(circle at 50% 46%,transparent 0 27vmin,rgba(227,182,79,.16) 27.3vmin,transparent 27.8vmin,transparent 31vmin,rgba(180,150,255,.14) 31.3vmin,transparent 31.8vmin),
   radial-gradient(120% 60% at 50% 20%,rgba(120,90,200,.28),transparent 70%),radial-gradient(90% 50% at 50% 100%,rgba(227,182,79,.12),transparent 70%),#0b0a17}
+/* 選定戦の取り合い 4回目：画面全体を固定して、ページごとスクロールしないように。
+   上の帯（相手の名前）＋中身。じゃんけん・選ぶ画面は1画面に収め、デッキ確認だけ中身をスクロール */
+.sd-screen{position:fixed;inset:0;z-index:5;max-width:600px;margin:0 auto;min-height:0;height:100%;padding:0;gap:0;display:flex;flex-direction:column;overflow:hidden}
+.sd-top{position:relative;top:auto;left:auto;right:auto;flex:none;margin:0;border-radius:0 0 14px 14px}
+.sd-main{flex:1;min-height:0;padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 12px);box-sizing:border-box;overflow:hidden}
+.sd-main.st-rps,.sd-main.st-gone{min-height:0;justify-content:center;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12vh)}
+.sd-main.st-pick{min-height:0;justify-content:space-evenly}
+.sd-main.st-check{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.sd-set .sen-cards{grid-template-columns:repeat(3,min(31%,calc((100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 300px) / 2 / 1.45)))}
+#app.sdmode{overflow:hidden;height:100%}
+html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:none}
+.sd-main > *{flex-shrink:0}
