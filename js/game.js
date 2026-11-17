@@ -224,7 +224,7 @@ function startTurn(pi, skipDraw) {
   p.field.forEach(u => { u.swings = 0; u.thawed = false; if (u.frozen) { u.ready = false; u.frozen = false; u.thawed = true; } else u.ready = !kw(u, "noattack"); });
   // 特殊勝利：場にいるまま、自分のターンの始めを決めた回数むかえると勝ち
   for (const u of p.field) {
-    if (u.wakeIn != null && !u.silenced) { u.wakeIn--; if (u.wakeIn <= 0) { u.wakeIn = null; silenceUnit(u); if (!u.thawed) u.ready = true; log(`${cname(u.id)}が目覚めた（沈黙して不動が解けた）。このターンから攻撃できる。`); } else fx(unitSel(u.uid), `目覚めまで${u.wakeIn}`, "trig"); }
+    if (u.wakeIn != null && !u.silenced) { u.wakeIn--; if (u.wakeIn <= 0) { u.wakeIn = null; (DEF[u.id].effects || []).filter(e => whenOf(e) === "wake").forEach(e => effect(pi, e, {}, u)); silenceUnit(u); if (!u.thawed) u.ready = true; log(`${cname(u.id)}が目覚めた（沈黙して不動が解けた）。このターンから攻撃できる。`); } else fx(unitSel(u.uid), `目覚めまで${u.wakeIn}`, "trig"); }
     if (u.winIn == null || u.silenced) continue;
     u.winIn--;
     if (u.winIn <= 0) { log(`${cname(u.id)}の力で、${pname(pi)}の勝利！`); S.specialWin = pi; break; }
@@ -240,8 +240,47 @@ function startTurn(pi, skipDraw) {
   if (pi === 1 && MODE === "cpu") cpuTurn();
 }
 
+/* 山札の上から見て1枚選ぶ（ヴァイスなど）。S.dig = { pi, ids }。選ぶまで、その人は何もできない */
+const digAuto = pi => MODE === "sim" || (MODE === "cpu" && pi !== ME);
+function digBest(pi, ids) {   // CPU：次のターンに出せる、重くて強いカードを選ぶ
+  const p = S.players[pi], score = id => { const c = DEF[id]; if (!c) return -99; return (c.cost <= p.maxE + 1 ? 10 : 0) + c.cost + RARITY_ORDER.indexOf(c.rarity); };
+  return ids.reduce((b, id, i) => score(id) > score(ids[b]) ? i : b, 0);
+}
+function resolveDig(pi, i) {
+  const D = S.dig; if (!D || D.pi !== pi) return false;
+  const me = S.players[pi], k = Math.max(0, Math.min(D.ids.length - 1, +i || 0)), id = D.ids[k];
+  S.dig = null;
+  me.deck.unshift(...D.ids.filter((_, j) => j !== k));   // 残りは山札の下へ
+  if (me.hand.length >= CONFIG.HAND_MAX) { log(`手札がいっぱいで、${cname(id)}は捨て札へ。`); fx("reveal", id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); }
+  else { me.hand.push(id); log(`${pname(pi)}は山札から1枚を選んで手札に加えた。`, { pi, msg: `${pname(pi)}は${cname(id)}を選んで手札に加えた。` }); if (!SIM && S.phase === "play") fx("draw", String(pi), "draw"); }
+  if (!SIM) render();
+  return true;
+}
+/* 山札の上から選ぶ画面（自分が選ぶときだけ。マリガンと同じく画面の上に重ねる） */
+const Dig = {
+  el: null,
+  after() {
+    const D = S && S.dig, mine = D && D.pi === ME && !S.over;
+    if (!mine) { if (this.el) { this.el.remove(); this.el = null; } return; }
+    const key = `${S.gid}|${D.ids.join(",")}`;
+    if (this.el && this.el.dataset.key === key) return;
+    if (!this.el) { this.el = document.createElement("div"); this.el.className = "mullp digp in"; document.body.appendChild(this.el); }
+    this.el.dataset.key = key;
+    this.el.innerHTML = `<div class="mullp-in">
+      <div class="pg-title sm"><b>1枚を選んで手札に加える</b></div>
+      <div class="dig-row">${D.ids.map((id, i) => `<div class="dig-c"><button type="button" class="dig-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id] ? DEF[id].name : id)}（押すと効果）">${cardHTML(DEF[id], { static: true })}</button>
+        <button type="button" class="btn sm primary" data-act="dig" data-i="${i}">これにする</button></div>`).join("")}</div>
+      <p class="pg-hint">残りは山札の下に戻ります。カードを押すと効果を見られます。</p></div>`;
+  }
+};
+function doDig(i) {
+  if (!S || !S.dig || S.dig.pi !== ME) return;
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "dig", i });
+  resolveDig(ME, i);
+}
 function endTurn(pi) {
   if (S.over || S.phase !== "play" || S.turn !== pi) return;
+  if (S.dig && S.dig.pi === pi) resolveDig(pi, digBest(pi, S.dig.ids));   // 時間切れなど：選ばずに終わったら、自動で選ぶ
   if (pi === ME) ui = { sel: null, mode: null };
   S.players[pi].field.forEach(u => {
     if (kw(u, "regen") && u.hp > 0 && u.hp < u.maxHp) { fx(unitSel(u.uid), "+" + (u.maxHp - u.hp), "heal"); u.hp = u.maxHp; log(`${cname(u.id)}は再生した。`); }
@@ -679,6 +718,27 @@ function effect(pi, e, targets, self) {
   const ownT = () => me.field.find(x => x.uid === targets.own && x !== self);
   switch (e.kind) {
     case "draw": for (let i = 0; i < n; i++) draw(pi); break;
+    case "dig": {   // 山札の上から n 枚を見て1枚を選ぶ（人は選ぶ画面、CPU・読みの計算はその場で一番よいもの）
+      const k = Math.min(n || 3, me.deck.length); if (!k) { log("山札にカードがなかった。"); break; }
+      const ids = me.deck.splice(me.deck.length - k, k).reverse();   // 山札の上（末尾）から順に
+      if (S.dig) { me.deck.unshift(...ids); break; }   // 選んでいる途中にもう1回は起きない（念のため）
+      S.dig = { pi, ids };
+      if (SIM || digAuto(pi)) resolveDig(pi, digBest(pi, ids));
+      else log(`${pname(pi)}は山札の上から${k}枚を見ている。`);
+      break;
+    }
+    case "buffCard": {
+      const L = me.field.filter(u => u.id === e.card && u.hp > 0);
+      L.forEach(u => { u.atk += n; u.hp += n; u.maxHp += n; fx(unitSel(u.uid), `+${n}/+${n}`, "heal"); });
+      if (L.length) log(`${cname(e.card)}が+${n}/+${n}された。`);
+      break;
+    }
+    case "mendCard": {
+      const L = me.field.filter(u => u.id === e.card && u.hp > 0);
+      if (L.length) L.forEach(u => { u.hp = u.maxHp; u.atk += n; u.hp += n; u.maxHp += n; fx(unitSel(u.uid), `全回復 +${n}/+${n}`, "heal"); log(`${cname(e.card)}は繕われて、+${n}/+${n}された。`); });
+      else if (DEF[e.card] && !fieldFull(me)) { addUnit(pi, e.card); log(`${cname(e.card)}が現れた。`); }
+      break;
+    }
     case "refresh": {
       const coins = me.hand.filter(id => id === "coin" || id === GEAR_ID);   // コインと歯車は手札に残す
       const k = me.hand.length - coins.length;
@@ -1166,6 +1226,9 @@ function effValue(e) {
   if (k === "merge") return 4;
   if (k === "costDown") return n * (e.dur === "game" ? 2 : 0.8);
   if (k === "winTimer") return 6;
+  if (k === "dig") return 1.8;
+  if (k === "buffCard") return n * 1.6;
+  if (k === "mendCard") return 3;
   if (/^dmg(Target|Random)$/.test(k)) return n * 0.9;
   if (k === "dmgAll") return n * 1.6;
   if (k === "dmgFace") return n * 0.8;
@@ -1357,7 +1420,7 @@ async function cpuTurn() {
 
 /* ---------- 自分の操作（CPU戦・ホストはその場で処理、ゲストはホストに送る） ---------- */
 function canAct() {
-  return S && !S.over && S.phase === "play" && S.turn === ME && !busy && !(typeof Online !== "undefined" && Online.blocked());
+  return S && !S.over && S.phase === "play" && S.turn === ME && !busy && !S.dig && !(typeof Online !== "undefined" && Online.blocked());
 }
 function doPlay(idx, targets, gear) {
   if (!canAct()) return;
@@ -1589,7 +1652,7 @@ function render() {
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   // 前と同じ画面なら作り直さない（作り直しはスマホでは重い）
-  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); Mull.after(); return; }
+  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); Mull.after(); Dig.after(); return; }
   lastBoardHTML = html;
   app.innerHTML = html;
   if (oldImgs.size) app.querySelectorAll("img").forEach(im => { const l = oldImgs.get(im.getAttribute("src")); if (l && l.length) { const o = l.pop(); o.className = im.className; im.replaceWith(o); } });
@@ -1597,6 +1660,7 @@ function render() {
   renderSheet();
   Motion.afterRender();
   Mull.after();
+  Dig.after();
 }
 
 /* ---------- 対戦前の画面（じゃんけん・先攻後攻・マリガン） ---------- */
@@ -3005,6 +3069,7 @@ function handleAct(act, el) {
     case "rps": if (S && el) doRps(el.dataset.v); break;
     case "choose": if (S && el) doChoose(el.dataset.v === "1"); break;
     case "mull": if (S && el) doMull(el.dataset.v === "1"); break;
+    case "dig": doDig(+el.dataset.i); break;
     case "play": case "playGear": {
       if (!ui.sel || ui.sel.kind !== "hand" || !canAct()) return;
       const idx = ui.sel.idx;

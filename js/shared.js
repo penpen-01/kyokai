@@ -136,6 +136,9 @@ const EFFECTS = {
   grantAll:    { legacy: true, group: "能力",   label: "自分のキャラ全体に能力を与える", text: (n, e) => `自分の${worldNo(e)}キャラ全体に「${kwName(e)}」を与える。`, opts: ["kw", "world"], noN: e => !e || e.kw !== "armor" },
   tokenField:  { group: "トークン", label: "トークンを場に出す",         text: (n, e) => `${tokDesc(e)}を${n}体出す。`, opts: ["token"], tokenType: "char" },
   tokenHand:   { group: "トークン", label: "トークンを手札に加える",     text: (n, e) => `${tokDesc(e)}を${n}枚手札に加える。`, opts: ["token"] },
+  dig:         { group: "ドロー", label: "山札の上からN枚見て、1枚を選んで手札に加える", text: n => `山札の上から${n}枚を見て、1枚を選んで手札に加える（残りは山札の下へ）。`, min: 2 },
+  buffCard:    { group: "トークン", label: "決めたカード（トークン）を強化する", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}を+${n}/+${n}する。`, opts: ["token"], tokenType: "char" },
+  mendCard:    { group: "トークン", label: "決めたカード（トークン）を全回復して強化する（いなければ出す）", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}の体力を全回復させ、+${n}/+${n}する。場にいなければ、${tokDesc(e)}を1体出す。`, opts: ["token"], tokenType: "char" },
   tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札から${costRange(n, e)}${worldNo(e)}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype", "cmin"], min: 0 },
   bounceEnemy: { legacy: true, group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
   shuffleEnemy:{ legacy: true, group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
@@ -281,7 +284,8 @@ const WHENS = {
   drawn:     { label: "自分がカードを引いたとき",     head: "自分がカードを引いたとき" },
   healed:    { label: "自分の体力が回復したとき",     head: "自分の体力が回復したとき" },
   voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" },
-  back:      { label: "場から手札に戻ったとき",       head: "場から手札に戻ったとき" }
+  back:      { label: "場から手札に戻ったとき",       head: "場から手札に戻ったとき" },
+  wake:      { label: "目覚めたとき（目覚めを持つキャラ）", head: "目覚めたとき" }
 };
 /* 効果ごとの条件（effect.cond）。満たしていないとその効果は発動しない。cn＝数値、cworld＝世界 */
 const CONDS = {

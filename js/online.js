@@ -443,6 +443,8 @@ const Online = {
         if (idx >= 0) done = playCard(1, idx, a.targets && typeof a.targets === "object" ? a.targets : (a.target ?? {}), !!a.gear);
       } else if (a.t === "attack") {
         done = attack(1, a.uid, a.target);
+      } else if (a.t === "dig") {
+        done = resolveDig(1, +a.i);
       } else if (a.t === "end") {
         endTurn(1); done = true;
       }
