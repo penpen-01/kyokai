@@ -1475,6 +1475,7 @@ function preloadArts(ids) {
   ids.forEach(id => { const d = DEF[id]; if (!d || !d.art || artCache.has(d.art)) return;
     const im = new Image(); im.src = d.art; artCache.set(d.art, im); if (im.decode) im.decode().catch(() => {}); });
 }
+let lastDraftHTML = "", lastPreHTML = "", lastPreKey = "";
 function render() {
   if (!S || SIM) return;
   CARD_EAGER = true;
@@ -1490,8 +1491,19 @@ function render() {
   if (typeof Cinema !== "undefined" && S.phase !== "draft") Cinema.watch();   // 試合開始・じゃんけん・先攻後攻・ターンの始めの大きな演出
   app.classList.add("battle");                       // 対戦前（じゃんけんなど）も同じ舞台を敷く
   app.classList.toggle("pre", S.phase !== "play");    // 対戦前は暗めに
+  app.classList.toggle("sdmode", S.phase === "draft");   // 選定戦の取り合い：対戦の舞台は使わない
+  if (S.phase === "draft" && typeof SenDraft !== "undefined") { Mull.close(); $("#sheet").hidden = true; const h = SenDraft.screenHTML(); if (h !== lastDraftHTML) { lastDraftHTML = h; app.innerHTML = h; } return; }
+  lastDraftHTML = "";
   // じゃんけん・先攻後攻は専用の画面。マリガンからは対戦の画面の上で行う（手札を配る演出：js/mull.js）
-  if (S.phase === "rps" || S.phase === "choose" || S.phase === "draft") { Mull.close(); app.innerHTML = pregameHTML(); $("#sheet").hidden = true; return; }
+  if (S.phase === "rps" || S.phase === "choose") {
+    Mull.close(); $("#sheet").hidden = true;
+    // 相手が手を選んだだけで、じゃんけんの手などの登場の動きが出直さないように（同じ場面の描き直しでは動かさない）
+    const k = `${S.gid}|${S.phase}|${S.rps.round}|${S.rps.picks[ME] || ""}`, h = pregameHTML(k === lastPreKey);
+    lastPreKey = k;
+    if (h !== lastPreHTML) { lastPreHTML = h; app.innerHTML = h; }
+    return;
+  }
+  lastPreHTML = "";
   const tk = `${S.gid}-${S.turnNo}`;
   if (S.turn === ME && !S.over && tk !== lastTurnKey) { lastTurnKey = tk; }
   const me = S.players[ME];
@@ -1535,7 +1547,7 @@ const RPS_ICON = {
 };
 /* じゃんけんの手（Gemini の絵を切り分けたもの：ui/rps-g/c/p.webp） */
 const rpsImg = k => `<img class="rpsimg" src="ui/rps-${k}.webp" alt="" draggable="false">`;
-function pregameHTML() {
+function pregameHTML(still) {
   const me = S.players[ME], op = S.players[OP];
   const wait = typeof Online !== "undefined" && MODE === "online" && Online.blocked();
   const face = pi => { const id = playerIcon(pi); return `<span class="pg-face">${id ? iconImgHTML(id) : typeof DEFAULT_AVATAR_HTML !== "undefined" ? DEFAULT_AVATAR_HTML : `<span class="glyph">召</span>`}</span>`; };
@@ -1572,7 +1584,7 @@ function pregameHTML() {
       : `<p class="pg-wait">${done ? "引き直しました。" : ""}相手を待っています${dots}</p>`}`;
   }
   const net = typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : "";
-  return `<div class="pre pg pg-${ph}">
+  return `<div class="pre pg pg-${ph} ${still ? "noanim" : ""}">
     <div class="pg-bg" aria-hidden="true"></div>
     <div class="pre-top"><button type="button" class="chip" data-act="menu">メニュー</button></div>
     ${plate(OP, opSt)}

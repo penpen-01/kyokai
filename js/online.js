@@ -401,7 +401,7 @@ const Online = {
     if (a.t === "stamp" && this.room && a.by === this.room.guest) { if (typeof Stamps !== "undefined") Stamps.show(OP, a.id); return; }
     if (!S || !this.room || a.by !== this.room.guest) return;
     let done = false;
-    if (S.phase === "draft" && (a.t === "drps" || a.t === "dpick")) done = typeof SenDraft !== "undefined" && SenDraft.act(1, { t: a.t, v: a.v, i: +a.i });
+    if (S.phase === "draft" && (a.t === "drps" || a.t === "dpick" || a.t === "dready")) done = typeof SenDraft !== "undefined" && SenDraft.act(1, { t: a.t, v: a.v, i: +a.i });
     else if (S.phase === "rps" && a.t === "rps") done = rpsPick(1, a.v);
     else if (S.phase === "choose" && a.t === "choose") done = chooseOrder(1, !!a.first);
     else if (S.phase === "mulligan" && a.t === "mull") done = mulligan(1, !!a.redraw);

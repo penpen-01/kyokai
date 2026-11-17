@@ -2486,7 +2486,7 @@ button.admin-badge{cursor:pointer;border:0;font-family:inherit;line-height:1.4}
 .ttl-opt:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .ptitle{font-size:10px;color:#e3b64f;font-weight:700;white-space:nowrap;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .pname b{flex:0 1 auto;min-width:3.5em}
-.pg-title{display:block;font-style:normal;font-size:10.5px;color:#e3b64f}
+em.pg-title{display:block;font-style:normal;font-size:10.5px;color:#e3b64f}   /* 名前の下の称号（真ん中の大きな見出し div.pg-title とは別） */
 
 /* ---------- スタンプ ---------- */
 .stamp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
@@ -2689,3 +2689,52 @@ html.eco .card.mako .shine,html.nofx .card.mako .shine,html.eco .card.mako .art:
 .sd-time.low{color:#ff8080}
 .sd-last{margin:0;font-size:12px;color:var(--muted,#b9bfd6);text-align:center}
 #sd-deck .dmodal{z-index:90}
+/* 同じ場面の描き直しでは、登場の動きをやり直さない */
+.pg.noanim .pg-hand,.pg.noanim .pg-chosen,.pg.noanim .pg-opt,.pg.noanim .pg-title,.pg.noanim .pg-plate,
+.sd-screen:not(.anim) .pg-hand,.sd-screen:not(.anim) .pg-chosen,.sd-screen:not(.anim) .sd-h,.sd-screen:not(.anim) .sd-set{animation:none!important}
+
+/* ---- 選定戦の取り合いの画面（対戦の舞台を使わない） ---- */
+#app.sdmode{display:block}
+.sd-screen{position:relative;min-height:100%;max-width:600px;margin:0 auto;padding:max(10px,env(safe-area-inset-top)) 12px 24px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+.sd-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 10px;border-radius:12px;background:rgba(10,12,24,.75);border:1px solid rgba(255,255,255,.12)}
+.sd-vs{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 6px;min-width:0;font-size:13px;color:var(--muted,#b9bfd6)}
+.sd-vs small{font-size:11px;padding:1px 6px;border-radius:99px;background:rgba(227,182,79,.2);color:#f3d58e}
+.sd-vs b{font-size:15px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:12em}
+.sd-vs em{font-style:normal;font-size:11px;color:#e3b64f}
+.sd-main{flex:1;display:flex;flex-direction:column;align-items:stretch;gap:10px}
+.sd-h{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;margin-top:8px;animation:pghand .35s both}
+.sd-h b{font-family:var(--f-display);font-size:clamp(28px,8vw,38px);letter-spacing:.1em;color:#f3d58e;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+.sd-h small{font-size:13px;line-height:1.6;color:#d9d3c2;max-width:30em}
+.sd-main .pg-rps,.sd-main .pg-chosen{align-self:center}
+.sd-st{margin:0;text-align:center;font-size:13px;color:var(--muted,#b9bfd6)}
+.sd-main > .sd-time{align-self:center}
+.sd-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sd-round{font-family:var(--f-display);font-size:26px;color:#f3d58e}
+.sd-round small{font-size:13px;margin-left:4px;color:var(--muted,#b9bfd6)}
+.sd-turn{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+.sd-turn b{font-size:17px}
+.sd-turn.me{background:rgba(227,182,79,.14);border-color:rgba(227,182,79,.6)}
+.sd-turn.me b{color:#f3d58e}
+.sd-turn small{font-size:12px;line-height:1.5;color:var(--muted,#b9bfd6)}
+.sd-set{animation:pghand .3s both}
+.sd-deck{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:12px;background:rgba(10,12,24,.65);border:1px solid rgba(255,255,255,.12)}
+.sd-deck.op{border-color:rgba(255,140,140,.35)}
+.sd-deck .sen-curve{height:48px}
+.sd-mini{display:flex;flex-wrap:wrap;gap:4px}
+.sd-chip{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:3px 8px 3px 3px;border-radius:99px;font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.sd-chip i{font-style:normal;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#2b3a6b;font-size:10.5px;font-weight:800}
+.sd-chip em{font-style:normal;font-weight:800;color:#f3d58e}
+.sd-chip.r-legend{border-color:rgba(255,160,230,.6)}.sd-chip.r-ur{border-color:rgba(255,214,120,.6)}.sd-chip.r-sr{border-color:rgba(170,200,255,.5)}
+.sd-both{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:640px){.sd-both{grid-template-columns:1fr 1fr}}
+.sd-ready{min-height:48px;font-size:16px}
+.sd-reveal{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;background:rgba(4,6,14,.72);animation:fadein .2s both}
+.sd-rv-in{width:min(460px,100%);display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;border-radius:16px;background:rgba(20,18,36,.95);border:1px solid rgba(227,182,79,.6);box-shadow:0 0 30px rgba(227,182,79,.25);text-align:center}
+.sd-rv-in b{font-size:16px;color:#f3d58e}
+.sd-rv-in small{font-size:12px;color:var(--muted,#b9bfd6)}
+.sd-rv-in .sen-cards{width:100%}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+/* 取り合いの間は対戦の背景ではなく、暗い紫の部屋（自分の名前・山札などは出さない） */
+#app.sdmode{overflow-y:auto;padding-left:0;padding-right:0}
+#app.battle.sdmode::before{background:radial-gradient(120% 60% at 50% 20%,rgba(120,90,200,.28),transparent 70%),radial-gradient(90% 50% at 50% 100%,rgba(227,182,79,.12),transparent 70%),#0b0a17}
+#app.battle.sdmode::after{background:none}

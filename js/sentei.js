@@ -254,7 +254,7 @@ const Sentei = {
    3) 対戦：じゃんけんに負けた人が、ハンデとして先攻・後攻を選ぶ。あとはふつうの対戦
    候補は「2人とも開放している弾」のカード（選定戦に出さないカード・ボス限定は出ない）。同じカードは2人とも3枚まで。
    進行は部屋を作った人（ホスト）の端末が持ち、盤面（S）として参加者に届ける。作ったデッキは、その1試合だけ */
-const SD_PICK_SEC = 45, SD_RPS_SEC = 20;
+const SD_PICK_SEC = 45, SD_RPS_SEC = 20, SD_CHECK_SEC = 60, SD_SHOW_SEC = 3;   // 選ぶ・じゃんけん・デッキの確認（秒）、渡されたカードを見せる（秒）
 const SenDraft = {
   /* 開放している弾（自分の端末で） */
   openedSets() { return [...new Set(CARDS.map(c => c.set || "1"))].filter(s => setOpen(s)); },
@@ -266,10 +266,13 @@ const SenDraft = {
   begin() {
     const O = Online, g = O.guestDeck || {}, m = O.myDeck || {};
     const pl = (name, d) => ({ name, deckName: "選定戦", ...(d.icon ? { icon: d.icon } : {}), ...(d.title ? { title: d.title } : {}) });
+    if (typeof Motion !== "undefined") Motion.reset();
+    if (typeof Finale !== "undefined") Finale.reset();   // 前の対戦の「負けで灰色」を消す
+    resultShown = false; ui = { sel: null, mode: null };
     S = { gid: Math.random().toString(36).slice(2, 10), phase: "draft", seq: 0, over: false, winner: null, log: [], turn: 0, turnNo: 0,
       players: [pl(O.room.hostName || "部屋主", m), pl(O.room.guestName || "参加者", g)],
       rps: { picks: [null, null], round: 1, last: null },
-      draft: { st: "rps", hands: [null, null], last: null, first: null, r: 0, chooser: null, offer: null, decks: [{}, {}], dl: Date.now() + SD_RPS_SEC * 1000,
+      draft: { st: "rps", hands: [null, null], last: null, first: null, r: 0, chooser: null, offer: null, decks: [{}, {}], ready: [false, false], dl: Date.now() + SD_RPS_SEC * 1000,
         sets: this.openedSets().filter(s => (g.opened || []).includes(s)) } };
     MODE = "online"; setPerspective(0); $("#overlay").hidden = true;
     this.startTick();
@@ -302,10 +305,15 @@ const SenDraft = {
       const take = D.offer[a.i], rest = D.offer[1 - a.i] || [];
       take.forEach(id => { D.decks[pi][id] = (D.decks[pi][id] || 0) + 1; });
       rest.forEach(id => { D.decks[1 - pi][id] = (D.decks[1 - pi][id] || 0) + 1; });
-      D.lastPick = { by: pi, take, rest };
+      D.lastPick = { by: pi, take, rest, r: D.r };
       D.r++;
-      if (D.r >= SEN_ROUNDS) { this.finish(); return true; }
-      D.chooser = (D.first + D.r) % 2; D.offer = this.offer(); D.dl = Date.now() + SD_PICK_SEC * 1000;
+      if (D.r >= SEN_ROUNDS) { D.st = "check"; D.offer = null; D.ready = [false, false]; D.dl = Date.now() + (SD_CHECK_SEC + SD_SHOW_SEC) * 1000; render(); return true; }
+      D.chooser = (D.first + D.r) % 2; D.offer = this.offer(); D.dl = Date.now() + (SD_PICK_SEC + SD_SHOW_SEC) * 1000;   // 渡されたカードを見せる時間の分だけ足す
+      render(); return true;
+    }
+    if (a.t === "dready" && D.st === "check" && !D.ready[pi]) {
+      D.ready[pi] = true;
+      if (D.ready[0] && D.ready[1]) { this.finish(); return true; }
       render(); return true;
     }
     return false;
@@ -335,6 +343,7 @@ const SenDraft = {
     const D = S.draft;
     if (D.st === "rps") { [0, 1].forEach(pi => { if (!D.hands[pi] && S.phase === "draft" && S.draft.st === "rps") this.act(pi, { t: "drps", v: "gcp"[Math.floor(Math.random() * 3)] }); }); }
     else if (D.st === "pick") this.act(D.chooser, { t: "dpick", i: Math.random() < .5 ? 0 : 1 });
+    else if (D.st === "check") this.finish();
   },
   left() { const D = S && S.draft; if (!D) return 0; const now = Date.now() - (Online.role === "guest" ? Online.skew || 0 : 0); return Math.max(0, Math.ceil((D.dl - now) / 1000)); },
   paintTime() { const el = document.querySelector(".sd-time"); if (el) { const s = this.left(); el.textContent = `残り ${s}秒`; el.classList.toggle("low", s <= 10); } },
@@ -344,42 +353,70 @@ const SenDraft = {
     if (Online.blocked()) return;
     Online.send(a);
   },
-  /* 画面（pregameHTML の真ん中） */
-  bodyHTML() {
-    const D = S.draft, me = ME, dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
+  /* ---------- 画面：対戦の舞台は使わず、取り合い専用の画面（自分の名前は出さず、相手の名前だけ上に） ---------- */
+  mini(d) {
+    const L = Object.entries(d).map(([id, n]) => [DEF[id], n]).filter(([c]) => c).sort((a, b) => a[0].cost - b[0].cost || a[0].name.localeCompare(b[0].name));
+    return `<div class="sd-mini">${L.map(([c, n]) => `<button type="button" class="sd-chip r-${c.rarity}" data-tk="${esc(c.id)}"><i>${c.cost}</i>${esc(c.name)}${n > 1 ? `<em>×${n}</em>` : ""}</button>`).join("") || `<span class="hint">まだありません</span>`}</div>`;
+  },
+  cards(ids, sel) { return `<div class="sen-cards">${ids.map(id => DEF[id] ? `<button type="button" class="sen-card" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true, look: null })}</button>` : "").join("")}</div>`; },
+  screenHTML() {
+    const D = S.draft, me = ME, op = OP, P = S.players[op], dots = `<span class="pg-dots"><i></i><i></i><i></i></span>`;
     if (!this.timer) this.startTick();
-    if (D.gone) return `<div class="pg-title"><b>相手が退出しました</b><small>選定戦は中止です</small></div><button type="button" class="btn" data-act="toTitle">部屋を出る</button>`;
+    // 演出を毎回やり直さない（相手が選んだだけで、じゃんけんの手などが出直さないように）
+    const key = `${S.gid}|${D.st}|${D.r}|${D.last ? D.last.hands.join("") : ""}`, anim = key !== this.animKey; this.animKey = key;
+    // 前の回で自分に入ったカードを、次の候補の前に見せる
+    if (D.lastPick && D.lastPick.r !== this.seenPick) {
+      const first = this.seenPick === undefined && D.r > 1; this.seenPick = D.lastPick.r;
+      if (!first) { const lp = D.lastPick, mine = lp.by === me ? lp.take : lp.rest, theirs = lp.by === me ? lp.rest : lp.take;
+        this.show = { mine, theirs, by: lp.by, until: Date.now() + SD_SHOW_SEC * 1000 - 300 };
+        clearTimeout(this.showT); this.showT = setTimeout(() => { this.show = null; if (S && S.phase === "draft") render(); }, SD_SHOW_SEC * 1000 - 300); }
+    }
     const wait = Online.blocked();
     const time = `<span class="sd-time">残り ${this.left()}秒</span>`;
-    if (D.st === "rps") {
+    let main;
+    if (D.gone) main = `<div class="sd-h"><b>相手が退出しました</b><small>選定戦は中止です</small></div><button type="button" class="btn" data-act="toTitle">部屋を出る</button>`;
+    else if (D.st === "rps") {
       const mine = D.hands[me];
-      return `<div class="pg-title"><b>${D.last ? "あいこ！" : "じゃんけん"}</b><small>${D.last ? "もう一度" : "選定戦：勝つと最初にセットを選べる。負けた人は、対戦の先攻・後攻を選べる"}</small></div>
+      main = `<div class="sd-h"><b>${D.last ? "あいこ！" : "じゃんけん"}</b><small>${D.last ? "もう一度" : "勝つと最初にセットを選べます。負けた人は、対戦の先攻・後攻を選べます。"}</small></div>
         ${mine ? `<div class="pg-chosen">${rpsImg(mine)}<span>${RPS[mine]}</span></div><p class="pg-wait">相手を待っています${dots}</p>`
           : `<div class="pg-rps">${Object.entries(RPS).map(([k, v], i) => `<button type="button" class="pg-hand" style="--i:${i}" data-act="sdRps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}
-        ${time}`;
+        <p class="sd-st">${D.hands[op] ? "相手は選びました" : `相手は考え中${dots}`}</p>${time}`;
+    } else if (D.st === "pick") {
+      const my = D.chooser === me, floor = senFloor(D.r), d = D.decks[me];
+      main = `<div class="sd-row"><b class="sd-round">${D.r + 1}<small>/ ${SEN_ROUNDS}回目</small></b>${time}</div>
+        <div class="sd-turn ${my ? "me" : ""}"><b>${my ? "あなたが選ぶ番" : "相手が選ぶ番"}</b><small>選ばれなかったセットは、${my ? "相手" : "あなた"}のデッキに入ります${floor ? `。どちらにも${RARITY[floor]}${floor === "legend" ? "" : "以上"}が入っています` : ""}</small></div>
+        <div class="sd-offer">${(D.offer || []).map((set, i) => `<div class="sd-set ${my && this.sel === i ? "sel" : ""}">
+          ${this.cards(set)}
+          ${my ? `<button type="button" class="btn ${this.sel === i ? "primary" : ""}" data-act="sdPick" data-v="${i}" ${wait ? "disabled" : ""}>${this.sel === i ? "このセットに決める" : "このセットを取る"}</button>` : ""}</div>`).join("")}</div>
+        ${my ? (this.sel != null ? `<p class="sd-st">もう一度押すと決まります</p>` : "") : `<p class="sd-st">相手が選んでいます${dots}</p>`}
+        <div class="sd-deck"><div class="sd-row"><b>あなたのデッキ</b><span>${Sentei.count(d)} / ${SEN_ROUNDS * SEN_SET}枚</span></div>${Sentei.curveHTML(d)}${this.mini(d)}</div>`;
+    } else {
+      const ok = D.ready[me];
+      main = `<div class="sd-h"><b>デッキ完成</b><small>お互いのデッキを確認してください。2人とも「確認した」を押すか、時間が来ると対戦が始まります。</small></div>
+        <div class="sd-row"><span class="sd-st">${D.ready[op] ? "相手は確認しました" : `相手は確認中${dots}`}</span>${time}</div>
+        <div class="sd-both">
+          <div class="sd-deck"><div class="sd-row"><b>あなたのデッキ</b><span>${Sentei.count(D.decks[me])}枚</span></div>${Sentei.curveHTML(D.decks[me])}${this.mini(D.decks[me])}</div>
+          <div class="sd-deck op"><div class="sd-row"><b>相手のデッキ</b><span>${Sentei.count(D.decks[op])}枚</span></div>${Sentei.curveHTML(D.decks[op])}${this.mini(D.decks[op])}</div>
+        </div>
+        <button type="button" class="btn primary sd-ready" data-act="sdReady" ${ok || wait ? "disabled" : ""}>${ok ? "確認しました（相手を待っています）" : "確認した"}</button>`;
     }
-    const my = D.chooser === me, n = Sentei.count(D.decks[me]);
-    const lp = D.lastPick ? `<p class="sd-last">${D.lastPick.by === me ? "あなた" : "相手"}が選んだ：${D.lastPick.take.map(id => esc((DEF[id] || {}).name || "")).join("・")}</p>` : "";
-    const floor = senFloor(D.r);
-    return `<div class="pg-title sm"><b>${D.r + 1} / ${SEN_ROUNDS} 回目　${my ? "あなたが選ぶ番" : "相手が選ぶ番"}</b><small>選ばれなかったセットは、${my ? "相手" : "あなた"}のデッキに入る${floor ? `／${RARITY[floor]}${floor === "legend" ? "" : "以上"}が必ず入る` : ""}</small></div>
-      <div class="sd-offer">${(D.offer || []).map((set, i) => `<div class="sd-set ${my && this.sel === i ? "sel" : ""}">
-        <div class="sen-cards">${set.map(id => DEF[id] ? `<button type="button" class="sen-card" data-tk="${esc(id)}" aria-label="${esc(DEF[id].name)}（押すと効果）">${cardHTML(DEF[id], { static: true, look: null })}</button>` : "").join("")}</div>
-        ${my ? `<button type="button" class="btn ${this.sel === i ? "primary" : ""}" data-act="sdPick" data-v="${i}" ${wait ? "disabled" : ""}>${this.sel === i ? "このセットに決める" : "このセットを取る"}</button>` : ""}</div>`).join("")}</div>
-      ${my ? "" : `<p class="pg-wait">相手が選んでいます${dots}</p>`}
-      <div class="sd-foot">${time}<button type="button" class="chip" data-act="sdDeck">自分のデッキ ${n}枚</button></div>${lp}`;
-  },
-  deckHTML() {
-    const d = S.draft.decks[ME];
-    return `<div class="dmodal" data-act="sdDeckClose"><div class="dmodal-in" role="dialog" aria-label="自分のデッキ" data-act="noop">
-      <b class="dm-name">今のデッキ（${Sentei.count(d)}枚）</b>${Sentei.curveHTML(d)}${Sentei.listHTML(d)}
-      <button type="button" class="btn" data-act="sdDeckClose">閉じる</button></div></div>`;
+    const sh = this.show && Date.now() < this.show.until ? this.show : null;
+    const reveal = sh ? `<div class="sd-reveal" role="status" data-act="sdShowClose">
+        <div class="sd-rv-in"><b>あなたのデッキに入ったカード</b>${this.cards(sh.mine)}
+        <small>${sh.by === me ? "相手には、もう片方のセットが入りました" : "相手が選んだ残りのセットです"}</small></div></div>` : "";
+    return `<div class="sd-screen ${anim ? "anim" : ""}">
+      <div class="sd-top"><span class="sd-vs"><small>選定戦</small> VS <b>${esc(P.name)}</b>${P.title ? `<em>${esc(P.title)}</em>` : ""}</span>
+        <button type="button" class="chip" data-act="menu">メニュー</button></div>
+      <div class="sd-main">${main}</div>${reveal}
+      ${typeof Online !== "undefined" ? Online.bannerHTML() : ""}
+    </div>`;
   },
   handleAct(act, el) {
     switch (act) {
       case "sdRps": this.send({ t: "drps", v: el.dataset.v }); return true;
       case "sdPick": { const i = +el.dataset.v; if (this.sel === i) { this.sel = null; this.send({ t: "dpick", i }); } else { this.sel = i; Sound.play("click"); render(); } return true; }
-      case "sdDeck": { const o = document.getElementById("sd-deck"); if (o) o.remove(); document.body.insertAdjacentHTML("beforeend", `<div id="sd-deck">${this.deckHTML()}</div>`); return true; }
-      case "sdDeckClose": { const o = document.getElementById("sd-deck"); if (o) o.remove(); return true; }
+      case "sdReady": this.send({ t: "dready" }); return true;
+      case "sdShowClose": this.show = null; render(); return true;
     }
     return false;
   }
