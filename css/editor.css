@@ -340,3 +340,22 @@ select.txt{appearance:auto;-webkit-appearance:auto}
 .qe-row .qe-prev{flex-basis:100%;margin:0}
 .qe-no{font-weight:700;color:var(--gold);min-width:1.5em}
 .qe-btns{display:flex;gap:6px;margin-left:auto}
+/* 選定戦の出禁：絵をタップで切り替え（2026-11-18） */
+.sen-warn{display:flex;flex-direction:column;gap:6px;padding:10px 12px;margin:6px 0;border-radius:10px;background:rgba(255,170,60,.12);border:1px solid rgba(255,170,60,.6)}
+.sen-warn > div{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px}
+.sen-warn small{font-size:12px;opacity:.8}
+.sen-filt{display:flex;flex-direction:column;gap:6px;margin:6px 0}
+.sen-filt .chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.sen-filt .chip{all:unset;cursor:pointer;padding:4px 10px;border-radius:99px;font-size:12.5px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04)}
+.sen-filt .chip.on{background:#e3b64f;color:#1d1209;border-color:#e3b64f;font-weight:700}
+.sen-sp{width:10px}
+.sen-bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px}
+.sen-bt{all:unset;cursor:pointer;position:relative;display:block;aspect-ratio:5/7;border-radius:8px;overflow:hidden;background:#1a1d30;border:2px solid rgba(255,255,255,.15)}
+.sen-bt img,.sen-bg0{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sen-bt i,.sen-bt em{position:absolute;top:3px;font-style:normal;font-size:11px;font-weight:800;padding:0 5px;border-radius:99px;background:rgba(0,0,0,.7);color:#fff}
+.sen-bt i{left:3px}.sen-bt em{right:3px}
+.sen-bt b{position:absolute;left:0;right:0;bottom:0;padding:10px 4px 3px;font-size:10.5px;line-height:1.25;text-align:center;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+.sen-bt.r-ur{border-color:#e3b64f}.sen-bt.r-legend{border-color:#ff9bd0}.sen-bt.r-sr{border-color:#9fb8ff}
+.sen-bt.ban img{filter:grayscale(1) brightness(.35)}
+.sen-bt.ban::after{content:"✕ 出さない";position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:800;white-space:nowrap;background:#b8343a;color:#fff}
+.sen-bt:focus-visible{outline:2px solid #fff;outline-offset:2px}

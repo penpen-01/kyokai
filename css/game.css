@@ -2859,3 +2859,16 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .sen-bot.row{flex-direction:row;justify-content:center}
 .sen-bot.row .sen-go{flex:1;width:auto;max-width:420px}
 .sen-bot .sen-quit{flex:none;width:auto;min-height:48px;padding:0 16px;background:#8e2630;border-color:#d0505a;color:#fff}
+/* ショップ：上のバーと店員をいっしょに上に固定（下へスクロールしても店員が見える） 2026-11-18 */
+.panel:has(> .sh-sticky){margin-top:0}
+.sh-sticky{position:sticky;top:0;z-index:6;display:flex;flex-direction:column;gap:10px;padding-bottom:10px;transform:translateZ(0)}
+/* 背景の絵が透けて見えるように、上のバーと同じ半透明＋ぼかし */
+.sh-sticky::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:calc(-1 * max(16px, env(safe-area-inset-left, 0px)));right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  background:rgba(10,11,24,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,200,120,.18);box-shadow:0 6px 12px -6px rgba(0,0,0,.6)}
+.overlay .sh-sticky > .topbar{position:relative;top:auto;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
+.sh-sticky > .topbar::before{display:none}
+/* 固定しても下の売り場が見えるように、店員の舞台は画面の高さの半分くらいまで */
+.shophub .sh-sticky .kp-stage{width:min(100%,calc(min(46dvh,460px) * 4 / 3))}
+/* 小さい顔：丸ではなく角の丸い四角で、顔を真ん中に */
+.kp-mini .kp-man{border-radius:12px;width:68px;height:68px}
+.kp-mini .kp-img{width:var(--kw,250%);left:var(--kl,-75%);top:var(--kt,-4%)}

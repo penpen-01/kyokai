@@ -928,7 +928,8 @@ function normalizeData(data) {
   const SEN_DEF = [[100, 0, 0, 0], [200, 0, 0, 0], [400, 0, 0, 0], [500, 0, 1, 0], [700, 100, 1, 0], [900, 200, 2, 0], [1200, 300, 2, 0], [1500, 500, 2, 1]];
   const sr = d.sen && Array.isArray(d.sen.rewards) && d.sen.rewards.length ? d.sen.rewards : SEN_DEF.map(([gold, stones, tickets, srTickets]) => ({ gold, stones, tickets, srTickets }));
   const sen = { rewards: Array.from({ length: 8 }, (_, i) => { const x = sr[i] || sr[sr.length - 1] || {}; const n = k => Math.max(0, Math.floor(+x[k] || 0)); return { gold: n("gold"), stones: n("stones"), tickets: n("tickets"), srTickets: n("srTickets") }; }),
-    ban: d.sen && Array.isArray(d.sen.ban) ? [...new Set(d.sen.ban.filter(x => typeof x === "string" && /^[\w-]{1,40}$/.test(x)))].slice(0, 400) : [] };
+    ban: d.sen && Array.isArray(d.sen.ban) ? [...new Set(d.sen.ban.filter(x => typeof x === "string" && /^[\w-]{1,40}$/.test(x)))].slice(0, 400) : [],
+    checked: d.sen && Array.isArray(d.sen.checked) ? d.sen.checked.filter(x => typeof x === "string" && x.length <= 20).slice(0, 100) : [] };   // 出禁を確認したパック（工房の注意書き用）
   return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps, skins, sen };
 }
 

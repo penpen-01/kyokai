@@ -304,10 +304,33 @@ const Admin = {
     S0.ban = S0.ban || [];
     const cfgs = ["SEN_ON", "SEN_BETA", "SEN_FEE"].map(k => `<div class="item"><label for="f-cfg-${k}">${CONFIG_INFO[k].label}<small>初期値 ${DEFAULT_CONFIG[k]}</small></label>${stepper("cfg-" + k, DATA.config[k] ?? DEFAULT_CONFIG[k], CONFIG_INFO[k].label)}</div>`).join("");
     const F = [["gold", "G"], ["stones", "魔石"], ["tickets", "パック券"], ["srTickets", "SR以上確定券"]];
-    const q = (this.senQ || "").trim();
     const all = (DATA.cards || []).filter(c => c.limit > 0 && !c.token && !c.boss);
-    const hits = q ? all.filter(c => c.name.includes(q) || c.id.includes(q)).slice(0, 40) : [];
-    const name = id => { const c = (DATA.cards || []).find(x => x.id === id); return c ? c.name : id; };
+    // 出禁の一覧：パック・レア度・種類で絞って、絵をタップで外す／戻す
+    const F0 = this.senF || (this.senF = { set: "all", rar: "all", type: "all", only: false });
+    const setKey = c => c.set || "1";
+    const packs = (DATA.packs || []).map(p => ({ key: p.set || "1", name: p.name || p.id }));
+    const keys = [...new Set(all.map(setKey))];
+    keys.forEach(k => { if (!packs.some(p => p.key === k)) packs.push({ key: k, name: k === "1" ? "第1弾" : k }); });
+    S0.checked = S0.checked || [];
+    const unchecked = packs.filter(p => keys.includes(p.key) && !S0.checked.includes(p.key));
+    const ban = new Set(S0.ban), q = (this.senQ || "").trim(), RARITY_ORDER = Object.keys(RARITY_SHORT);
+    const shown = all.filter(c => (F0.set === "all" || setKey(c) === F0.set) && (F0.rar === "all" || c.rarity === F0.rar) && (F0.type === "all" || c.type === F0.type)
+      && (!F0.only || ban.has(c.id)) && (!q || c.name.includes(q) || c.id.includes(q)))
+      .sort((x, y) => x.cost - y.cost || RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity));
+    const chip = (k, v, label) => `<button type="button" class="chip ${F0[k] === v ? "on" : ""}" data-act="senF" data-k="${k}" data-v="${v}">${label}</button>`;
+    const banHTML = `<div class="fgroup"><span class="gl">選定戦に出さないカード（${S0.ban.length}枚）</span>
+        <p class="hint">絵をタップすると、出す／出さないが切り替わります（暗くて ✕ がついているのが出さないカード）。プレイヤーにも CPU にも出ません。ボス限定のカードは、もともと出ません。</p>
+        ${unchecked.length ? `<div class="sen-warn">${unchecked.map(p => `<div><b>まだ出禁を確認していないパック：${esc(p.name)}</b><span><button type="button" class="btn sm" data-act="senF" data-k="set" data-v="${esc(p.key)}">このパックを見る</button><button type="button" class="btn sm primary" data-act="senChecked" data-v="${esc(p.key)}">確認した</button></span></div>`).join("")}<small>新しいパックを足したら、ここに出ます。強すぎるカードや、組み合わせがないと働かないカードがないか見てから「確認した」を押してください。</small></div>` : ""}
+        <div class="sen-filt">
+          <div class="chips">${chip("set", "all", "すべてのパック")}${packs.filter(p => keys.includes(p.key)).map(p => chip("set", p.key, esc(p.name))).join("")}</div>
+          <div class="chips">${chip("rar", "all", "すべて")}${RARITY_ORDER.map(r => chip("rar", r, RARITY_SHORT[r])).join("")}<span class="sen-sp"></span>${chip("type", "all", "キャラも魔法も")}${chip("type", "char", "キャラ")}${chip("type", "spell", "魔法")}</div>
+          <div class="chips"><label class="ownchk"><input type="checkbox" data-act="senOnly" ${F0.only ? "checked" : ""}> 出さないカードだけ見る</label>
+            <input class="txt" id="sen-q" placeholder="名前で探す" value="${esc(this.senQ || "")}" autocomplete="off" style="max-width:180px"></div>
+          <div class="chips"><span class="hint">表示中の ${shown.length}枚：</span><button type="button" class="btn sm" data-act="senBulk" data-v="ban">全部 出さない</button><button type="button" class="btn sm" data-act="senBulk" data-v="ok">全部 出す</button></div>
+        </div>
+        <div class="sen-bgrid">${shown.map(c => `<button type="button" class="sen-bt ${ban.has(c.id) ? "ban" : ""} r-${c.rarity}" data-act="senToggle" data-v="${esc(c.id)}" title="${esc(c.name)}" aria-pressed="${ban.has(c.id)}">
+          ${c.art ? `<img src="${esc(c.art)}" alt="" loading="lazy">` : `<span class="sen-bg0"></span>`}<i>${c.cost}</i><em>${RARITY_SHORT[c.rarity] || ""}</em><b>${esc(c.name)}</b></button>`).join("") || `<p class="hint">条件に合うカードはありません。</p>`}</div>
+      </div>`;
     return `<div class="fgroup"><span class="gl">選定戦</span>
         <p class="hint">「一人で対戦」の選定戦です。入場料（G）を払い、3枚ずつの2つのセットから1つを選ぶのを10回くり返してデッキを作り、7勝か2敗まで CPU と戦います。</p>
         <div class="cfg">${cfgs}</div></div>
@@ -315,12 +338,7 @@ const Admin = {
         <p class="hint">途中でやめたときも、その時点の勝った数の報酬を受け取ります。</p>
         ${S0.rewards.map((x, i) => `<div class="frow inf-ed"><b style="min-width:3em">${i}勝</b>${F.map(([k, l]) => `<label class="fl">${l}<input class="txt" type="number" min="0" data-senr="${i}:${k}" value="${+x[k] || 0}" style="max-width:100px"></label>`).join("")}</div>`).join("")}
       </div>
-      <div class="fgroup"><span class="gl">選定戦に出さないカード（${S0.ban.length}枚）</span>
-        <p class="hint">ここに入れたカードは、選定戦の候補（プレイヤーにも CPU にも）に出ません。強すぎるカードや、組み合わせがないと働かないカードを外すのに使います。ボス限定のカードは、もともと出ません。</p>
-        <div class="chips">${S0.ban.map(id => `<button type="button" class="btn sm" data-act="senUnban" data-v="${esc(id)}">${esc(name(id))} ✕</button>`).join("") || `<span class="hint">まだありません</span>`}</div>
-        <input class="txt" id="sen-q" placeholder="カードの名前で探して足す" value="${esc(this.senQ || "")}" autocomplete="off" style="margin-top:8px">
-        ${hits.length ? `<div class="chips">${hits.map(c => S0.ban.includes(c.id) ? "" : `<button type="button" class="btn sm" data-act="senBan" data-v="${esc(c.id)}">＋ ${esc(c.name)}</button>`).join("")}</div>` : ""}
-      </div>`;
+      ${banHTML}`;
   },
   /* ---------- スタンプ ---------- */
   stampsHTML() {
@@ -625,6 +643,14 @@ const Admin = {
       }
       case "ecoSub": this.ecoSub = el.dataset.v; this.renderEco(); return true;
       case "sknAdd": DATA.skins = DATA.skins || []; DATA.skins.push({ id: "k" + Date.now().toString(36), kind: el.dataset.v, name: "新しいスキン", price: 5000 }); this.touch(this.renderEco); return true;
+      case "senF": { const F0 = this.senF || (this.senF = {}); F0[el.dataset.k] = el.dataset.v; this.renderEco(); return true; }
+      case "senOnly": { (this.senF || (this.senF = {})).only = el.checked; this.renderEco(); return true; }
+      case "senToggle": { const b = DATA.sen.ban = DATA.sen.ban || [], id = el.dataset.v; DATA.sen.ban = b.includes(id) ? b.filter(x => x !== id) : [...b, id]; this.touch(this.renderEco); return true; }
+      case "senBulk": {
+        const ids = [...document.querySelectorAll(".sen-bt")].map(x => x.dataset.v), b = new Set(DATA.sen.ban || []);
+        ids.forEach(id => el.dataset.v === "ban" ? b.add(id) : b.delete(id)); DATA.sen.ban = [...b]; this.touch(this.renderEco); return true;
+      }
+      case "senChecked": { const c = DATA.sen.checked = DATA.sen.checked || []; if (!c.includes(el.dataset.v)) c.push(el.dataset.v); this.touch(this.renderEco); return true; }
       case "senBan": { const b = DATA.sen.ban = DATA.sen.ban || []; if (!b.includes(el.dataset.v)) b.push(el.dataset.v); this.touch(this.renderEco); return true; }
       case "senUnban": DATA.sen.ban = (DATA.sen.ban || []).filter(x => x !== el.dataset.v); this.touch(this.renderEco); return true;
       case "sknDel": (DATA.skins || []).splice(+el.dataset.i, 1); this.touch(this.renderEco); return true;

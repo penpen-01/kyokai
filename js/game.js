@@ -902,7 +902,10 @@ function bounce(pi, u, to) {
 /* 沈黙：効果と能力をすべて失う（上がった攻撃力・体力はそのまま） */
 function silenceUnit(u) {
   u.winIn = null;
+  const wasStill = kw(u, "noattack");
   u.silenced = true; u.kws = []; u.armorPlus = 0;
+  // 不動で動けなかったキャラが自分のターン中に沈黙したら、そのターンから攻撃できる（前のターンから場にいて、凍結していなければ）
+  if (wasStill && !kw(u, "noattack") && S.turn === ownerOf(u) && u.born < S.turnNo && !u.frozen && !u.thawed && !u.swings) u.ready = true;
   log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "silence");
 }
 function swapStats(u) {
@@ -1228,6 +1231,10 @@ function evaluate(st, pi) {
   const enGuard = en.field.some(u => kw(u, "guard") && !hidden(u));
   const myReach = me.field.reduce((a, u) => a + ((!enGuard || kw(u, "pierce")) && !kw(u, "noattack") ? u.atk * (kw(u, "twice") ? 2 : 1) : 0), 0);
   if (myReach >= en.hp) s += 25;
+  // 特殊勝利（終刻の大時計など）：場に残るほど負けに近づく。体力を削るほど倒しやすくなるので、残りの体力も重く見る
+  const timer = u => u.winIn != null && !u.silenced && u.hp > 0 ? (u.winIn <= 1 ? 40 : u.winIn === 2 ? 22 : 12) + u.hp * 1.3 : 0;
+  s -= en.field.reduce((a, u) => a + timer(u), 0);
+  s += me.field.reduce((a, u) => a + timer(u), 0) * 0.8;
   return s;
 }
 
@@ -1248,7 +1255,9 @@ function legalActions(pi) {
   });
   me.field.forEach(u => {
     if (!u.ready) return;
-    if (canAttackPlayer(pi, u)) acts.push({ t: "attack", uid: u.uid, target: "player" });
+    // 攻撃力0で本体を殴っても何も起きない（攻撃したときの効果があるキャラは別）。むだな手としてCPUが選ばないように外す
+    const noUse = u.atk <= 0 && (u.silenced || !(DEF[u.id].effects || []).some(e => ["attack", "face"].includes(whenOf(e))));
+    if (canAttackPlayer(pi, u) && !noUse) acts.push({ t: "attack", uid: u.uid, target: "player" });
     en.field.forEach(d => { if (canAttackUnit(pi, d, u)) acts.push({ t: "attack", uid: u.uid, target: d.uid }); });
   });
   return acts;
@@ -1291,6 +1300,25 @@ function cpuChoose(pi) {
     const bonus = a.t === "play" && DEF[a.id] ? playEffects(DEF[a.id]).filter(e => e.kind === "tutor").length * 0.9 : 0;
     return { a, v: sum / tries + bonus };
   }).sort((x, y) => y.v - x.v);
+  // 特殊勝利のキャラ（終刻の大時計など）が、もうすぐ勝ちになるとき：本体を倒しきれないなら、攻撃をそのキャラに集める。
+  // 1手ずつの点数では「削っても倒すまでは得にならない」ので、ここで決める（カードを出す手が一番よければ、そちらが先）
+  if (!easy && (!scored[0] || scored[0].a.t !== "play" || scored[0].v <= base + 0.05)) {
+    const me = S.players[pi], en = S.players[opp(pi)];
+    const thr = en.field.filter(u => u.winIn != null && !u.silenced && u.hp > 0 && u.winIn <= 2).sort((x, y) => x.winIn - y.winIn || x.hp - y.hp)[0];
+    if (thr) {
+      const ready = me.field.filter(u => u.ready && u.atk > 0 && !kw(u, "noattack"));
+      const face = ready.filter(u => canAttackPlayer(pi, u)).reduce((a, u) => a + u.atk * (kw(u, "twice") ? 2 : 1), 0);
+      const hitters = ready.filter(u => canAttackUnit(pi, thr, u)).sort((x, y) => y.atk - x.atk);
+      const canKill = hitters.reduce((a, u) => a + u.atk, 0) >= thr.hp;
+      if (face < en.hp && hitters.length && (canKill || thr.winIn >= 2)) {
+        // ちょうど倒せる一番小さい攻撃力のキャラがいればそれ、いなければ一番大きいキャラで削る
+        const one = hitters.filter(u => u.atk >= thr.hp).pop();
+        const u = one || hitters[0];
+        const a = acts.find(x => x.t === "attack" && x.uid === u.uid && x.target === thr.uid);
+        if (a) return a;
+      }
+    }
+  }
   if (easy) {
     const ok = scored.filter(x => x.v > base + 0.05).slice(0, 3);
     return ok.length ? ok[Math.floor(Math.random() * ok.length)].a : null;
@@ -1472,6 +1500,9 @@ let lastBannerKey = "";
 let CARD_EAGER = false, lastBoardHTML = "";
 const artCache = new Map();
 function preloadArts(ids) {
+  // 前の対戦の絵は手放す（ずっと持っていると、何十戦も続けたときに iPhone のメモリが足りなくなり、画面が白くなって読み込み直しになる）
+  const want = new Set(ids.map(id => DEF[id] && DEF[id].art).filter(Boolean));
+  [...artCache.keys()].forEach(a => { if (!want.has(a)) artCache.delete(a); });
   ids.forEach(id => { const d = DEF[id]; if (!d || !d.art || artCache.has(d.art)) return;
     const im = new Image(); im.src = d.art; artCache.set(d.art, im); if (im.decode) im.decode().catch(() => {}); });
 }

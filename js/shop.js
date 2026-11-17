@@ -209,7 +209,7 @@ const Shop = {
   },
   show(msg) {
     this.view = "hub";
-    this.msg = msg === undefined ? this.msg : msg;
+    if (msg) toast(msg); this.msg = null;   // 交換した知らせは、上の紫の欄ではなく短い通知で（店員の場所を動かさない）
     const sur = this.surplus();
     const surN = sur.reduce((a, x) => a + x.n, 0), surS = sur.reduce((a, x) => a + x.stones, 0);
     const tc = this.ticketCost(), f = this.feature(), use = this.usable();
@@ -217,10 +217,9 @@ const Shop = {
     const soon = /[?&]shopsoon\b/.test(location.search);
     const fut = SHOP_CATS.filter(x => !x.ready);
     openOverlay(`<div class="panel wide shop shophub">
-      <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
+      <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
+      ${Keeper.stageHTML()}</div>
       ${this.noteHTML()}
-      ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
-      ${Keeper.stageHTML()}
       <div class="sh-cats">
         <button type="button" class="sh-cat art wide c-trade" data-act="shopTrade" ${use ? "" : "disabled"}>
           <span class="sh-art" style="background-image:url('ui/shop-trade.webp')" aria-hidden="true"></span><b>カードと交換</b><small>好きなカードを魔石で1枚ずつ</small><span class="go" aria-hidden="true">›</span></button>
@@ -261,16 +260,15 @@ const Shop = {
   /* カードと交換の売り場 */
   showTrade(msg) {
     this.view = "trade";
-    this.msg = msg === undefined ? this.msg : msg;
+    if (msg) toast(msg); this.msg = null;
     const sur = this.surplus();
     const surN = sur.reduce((a, x) => a + x.n, 0), surS = sur.reduce((a, x) => a + x.stones, 0);
     const cap = this.cap(), tc = this.ticketCost();
     const list = this.pool().filter(c => (this.rar === "all" || c.rarity === this.rar) && (!this.onlyNeed || Account.owned(c.id) < cap));
     openOverlay(`<div class="panel wide shop">
-      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>カードと交換</b>${stoneTag(Account.stones)}</div>
+      <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>カードと交換</b>${stoneTag(Account.stones)}</div>
+      ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
-      ${Keeper.miniHTML()}
-      ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
       <section class="shopsec">
         <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.costRate(r)}</span>`).join("")}</p>
         <div class="shopfilter">
@@ -291,17 +289,16 @@ const Shop = {
   showDismantle(msg) {
     const ov = $("#overlay"), y = this.view === "dis" && !ov.hidden ? ov.scrollTop : 0;   // 選ぶたびに一番上へ戻らないように
     this.view = "dis";
-    if (msg !== undefined) this.msg = msg;
+    if (msg) toast(msg); this.msg = null;
     const sur = this.surplus(), cap = this.cap();
     this.sel = Object.fromEntries(Object.entries(this.sel || {}).filter(([id, k]) => k > 0 && sur.some(x => x.c.id === id)));
     const allN = sur.reduce((a, x) => a + x.n, 0), allS = sur.reduce((a, x) => a + x.stones, 0);
     const pick = x => Math.min(x.n, this.sel[x.c.id] || 0);
     const selN = sur.reduce((a, x) => a + pick(x), 0), selS = sur.reduce((a, x) => a + pick(x) * this.getRate(x.c.rarity), 0);
     openOverlay(`<div class="panel wide shop">
-      <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b>${stoneTag(Account.stones)}</div>
+      <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b>${stoneTag(Account.stones)}</div>
+      ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
-      ${Keeper.miniHTML()}
-      ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}
       <p class="callout"><b>分解できるのはダブりだけ</b>同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>
       <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.getRate(r)}</span>`).join("")}</p>
       ${sur.length ? `
@@ -424,7 +421,9 @@ const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "o
 const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere"] };
 const KEEPER_FALLBACK = { sleep: "blink", doze: "idle", yawn: "talk1", shy: "happy", angry: "trouble", dere: "happy" };
 const KEEPER_DOZE = 10000, KEEPER_SLEEP = 20000;   // 何もしないと、うとうと（10秒）→ 眠る（20秒）。眠る絵のある店員だけ
-const KEEPER_ART = ["dorgan", "weiss", "ruu"];   // 絵がそろっている店員
+const KEEPER_ART = ["dorgan", "weiss", "ruu"];
+/* 小さい顔アイコンで切り抜く顔の中心（店員の絵 480×642 の中の位置）。絵ごとに顔の位置が違うので、ここで合わせる */
+const KEEPER_FACE = { dorgan: [250, 128], weiss: [272, 150], ruu: [240, 150] };   // 絵がそろっている店員
 const KEEPER_RICH = 5000;        // これ以上魔石を持っていると「魔石が多い」のあいさつが出ることがある
 const Keeper = {
   q: [], text: "", extra: "", shown: "", mood: null, moodUntil: 0, talking: false, timers: [], cache: {},
@@ -566,7 +565,9 @@ const Keeper = {
     this.sync(k);
     if (!this.q.length && !this.shown) return "";
     this.preload(k); setTimeout(() => this.mount(), 0);
-    return `<div class="kp-mini"><button type="button" class="kp-man" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
+    const [fx, fy] = KEEPER_FACE[k.id] || [240, 150], W = 230;   // 顔の周り 230px 四方を見せる
+    const pos = `--kw:${(480 / W * 100).toFixed(1)}%;--kl:${(-(fx - W / 2) / W * 100).toFixed(1)}%;--kt:${(-(fy - W * .46) / W * 100).toFixed(1)}%`;
+    return `<div class="kp-mini"><button type="button" class="kp-man" style="${pos}" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
       <div class="kp-bubble" data-act="kpNext" role="status" aria-live="polite"><span class="kp-text">${esc(this.shown)}</span><span class="kp-extra"></span></div></div>`;
   },
   /* 描かれた画面で動かし始める（画面が描き直されると止まる） */
