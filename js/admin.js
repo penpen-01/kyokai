@@ -140,7 +140,7 @@ const Admin = {
             </div>
             <div class="frow"><label class="small" for="dk-key-${esc(d.id)}">代表カード</label>
               <select class="txt" id="dk-key-${esc(d.id)}" data-admin="deck-key" data-id="${esc(d.id)}" style="flex:1;min-width:160px">
-                <option value="">おまかせ（いちばんレアで重いキャラ）</option>
+                <option value="">おまかせ（いちばんコストの高いキャラ）</option>
                 ${Object.keys(d.cards).map(id => cards[id]).filter(c => c && c.type === "char").sort((a, b) => b.cost - a.cost).map(c => `<option value="${esc(c.id)}" ${d.key === c.id ? "selected" : ""}>${esc(c.name)}（${RARITY[c.rarity] || ""}・${c.cost}）</option>`).join("")}
               </select></div>
             <span class="${pr.length ? "bad" : "ok"} small">${deckCount(d)}枚${pr.length ? " ・ " + esc(pr[0]) : ""}</span>

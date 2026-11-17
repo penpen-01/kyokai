@@ -389,7 +389,7 @@ const Account = {
         <button type="button" class="iconopt auto ${cur ? "" : "on"}" data-act="iconSet" data-id="" aria-label="おまかせ"><span class="iface">${DEFAULT_AVATAR_HTML}</span><small>おまかせ</small></button>
         ${list.map(c => `<button type="button" class="iconopt r-${c.rarity} ${cur === c.id ? "on" : ""}" data-act="iconSet" data-id="${esc(c.id)}" aria-label="${esc(c.name)}"><span class="iface">${iconImgHTML(c.id)}</span><small>${esc(c.name)}</small></button>`).join("")}
       </div>
-      <p class="datainfo">「おまかせ」は、使うデッキでいちばんレアなキャラの絵になります。</p>
+      <p class="datainfo">「おまかせ」は、対戦では使うデッキでいちばんコストの高いキャラの絵になります。</p>
       <button type="button" class="btn" data-act="${back}">戻る</button>
     </div>`, this.iconFrom === "options" ? "options" : "start", true);
   },

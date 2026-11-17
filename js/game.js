@@ -1380,15 +1380,15 @@ function doEnd() {
 }
 
 /* ---------- 描画 ---------- */
-/* プレイヤーの顔（アイコン）にするカード。p.icon があればそれ、なければデッキでいちばんレアな絵付きキャラ */
+/* プレイヤーの顔（アイコン）にするカード。p.icon があればそれ、なければデッキでいちばんコストの高い絵付きキャラ */
 function playerIcon(pi) {
   const p = S.players[pi];
   if (p.icon && DEF[p.icon] && DEF[p.icon].art) return p.icon;
+  // おまかせ：デッキでいちばんコストの高いキャラ（同じならレア度の高い方）。魔法は顔にしない（2026-11-18）
   const dk = S.decks && S.decks[pi];
-  if (dk && dk.key && DEF[dk.key] && DEF[dk.key].art) return dk.key;   // デッキの代表カード
   const deck = (dk && dk.cards) || {};
   const cands = Object.keys(deck).map(id => DEF[id]).filter(d => d && d.type === "char" && d.art);
-  cands.sort((x, y) => RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity) || y.cost - x.cost);
+  cands.sort((x, y) => y.cost - x.cost || RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity));
   return cands[0] ? cands[0].id : null;
 }
 const MENU_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>';
