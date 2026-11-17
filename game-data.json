@@ -1,5 +1,5 @@
 {
- "version": 183,
+ "version": 184,
  "updated": "2026-11-17",
  "config": {
   "PLAYER_HP": 20,
@@ -9545,43 +9545,43 @@
  "sen": {
   "rewards": [
    {
-    "gold": 500,
+    "gold": 300,
     "stones": 0,
     "tickets": 0,
     "srTickets": 0
    },
    {
-    "gold": 1000,
+    "gold": 800,
     "stones": 0,
     "tickets": 0,
     "srTickets": 0
    },
    {
-    "gold": 2000,
+    "gold": 1500,
     "stones": 0,
     "tickets": 0,
     "srTickets": 0
    },
    {
-    "gold": 3000,
+    "gold": 2500,
     "stones": 0,
     "tickets": 1,
     "srTickets": 0
    },
    {
-    "gold": 4000,
+    "gold": 3500,
     "stones": 200,
     "tickets": 1,
     "srTickets": 0
    },
    {
-    "gold": 5500,
+    "gold": 5000,
     "stones": 400,
     "tickets": 2,
     "srTickets": 0
    },
    {
-    "gold": 7500,
+    "gold": 7000,
     "stones": 600,
     "tickets": 2,
     "srTickets": 0
