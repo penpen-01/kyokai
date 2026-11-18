@@ -465,9 +465,11 @@ const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "o
 const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere"], mamoru: ["alert1", "alert2", "alert3", "glitch", "short", "reboot"] };
 const KEEPER_FALLBACK = { sleep: "blink", doze: "idle", yawn: "talk1", shy: "happy", angry: "trouble", dere: "happy", alert1: "trouble", alert2: "trouble", alert3: "trouble", glitch: "trouble", short: "trouble", reboot: "idle" };
 /* マモル（警備ロボ）：続けて押すほど警戒が上がり、最後は画面がバグってショートする。
-   段階（3秒以内に続けて押した回数）：1〜3 平気（喜ぶ）→ 4〜6 気づく → 7〜9 警戒 → 10〜12 本気の警戒 → 13〜15 故障 → 16〜 ショート
+   段階（3秒以内に続けて押した回数）：1〜5 平気 → 6〜9 気づく → 10〜14 警戒 → 15〜19 本気の警戒 → 20〜23 故障 → 24〜 ショート
    ショートしたら押しても反応しない。MAMORU_REBOOT ミリ秒放っておくか、何か買う（交換・分解）と再起動して戻る */
-const MAMORU_STEPS = [[16, "short"], [13, "glitch"], [10, "alert3"], [7, "alert2"], [4, "alert1"], [1, "tap"]];
+const MAMORU_STEPS = [[24, "short"], [20, "glitch"], [15, "alert3"], [10, "alert2"], [6, "alert1"], [1, "tap"]];
+/* 話しているときの口の動き。step＝何コマ（1コマ90ミリ秒）ごとに次の絵にするか。ルゥは口を大きく開けた絵（あくびに近い）を使わない */
+const KEEPER_TALK = { def: { f: ["talk1", "idle", "talk2", "idle"], step: 3 }, ruu: { f: ["talk2", "idle"], step: 4 } };
 const MAMORU_REBOOT = 20000;
 const KEEPER_DOZE = 10000, KEEPER_SLEEP = 20000;   // 何もしないと、うとうと（10秒）→ 眠る（20秒）。眠る絵のある店員だけ
 const KEEPER_ART = ["dorgan", "weiss", "ruu", "mamoru"];
@@ -579,7 +581,7 @@ const Keeper = {
       this.paintRobo();
       return;
     }
-    this.q = [step === "tap" ? (t => ({ ...t, mood: t.mood || "happy" }))(this.topic(this.cur())) : { scene: step, mood: step }];
+    this.q = [step === "tap" ? this.topic(this.cur()) : { scene: step, mood: step }];
     this.next(true);
     this.paintRobo();
   },
@@ -621,11 +623,14 @@ const Keeper = {
   next(force) {
     if (!force && this.typing) { this.finishTyping(); return; }
     const it = this.q.shift(); if (!it) return;
-    let t = this.line(it.scene, it.vars); if (!t) return this.next(true);
+    let t = it.text != null ? it.text : this.line(it.scene, it.vars); if (!t) return this.next(true);
     // 行の頭の [顔] で、そのセリフの顔を決められる（例：[shy]…見てた？）
     let mood = it.mood; const m = t.match(/^\[(\w+)\]\s*/);
     if (m) { t = t.slice(m[0].length); const k = this.cur(); if (k && (this.has(k, m[1]) || KEEPER_FALLBACK[m[1]])) mood = m[1]; }
-    this.say(t, mood, it.extra || "");
+    // 「。」で区切って、1文ずつ吹き出しに出す（一気に流れないように）。続きは同じ顔で、少し間をあけて出る
+    const parts = it.text != null ? [t] : t.split(/(?<=。)(?=.)/);
+    if (parts.length > 1) { this.q.unshift(...parts.slice(1).map((p, i) => ({ text: p, mood, extra: i === parts.length - 2 ? it.extra : "" }))); t = parts[0]; }
+    this.say(t, mood, parts.length > 1 ? "" : it.extra || "");
   },
   say(t, mood, extra) {
     if (this.shorted && mood !== "short") return;
@@ -685,9 +690,14 @@ const Keeper = {
       if (this.mood && now > this.moodUntil) { this.mood = null; this.paintRobo(); }
       let f = "idle";
       if (this.mood) f = this.mood;
-      else if (this.talking) f = ["talk1", "idle", "talk2", "idle"][Math.floor(tick / 3) % 4];   // 口だけ、約0.27秒ごとにゆっくり動かす
+      else if (this.talking && now >= (this.pauseUntil || 0)) { const T = KEEPER_TALK[k.id] || KEEPER_TALK.def; f = T[Math.floor(tick / T.step) % T.f.length]; }   // 口だけゆっくり動かす（区切りの間は止める）
       else {
-        const still = now - (this.lastAct || now), sleepy = this.has(k, "sleep");
+        // 歌っている間（ルゥ）：眠らない。短い歌は約6秒で終わり、そこから5秒でうとうと。3割は押されるまで歌い続ける
+        if (this.singing) {
+          if (now >= this.singUntil) { this.singing = false; this.lastAct = now - 5000; this.text = this.shown = ""; this.paintText(); }
+          else if (now >= this.singNext) { const t = this.line("sing"); if (t) { this.text = this.shown = t.replace(/^\[\w+\]\s*/, ""); this.extra = ""; this.paintText(); } this.singNext = now + 4500; }
+        }
+        const still = this.singing ? 0 : now - (this.lastAct || now), sleepy = this.has(k, "sleep");
         if (sleepy && still >= KEEPER_SLEEP) f = "sleep";                       // 放っておくと眠ってしまう
         else {
           if (now > blinkAt) { blinkTo = now + 130; blinkAt = now + 2200 + Math.random() * 3800; }
@@ -698,10 +708,9 @@ const Keeper = {
         // 歌のセリフがある店員（ルゥ）は、5秒ほど放っておくと、ときどき小さく歌いだす（1回放っておくごとに1回まで）
         if (!this.singing && !this.sangAt && still >= 5000 && still < KEEPER_DOZE - 1500 && !this.typing && k.lines && (k.lines.sing || []).length) {
           this.sangAt = now;
-          if (Math.random() < 0.45) { const t = this.line("sing"); if (t) { this.text = this.shown = t; this.extra = ""; this.paintText(); this.singing = true; } }
+          if (Math.random() < 0.45) { this.singing = true; this.singNext = now; this.singUntil = Math.random() < 0.3 ? Infinity : now + 6000; }
         }
-        if (this.singing && still >= KEEPER_DOZE) this.singing = false;
-        if (still < 5000) this.sangAt = 0;
+        if (still < 5000 && !this.singing) this.sangAt = 0;
         if (this.singing && now % 1200 < 600 && f === "idle") f = "blink";   // 歌っている間は、ときどき目を閉じる
         const st = sleepy && still >= KEEPER_SLEEP ? "sleep" : sleepy && still >= KEEPER_DOZE ? "doze" : "";
         if (st !== this.nap) {
@@ -715,11 +724,15 @@ const Keeper = {
     const typer = setInterval(() => {
       if (!img.isConnected) return;
       if (!this.typing) return;
+      if (Date.now() < (this.pauseUntil || 0)) return;
       this.shown = this.text.slice(0, this.shown.length + 1);
+      const ch = this.shown.slice(-1), nx = this.text.charAt(this.shown.length);
+      // 「、」「…」「？」「！」のあとは少し間をあける（「……」は2文字目のあとだけ）
+      if (nx && (ch === "、" || "？！?!".includes(ch) || (ch === "…" && nx !== "…"))) this.pauseUntil = Date.now() + (ch === "…" ? 260 : 220);
       document.querySelectorAll(".kp-text").forEach(el => { el.textContent = this.shown; });
       if (this.shown.length >= this.text.length) {
         this.typing = false; this.talking = false; this.paintText();
-        if (this.q.length) setTimeout(() => { if (!this.typing && img.isConnected) this.next(true); }, 1800);
+        if (this.q.length) setTimeout(() => { if (!this.typing && img.isConnected) this.next(true); }, this.q[0] && this.q[0].text != null ? 1100 : 1800);
       }
     }, 40);
     this.timers.push(loop, typer);
