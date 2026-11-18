@@ -2986,3 +2986,16 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .ar-door.art .ar-leaf{top:0;bottom:0;width:50%;border-radius:0;background-color:transparent;background-repeat:no-repeat}
 .ar-door.art .ar-leaf.l{left:0}.ar-door.art .ar-leaf.r{right:0}
 .ar-door.art.opening .ar-gate{animation:none;filter:drop-shadow(0 0 30px rgba(255,210,120,.8))}
+/* 扉の左右のかがり火（ui/arena-torch.webp。右は左右反転）。炎の明かりのゆらぎと火の粉を重ねる 2026-11-19 */
+.ar-side{position:absolute;bottom:0;height:86%;aspect-ratio:177/560;background:url(../ui/arena-torch.webp) center/100% 100% no-repeat;pointer-events:none}
+.ar-side.l{right:calc(100% + 4px)}
+.ar-side.r{left:calc(100% + 4px);transform:scaleX(-1)}
+.ar-side::before{content:"";position:absolute;left:-20%;width:130%;top:-10%;height:42%;background:radial-gradient(ellipse at 50% 55%,rgba(255,200,110,.5),rgba(255,120,40,.18) 45%,transparent 70%);mix-blend-mode:screen;animation:arflick 1.7s ease-in-out infinite}
+.ar-side.r::before{animation-delay:-.8s}
+.ar-side i{position:absolute;left:40%;top:14%;width:3px;height:3px;border-radius:50%;background:#ffd27a;box-shadow:0 0 4px #ffb347;opacity:0;animation:arember 2.4s linear infinite}
+.ar-side i::before,.ar-side i::after{content:"";position:absolute;width:2px;height:2px;border-radius:50%;background:#ffc060;box-shadow:0 0 3px #ff9a3c}
+.ar-side i::before{left:-9px;top:6px}.ar-side i::after{left:8px;top:3px}
+.ar-side.r i{animation-delay:-1.2s}
+@keyframes arflick{0%,100%{opacity:.75;transform:scale(1)}20%{opacity:1;transform:scale(1.05,1.08)}45%{opacity:.6;transform:scale(.97)}70%{opacity:.95;transform:scale(1.03,1.06)}}
+@keyframes arember{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}100%{opacity:0;transform:translate(6px,-60px)}}
+@media (prefers-reduced-motion:reduce){.ar-side::before,.ar-side i{animation:none}}

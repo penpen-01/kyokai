@@ -46,6 +46,7 @@ const Arena = {
         <span class="ar-glow" aria-hidden="true"></span>
         <span class="ar-leaf l" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}></span>
         <span class="ar-leaf r" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}></span>
+        <span class="ar-side l" aria-hidden="true"><i></i></span><span class="ar-side r" aria-hidden="true"><i></i></span>
       </button>
       <div class="ar-plate"><b>アリーナ開催中</b><span>${ARENA_RULES[c.rule].name} ・ ${this.hm(c.end)}まで</span><small>扉をタップ</small></div>
     </div>`;
