@@ -1,5 +1,5 @@
 {
- "version": 201,
+ "version": 202,
  "updated": "2026-11-19",
  "config": {
   "PLAYER_HP": 20,
@@ -10057,5 +10057,20 @@
    "shopPrice": 6000,
    "art": "art/k-mamoru-c3c166f55e.webp"
   }
- ]
+ ],
+ "arena": {
+  "on": 1,
+  "start": "21:00",
+  "end": "22:00",
+  "days": [
+   "std",
+   "std",
+   "sen",
+   "set1",
+   "std",
+   "sen",
+   "set1"
+  ],
+  "extra": []
+ }
 }

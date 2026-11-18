@@ -706,6 +706,8 @@ const KEEPER_SCENES = {
   sing:    { label: "ひとりで歌っている", hint: "ルゥだけ。しばらく放っておくと、ときどき小さく歌いだす（眠る前）" },
   singCaught:{ label: "歌っているところを見られた", hint: "ルゥだけ。歌っている最中に押されたとき（照れる）" }
 };
+/* アリーナの曜日ごとのルール（日〜土）。std＝通常戦、sen＝選定戦、set1＝第1弾限定 */
+const ARENA_DAYS_DEF = ["std", "std", "sen", "set1", "std", "sen", "set1"];
 /* 情報屋で売る情報の種類。peek＝買ったその時だけ見られる「今の状態」、ほかは買ってから INFO_HOURS 時間読める */
 const INFO_CATS = { peek: "今の状態（買ったその時だけ）", boss: "ボスの秘密", legend: "限定レジェンドの解説と考察", cpu: "CPUのデッキ帳", card: "噂の強カード", gate: "パック開放戦の攻略" };
 const INFO_PEEKS = { pityHard: "上級のボスが必ず現れるまでの勝ち数", pityEx: "超級のボスが必ず現れるまでの勝ち数", tomorrow: "明日のおすすめ（交換所）" };
@@ -960,7 +962,12 @@ function normalizeData(data) {
   const sen = { rewards: Array.from({ length: 8 }, (_, i) => { const x = sr[i] || sr[sr.length - 1] || {}; const n = k => Math.max(0, Math.floor(+x[k] || 0)); return { gold: n("gold"), stones: n("stones"), tickets: n("tickets"), srTickets: n("srTickets") }; }),
     ban: d.sen && Array.isArray(d.sen.ban) ? [...new Set(d.sen.ban.filter(x => typeof x === "string" && /^[\w-]{1,40}$/.test(x)))].slice(0, 400) : [],
     checked: d.sen && Array.isArray(d.sen.checked) ? d.sen.checked.filter(x => typeof x === "string" && x.length <= 20).slice(0, 100) : [] };   // 出禁を確認したパック（工房の注意書き用）
-  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps, skins, sen };
+  // アリーナ（決まった時間だけのランダム対戦）：曜日ごとのルール（"" は開かない）・開く時刻・特別に開く日時
+  const A0 = d.arena || {}, AR = ["std", "sen", "set1"], hm = v => /^\d{2}:\d{2}$/.test(v || "") ? v : null;
+  const arena = { on: A0.on === 0 ? 0 : 1, start: hm(A0.start) || "21:00", end: hm(A0.end) || "22:00",
+    days: Array.from({ length: 7 }, (_, i) => { const v = Array.isArray(A0.days) ? A0.days[i] : ARENA_DAYS_DEF[i]; return v === "" ? "" : AR.includes(v) ? v : ARENA_DAYS_DEF[i]; }),
+    extra: (Array.isArray(A0.extra) ? A0.extra : []).filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && hm(x.start) && hm(x.end) && AR.includes(x.rule)).map(x => ({ date: x.date, start: x.start, end: x.end, rule: x.rule })).slice(0, 60) };
+  return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps, skins, sen, arena };
 }
 
 function cleanDeckCards(cards) {
@@ -978,6 +985,11 @@ function deckWorld(deck, cardsById) {
   const defs = cardsById || (typeof DEF !== "undefined" ? DEF : {});
   const ws = new Set(Object.entries(deck.cards || {}).filter(([, n]) => n > 0).map(([id]) => defs[id] ? defs[id].world : "?"));
   return ws.size === 1 && !ws.has("?") ? [...ws][0] : null;
+}
+/* 第1弾のカードだけのデッキか（アリーナの「第1弾限定」） */
+function deckSet1(deck, cardsById) {
+  const defs = cardsById || (typeof DEF !== "undefined" ? DEF : {});
+  return Object.entries(deck.cards || {}).filter(([, n]) => n > 0).every(([id]) => defs[id] && String(defs[id].set || "1") === "1" && !defs[id].shop);
 }
 function deckCount(deck) { return Object.values(deck.cards || {}).reduce((s, n) => s + n, 0); }
 function deckProblems(deck, cardsById, config, owned) {

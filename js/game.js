@@ -54,6 +54,7 @@ async function loadCardData() {
   if (typeof TITLES !== "undefined") { TITLES = data.titles || []; STAMPS = data.stamps || []; }
   if (typeof SKINS !== "undefined") SKINS = data.skins || [];
   if (typeof SEN !== "undefined") SEN = data.sen || { rewards: [], ban: [] };
+  if (typeof ARENA !== "undefined") ARENA = data.arena || ARENA;
   DATA_INFO.updated = data.updated;
   DATA_INFO.version = data.version;
 }
@@ -2500,6 +2501,7 @@ function giveReward(res) {
   // 友達との対戦：勝ちでも負けでもGが出る。ただし短すぎる試合は出ない・1日の回数に上限（2台で結託して増やせないように）
   const senBeta = MODE === "online" && typeof Online !== "undefined" && Online.room && Online.room.rule === "sen" && typeof Sentei !== "undefined" && Sentei.beta();
   if (senBeta) r.senBeta = true;
+  if (MODE === "online" && counts && typeof Arena !== "undefined" && Online.room && Online.room.arena) r.arena = Arena.record(res);   // アリーナの点
   if (MODE === "online" && counts && !senBeta) {
     const minT = CONFIG.ONLINE_MIN_TURNS ?? 6, max = CONFIG.ONLINE_DAY_MAX ?? 10;
     const t = Decks.today(), od = Account.data.onlDay, used = od && od.d === t ? od.n : 0;
@@ -2569,7 +2571,8 @@ function showResult(res) {
     r.online && r.online.short ? `${r.online.short}ターン目まで続かなかった対戦なので、Gはもらえません` : "",
     r.online && r.online.capped ? `友達との対戦でGを受け取れるのは1日${r.online.max}回までです（今日の分は受け取り済み）` : "",
     r.online && r.g ? `友達との対戦の報酬：今日 ${r.online.used}/${r.online.max}回目` : "",
-    r.senBeta ? "選定戦β版のため、報酬はありません" : ""
+    r.senBeta ? "選定戦β版のため、報酬はありません" : "",
+    r.arena ? `アリーナ：+${r.arena.add}点（ランキングはアリーナの画面で）` : ""
   ].filter(Boolean);
   // 次にすること：大きいボタン1つ＋小さいボタン
   const again = online
@@ -3132,6 +3135,7 @@ function handleAct(act, el) {
       if (Inbox.handleAct(act, el)) return;
       if (Showcase.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
+      if (typeof Arena !== "undefined" && Arena.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);
   }
 }

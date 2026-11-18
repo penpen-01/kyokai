@@ -50,6 +50,7 @@ const Online = {
           <input class="otxt" id="onl-name" maxlength="10" placeholder="例：見習いプレイヤー" value="${esc(name)}" autocomplete="nickname">
         </div>
       </div>
+      ${typeof Arena !== "undefined" ? Arena.lobbyHTML() : ""}
       <div class="obox">
         <h3>部屋を作る</h3>
         <label class="ownchk"><input type="checkbox" id="onl-world" ${store.get(WORLD_RULE_KEY) === "1" ? "checked" : ""}> 世界限定ルール（2人とも、30枚すべて同じ世界のカードのデッキで戦う）</label>
@@ -79,7 +80,7 @@ const Online = {
     const v = normCodeText(el.value).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     if (el.value !== v) el.value = v;
   },
-  lobbyMsg(text) { const m = $("#onl-msg"); if (m) m.textContent = text; else this.showLobby(text); },
+  lobbyMsg(text) { if (this.arenaErr) return this.arenaErr(text); const m = $("#onl-msg"); if (m) m.textContent = text; else this.showLobby(text); },
 
   showWaiting() {
     openOverlay(`<div class="panel">
@@ -154,7 +155,7 @@ const Online = {
 
   reset() {
     this.unsubs.forEach(f => { try { f(); } catch {} });
-    Object.assign(this, { senRule: false, myAgain: null, seenAgain: null, role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
+    Object.assign(this, { arenaErr: null, senRule: false, myAgain: null, seenAgain: null, role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
     clearTimeout(this.pendingTimer);
   },
 
@@ -164,52 +165,61 @@ const Online = {
     const icon = Account.icon(), title = typeof Titles !== "undefined" ? Titles.curName() : "", lk = typeof Skins !== "undefined" ? Skins.deckLook() : {};
     return { name: "選定戦", cards: {}, sen: true, opened: SenDraft.openedSets(), ...(icon ? { icon } : {}), ...(title ? { title } : {}), ...lk, ...(typeof Skins !== "undefined" ? { look: Skins.looks() } : {}) };
   },
-  async create() {
+  /* opts（アリーナから）：{ arena: 回のID, rule, deck, code }。合言葉は決まっていて、ロビーの欄は読まない */
+  async create(opts = {}) {
+    const A = opts.arena || null;
+    this.arenaErr = A ? (t => Arena.show(t)) : null;
     const name = this.readName();
-    const senRule = !!($("#onl-sen") && $("#onl-sen").checked);
-    const deck = senRule ? this.senMeta() : Decks.readyDeck(m => this.lobbyMsg(m));
+    const senRule = A ? opts.rule === "sen" : !!($("#onl-sen") && $("#onl-sen").checked);
+    const deck = opts.deck || (senRule ? this.senMeta() : Decks.readyDeck(m => this.lobbyMsg(m)));
     if (!deck) return;
-    const worldRule = !senRule && !!($("#onl-world") && $("#onl-world").checked);
-    store.set(WORLD_RULE_KEY, worldRule ? "1" : "0");
-    const tl = $("#onl-tl") ? +$("#onl-tl").value : this.prefLimit();
-    store.set(TURN_LIMIT_KEY, TURN_LIMITS.includes(tl) ? tl : 90);
-    if (deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
+    const worldRule = !A && !senRule && !!($("#onl-world") && $("#onl-world").checked);
+    if (!A) {
+      store.set(WORLD_RULE_KEY, worldRule ? "1" : "0");
+      const tl = $("#onl-tl") ? +$("#onl-tl").value : this.prefLimit();
+      store.set(TURN_LIMIT_KEY, TURN_LIMITS.includes(tl) ? tl : 90);
+    }
+    if (!A && deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
     if (worldRule && !deckWorld(deck)) return this.lobbyMsg(`世界限定ルールでは、30枚すべて同じ世界のカードで組んだデッキが必要です。今のデッキ「${deck.name}」は世界が混ざっています。`);
     this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
-    this.reset();
-    let code = null;
+    this.reset(); this.arenaErr = A ? (t => Arena.show(t)) : null;
+    let code = opts.code || null;
     for (let i = 0; i < 6 && !code; i++) {
       const c = Array.from({ length: 4 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
       if (!(await Net.get(`rooms/${c}/host`))) code = c;
     }
     if (!code) return this.lobbyMsg("部屋を作れませんでした。もう一度お試しください。");
     try {
-      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now(), tl: this.prefLimit(), ...(senRule ? { rule: "sen" } : worldRule ? { rule: "world" } : {}) });
+      await Net.set(`rooms/${code}`, { host: this.uid, hostName: name, status: "waiting", dataKey: dataKey(), created: Date.now(), tl: A ? 90 : this.prefLimit(), ...(A ? { arena: A } : {}), ...(A && opts.rule === "set1" ? { rule: "set1" } : senRule ? { rule: "sen" } : worldRule ? { rule: "world" } : {}) });
     } catch (e) {
       console.error(e);
       return this.lobbyMsg("部屋を作れませんでした（サーバーの設定を確認してください）。");
     }
     this.role = "host"; this.code = code; this.myDeck = deck; this.guestDeck = null; this.mySample = !!deck.sample; this.senRule = senRule;
-    if (this.mySample) Decks.useSample();
+    if (this.mySample && !A) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "host", sample: this.mySample });
     this.watchRoom();
-    this.showWaiting();
+    if (A) this.showConnecting("対戦相手が見つかりました"); else this.showWaiting();
   },
 
   /* ---------- 参加する（ゲスト） ---------- */
-  async join(codeArg) {
+  async join(codeArg, opts = {}) {
+    const A = !!opts.arena;
+    this.arenaErr = A ? (t => Arena.show(t)) : null;
     const name = this.readName();
     const code = normCodeText(codeArg || ($("#onl-code") ? $("#onl-code").value : "")).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     if (code.length !== 4) return this.lobbyMsg("合言葉は4文字です。");
-    this.lobbyMsg("接続中…");
+    if (A) this.showConnecting("対戦相手が見つかりました"); else this.lobbyMsg("接続中…");
     if (!(await this.connect())) return;
-    const room0 = await Net.get(`rooms/${code}`);
+    let room0 = await Net.get(`rooms/${code}`);
+    for (let i = 0; A && i < 15 && !(room0 && room0.host); i++) { await new Promise(r => setTimeout(r, 600)); room0 = await Net.get(`rooms/${code}`); }   // アリーナ：相手が部屋を作り終えるのを待つ
     const senRule = !!(room0 && room0.rule === "sen");
-    const deck = senRule ? this.senMeta() : Decks.readyDeck(m => this.lobbyMsg(m));
+    const deck = senRule ? this.senMeta() : opts.deck || Decks.readyDeck(m => this.lobbyMsg(m));
     if (!deck) return;
-    if (deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
-    this.reset();
+    if (room0 && room0.rule === "set1" && !deckSet1(deck)) return this.lobbyMsg("この部屋は第1弾限定です。第1弾のカードだけで組んだデッキを選んでください。");
+    if (!A && deck.sample && Decks.sampleLeft() <= 0) return this.lobbyMsg(`サンプルデッキで友達と対戦できるのは、1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回までです。今日はもう使えません（明日また使えます）。自分のカードで組んだデッキなら対戦できます。`);
+    this.reset(); this.arenaErr = A ? (t => Arena.show(t)) : null;
     const room = await Net.get(`rooms/${code}`);
     if (!room || !room.host || room.status === "closed") return this.lobbyMsg("その合言葉の部屋は見つかりませんでした。");
     if (room.host === this.uid) return this.lobbyMsg("自分で作った部屋には参加できません。別の端末から参加してください。");
@@ -223,7 +233,7 @@ const Online = {
       return this.lobbyMsg("参加できませんでした。");
     }
     this.role = "guest"; this.code = code; this.myDeck = deck; this.mySample = !!deck.sample; this.senRule = senRule;
-    if (this.mySample) Decks.useSample();
+    if (this.mySample && !A) Decks.useSample();
     store.set(ROOM_KEY, { code, role: "guest", sample: this.mySample });
     // 自分のデッキをホストに送る（対戦処理はホストが行うため）
     Net.push(`rooms/${code}/actions`, { t: "deck", ...(deck.sen ? { sen: 1, opened: deck.opened } : {}), name: deck.name, cards: deck.cards, ...(deck.icon ? { icon: deck.icon } : {}), ...(deck.key ? { key: deck.key } : {}), ...(deck.title ? { title: deck.title } : {}), ...(deck.sleeve ? { sleeve: deck.sleeve } : {}), ...(deck.frame ? { frame: deck.frame } : {}), ...(deck.look ? { look: deck.look } : {}), by: this.uid, at: Date.now() });
@@ -301,6 +311,7 @@ const Online = {
     const pr = Decks.problems(d);
     if (pr.length) return pr[0];
     if (this.room && this.room.rule === "world" && !deckWorld(d)) return "世界限定ルールの部屋なので、30枚すべて同じ世界のカードのデッキが必要です";
+    if (this.room && this.room.rule === "set1" && !deckSet1(d)) return "第1弾限定なので、第1弾のカードだけのデッキが必要です";
     if (d.free && Decks.sampleOK() && !this.mySample && Decks.sampleLeft() <= 0) return "サンプルデッキで友達と対戦できる回数（1日）を使い切っています";
     return "";
   },
@@ -360,6 +371,8 @@ const Online = {
     this.paintAgain();
   },
   againHTML() {
+    // アリーナ：同じ相手とは続けず、次の相手を探す
+    if (this.room && this.room.arena) return `<button type="button" class="btn primary res-main" data-act="arenaNext">次の相手を探す</button><button type="button" class="btn" data-act="arenaBack">アリーナの画面へ</button>`;
     if (this.oppLeft || this.closed) return `<p class="datainfo">相手が退出したので、もう一度は対戦できません</p>`;
     const A = this.againOf(), me = this.role, op = me === "host" ? "guest" : "host";
     const mine = A[me] || (me === "guest" && this.myAgain && S && this.myAgain === S.gid);

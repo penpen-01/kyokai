@@ -2925,3 +2925,20 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .kp-man.startle .kp-img{animation:kpstartle .45s cubic-bezier(.2,1.6,.4,1)}
 @keyframes kpstartle{0%{transform:translateY(0)}18%{transform:translateY(-4.5%) scale(1.02,.98)}34%{transform:translateY(0) translateX(-1%)}48%{transform:translateX(1%)}62%{transform:translateX(-.5%)}100%{transform:none}}
 @media (prefers-reduced-motion:reduce){.kp-man.startle .kp-img{animation:none}}
+/* アリーナ（β） 2026-11-19 */
+.ar-box h3{display:flex;align-items:center;gap:6px}
+.ar-live{color:#ff8a8a}
+.beta-tag{font-style:normal;font-size:11px;font-weight:800;padding:1px 7px;border-radius:99px;background:rgba(255,200,90,.18);color:#ffd27a;border:1px solid rgba(255,200,90,.5);vertical-align:middle}
+.panel.ar .ar-now{display:flex;align-items:baseline;gap:10px;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,rgba(255,90,90,.18),rgba(255,200,90,.08));border:1px solid rgba(255,140,120,.45)}
+.panel.ar .ar-now b{color:#ff9a8a}.panel.ar .ar-now span{font-size:18px;font-weight:800}.panel.ar .ar-now small{margin-left:auto;opacity:.8}
+.panel.ar .ar-go{width:100%;min-height:52px;font-size:17px}
+.panel.ar .ar-search{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;border-radius:12px;background:rgba(255,255,255,.05)}
+.panel.ar .ar-test{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.ar-rank ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.ar-rank li{display:grid;grid-template-columns:28px 1fr auto auto;gap:8px;align-items:center;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.04)}
+.ar-rank li.me{background:rgba(255,210,120,.14);outline:1px solid rgba(255,210,120,.5)}
+.ar-rank li i{font-style:normal;font-weight:800;text-align:center;color:#ffd27a}
+.ar-rank li span{font-weight:800}.ar-rank li small{opacity:.7;font-size:12px}
+.ar-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:14px}
+.ar-list li{display:flex;justify-content:space-between;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.03)}
+.ar-list li.on{background:rgba(255,140,120,.15)}
