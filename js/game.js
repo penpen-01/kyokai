@@ -536,6 +536,8 @@ function condOK(pi, e, self) {
     case "bounced": return (S.bouncedNow || 0) > 0;
     case "hitEnemy": return (S.hitNow || 0) > 0;
     case "gearNone": return !(S.gearSpent > 0);
+    case "hurtLT": return !!self && (self.hurt || 0) < e.cn;    // マモル：ダメージを受けて生き残った回数（survive のたびに1増える）
+    case "hurtEQ": return !!self && (self.hurt || 0) === e.cn;
   }
   return true;
 }
@@ -1031,6 +1033,7 @@ function fireTrig(t) {
   const cd = t.card && DEF[t.card];
   const list = DEF[u.id].effects.filter(e => whenOf(e) === t.when && (t.when !== "cardPlay" || (cd && (!e.pw || cd.world === e.pw) && (!e.pt || cd.type === e.pt))));
   if (!list.length) return;
+  if (t.when === "survive" && live) live.hurt = (live.hurt || 0) + 1;   // 生き残った回数を数える（「N回目」の条件用）
   log(`${cname(u.id)}の効果（${t.when === "cardPlay" ? cardPlayHead(list[0]) : WHENS[t.when].label}）。`);
   fx(unitSel(u.uid), WHENS[t.when].label, "trig");
   const auto = autoTargets(t.pi, u);

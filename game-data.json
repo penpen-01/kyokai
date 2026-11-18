@@ -1,5 +1,5 @@
 {
- "version": 196,
+ "version": 197,
  "updated": "2026-11-19",
  "config": {
   "PLAYER_HP": 20,
@@ -9900,6 +9900,54 @@
    "effects": [],
    "token": true,
    "art": "art/tk-button-bbbbbb5563.webp"
+  },
+  {
+   "id": "k-mamoru",
+   "name": "警備担当マモル",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 3,
+   "hp": 8,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "guard"
+   ],
+   "armor": 1,
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "atk",
+     "to": "self",
+     "when": "survive",
+     "cond": "hurtLT",
+     "cn": 3
+    },
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemyAll",
+     "when": "survive",
+     "cond": "hurtEQ",
+     "cn": 3
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "silence",
+     "to": "self",
+     "when": "survive",
+     "cond": "hurtEQ",
+     "cn": 3
+    }
+   ],
+   "shop": true,
+   "shopPrice": 6000,
+   "art": "ui/keeper/mamoru-idle.webp"
   }
  ]
 }

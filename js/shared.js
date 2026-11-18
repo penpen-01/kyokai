@@ -294,6 +294,8 @@ const CONDS = {
   worldGE: { label: "自分の場に（世界の）キャラがN体以上", text: (e, isChar) => `自分の場に${WORLDS[e.cworld] ? WORLDS[e.cworld] + "の" : ""}キャラが${e.cn}体以上いれば${isChar ? "（このキャラも数える）" : ""}` , world: true },
   combo:   { label: "このターン、すでにほかのカードを使った（コンボ）", text: () => "このターン、すでにほかのカードを使っていれば", noN: true },
   playedGE:{ label: "詠唱N（このターン、先にカードをN枚以上使った）", text: e => `詠唱${e.cn}（このターン、先にカードを${e.cn}枚以上使っていれば）` },
+  hurtLT:  { label: "（このキャラが）ダメージを受けて生き残ったのがN回目より前", text: e => `${e.cn - 1}回目までは` },
+  hurtEQ:  { label: "（このキャラが）ダメージを受けて生き残ったのがN回目", text: e => `${e.cn}回目なら` },
   handZero:{ label: "手札が0枚",                  text: () => "自分の手札が0枚なら", noN: true },
   handGE:  { label: "手札がN枚以上",              text: e => `自分の手札が${e.cn}枚以上なら` },
   maxEGE:  { label: "最大エナジーがN以上",        text: e => `自分のエナジーの最大値が${e.cn}以上なら` },
@@ -466,7 +468,9 @@ function effectsText(card, list, auto) {
     } else t = EFFECTS[e.kind].text(e.n, e);
     if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
     if (e.per === "played") t = e.split ? `このターン、このカードより先に使ったカードの枚数だけ、${t.replace(/。$/, "")}（1回ずつ対象を選び直す）。` : `このターン、このカードより先に使ったカード1枚につき、${t}`;
-    if (e.cond && CONDS[e.cond]) t = `${condText(e, isChar)}、${t}`;
+    // 前の効果と同じ条件なら、条件は2回書かずに「さらに」でつなぐ
+    const pe = i > 0 ? list[i - 1] : null, sameCond = pe && e.cond && pe.cond === e.cond && pe.cn === e.cn && pe.cworld === e.cworld;
+    if (e.cond && CONDS[e.cond]) t = sameCond ? `さらに、${t}` : `${condText(e, isChar)}、${t}`;
     if (k > 1) t = e.kind === "unit" && e.act === "dmg" && e.to === "enemyRand" ? `ランダムな相手キャラに${e.n}ダメージを${k}回与える（1回ごとに選び直す。倒れたキャラは選ばれない）。` : `${t.replace(/。$/, "")}（${k}回${e.kind === "unit" && e.act !== "dmg" && e.to === "enemyRand" ? "。同じキャラは2回選ばれない" : ""}）。`;
     out.push(t);
     i += k - 1;
