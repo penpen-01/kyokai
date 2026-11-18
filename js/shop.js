@@ -472,7 +472,7 @@ const MAMORU_REBOOT = 20000;
 const KEEPER_DOZE = 10000, KEEPER_SLEEP = 20000;   // 何もしないと、うとうと（10秒）→ 眠る（20秒）。眠る絵のある店員だけ
 const KEEPER_ART = ["dorgan", "weiss", "ruu", "mamoru"];
 /* まだ一般には出さない店員（運営用アカウントだけ、買う・着替えるができる）。公開するときはここから外す */
-const KEEPER_ADMIN = ["mamoru"];
+const KEEPER_ADMIN = [];
 const keeperOpen = id => KEEPER_ART.includes(id) && (!KEEPER_ADMIN.includes(id) || (typeof adminOn === "function" && adminOn()));
 /* 小さい顔アイコンで切り抜く顔の中心（店員の絵 480×642 の中の位置）。絵ごとに顔の位置が違うので、ここで合わせる */
 const KEEPER_FACE = { dorgan: [250, 128], weiss: [272, 150], ruu: [240, 150], mamoru: [236, 112] };   // 絵がそろっている店員
