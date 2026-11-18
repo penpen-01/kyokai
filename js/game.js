@@ -2253,7 +2253,7 @@ function showStart() {
       ${goldOK ? questBoardSafe() : ""}
     </div>
     <div class="homemain">
-      ${Showcase.html()}
+      ${typeof Arena !== "undefined" && Arena.live() && !DATA_INFO.draft ? Arena.doorHTML() : Showcase.html()}
       ${Account.status === "none" ? `<p class="onl-msg">サーバーに接続できないため、スターターデッキだけで遊べます（カードやGは保存されません）。</p>` : ""}
       ${DATA_INFO.draft ? `<p class="datainfo">編集中のカードデータで試遊しています（対人戦は使えません）</p>` : ""}
     </div>

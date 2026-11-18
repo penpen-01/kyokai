@@ -12,6 +12,7 @@ const ARENA_RULES = {
   set1: { name: "第1弾限定",  desc: "第1弾のカードだけで組んだデッキで戦います。" }
 };
 const ARENA_PTS = { win: 3, lose: 1, draw: 1 };
+const ARENA_DOOR_ART = "";   // 扉の絵（左右に分けて開く。空なら CSS で描いた仮の扉）
 const JST = 9 * 3600e3;
 const Arena = {
   searching: false, unsubs: [], timer: null, sid: null, rule: null, deck: null,
@@ -34,6 +35,28 @@ const Arena = {
     if (c) return c;
     if ((typeof adminOn === "function" && adminOn()) || (typeof Maint !== "undefined" && Maint.pass())) return { sid: "test-" + this.ymd(now).replace(/-/g, ""), start: now, end: now + 3600e3, rule: this.testRule || "std", test: true };   // 運営のテスト
     return null;
+  },
+  /* 一般の回が開いているか（運営のテストは含まない）。開いている間、ホームの飾り棚が「アリーナの扉」になる */
+  live(now = Date.now()) { return !!this.sessions(now).find(x => x.start <= now && now < x.end); },
+  doorHTML() {
+    const c = this.sessions().find(x => x.start <= Date.now() && Date.now() < x.end);
+    const art = ARENA_DOOR_ART;
+    return `<div class="ar-door${art ? " art" : ""}" id="ar-door">
+      <button type="button" class="ar-gate" data-act="arenaDoor" aria-label="アリーナの扉を開く（${ARENA_RULES[c.rule].name}・${this.hm(c.end)}まで）">
+        <span class="ar-glow" aria-hidden="true"></span>
+        <span class="ar-leaf l" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}></span>
+        <span class="ar-leaf r" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}></span>
+      </button>
+      <div class="ar-plate"><b>アリーナ開催中</b><span>${ARENA_RULES[c.rule].name} ・ ${this.hm(c.end)}まで</span><small>扉をタップ</small></div>
+    </div>`;
+  },
+  /* 扉を開く：きしむ音とともに左右の扉がゆっくり開き、光の中へ入ってアリーナの画面へ */
+  openDoor() {
+    const d = document.getElementById("ar-door"); if (!d || d.classList.contains("opening")) return this.show();
+    d.classList.add("opening");
+    if (typeof Sound !== "undefined") Sound.play("creak");
+    const slow = !(typeof Motion !== "undefined" && Motion.reduced);
+    setTimeout(() => { const f = document.createElement("div"); f.className = "ar-flash"; document.body.appendChild(f); setTimeout(() => { this.show(); setTimeout(() => f.classList.add("out"), 30); setTimeout(() => f.remove(), 700); }, slow ? 420 : 0); }, slow ? 1700 : 0);
   },
   next(now = Date.now()) { return this.sessions(now).find(x => x.start > now) || null; },
   hm(ms) { const t = new Date(ms + JST); return `${t.getUTCHours()}:${String(t.getUTCMinutes()).padStart(2, "0")}`; },
@@ -157,6 +180,7 @@ const Arena = {
     switch (act) {
       case "arenaOpen": case "arenaBack": if (act === "arenaBack") { Online.leave(); MODE = "cpu"; S = null; app.innerHTML = ""; } this.show(); return true;
       case "arenaSearch": this.search(); return true;
+      case "arenaDoor": this.openDoor(); return true;
       case "arenaStop": this.stop(); this.show(); return true;
       case "arenaClose": this.stop(); if (this.rankOff) { try { this.rankOff(); } catch (e) {} this.rankOff = null; this.rankSid = null; } Online.showLobby(); return true;
       case "arenaTestRule": this.testRule = el.dataset.v; this.stop(); this.show(); return true;

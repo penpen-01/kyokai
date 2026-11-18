@@ -97,6 +97,11 @@ const Sound = {
         case "win": [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * 0.12, 0.35, "triangle", 0.3)); break;
         case "lose": [392, 349, 311, 262].forEach((f, i) => this.tone(f, i * 0.16, 0.4, "sine", 0.25)); break;
         case "open": this.noise(0, 0.4, 0.3, 2400); this.tone(220, 0, 0.4, "triangle", 0.2, 440); break;
+        case "creak": {   // 重い扉がきしむ「キィィ…」：ゆらぐ高めの音を細かくつなぐ＋低い木の響き
+          let t = 0; for (let i = 0; i < 16; i++) { const f = 520 + Math.sin(i * 1.7) * 120 - i * 14, d = 0.07 + (i % 3) * 0.02; this.tone(f, t, d + 0.03, "sawtooth", 0.045, f * 0.93); t += d; }
+          this.tone(70, 0, 1.6, "triangle", 0.18, 52); this.noise(0.05, 1.4, 0.07, 500);
+          break;
+        }
         case "flip": this.noise(0, 0.08, 0.3, 3000); this.tone(660, 0, 0.08, "triangle", 0.15); break;
         case "rare": {
           // レア度が高いほど高く、長く

@@ -2942,3 +2942,39 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .ar-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:14px}
 .ar-list li{display:flex;justify-content:space-between;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,.03)}
 .ar-list li.on{background:rgba(255,140,120,.15)}
+/* ===== アリーナの扉（開催中、ホームの飾り棚の代わり） 2026-11-19 ===== */
+.ar-door{position:relative;flex:1;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.ar-gate{all:unset;cursor:pointer;position:relative;width:min(62vw,260px);aspect-ratio:3/4;perspective:900px;border-radius:50% 50% 6px 6px / 28% 28% 6px 6px;
+  background:linear-gradient(180deg,#f6e3a1,#b8862d 40%,#6e4a12);padding:9px;box-shadow:0 0 0 2px #2a1a06,0 0 34px rgba(255,200,90,.45),inset 0 0 0 2px rgba(255,240,200,.6)}
+.ar-gate::before{content:"";position:absolute;inset:9px;border-radius:inherit;background:#0b0a10}
+.ar-glow{position:absolute;inset:9px;border-radius:inherit;background:radial-gradient(ellipse at 50% 60%,#fff6d6 0%,#ffd77a 25%,rgba(255,170,60,.6) 50%,transparent 75%);opacity:0;transition:opacity 1.4s ease}
+.ar-leaf{position:absolute;top:9px;bottom:9px;width:calc(50% - 9px);transition:transform 1.7s cubic-bezier(.45,.05,.3,1);backface-visibility:hidden;
+  background:repeating-linear-gradient(90deg,transparent 0 18%,rgba(214,170,80,.0) 18%),linear-gradient(160deg,#1b1822,#0a090e);box-shadow:inset 0 0 0 3px #c99a3d,inset 0 0 0 6px #1a1408,inset 0 0 0 8px #8a6420}
+.ar-leaf.l{left:9px;transform-origin:left center;border-radius:100% 0 0 0 / 46% 0 0 0}
+.ar-leaf.r{right:9px;transform-origin:right center;border-radius:0 100% 0 0 / 0 46% 0 0}
+/* 仮の扉の飾り：金の縦の帯と、取っ手の輪 */
+.ar-door:not(.art) .ar-leaf::before{content:"";position:absolute;inset:22% 22% 12%;border:2px solid #c99a3d;border-radius:4px;box-shadow:inset 0 0 0 4px rgba(201,154,61,.18)}
+.ar-door:not(.art) .ar-leaf::after{content:"";position:absolute;top:56%;width:16px;height:16px;border-radius:50%;border:3px solid #e8c164;box-shadow:0 0 8px rgba(255,210,120,.6)}
+.ar-door:not(.art) .ar-leaf.l::after{right:8px}.ar-door:not(.art) .ar-leaf.r::after{left:8px}
+/* 絵があるとき：1枚の絵を左右に分けて貼る */
+.ar-door.art .ar-leaf{background-size:200% 100%;box-shadow:none}
+.ar-door.art .ar-leaf.l{background-position:left center}.ar-door.art .ar-leaf.r{background-position:right center}
+.ar-gate{animation:argate 3.2s ease-in-out infinite}
+@keyframes argate{0%,100%{box-shadow:0 0 0 2px #2a1a06,0 0 24px rgba(255,200,90,.35),inset 0 0 0 2px rgba(255,240,200,.6)}50%{box-shadow:0 0 0 2px #2a1a06,0 0 44px rgba(255,200,90,.7),inset 0 0 0 2px rgba(255,240,200,.6)}}
+.ar-door.opening .ar-leaf.l{transform:rotateY(-105deg)}
+.ar-door.opening .ar-leaf.r{transform:rotateY(105deg)}
+.ar-door.opening .ar-glow{opacity:1}
+.ar-door.opening .ar-gate{animation:none;transform:scale(1.04);transition:transform 1.8s ease}
+.ar-plate{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 18px;border-radius:10px;background:linear-gradient(180deg,rgba(20,16,10,.92),rgba(8,6,4,.92));border:1px solid #c99a3d;text-align:center}
+.ar-plate b{color:#ffd77a;font-size:16px;letter-spacing:.08em}.ar-plate span{font-size:13px}.ar-plate small{font-size:11px;opacity:.7}
+.ar-flash{position:fixed;inset:0;z-index:200;background:radial-gradient(circle at 50% 45%,#fffbe8,#ffd77a 60%,#c98a20);opacity:0;animation:arflash .42s ease forwards;pointer-events:none}
+.ar-flash.out{animation:none;opacity:1;transition:opacity .6s ease;opacity:0}
+@keyframes arflash{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.ar-gate{animation:none}.ar-leaf{transition:none}}
+.ar-door{min-height:0;gap:8px;padding:6px 0}
+.ar-gate{width:min(46vw,30dvh,230px)}
+.ar-plate{padding:6px 16px}
+.ar-door{justify-content:center;padding:0 0 30px}
+.ar-gate{width:min(46vw,28dvh,220px)}
+.ar-plate{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);z-index:2;white-space:nowrap;box-shadow:0 6px 14px rgba(0,0,0,.6)}
+.ar-door.opening .ar-plate{opacity:0;transition:opacity .5s}
