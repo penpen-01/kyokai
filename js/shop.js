@@ -471,13 +471,16 @@ const MAMORU_STEPS = [[16, "short"], [13, "glitch"], [10, "alert3"], [7, "alert2
 const MAMORU_REBOOT = 20000;
 const KEEPER_DOZE = 10000, KEEPER_SLEEP = 20000;   // 何もしないと、うとうと（10秒）→ 眠る（20秒）。眠る絵のある店員だけ
 const KEEPER_ART = ["dorgan", "weiss", "ruu", "mamoru"];
+/* まだ一般には出さない店員（運営用アカウントだけ、買う・着替えるができる）。公開するときはここから外す */
+const KEEPER_ADMIN = ["mamoru"];
+const keeperOpen = id => KEEPER_ART.includes(id) && (!KEEPER_ADMIN.includes(id) || (typeof adminOn === "function" && adminOn()));
 /* 小さい顔アイコンで切り抜く顔の中心（店員の絵 480×642 の中の位置）。絵ごとに顔の位置が違うので、ここで合わせる */
 const KEEPER_FACE = { dorgan: [250, 128], weiss: [272, 150], ruu: [240, 150], mamoru: [236, 112] };   // 絵がそろっている店員
 const KEEPER_RICH = 5000;        // これ以上魔石を持っていると「魔石が多い」のあいさつが出ることがある
 const Keeper = {
   q: [], text: "", extra: "", shown: "", mood: null, moodUntil: 0, talking: false, timers: [], cache: {},
   cur() {
-    const L = (typeof KEEPERS !== "undefined" ? KEEPERS : []).filter(k => KEEPER_ART.includes(k.id) || (k.art && k.art.idle));
+    const L = (typeof KEEPERS !== "undefined" ? KEEPERS : []).filter(k => keeperOpen(k.id) || (k.art && k.art.idle));
     const want = Account.data && Account.data.keeper;
     return L.find(k => k.id === want) || L[0] || null;
   },

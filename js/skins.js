@@ -20,7 +20,7 @@ const Skins = {
   get(id) { return SKINS.find(s => s.id === id) || null; },
   /* 絵がまだない品は「準備中」（今の枠など、絵がなくても成り立つ最初の品は除く） */
   ready(s) {
-    if (s.kind === "keeper") return typeof KEEPER_ART !== "undefined" && KEEPER_ART.includes(s.ref);
+    if (s.kind === "keeper") return typeof keeperOpen === "function" && keeperOpen(s.ref);
     if (s.kind === "icon") return !!(s.card && DEF[s.card] && DEF[s.card].art);
     if (s.kind === "art") return !!(s.art && s.card && DEF[s.card]);
     if (s.kind === "bgm") return false;
