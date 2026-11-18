@@ -2915,3 +2915,9 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 #netbanner.small{left:auto;right:calc(env(safe-area-inset-right,0px) + 8px);transform:none;width:auto;padding:0;background:transparent;border:0;box-shadow:none}
 #netbanner .nb-pill{padding:4px 10px;border-radius:99px;background:rgba(60,40,8,.94);border:1px solid #d9a441;color:#ffd06b;font-size:11px;font-weight:700}
 #netbanner[hidden]{display:none}
+/* マモル：故障（揺れて色がずれる）・ショート（息が止まり、ときどき火花でちらつく） 2026-11-18 */
+.kp-man.glitchy .kp-img{animation:kpglitch .18s steps(2) infinite}
+@keyframes kpglitch{0%{transform:translate(0,0);filter:none}25%{transform:translate(-1.5%,.6%);filter:hue-rotate(40deg) saturate(1.6)}50%{transform:translate(1.2%,-.5%);filter:drop-shadow(3px 0 0 rgba(0,220,255,.6)) drop-shadow(-3px 0 0 rgba(255,40,80,.6))}75%{transform:translate(-.6%,-.8%);filter:brightness(1.3)}100%{transform:translate(0,0)}}
+.kp-man.shorted .kp-img{animation:kpshort 3.2s linear infinite}
+@keyframes kpshort{0%,86%,100%{filter:brightness(.9)}88%{filter:brightness(1.6) drop-shadow(0 0 6px #ffe27a)}90%{filter:brightness(.7)}92%{filter:brightness(1.4)}}
+@media (prefers-reduced-motion:reduce){.kp-man.glitchy .kp-img,.kp-man.shorted .kp-img{animation:none!important}}

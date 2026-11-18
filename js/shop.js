@@ -462,12 +462,17 @@ const Shop = {
    絵は ui/keeper/<店員のid>-<表情>.webp（idle まばたき前の顔 / blink / talk1 / talk2 / happy / trouble / offer） */
 const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "offer"];
 /* 店員ごとの追加の表情（絵がある店員だけ）。ない店員は KEEPER_FALLBACK の表情で代わりにする */
-const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere"] };
-const KEEPER_FALLBACK = { sleep: "blink", doze: "idle", yawn: "talk1", shy: "happy", angry: "trouble", dere: "happy" };
+const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere"], mamoru: ["alert1", "alert2", "alert3", "glitch", "short", "reboot"] };
+const KEEPER_FALLBACK = { sleep: "blink", doze: "idle", yawn: "talk1", shy: "happy", angry: "trouble", dere: "happy", alert1: "trouble", alert2: "trouble", alert3: "trouble", glitch: "trouble", short: "trouble", reboot: "idle" };
+/* マモル（警備ロボ）：続けて押すほど警戒が上がり、最後は画面がバグってショートする。
+   段階（3秒以内に続けて押した回数）：1〜3 平気（喜ぶ）→ 4〜6 気づく → 7〜9 警戒 → 10〜12 本気の警戒 → 13〜15 故障 → 16〜 ショート
+   ショートしたら押しても反応しない。MAMORU_REBOOT ミリ秒放っておくか、何か買う（交換・分解）と再起動して戻る */
+const MAMORU_STEPS = [[16, "short"], [13, "glitch"], [10, "alert3"], [7, "alert2"], [4, "alert1"], [1, "tap"]];
+const MAMORU_REBOOT = 20000;
 const KEEPER_DOZE = 10000, KEEPER_SLEEP = 20000;   // 何もしないと、うとうと（10秒）→ 眠る（20秒）。眠る絵のある店員だけ
-const KEEPER_ART = ["dorgan", "weiss", "ruu"];
+const KEEPER_ART = ["dorgan", "weiss", "ruu", "mamoru"];
 /* 小さい顔アイコンで切り抜く顔の中心（店員の絵 480×642 の中の位置）。絵ごとに顔の位置が違うので、ここで合わせる */
-const KEEPER_FACE = { dorgan: [250, 128], weiss: [272, 150], ruu: [240, 150] };   // 絵がそろっている店員
+const KEEPER_FACE = { dorgan: [250, 128], weiss: [272, 150], ruu: [240, 150], mamoru: [236, 112] };   // 絵がそろっている店員
 const KEEPER_RICH = 5000;        // これ以上魔石を持っていると「魔石が多い」のあいさつが出ることがある
 const Keeper = {
   q: [], text: "", extra: "", shown: "", mood: null, moodUntil: 0, talking: false, timers: [], cache: {},
@@ -483,7 +488,7 @@ const Keeper = {
   /* セリフを1つ選ぶ（{card}・{off} を置き換える） */
   line(scene, vars = {}) {
     const k = this.cur(); let L = (k && k.lines && k.lines[scene]) || [];
-    if (!L.length && ["shy", "angry", "pet", "wake"].includes(scene)) L = (k && k.lines && k.lines.tap) || [];   // 書いていなければ「押した」のセリフで代わりに
+    if (!L.length && ["shy", "angry", "pet", "wake", "alert1", "alert2", "alert3", "glitch", "reboot"].includes(scene)) L = (k && k.lines && k.lines.tap) || [];   // 書いていなければ「押した」のセリフで代わりに
     if (!L.length) return "";
     const t = L[Math.floor(Math.random() * L.length)];
     return t.replace(/\{card\}/g, vars.card || "").replace(/\{off\}/g, vars.off ?? "");
@@ -523,6 +528,8 @@ const Keeper = {
   react(scene, mood) {
     const k = this.cur(); if (!k) return;
     this.who = k.id;
+    if (this.shorted && ["buy", "dis"].includes(scene)) { this.reboot(); return; }   // 何か買うと再起動して戻る
+    if (this.shorted) return;
     this.q = this.seen(k) ? [{ scene, mood }] : [{ scene: "first" }];
     this.shown = ""; this.extra = ""; this.typing = false; this.talking = false;
   },
@@ -535,6 +542,7 @@ const Keeper = {
     const el = document.querySelector(".kp-man"); if (el) { el.classList.remove("hop"); void el.offsetWidth; el.classList.add("hop"); }
     if (typeof Sound !== "undefined") Sound.play("click");
     const k = this.cur(), moody = k && this.has(k, "shy");   // 照れる・怒る・眠るのは、その絵がある店員（ルゥ）だけ
+    if (k && this.has(k, "short")) return this.tapRobo(now);
     const sleepy = k && this.has(k, "sleep") && now - (this.lastAct || now) >= KEEPER_SLEEP;
     this.lastAct = now;
     if (sleepy) { this.taps = 0; this.q = [{ scene: "wake", mood: "yawn" }]; return this.next(true); }
@@ -544,6 +552,34 @@ const Keeper = {
     if (it.scene === "shy") this.taps = 0;   // 照れたら数え直し（照れたあと、すぐ怒らない）
     this.q = [it];
     this.next(true);
+  },
+  /* マモル：押すほど警戒 → 故障 → ショート */
+  tapRobo(now) {
+    this.lastAct = now;
+    if (this.shorted) { this.shortAt = Math.max(this.shortAt, now - MAMORU_REBOOT + 6000); return; }   // ショート中は反応しない（押されたら再起動まで少し延びる）
+    this.taps = now - (this.tapAt || 0) <= 3000 ? (this.taps || 0) + 1 : 1; this.tapAt = now;
+    const step = MAMORU_STEPS.find(([n]) => this.taps >= n)[1];
+    if (step === "short") {
+      this.shorted = true; this.shortAt = now; this.taps = 0; this.q = [];
+      this.say(this.line("short") || "ブツッ……", "short", "");
+      this.mood = "short"; this.moodUntil = Infinity;
+      this.paintRobo();
+      return;
+    }
+    this.q = [step === "tap" ? { scene: "tap", mood: "happy" } : { scene: step, mood: step }];
+    this.next(true);
+    this.paintRobo();
+  },
+  reboot() {
+    this.shorted = false; this.rebootUntil = Date.now() + 2200; this.mood = "reboot"; this.moodUntil = this.rebootUntil;
+    this.text = this.shown = "……再起動中"; this.extra = ""; this.typing = false; this.talking = false; this.paintText();
+    this.paintRobo();
+    setTimeout(() => { if (this.shorted) return; this.q = [{ scene: "reboot", mood: "happy" }]; this.next(true); this.paintRobo(); }, 2200);
+  },
+  /* 故障・ショートの見た目（画面の揺れ・ちらつき）は、絵の外側の枠に付ける */
+  paintRobo() {
+    const m = this.shorted ? "short" : this.mood;
+    document.querySelectorAll(".kp-man").forEach(el => { el.classList.toggle("glitchy", m === "glitch"); el.classList.toggle("shorted", m === "short"); });
   },
   /* 店員の顔のあたりを左右になでた */
   pet() {
@@ -576,6 +612,7 @@ const Keeper = {
     this.say(t, it.mood, it.extra || "");
   },
   say(t, mood, extra) {
+    if (this.shorted && mood !== "short") return;
     this.lastAct = Date.now(); this.nap = "";
     document.querySelectorAll(".kp-man.asleep").forEach(m => m.classList.remove("asleep"));
     this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true;
@@ -590,7 +627,7 @@ const Keeper = {
   /* 店員を着替えたあと：前の店員の話の続きは捨てて、新しい店員があいさつする（初めてなら自己紹介） */
   sync(k) {
     if (this.who === k.id) return;
-    this.who = k.id; this.mood = null; this.nap = "";
+    this.who = k.id; this.mood = null; this.nap = ""; this.shorted = false; this.taps = 0;
     this.q = [{ scene: this.seen(k) ? "enter" : "first" }];
     this.text = this.shown = this.extra = ""; this.typing = false; this.talking = false;
   },
@@ -621,12 +658,14 @@ const Keeper = {
     const k = this.cur();
     this.lastAct = Date.now(); this.nap = "";
     document.querySelectorAll(".kp-man").forEach(m => this.bindPet(m));
+    this.paintRobo();
     if (this.q.length && !this.typing) this.next(true); else this.paintText();
     let blinkAt = Date.now() + 1500 + Math.random() * 3000, blinkTo = 0, tick = 0;
     const loop = setInterval(() => {
       if (!img.isConnected) { clearInterval(loop); clearInterval(typer); return; }
       const now = Date.now(); tick++;
-      if (this.mood && now > this.moodUntil) this.mood = null;
+      if (this.shorted && now - this.shortAt >= MAMORU_REBOOT) this.reboot();   // 放っておくと再起動
+      if (this.mood && now > this.moodUntil) { this.mood = null; this.paintRobo(); }
       let f = "idle";
       if (this.mood) f = this.mood;
       else if (this.talking) f = ["talk1", "idle", "talk2", "idle"][Math.floor(tick / 3) % 4];   // 口だけ、約0.27秒ごとにゆっくり動かす
