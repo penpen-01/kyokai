@@ -111,9 +111,7 @@ const Online = {
     let msg = "";
     if (this.closed && (!S || !S.over)) msg = "部屋が閉じられました。";
     else if (this.oppLeft && (!S || !S.over)) msg = "相手が退出しました。";
-    else if (!this.oppOnline && S && !S.over) msg = this.role === "guest"
-      ? "相手（部屋を作った人）の接続が切れています。戻ってくるのを待っています…"
-      : "相手の接続が切れています。戻ってくるのを待っています…";
+    else if (!this.oppOnline && S && !S.over) msg = `相手の接続が切れています。戻ってくるのを待っています…<small id="onl-off">${this.offLeft() != null ? `あと${this.offLeft()}秒戻らなければ、あなたの勝ちになります。` : ""}</small>`;
     if (!msg) return "";
     return `<div class="netbanner" role="status"><span>${msg}</span><button type="button" class="btn" data-act="toTitle">部屋を出る</button></div>`;
   },
@@ -157,7 +155,7 @@ const Online = {
 
   reset() {
     this.unsubs.forEach(f => { try { f(); } catch {} });
-    Object.assign(this, { arenaErr: null, senRule: false, myAgain: null, seenAgain: null, role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null });
+    Object.assign(this, { arenaErr: null, senRule: false, myAgain: null, seenAgain: null, role: null, code: null, room: null, pending: false, oppOnline: true, oppLeft: false, closed: false, fxq: [], unsubs: [], lastSeq: -1, lastBody: null, pubForce: false, netKey: null, skew: 0, seenTimeout: null, lastBeep: null, seenOppDchg: undefined, oppDeckChanged: false, seenStamp: undefined, myDeck: null, guestDeck: null, offSince: null });
     clearTimeout(this.pendingTimer);
   },
 
@@ -264,6 +262,7 @@ const Online = {
       if (this.role === "guest" && this.code) {
         this.closed = true;
         if (room && room.state) this.onState(room.state);
+        if (S && !S.over && S.players && S.phase !== "draft") this.oppGone("退出した");   // 部屋を作った人が決着前に出ていった
         else if (S) render();
         else this.showLobby("部屋が閉じられました。");
       }
@@ -293,7 +292,12 @@ const Online = {
     this.netKey = netKey;
     if (this.role === "host") {
       if (!S && room.guest && room.status === "waiting" && this.guestDeck) return this.startGame();
-      if (S && this.oppLeft && !prevOppLeft && !S.over) { if (S.phase === "draft") { S.draft.gone = true; render(); return; } forfeit(1, "退出した"); return; }
+      if (S && this.oppLeft && !prevOppLeft && !S.over) {
+        if (S.phase === "draft") { S.draft.gone = true; render(); return; }
+        // 参加者が「部屋を作った人の接続が切れたので勝ち」として出ていったときは、こちらの負け
+        if (room.left[ou] === "win") forfeit(0, "接続切れのまま戻らなかった"); else forfeit(1, "退出した");
+        this.publish(true); return;
+      }
       if (S && netChanged && MODE === "online") render();
     } else {
       if (room.state) this.onState(room.state);
@@ -483,6 +487,7 @@ const Online = {
   },
 
   onState(str) {
+    if (this.role === "guest" && this.closed && S && S.over) return;   // 自分の画面で決着したあとは受け取らない
     let p;
     try { p = JSON.parse(str); } catch { return; }
     if (!p || !p.S) return;
@@ -518,7 +523,9 @@ const Online = {
     try {
       if (this.role === "host") {
         // 最後の盤面を書き込んでから閉じる
-        const final = S ? { state: JSON.stringify({ S, fx: [] }) } : {};
+        // 番号（seq）を進めて書く。前は同じ番号のままだったので、参加者の画面が「もう受け取った盤面」と見なして、降参が伝わらなかった（2026-11-19）
+        if (S) S.seq = (S.seq || 0) + 1;
+        const final = S ? { state: JSON.stringify({ S, fx: [], now: Date.now() }) } : {};
         Net.update(base, { ...final, status: "closed" });
       } else if (this.uid) {
         Net.set(`${base}/left/${this.uid}`, true);
@@ -542,7 +549,28 @@ const Online = {
     return Math.min(sec, k === "m" ? MULL_LIMIT : this.turnLimit() || sec);
   },
   startTicker() { if (!this.ticker) this.ticker = setInterval(() => this.tick(), 250); },
+  /* 相手の接続が切れたまま OFF_LIMIT 秒たったら、こちらの勝ちにする（ずっと待たされないように） */
+  offLimit: 60,   // 相手の接続が切れてから、こちらの勝ちになるまでの秒数
+  offLeft() { return this.offSince ? Math.max(0, Math.ceil((this.offSince + this.offLimit * 1000 - Date.now()) / 1000)) : null; },
+  watchOff() {
+    const live = MODE === "online" && this.code && S && !S.over && S.players && S.phase !== "draft" && !this.oppLeft && !this.closed;
+    if (!live || this.oppOnline) { this.offSince = null; return; }
+    if (!this.offSince) this.offSince = Date.now();
+    const el = document.getElementById("onl-off"); if (el) el.textContent = `あと${this.offLeft()}秒戻らなければ、あなたの勝ちになります。`;
+    if (Date.now() - this.offSince > this.offLimit * 1000) { this.offSince = null; this.oppGone("接続切れのまま戻らなかった"); }
+  },
+  /* 相手がいなくなった：こちらの勝ちで決着する */
+  oppGone(reason) {
+    if (!S || S.over) return;
+    if (this.role === "host") { forfeit(1, reason); this.publish(true); return; }
+    // 参加者：盤面を決めるのは部屋を作った人なので、自分の画面で決着させ、以後の盤面は受け取らない。
+    // 部屋を作った人が後から戻っても、勝ちが二重にならないよう「勝ちとして出た」と書いておく
+    this.closed = true;
+    try { if (this.code && this.uid) Net.set(`rooms/${this.code}/left/${this.uid}`, "win"); } catch (e) { console.error(e); }
+    forfeit(OP, reason);
+  },
   tick() {
+    this.watchOff();
     if (MODE !== "online" || !S || !this.code) { this.paint(null); return; }
     const tl = this.turnLimit();
     if (this.role === "host" && tl && !this.blocked()) {

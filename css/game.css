@@ -302,6 +302,7 @@ body{
   box-shadow:0 10px 30px rgba(0,0,0,.5);
 }
 .netbanner span{flex:1;min-width:0}
+.netbanner span small{display:block;margin-top:2px;opacity:.85}
 .netbanner .btn{flex:none;padding:8px 12px}
 
 /* ---- 対戦前（じゃんけん・先攻後攻・マリガン） ---- */
