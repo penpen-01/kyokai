@@ -388,9 +388,19 @@ img{max-width:100%}
 
 /* G・魔石の絵（どの画面でも同じ大きさの基準。各画面で width/height を上書きしてよい） */
 img.cur-img{width:1.45em;height:1.45em;object-fit:contain;flex:none;vertical-align:-.3em;-webkit-user-drag:none;user-select:none}
-/* 沈黙・目覚めの表示：絵の真ん中ではなく、下の攻撃力と体力のあいだに小さく（絵が見えるように）2026-11-18 */
-.card .frz.sil,.card .frz + .frz.sil{top:auto;bottom:3.5cqw;transform:translateX(-50%);z-index:6;font-size:8.5cqw;letter-spacing:.05em;padding:.6cqw 3cqw;border-radius:99px;background:rgba(70,40,110,.92);box-shadow:0 0 0 .6cqw rgba(200,170,255,.55)}
-.card:has(.frz.sil) .art{filter:saturate(.35) brightness(.85)}
-.card .wintag.wake{top:auto;bottom:3.5cqw;font-size:9cqw;padding:.6cqw 3cqw;color:#e9e4ff;background:linear-gradient(180deg,#5b4fa8,#2e2766);box-shadow:0 0 0 .6cqw rgba(190,180,255,.5);animation:none;display:flex;align-items:baseline;gap:.8cqw}
-.card .wintag.wake i{font-style:normal;font-size:7cqw;opacity:.85;letter-spacing:-.05em}
-.card .wintag.wake i b{font-size:9cqw}
+/* 沈黙・目覚めの表示：絵の真ん中ではなく、下の攻撃力と体力のあいだに（絵が見えるように）2026-11-18
+   沈黙：カードの縁に紫の光をまとった鎖＋下に錠前の札。目覚め：三日月の札に「目覚め N」 */
+.card .chainfx{position:absolute;inset:-1.5cqw;z-index:5;pointer-events:none;background:url("../ui/fx/chain.svg") center/100% 100% no-repeat;animation:chainin .45s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes chainin{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+.card .silseal,.card .wakeb{position:absolute;left:50%;bottom:2.6cqw;transform:translateX(-50%);z-index:7;display:flex;align-items:center;gap:1.2cqw;white-space:nowrap;
+  padding:.8cqw 3.6cqw .8cqw 2cqw;border-radius:99px;font-weight:900;font-size:8.5cqw;line-height:1.15;letter-spacing:.06em}
+.card .silseal{color:#f1e8ff;background:linear-gradient(180deg,#5a3f94 0%,#2c1d52 60%,#1c1238 100%);
+  box-shadow:0 0 0 .55cqw #c9b4ff,0 0 0 1.1cqw #2a1b4a,0 0 4cqw rgba(170,120,255,.75),inset 0 .6cqw 0 rgba(255,255,255,.18)}
+.card .silseal svg{width:8.5cqw;height:10cqw;flex:none;filter:drop-shadow(0 .4cqw .4cqw rgba(0,0,0,.6))}
+.card .silseal b{text-shadow:0 .4cqw .6cqw rgba(0,0,0,.7)}
+.card .wakeb{color:#f6efff;background:linear-gradient(180deg,#3d3a8f 0%,#211f5c 60%,#15133d 100%);
+  box-shadow:0 0 0 .55cqw #e8c46a,0 0 0 1.1cqw #2a2350,0 0 4cqw rgba(232,196,106,.5),inset 0 .6cqw 0 rgba(255,255,255,.15)}
+.card .wakeb svg{width:8.5cqw;height:8.5cqw;flex:none;filter:drop-shadow(0 0 1.2cqw rgba(255,214,120,.8))}
+.card .wakeb b{font-size:10.5cqw;color:#ffd978;margin-left:.6cqw;text-shadow:0 0 2cqw rgba(255,200,90,.8)}
+@media (prefers-reduced-motion:reduce){.card .chainfx{animation:none}}
+.card.silenced .cost,.card.silenced .marks,.card.silenced .stats{z-index:6}
