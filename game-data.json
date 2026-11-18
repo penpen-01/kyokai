@@ -1,5 +1,5 @@
 {
- "version": 202,
+ "version": 203,
  "updated": "2026-11-19",
  "config": {
   "PLAYER_HP": 20,
@@ -10071,6 +10071,13 @@
    "sen",
    "set1"
   ],
-  "extra": []
+  "extra": [
+   {
+    "date": "2026-11-19",
+    "start": "05:00",
+    "end": "06:05",
+    "rule": "std"
+   }
+  ]
  }
 }
