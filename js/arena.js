@@ -197,3 +197,15 @@ const Arena = {
     return false;
   }
 };
+
+/* ホームを開いたままでも、開催の始まり・終わりで扉と飾り棚を入れ替える（30秒ごとに確かめる） */
+setInterval(() => {
+  try {
+    if (typeof ARENA === "undefined" || !ARENA.on || S || (typeof DATA_INFO !== "undefined" && DATA_INFO.draft)) return;
+    const ov = document.getElementById("overlay"); if (ov && !ov.hidden) return;
+    const door = document.getElementById("ar-door"), sc = document.getElementById("showcase");
+    if (door && door.classList.contains("opening")) return;
+    const live = Arena.live();
+    if ((door && !live) || (sc && live)) showStart();
+  } catch (e) { console.error(e); }
+}, 30000);
