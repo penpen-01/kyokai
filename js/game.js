@@ -1457,6 +1457,8 @@ function playerIcon(pi) {
   if (p.icon && DEF[p.icon] && DEF[p.icon].art) return p.icon;
   // おまかせ：デッキでいちばんコストの高いキャラ（同じならレア度の高い方）。魔法は顔にしない（2026-11-18）
   const dk = S.decks && S.decks[pi];
+  // CPU・ボスの顔は、工房で決めたデッキの代表カード（プレイヤーのおまかせだけ、いちばんコストの高いキャラ）
+  if (MODE !== "online" && pi !== ME && dk && dk.key && DEF[dk.key] && DEF[dk.key].art) return dk.key;
   const deck = (dk && dk.cards) || {};
   const cands = Object.keys(deck).map(id => DEF[id]).filter(d => d && d.type === "char" && d.art);
   cands.sort((x, y) => y.cost - x.cost || RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity));
