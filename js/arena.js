@@ -120,34 +120,40 @@ const Arena = {
       Net.onDisconnectRemove(me);
     } catch (e) { console.error(e); this.searching = false; return this.show("アリーナに入れませんでした（サーバーの設定がまだかもしれません）。"); }
     this.unsubs.push(Net.on(me, v => { if (v && v.room && this.searching) this.matched(v.room, false); }));
+    this.unsubs.push(Net.on(`arena/q/${c.sid}`, v => { this.queue = v || {}; this.paintWait(); }));   // 並んでいる人（見張っておくと、手元の値がいつも新しい）
     this.timer = setInterval(() => this.tick(), 2500 + Math.random() * 800);
     this.show();
     this.tick();
   },
-  paintWait() { const el = document.getElementById("ar-wait"); if (el) el.textContent = `${Math.floor((Date.now() - this.since) / 1000)}秒`; },
+  paintWait() {
+    const el = document.getElementById("ar-wait"); if (!el) return;
+    const n = Object.entries(this.queue || {}).filter(([u, x]) => u !== this.uid && x && !x.room && Date.now() - (x.at || 0) < 60000).length;
+    el.textContent = `${Math.floor((Date.now() - this.since) / 1000)}秒 ・ ほかに探している人：${n}人`;
+  },
   async tick() {
     if (!this.searching || this.claiming) return;
     this.paintWait();
     const c = this.current();
     if (!c || c.sid !== this.sid) { this.stop(); return this.show("時間になったので、アリーナは閉じました。"); }
     const me = `arena/q/${this.sid}/${this.uid}`;
-    if (Date.now() - (this.beat || 0) > 20000) { this.beat = Date.now(); Net.tx(me, cur => cur && !cur.room ? { ...cur, at: Date.now() } : undefined).catch(() => {}); }   // まだ並んでいる印（消えた欄を作り直さない）
-    let q = null; try { q = await Net.get(`arena/q/${this.sid}`); } catch (e) { return; }
+    if (Date.now() - (this.beat || 0) > 20000) { this.beat = Date.now(); Net.tx(me, cur => cur === null ? null : !cur.room ? { ...cur, at: Date.now() } : undefined).catch(() => {}); }   // まだ並んでいる印（消えた欄を作り直さない）
+    const q = this.queue || {};
     if (!this.searching) return;
     const now = Date.now();
     const cands = Object.entries(q || {}).filter(([u, x]) => u > this.uid && x && !x.room && !(x.lock && now - x.lock < 8000) && now - (x.at || 0) < 60000).sort((a, b) => a[1].at - b[1].at);
     if (!cands.length || !this.searching) return;
     this.claiming = true;
     try {
-      const lk = await Net.tx(me, cur => cur && !cur.room ? { ...cur, lock: Date.now() } : undefined);   // 自分が呼ばれている途中なら、呼びに行かない
-      if (!lk.committed) return;
+      const lk = await Net.tx(me, cur => cur === null ? null : !cur.room ? { ...cur, lock: Date.now() } : undefined);   // 自分が呼ばれている途中なら、呼びに行かない
+      if (!lk.committed || !lk.val || !lk.val.lock || lk.val.room) return;
       let code = null;
       for (let i = 0; i < 6 && !code; i++) { const k = Array.from({ length: 4 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join(""); if (!(await Net.get(`rooms/${k}/host`))) code = k; }
       if (code) for (const [u] of cands) {
-        const r = await Net.tx(`arena/q/${this.sid}/${u}`, cur => cur && !cur.room && !(cur.lock && Date.now() - cur.lock < 8000) ? { ...cur, room: code, by: this.uid } : undefined);
-        if (r.committed) return this.matched(code, true);
+        let r = null;
+        try { r = await Net.tx(`arena/q/${this.sid}/${u}`, cur => cur === null ? null : !cur.room && !(cur.lock && Date.now() - cur.lock < 8000) ? { ...cur, room: code, by: this.uid } : undefined); } catch (e) { continue; }
+        if (r && r.committed && r.val && r.val.room === code) return this.matched(code, true);
       }
-      await Net.tx(me, cur => cur && !cur.room ? { ...cur, lock: null } : cur || undefined);
+      await Net.tx(me, cur => cur === null ? null : !cur.room ? { ...cur, lock: null } : undefined);
     } catch (e) { console.error(e); }
     finally { this.claiming = false; }
   },
