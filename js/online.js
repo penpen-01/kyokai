@@ -137,11 +137,13 @@ const Online = {
   },
 
   readName() {
+    // 名前の欄があるとき（友達と対戦のロビー）だけ、入れた名前を保存する。
+    // 欄がないとき（アリーナから入るとき）は、いまの名前をそのまま使う。
+    // 前は欄がないと「見習いプレイヤー」で上書きして保存していた（アリーナで名前が消えた不具合。2026-11-19）
     const el = $("#onl-name");
-    let n = (el ? el.value : store.get(NAME_KEY) || "").trim().slice(0, 10);
-    if (!n) n = DEFAULT_NAME;
-    setPlayerName(n);
-    return n;
+    const typed = el ? String(el.value || "").trim().slice(0, 10) : "";
+    if (typed) { setPlayerName(typed); return typed; }
+    return playerName();
   },
 
   async connect() {
