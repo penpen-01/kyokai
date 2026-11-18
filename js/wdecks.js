@@ -92,6 +92,7 @@ const WDecks = {
           <select class="txt" id="wd-level" data-wd="level" style="width:auto">${Object.entries(WD_LEVELS).map(([k, v]) => `<option value="${k}" ${(d.level || "normal") === k ? "selected" : ""}>${v}</option>`).join("")}</select></div>
         <span class="wd-count ${n === size ? "ok" : "bad"}"><b>${n}</b>/${size}</span>
       </div>
+      ${d.level === "test" ? `<label class="check"><input type="checkbox" data-wd="pub" ${d.pub ? "checked" : ""}><span><b>プレイヤーにも公開する</b><span>デッキの「用意されたデッキから作る」に出て、誰でもサンプルデッキとしてコピーできます（まだ手に入らないカードも、このデッキからなら試せます）。CPU戦では使いません。</span></span></label>` : ""}
       <p class="${pr.length ? "bad" : "ok"} small">${pr.length ? pr.map(esc).join("<br>") : (d.level === "test" ? "検証で使えます" : "CPUが使えるデッキです")}</p>
       <div class="wd-stats">
         <div class="wd-curve">${s.curve.map((k, i) => `<div><span class="n">${k || ""}</span><span class="fill" style="height:${k / max * 44}px"></span><span class="c">${i === 8 ? "8+" : i}</span></div>`).join("")}</div>
@@ -205,7 +206,8 @@ const WDecks = {
     if (k === "q") { this.f.q = t.value; const p = $("#wd-pool"); if (p && d) p.innerHTML = this.poolHTML(d); return true; }
     if (!d) return false;
     if (k === "name") { d.name = t.value.slice(0, 16) || "デッキ"; saveDraft(); renderStatus(); return true; }
-    if (k === "level") { d.level = t.value; this.touch(); return true; }
+    if (k === "level") { d.level = t.value; if (d.level !== "test") delete d.pub; this.touch(); return true; }
+    if (k === "pub") { if (t.checked) d.pub = true; else delete d.pub; this.touch(); return true; }
     return false;
   }
 };

@@ -856,6 +856,7 @@ function normalizeData(data) {
   })).filter(c => c.id);
   const decks = (Array.isArray(d.decks) ? d.decks : []).filter(x => x && x.id && x.cards).map(x => ({
     id: String(x.id), name: String(x.name || "デッキ"), cards: cleanDeckCards(x.cards),
+    ...(x.level === "test" && x.pub ? { pub: true } : {}),   // 検証用でも、プレイヤーが「用意されたデッキから作る」でコピーできる（CPU戦では使わない）
     ...(typeof x.key === "string" && x.key ? { key: x.key } : {}),   // 代表カード（対戦の始まりの演出・相手の顔に使う）
     level: ["easy", "normal", "hard", "ex", "boss", "test", "gate", "gift"].includes(x.level) ? x.level : "normal"   // ex = 超級（第2弾をすべて開放すると出る）、test = 検証用（CPUもプレイヤーも使わない）、boss = 隠しボス用、gate = パック開放戦の相手（ふだんのCPU戦では使わない）
   }));

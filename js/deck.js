@@ -320,7 +320,7 @@ const Decks = {
     openOverlay(`<div class="panel wide">
       ${this.topbar("用意されたデッキから作る", "decks")}
       <p class="lead small">CPUが使っているデッキをコピーして、サンプルデッキとして編集できます。</p>
-      <ul class="dlist">${PRESETS.filter(d => !hiddenDeck(d) || adminOn()).map(d => `<li class="drow"><span class="drow-main"><b>${esc(d.name)}</b><span class="hint">${hiddenDeck(d) ? `<i class="adm-tag">運営のみ</i>${{ test: "検証用", gate: "関門", gift: "配布用", boss: "ボス", ex: "超級" }[d.level] || ""}` : `${{ easy: "初級", normal: "中級", hard: "上級", ex: "超級" }[d.level] || ""}CPU用`} ・ ${deckCount(d)}枚</span></span>
+      <ul class="dlist">${PRESETS.filter(d => !hiddenDeck(d) || d.pub || adminOn()).map(d => `<li class="drow"><span class="drow-main"><b>${esc(d.name)}</b><span class="hint">${d.pub ? `<i class="adm-tag">期間限定</i>検証用・まだ手に入らないカードも試せます` : hiddenDeck(d) ? `<i class="adm-tag">運営のみ</i>${{ test: "検証用", gate: "関門", gift: "配布用", boss: "ボス", ex: "超級" }[d.level] || ""}` : `${{ easy: "初級", normal: "中級", hard: "上級", ex: "超級" }[d.level] || ""}CPU用`} ・ ${deckCount(d)}枚</span></span>
         <div class="drow-acts"><button type="button" class="btn sm" data-act="deckFromPreset" data-id="${esc(d.id)}">コピーして編集</button></div></li>`).join("")}</ul>
     </div>`, "start", true);
   },

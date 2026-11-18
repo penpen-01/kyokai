@@ -1,5 +1,5 @@
 {
- "version": 191,
+ "version": 192,
  "updated": "2026-11-18",
  "config": {
   "PLAYER_HP": 20,
@@ -1291,7 +1291,8 @@
     "k-ruu": 3,
     "k-dorgan": 2,
     "k-weiss": 2
-   }
+   },
+   "pub": true
   }
  ],
  "serials": [
