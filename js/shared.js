@@ -659,7 +659,7 @@ function cardHTML(card, o = {}) {
     ${marks ? `<span class="marks">${marks}</span>` : ""}
     ${o.count ? `<span class="gearcnt" aria-label="${o.count}枚">×${o.count}</span>` : ""}
     ${o.perN ? `<span class="perb" aria-label="このターン先に使ったカード${o.perN}枚">先に${o.perN}枚</span>` : ""}
-    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}${u && u.wakeIn != null && !u.silenced ? `<span class="wintag wake" title="目覚めまであと${u.wakeIn}回">目覚めまで${u.wakeIn}</span>` : ""}
+    ${u && u.frozen ? `<span class="frz">凍結</span>` : ""}${u && u.silenced ? `<span class="frz sil">沈黙</span>` : ""}${u && u.winIn != null && !u.silenced ? `<span class="wintag" title="勝利まであと${u.winIn}回">勝利まで${u.winIn}</span>` : ""}${u && u.wakeIn != null && !u.silenced ? `<span class="wintag wake" title="目覚めまであと${u.wakeIn}回" aria-label="目覚めまで${u.wakeIn}"><i aria-hidden="true">z<b>z</b></i>${u.wakeIn}</span>` : ""}
     <span class="foot"><span class="nm ${nmLen(card) >= 11 ? "xlong x3" : nmLen(card) >= 10 ? "xlong x2" : nmLen(card) >= 9 ? "xlong" : nmLen(card) >= 7 ? "long" : ""}">${esc(card.name)}</span>${stats}</span></${tag}>`;
 }
 

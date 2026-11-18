@@ -388,3 +388,9 @@ img{max-width:100%}
 
 /* G・魔石の絵（どの画面でも同じ大きさの基準。各画面で width/height を上書きしてよい） */
 img.cur-img{width:1.45em;height:1.45em;object-fit:contain;flex:none;vertical-align:-.3em;-webkit-user-drag:none;user-select:none}
+/* 沈黙・目覚めの表示：絵の真ん中ではなく、下の攻撃力と体力のあいだに小さく（絵が見えるように）2026-11-18 */
+.card .frz.sil,.card .frz + .frz.sil{top:auto;bottom:3.5cqw;transform:translateX(-50%);z-index:6;font-size:8.5cqw;letter-spacing:.05em;padding:.6cqw 3cqw;border-radius:99px;background:rgba(70,40,110,.92);box-shadow:0 0 0 .6cqw rgba(200,170,255,.55)}
+.card:has(.frz.sil) .art{filter:saturate(.35) brightness(.85)}
+.card .wintag.wake{top:auto;bottom:3.5cqw;font-size:9cqw;padding:.6cqw 3cqw;color:#e9e4ff;background:linear-gradient(180deg,#5b4fa8,#2e2766);box-shadow:0 0 0 .6cqw rgba(190,180,255,.5);animation:none;display:flex;align-items:baseline;gap:.8cqw}
+.card .wintag.wake i{font-style:normal;font-size:7cqw;opacity:.85;letter-spacing:-.05em}
+.card .wintag.wake i b{font-size:9cqw}
