@@ -462,14 +462,14 @@ const Shop = {
    絵は ui/keeper/<店員のid>-<表情>.webp（idle まばたき前の顔 / blink / talk1 / talk2 / happy / trouble / offer） */
 const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "offer"];
 /* 店員ごとの追加の表情（絵がある店員だけ）。ない店員は KEEPER_FALLBACK の表情で代わりにする */
-const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere"], mamoru: ["alert1", "alert2", "alert3", "glitch", "short", "reboot"] };
+const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere", "mouth1", "mouth2"], mamoru: ["alert1", "alert2", "alert3", "glitch", "short", "reboot"] };
 const KEEPER_FALLBACK = { sleep: "blink", doze: "idle", yawn: "talk1", shy: "happy", angry: "trouble", dere: "happy", alert1: "trouble", alert2: "trouble", alert3: "trouble", glitch: "trouble", short: "trouble", reboot: "idle" };
 /* マモル（警備ロボ）：続けて押すほど警戒が上がり、最後は画面がバグってショートする。
    段階（3秒以内に続けて押した回数）：1〜5 平気 → 6〜9 気づく → 10〜14 警戒 → 15〜19 本気の警戒 → 20〜23 故障 → 24〜 ショート
    ショートしたら押しても反応しない。MAMORU_REBOOT ミリ秒放っておくか、何か買う（交換・分解）と再起動して戻る */
 const MAMORU_STEPS = [[24, "short"], [20, "glitch"], [15, "alert3"], [10, "alert2"], [6, "alert1"], [1, "tap"]];
 /* 話しているときの口の動き。step＝何コマ（1コマ90ミリ秒）ごとに次の絵にするか。ルゥは口を大きく開けた絵（あくびに近い）を使わない */
-const KEEPER_TALK = { def: { f: ["talk1", "idle", "talk2", "idle"], step: 3 }, ruu: { f: ["talk2", "idle"], step: 4 } };
+const KEEPER_TALK = { def: { f: ["talk1", "idle", "talk2", "idle"], step: 3 }, ruu: { f: ["mouth2", "idle", "mouth1", "idle", "mouth2", "idle"], step: 3 } };   // ルゥ：ふだんの顔のまま、口だけ替えた絵（目が動かない）
 const MAMORU_REBOOT = 20000;
 const KEEPER_DOZE = 10000, KEEPER_SLEEP = 20000;   // 何もしないと、うとうと（10秒）→ 眠る（20秒）。眠る絵のある店員だけ
 const KEEPER_ART = ["dorgan", "weiss", "ruu", "mamoru"];
@@ -559,8 +559,8 @@ const Keeper = {
     if (k && this.has(k, "short")) return this.tapRobo(now);
     const sleepy = k && this.has(k, "sleep") && now - (this.lastAct || now) >= KEEPER_SLEEP;
     this.lastAct = now;
+    if (this.singing) { this.singing = false; this.taps = 0; this.q = [{ scene: "singCaught", mood: "shy" }]; return this.next(true); }   // 歌っているところを見られた（歌っている間は眠っていない）
     if (sleepy) { this.taps = 0; this.q = [{ scene: "wake", mood: "yawn" }]; return this.next(true); }
-    if (this.singing) { this.singing = false; this.taps = 0; this.q = [{ scene: "singCaught", mood: "shy" }]; return this.next(true); }   // 歌っているところを見られた
     this.taps = now - (this.tapAt || 0) <= 3000 ? (this.taps || 0) + 1 : 1; this.tapAt = now;
     // 眠たげな子なので、ふだんは素っ気なく返すだけ。続けて押すと、4〜7回目でたまに（3割）照れて、8回目からは怒る
     const it = !moody ? this.topic(k) : this.taps >= 8 ? { scene: "angry", mood: "angry" } : this.taps >= 4 && Math.random() < 0.3 ? { scene: "shy", mood: "shy" } : this.topic(k);
@@ -629,16 +629,17 @@ const Keeper = {
     if (m) { t = t.slice(m[0].length); const k = this.cur(); if (k && (this.has(k, m[1]) || KEEPER_FALLBACK[m[1]])) mood = m[1]; }
     // 「。」で区切って、1文ずつ吹き出しに出す（一気に流れないように）。続きは同じ顔で、少し間をあけて出る
     const parts = it.text != null ? [t] : t.split(/(?<=。)(?=.)/);
-    if (parts.length > 1) { this.q.unshift(...parts.slice(1).map((p, i) => ({ text: p, mood, extra: i === parts.length - 2 ? it.extra : "" }))); t = parts[0]; }
-    this.say(t, mood, parts.length > 1 ? "" : it.extra || "");
+    if (parts.length > 1) { this.q.unshift(...parts.slice(1).map((p, i) => ({ text: p, mood, more: i < parts.length - 2, extra: i === parts.length - 2 ? it.extra : "" }))); t = parts[0]; }
+    this.say(t, mood, parts.length > 1 ? "" : it.extra || "", parts.length > 1 || it.more);
   },
-  say(t, mood, extra) {
+  say(t, mood, extra, hold) {
     if (this.shorted && mood !== "short") return;
     this.singing = false;
     this.lastAct = Date.now(); this.nap = "";
     document.querySelectorAll(".kp-man.asleep").forEach(m => m.classList.remove("asleep"));
     this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true;
-    if (mood) { this.mood = mood; this.moodUntil = Date.now() + Math.max(1800, t.length * 45 + 1400); } else this.mood = null;
+    // 続きの文があるあいだは、同じ顔のまま（文の切れ目で顔が一度戻って、また変わらないように）
+    if (mood) { this.mood = mood; this.moodUntil = hold ? Infinity : Date.now() + Math.max(1800, t.length * 70 + 1400); } else this.mood = null;
     this.paintText();
   },
   finishTyping() { this.shown = this.text; this.typing = false; this.talking = false; this.paintText(); },
@@ -732,7 +733,7 @@ const Keeper = {
       document.querySelectorAll(".kp-text").forEach(el => { el.textContent = this.shown; });
       if (this.shown.length >= this.text.length) {
         this.typing = false; this.talking = false; this.paintText();
-        if (this.q.length) setTimeout(() => { if (!this.typing && img.isConnected) this.next(true); }, this.q[0] && this.q[0].text != null ? 1100 : 1800);
+        if (this.q.length) setTimeout(() => { if (!this.typing && img.isConnected) this.next(true); }, this.q[0] && this.q[0].text != null ? 1500 : 1800);
       }
     }, 40);
     this.timers.push(loop, typer);
