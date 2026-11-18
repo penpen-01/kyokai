@@ -44,8 +44,9 @@ const Arena = {
     return `<div class="ar-door${art ? " art" : ""}" id="ar-door">
       <button type="button" class="ar-gate" data-act="arenaDoor" aria-label="アリーナの扉を開く（${ARENA_RULES[c.rule].name}・${this.hm(c.end)}まで）">
         <span class="ar-glow" aria-hidden="true"></span>
-        <span class="ar-leaf l" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}></span>
-        <span class="ar-leaf r" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}></span>
+        <span class="ar-leaf l" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}><i class="ar-edge"></i></span>
+        <span class="ar-leaf r" aria-hidden="true"${art ? ` style="background-image:url('${art}')"` : ""}><i class="ar-edge"></i></span>
+        ${art ? `<span class="ar-frame" aria-hidden="true"></span>` : ""}
         <span class="ar-side l" aria-hidden="true"><i></i></span><span class="ar-side r" aria-hidden="true"><i></i></span>
       </button>
       <div class="ar-plate"><b>アリーナ開催中</b><span>${ARENA_RULES[c.rule].name} ・ ${this.hm(c.end)}まで</span><small>扉をタップ</small></div>
@@ -57,7 +58,7 @@ const Arena = {
     d.classList.add("opening");
     if (typeof Sound !== "undefined") Sound.play("creak");
     const slow = !(typeof Motion !== "undefined" && Motion.reduced);
-    setTimeout(() => { const f = document.createElement("div"); f.className = "ar-flash"; document.body.appendChild(f); setTimeout(() => { this.show(); setTimeout(() => f.classList.add("out"), 30); setTimeout(() => f.remove(), 700); }, slow ? 420 : 0); }, slow ? 1700 : 0);
+    setTimeout(() => { const f = document.createElement("div"); f.className = "ar-flash"; document.body.appendChild(f); setTimeout(() => { this.show(); setTimeout(() => f.classList.add("out"), 30); setTimeout(() => f.remove(), 700); }, slow ? 420 : 0); }, slow ? 2000 : 0);
   },
   next(now = Date.now()) { return this.sessions(now).find(x => x.start > now) || null; },
   hm(ms) { const t = new Date(ms + JST); return `${t.getUTCHours()}:${String(t.getUTCMinutes()).padStart(2, "0")}`; },

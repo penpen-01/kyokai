@@ -2330,7 +2330,6 @@ function showMenu() {
     <button type="button" class="btn primary" data-act="closeOverlay">対戦に戻る</button>
     <div class="menu list">
       <button type="button" class="mi" data-act="log"><span>プレイログ<small>これまでの行動を見る</small></span></button>
-      <button type="button" class="mi" data-act="cards"><span>カード一覧<small>すべてのカードの効果</small></span></button>
       <button type="button" class="mi" data-act="rules"><span>ルール<small>遊び方・カードの能力</small></span></button>
       ${online && S && !S.over
         ? `<button type="button" class="mi danger" data-act="surrender"><span>降参してタイトルに戻る<small>この対戦は負けになります</small></span></button>`
