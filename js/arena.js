@@ -32,7 +32,7 @@ const Arena = {
   current(now = Date.now()) {
     const c = this.sessions(now).find(x => x.start <= now && now < x.end);
     if (c) return c;
-    if (typeof adminOn === "function" && adminOn()) return { sid: "test-" + this.ymd(now).replace(/-/g, ""), start: now, end: now + 3600e3, rule: this.testRule || "std", test: true };   // 運営のテスト
+    if ((typeof adminOn === "function" && adminOn()) || (typeof Maint !== "undefined" && Maint.pass())) return { sid: "test-" + this.ymd(now).replace(/-/g, ""), start: now, end: now + 3600e3, rule: this.testRule || "std", test: true };   // 運営のテスト
     return null;
   },
   next(now = Date.now()) { return this.sessions(now).find(x => x.start > now) || null; },
@@ -50,7 +50,7 @@ const Arena = {
     const rule = c ? ARENA_RULES[c.rule] : null;
     openOverlay(`<div class="panel ar">
       <h2 class="title sm">アリーナ <i class="beta-tag">β版・報酬なし</i></h2>
-      ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
+      ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営・メンテ通過の端末のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
         <p class="lead small">${rule.desc}同じ時間に探している人と、ランダムに対戦します。勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点。何回でも戦えます。</p>
         ${c.test ? `<div class="ar-test">テストのルール：${Object.entries(ARENA_RULES).map(([k, r]) => `<button type="button" class="btn sm ${c.rule === k ? "primary" : ""}" data-act="arenaTestRule" data-v="${k}">${r.name}</button>`).join("")}</div>` : ""}
         ${this.searching ? `<div class="ar-search"><b>相手を探しています<span class="pg-dots"><i></i><i></i><i></i></span></b><small id="ar-wait"></small><button type="button" class="btn" data-act="arenaStop">探すのをやめる</button></div>`
