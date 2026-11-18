@@ -489,11 +489,20 @@ const Keeper = {
   src(k, f) { if (!this.has(k, f)) f = KEEPER_FALLBACK[f] || "idle"; return (k.art && k.art[f]) || `ui/keeper/${k.id}-${f}.webp`; },
   preload(k) { if (this.cache[k.id]) return; this.cache[k.id] = this.frames(k).map(f => { const im = new Image(); im.src = this.src(k, f); return im; }); },
   /* セリフを1つ選ぶ（{card}・{off} を置き換える） */
+  /* 押したときの話題：ふだんの「押した」か、おしゃべり（好き・嫌い・趣味・ほかの店員・ひとこと）。おしゃべりは6割 */
+  topic(k) {
+    const T = ["like", "dislike", "hobby", "staff", "cheer"].filter(s => k && k.lines && (k.lines[s] || []).length);
+    if (!T.length || Math.random() < 0.4) return { scene: "tap" };
+    const s = T[Math.floor(Math.random() * T.length)];
+    return { scene: s, mood: s === "like" ? "happy" : s === "dislike" ? "trouble" : null };
+  },
   line(scene, vars = {}) {
     const k = this.cur(); let L = (k && k.lines && k.lines[scene]) || [];
     if (!L.length && ["shy", "angry", "pet", "wake", "alert1", "alert2", "alert3", "glitch", "reboot"].includes(scene)) L = (k && k.lines && k.lines.tap) || [];   // 書いていなければ「押した」のセリフで代わりに
     if (!L.length) return "";
-    const t = L[Math.floor(Math.random() * L.length)];
+    let t = L[Math.floor(Math.random() * L.length)];
+    if (L.length > 1 && t === this.lastLine) t = L[(L.indexOf(t) + 1) % L.length];   // 同じセリフが続かないように
+    this.lastLine = t;
     return t.replace(/\{card\}/g, vars.card || "").replace(/\{off\}/g, vars.off ?? "");
   },
   /* 店に入ったとき：あいさつ → 今日のおすすめ */
@@ -549,9 +558,10 @@ const Keeper = {
     const sleepy = k && this.has(k, "sleep") && now - (this.lastAct || now) >= KEEPER_SLEEP;
     this.lastAct = now;
     if (sleepy) { this.taps = 0; this.q = [{ scene: "wake", mood: "yawn" }]; return this.next(true); }
+    if (this.singing) { this.singing = false; this.taps = 0; this.q = [{ scene: "singCaught", mood: "shy" }]; return this.next(true); }   // 歌っているところを見られた
     this.taps = now - (this.tapAt || 0) <= 3000 ? (this.taps || 0) + 1 : 1; this.tapAt = now;
     // 眠たげな子なので、ふだんは素っ気なく返すだけ。続けて押すと、4〜7回目でたまに（3割）照れて、8回目からは怒る
-    const it = !moody ? { scene: "tap" } : this.taps >= 8 ? { scene: "angry", mood: "angry" } : this.taps >= 4 && Math.random() < 0.3 ? { scene: "shy", mood: "shy" } : { scene: "tap" };
+    const it = !moody ? this.topic(k) : this.taps >= 8 ? { scene: "angry", mood: "angry" } : this.taps >= 4 && Math.random() < 0.3 ? { scene: "shy", mood: "shy" } : this.topic(k);
     if (it.scene === "shy") this.taps = 0;   // 照れたら数え直し（照れたあと、すぐ怒らない）
     this.q = [it];
     this.next(true);
@@ -569,7 +579,7 @@ const Keeper = {
       this.paintRobo();
       return;
     }
-    this.q = [step === "tap" ? { scene: "tap", mood: "happy" } : { scene: step, mood: step }];
+    this.q = [step === "tap" ? (t => ({ ...t, mood: t.mood || "happy" }))(this.topic(this.cur())) : { scene: step, mood: step }];
     this.next(true);
     this.paintRobo();
   },
@@ -611,11 +621,15 @@ const Keeper = {
   next(force) {
     if (!force && this.typing) { this.finishTyping(); return; }
     const it = this.q.shift(); if (!it) return;
-    const t = this.line(it.scene, it.vars); if (!t) return this.next(true);
-    this.say(t, it.mood, it.extra || "");
+    let t = this.line(it.scene, it.vars); if (!t) return this.next(true);
+    // 行の頭の [顔] で、そのセリフの顔を決められる（例：[shy]…見てた？）
+    let mood = it.mood; const m = t.match(/^\[(\w+)\]\s*/);
+    if (m) { t = t.slice(m[0].length); const k = this.cur(); if (k && (this.has(k, m[1]) || KEEPER_FALLBACK[m[1]])) mood = m[1]; }
+    this.say(t, mood, it.extra || "");
   },
   say(t, mood, extra) {
     if (this.shorted && mood !== "short") return;
+    this.singing = false;
     this.lastAct = Date.now(); this.nap = "";
     document.querySelectorAll(".kp-man.asleep").forEach(m => m.classList.remove("asleep"));
     this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true;
@@ -681,6 +695,14 @@ const Keeper = {
           else if (sleepy && still >= KEEPER_DOZE) f = "doze";                    // うとうと
         }
         // 眠っている間：体の上下（息）を止めて、吹き出しは「…」。うとうとしている間は吹き出しを空に
+        // 歌のセリフがある店員（ルゥ）は、5秒ほど放っておくと、ときどき小さく歌いだす（1回放っておくごとに1回まで）
+        if (!this.singing && !this.sangAt && still >= 5000 && still < KEEPER_DOZE - 1500 && !this.typing && k.lines && (k.lines.sing || []).length) {
+          this.sangAt = now;
+          if (Math.random() < 0.45) { const t = this.line("sing"); if (t) { this.text = this.shown = t; this.extra = ""; this.paintText(); this.singing = true; } }
+        }
+        if (this.singing && still >= KEEPER_DOZE) this.singing = false;
+        if (still < 5000) this.sangAt = 0;
+        if (this.singing && now % 1200 < 600 && f === "idle") f = "blink";   // 歌っている間は、ときどき目を閉じる
         const st = sleepy && still >= KEEPER_SLEEP ? "sleep" : sleepy && still >= KEEPER_DOZE ? "doze" : "";
         if (st !== this.nap) {
           this.nap = st;
