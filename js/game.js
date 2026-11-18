@@ -733,6 +733,10 @@ function effect(pi, e, targets, self) {
       if (L.length) log(`${cname(e.card)}が+${n}/+${n}された。`);
       break;
     }
+    case "callCard": {
+      if (!me.field.some(u => u.id === e.card && u.hp > 0) && DEF[e.card] && !fieldFull(me)) { addUnit(pi, e.card); log(`${cname(e.card)}が現れた。`); }
+      break;
+    }
     case "mendCard": {
       const L = me.field.filter(u => u.id === e.card && u.hp > 0);
       if (L.length) L.forEach(u => { u.hp = u.maxHp; u.atk += n; u.hp += n; u.maxHp += n; fx(unitSel(u.uid), `全回復 +${n}/+${n}`, "heal"); log(`${cname(e.card)}は繕われて、+${n}/+${n}された。`); });
@@ -1229,6 +1233,7 @@ function effValue(e) {
   if (k === "dig") return 1.8;
   if (k === "buffCard") return n * 1.6;
   if (k === "mendCard") return 3;
+  if (k === "callCard") return 1.5;
   if (/^dmg(Target|Random)$/.test(k)) return n * 0.9;
   if (k === "dmgAll") return n * 1.6;
   if (k === "dmgFace") return n * 0.8;

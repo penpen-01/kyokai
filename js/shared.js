@@ -139,6 +139,7 @@ const EFFECTS = {
   dig:         { group: "ドロー", label: "山札の上からN枚見て、1枚を選んで手札に加える", text: n => `山札の上から${n}枚を見て、1枚を選んで手札に加える（残りは山札の下へ）。`, min: 2 },
   buffCard:    { group: "トークン", label: "決めたカード（トークン）を強化する", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}を+${n}/+${n}する。`, opts: ["token"], tokenType: "char" },
   mendCard:    { group: "トークン", label: "決めたカード（トークン）を全回復して強化する（いなければ出す）", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}の体力を全回復させ、+${n}/+${n}する。場にいなければ、${tokDesc(e)}を1体出す。`, opts: ["token"], tokenType: "char" },
+  callCard:    { group: "トークン", label: "決めたカード（トークン）が場にいなければ出す", text: (n, e) => `自分の場に${tokDesc(e).replace(/（[^）]*）$/, "")}がいなければ、${tokDesc(e)}を1体出す。`, opts: ["token"], tokenType: "char" },
   tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札から${costRange(n, e)}${worldNo(e)}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype", "cmin"], min: 0 },
   bounceEnemy: { legacy: true, group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
   shuffleEnemy:{ legacy: true, group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
