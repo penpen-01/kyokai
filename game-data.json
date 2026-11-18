@@ -1,5 +1,5 @@
 {
- "version": 199,
+ "version": 200,
  "updated": "2026-11-19",
  "config": {
   "PLAYER_HP": 20,
@@ -56,7 +56,7 @@
   "SEN_BETA": 1,
   "SEN_FEE": 3000,
   "SKIN_ON": 1,
-  "LIMITED_ON": 0,
+  "LIMITED_ON": 1,
   "INFO_HOURS": 24,
   "CHARM_HARD": 3000,
   "CHARM_EX": 5000,
@@ -1292,7 +1292,6 @@
     "k-dorgan": 2,
     "k-weiss": 2
    },
-   "pub": true,
    "level": "test"
   }
  ],
@@ -9923,7 +9922,7 @@
     }
    ],
    "shop": true,
-   "shopPrice": 3000,
+   "shopPrice": 1000,
    "art": "art/k-dorgan-5090aa86d6.webp"
   },
   {
@@ -9945,7 +9944,7 @@
     }
    ],
    "shop": true,
-   "shopPrice": 6000,
+   "shopPrice": 3000,
    "art": "art/k-weiss-5c884a9217.webp"
   },
   {
