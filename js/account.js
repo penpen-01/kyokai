@@ -241,7 +241,10 @@ const Account = {
     if (this.status === "free" || !this.data || !this.code) return Promise.resolve(false);
     this.writeCache();
     if (this.status === "offline") return Promise.resolve(false);
-    this.saving = (this.saving || Promise.resolve()).then(() => this.saveOnce()).catch(e => { console.error(e); return false; });
+    // 保存中の数を数える（保存が届くまでのあいだは、見張りがサーバーの値で読み込み直さないように）
+    this.inflight = (this.inflight || 0) + 1;
+    this.saving = (this.saving || Promise.resolve()).then(() => this.saveOnce()).catch(e => { console.error(e); return false; })
+      .finally(() => { this.inflight = Math.max(0, (this.inflight || 1) - 1); });
     return this.saving;
   },
   async saveOnce() {
@@ -249,7 +252,7 @@ const Account = {
     const base = this.data.rev || 0;
     const next = JSON.parse(JSON.stringify({ ...this.data, rev: base + 1 }));
     const r = await Net.tx(this.path(this.code), cur => (cur && (+cur.rev || 0) !== base ? undefined : next));
-    if (r.committed) { this.data.rev = base + 1; this.writeCache(); return true; }
+    if (r.committed) { this.data.rev = Math.max(this.data.rev || 0, base + 1); this.wroteRev = Math.max(this.wroteRev || 0, base + 1); this.writeCache(); return true; }
     if (r.val) {
       this.data = this.fix(r.val); this.writeCache();
       if (typeof toast === "function") toast("別の端末（または別の画面）で遊んだ新しいデータを読み込みました。直前の変更は保存されていません");
@@ -262,8 +265,11 @@ const Account = {
     if (this.unwatch || !this.code) return;
     try {
       this.unwatch = Net.on(this.path(this.code), v => {
-        if (!v || !this.data || this.saveTimer) return;
-        if ((+v.rev || 0) > (this.data.rev || 0)) { this.data = this.fix(v); this.writeCache(); if (typeof this.onReload === "function") this.onReload(); }
+        // 自分の保存が届いたときの知らせでは読み込み直さない。
+        // 前は、保存が届くまでのあいだに変えたこと（ボスの乱入を消した、など）が、届いた古い中身で上書きされて消えていた
+        // （超級のボスに何度でも挑めた不具合の原因。2026-11-18）
+        if (!v || !this.data || this.saveTimer || this.inflight) return;
+        if ((+v.rev || 0) > (this.data.rev || 0) && (+v.rev || 0) > (this.wroteRev || 0)) { this.data = this.fix(v); this.writeCache(); if (typeof this.onReload === "function") this.onReload(); }
       });
     } catch (e) { console.error(e); }
   },

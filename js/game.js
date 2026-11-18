@@ -2521,6 +2521,7 @@ function giveReward(res) {
       if (pity >= (CONFIG[BZ.cfg + "PITY"] || 20) || Math.random() * 100 < (CONFIG[BZ.cfg + "RATE"] || 0)) { Account.data[BZ.next] = true; Account.data[BZ.pity] = 0; r.bossSign = CPU_LEVEL; }
       else Account.data[BZ.pity] = pity;
     }
+    if (B.kind === "boss" && !B.ticket && !B.test && BOSSES[B.boss || "hard"]) Account.data[BOSSES[B.boss || "hard"].next] = false;   // 乱入は1回きり（念のため、終わったときにも消す）
     if (B.kind === "boss" && res === "win") r.boss = bossReward(B.boss || "hard");
     if (B.kind === "gate" && res === "win") r.gate = gateReward();
     if (B.kind === "tutorial") r.tut = Tut.reward(res);
@@ -2740,6 +2741,8 @@ function startBattle(spec) {
 }
 /* 結果画面の「もう一度」「選び直す」 */
 function battleAgain() {
+  // 連打で何回も始まらないように（ボスの登場の演出のあいだなど）
+  const now = Date.now(); if (battleAgain.t && now - battleAgain.t < 1500) return; battleAgain.t = now;
   const k = S && S.battle ? S.battle.kind : (S && S.practice ? "practice" : "cpu");
   if (k === "tutorial") Tut.start();
   else if (k === "sen") { const x = rewarded[S.gid] && rewarded[S.gid].sen; if (x && x.done) Sentei.showEnd(x); else Sentei.show(); }
