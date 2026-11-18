@@ -12,7 +12,7 @@ const ARENA_RULES = {
   set1: { name: "第1弾限定",  desc: "第1弾のカードだけで組んだデッキで戦います。" }
 };
 const ARENA_PTS = { win: 3, lose: 1, draw: 1 };
-const ARENA_DOOR_ART = "";   // 扉の絵（左右に分けて開く。空なら CSS で描いた仮の扉）
+const ARENA_DOOR_ART = "ui/arena-door.webp";   // 扉の絵（左右に分けて開く。空なら CSS で描いた仮の扉）
 const JST = 9 * 3600e3;
 const Arena = {
   searching: false, unsubs: [], timer: null, sid: null, rule: null, deck: null,

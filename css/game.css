@@ -2978,3 +2978,11 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .ar-gate{width:min(46vw,28dvh,220px)}
 .ar-plate{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);z-index:2;white-space:nowrap;box-shadow:0 6px 14px rgba(0,0,0,.6)}
 .ar-door.opening .ar-plate{opacity:0;transition:opacity .5s}
+
+/* 扉の絵（ui/arena-door.webp、左右の扉の境目が真ん中に来るように作ってある） 2026-11-19 */
+.ar-door.art .ar-gate{aspect-ratio:600/784;padding:0;border-radius:0;background:none;box-shadow:none;animation:none;filter:drop-shadow(0 0 14px rgba(255,200,90,.35));animation:argateart 3.2s ease-in-out infinite}
+@keyframes argateart{0%,100%{filter:drop-shadow(0 0 10px rgba(255,200,90,.3))}50%{filter:drop-shadow(0 0 22px rgba(255,200,90,.6))}}
+.ar-door.art .ar-gate::before,.ar-door.art .ar-glow{inset:2% 3% 0;border-radius:0;-webkit-mask:url(../ui/arena-door.webp) center/100% 100% no-repeat;mask:url(../ui/arena-door.webp) center/100% 100% no-repeat}
+.ar-door.art .ar-leaf{top:0;bottom:0;width:50%;border-radius:0;background-color:transparent;background-repeat:no-repeat}
+.ar-door.art .ar-leaf.l{left:0}.ar-door.art .ar-leaf.r{right:0}
+.ar-door.art.opening .ar-gate{animation:none;filter:drop-shadow(0 0 30px rgba(255,210,120,.8))}
