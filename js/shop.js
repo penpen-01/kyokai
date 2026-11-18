@@ -462,7 +462,7 @@ const Shop = {
    絵は ui/keeper/<店員のid>-<表情>.webp（idle まばたき前の顔 / blink / talk1 / talk2 / happy / trouble / offer） */
 const KEEPER_FRAMES = ["idle", "blink", "talk1", "talk2", "happy", "trouble", "offer"];
 /* 店員ごとの追加の表情（絵がある店員だけ）。ない店員は KEEPER_FALLBACK の表情で代わりにする */
-const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere", "mouth1", "mouth2"], mamoru: ["alert1", "alert2", "alert3", "glitch", "short", "reboot"] };
+const KEEPER_EXTRA = { ruu: ["sleep", "yawn", "doze", "shy", "angry", "dere", "mouth1", "mouth2", "happyM", "troubleM", "shyM", "dereM", "angryM", "offerM"], mamoru: ["alert1", "alert2", "alert3", "glitch", "short", "reboot"] };
 const KEEPER_FALLBACK = { sleep: "blink", doze: "idle", yawn: "talk1", shy: "happy", angry: "trouble", dere: "happy", alert1: "trouble", alert2: "trouble", alert3: "trouble", glitch: "trouble", short: "trouble", reboot: "idle" };
 /* マモル（警備ロボ）：続けて押すほど警戒が上がり、最後は画面がバグってショートする。
    段階（3秒以内に続けて押した回数）：1〜5 平気 → 6〜9 気づく → 10〜14 警戒 → 15〜19 本気の警戒 → 20〜23 故障 → 24〜 ショート
@@ -559,7 +559,11 @@ const Keeper = {
     if (k && this.has(k, "short")) return this.tapRobo(now);
     const sleepy = k && this.has(k, "sleep") && now - (this.lastAct || now) >= KEEPER_SLEEP;
     this.lastAct = now;
-    if (this.singing) { this.singing = false; this.taps = 0; this.q = [{ scene: "singCaught", mood: "shy" }]; return this.next(true); }   // 歌っているところを見られた（歌っている間は眠っていない）
+    if (this.singing) {
+      this.singing = false; this.taps = 0;
+      const el = document.querySelector(".kp-man"); if (el) { el.classList.remove("hop", "startle"); void el.offsetWidth; el.classList.add("startle"); setTimeout(() => el.classList.remove("startle"), 500); }   // ビクッとする
+      this.q = [{ scene: "singCaught", mood: "shy" }]; return this.next(true);
+    }   // 歌っているところを見られた（歌っている間は眠っていない）
     if (sleepy) { this.taps = 0; this.q = [{ scene: "wake", mood: "yawn" }]; return this.next(true); }
     this.taps = now - (this.tapAt || 0) <= 3000 ? (this.taps || 0) + 1 : 1; this.tapAt = now;
     // 眠たげな子なので、ふだんは素っ気なく返すだけ。続けて押すと、4〜7回目でたまに（3割）照れて、8回目からは怒る
@@ -637,7 +641,7 @@ const Keeper = {
     this.singing = false;
     this.lastAct = Date.now(); this.nap = "";
     document.querySelectorAll(".kp-man.asleep").forEach(m => m.classList.remove("asleep"));
-    this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true;
+    this.text = t; this.extra = extra; this.shown = ""; this.typing = true; this.talking = true; this.talkUntil = Date.now() + 1300;
     // 続きの文があるあいだは、同じ顔のまま（文の切れ目で顔が一度戻って、また変わらないように）
     if (mood) { this.mood = mood; this.moodUntil = hold ? Infinity : Date.now() + Math.max(1800, t.length * 70 + 1400); } else this.mood = null;
     this.paintText();
@@ -690,8 +694,9 @@ const Keeper = {
       if (this.shorted && now - this.shortAt >= MAMORU_REBOOT) this.reboot();   // 放っておくと再起動
       if (this.mood && now > this.moodUntil) { this.mood = null; this.paintRobo(); }
       let f = "idle";
-      if (this.mood) f = this.mood;
-      else if (this.talking && now >= (this.pauseUntil || 0)) { const T = KEEPER_TALK[k.id] || KEEPER_TALK.def; f = T[Math.floor(tick / T.step) % T.f.length]; }   // 口だけゆっくり動かす（区切りの間は止める）
+      const talk = this.talking || now < (this.talkUntil || 0);   // 短いセリフでも、少しのあいだは口を動かす
+      if (this.mood) f = talk && this.has(k, this.mood + "M") && Math.floor(tick / 3) % 2 ? this.mood + "M" : this.mood;   // 表情つきでも、口だけ動く絵があれば話す（ルゥ）
+      else if (talk) { const T = KEEPER_TALK[k.id] || KEEPER_TALK.def; f = T.f[Math.floor(tick / T.step) % T.f.length]; }   // 口だけゆっくり動かす
       else {
         // 歌っている間（ルゥ）：眠らない。短い歌は約6秒で終わり、そこから5秒でうとうと。3割は押されるまで歌い続ける
         if (this.singing) {
@@ -712,7 +717,7 @@ const Keeper = {
           if (Math.random() < 0.45) { this.singing = true; this.singNext = now; this.singUntil = Math.random() < 0.3 ? Infinity : now + 6000; }
         }
         if (still < 5000 && !this.singing) this.sangAt = 0;
-        if (this.singing && now % 1200 < 600 && f === "idle") f = "blink";   // 歌っている間は、ときどき目を閉じる
+        if (this.singing && f === "idle" && this.has(k, "mouth1")) f = ["mouth2", "mouth2", "idle", "mouth1", "mouth1", "idle"][Math.floor(tick / 4) % 6];   // 歌っている間は、口をゆっくり動かす
         const st = sleepy && still >= KEEPER_SLEEP ? "sleep" : sleepy && still >= KEEPER_DOZE ? "doze" : "";
         if (st !== this.nap) {
           this.nap = st;

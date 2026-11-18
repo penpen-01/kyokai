@@ -2921,3 +2921,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .kp-man.shorted .kp-img{animation:kpshort 3.2s linear infinite}
 @keyframes kpshort{0%,86%,100%{filter:brightness(.9)}88%{filter:brightness(1.6) drop-shadow(0 0 6px #ffe27a)}90%{filter:brightness(.7)}92%{filter:brightness(1.4)}}
 @media (prefers-reduced-motion:reduce){.kp-man.glitchy .kp-img,.kp-man.shorted .kp-img{animation:none!important}}
+/* ルゥ：歌っているところを見られて、ビクッとする */
+.kp-man.startle .kp-img{animation:kpstartle .45s cubic-bezier(.2,1.6,.4,1)}
+@keyframes kpstartle{0%{transform:translateY(0)}18%{transform:translateY(-4.5%) scale(1.02,.98)}34%{transform:translateY(0) translateX(-1%)}48%{transform:translateX(1%)}62%{transform:translateX(-.5%)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.kp-man.startle .kp-img{animation:none}}
