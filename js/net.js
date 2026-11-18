@@ -28,11 +28,10 @@ const FirebaseNet = {
   db: null,
   async init() {
     if (this.uid) return this.uid;
-    if (!window.firebase) {
-      await loadScript("vendor/firebase-app-compat.js");
-      await loadScript("vendor/firebase-auth-compat.js");
-      await loadScript("vendor/firebase-database-compat.js");
-    }
+    // 1つずつ、まだ読めていないものだけ読む（前は途中で失敗すると、あとで通信が戻っても読み直さず、ずっとオフラインのままだった）
+    if (!window.firebase) await loadScript("vendor/firebase-app-compat.js");
+    if (!firebase.auth) await loadScript("vendor/firebase-auth-compat.js");
+    if (!firebase.database) await loadScript("vendor/firebase-database-compat.js");
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     const auth = firebase.auth();
     if (!auth.currentUser) await auth.signInAnonymously();

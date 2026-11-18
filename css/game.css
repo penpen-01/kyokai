@@ -2340,7 +2340,7 @@ html.eco .card.rar-ur .frame::before,html.eco .card.rar-legend .frame::before,ht
 .pick-grid{position:relative;z-index:0;isolation:isolate}
 
 /* 通信の知らせ（オフライン・通信が切れている間だけ） */
-#netbanner{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 6px);z-index:80;width:min(94vw,520px);padding:7px 12px;border-radius:10px;background:rgba(60,40,8,.94);border:1px solid #d9a441;color:#ffe9b8;font-size:11.5px;line-height:1.5;box-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
+#netbanner{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 6px);z-index:80;width:min(94vw,520px);padding:7px 12px;border-radius:10px;background:rgba(60,40,8,.94);border:1px solid #d9a441;color:#ffe9b8;font-size:11.5px;line-height:1.5;box-shadow:0 6px 18px rgba(0,0,0,.5);display:flex;align-items:center;gap:8px}
 #netbanner b{display:block;font-size:12.5px;color:#ffd06b}
 
 /* 選択券：下の帯は画面の下に固定し、不透明にする。カードが帯に隠れないよう、一覧の下に帯のぶんの余白を取る（2026-11-14） */
@@ -2904,3 +2904,14 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .dig-c{display:flex;flex-direction:column;align-items:center;gap:8px}
 .dig-card{all:unset;cursor:pointer;display:block;width:100%}
 .dig-card .card{width:100%;box-shadow:0 8px 18px rgba(0,0,0,.6)}
+
+/* 通信の知らせ：つなぎ直す・小さくする（2026-11-18） */
+#netbanner .nb-text{flex:1;min-width:0}
+#netbanner .nb-btns{display:flex;align-items:center;gap:6px;flex:none}
+#netbanner button{font:inherit;cursor:pointer;border-radius:8px}
+#netbanner .nb-retry{padding:6px 10px;background:#d9a441;color:#2a1a02;border:0;font-weight:700;font-size:12px}
+#netbanner .nb-retry:disabled{opacity:.6}
+#netbanner .nb-x{width:30px;height:30px;background:transparent;border:1px solid rgba(255,233,184,.4);color:#ffe9b8;font-size:16px;line-height:1}
+#netbanner.small{left:auto;right:calc(env(safe-area-inset-right,0px) + 8px);transform:none;width:auto;padding:0;background:transparent;border:0;box-shadow:none}
+#netbanner .nb-pill{padding:4px 10px;border-radius:99px;background:rgba(60,40,8,.94);border:1px solid #d9a441;color:#ffd06b;font-size:11px;font-weight:700}
+#netbanner[hidden]{display:none}

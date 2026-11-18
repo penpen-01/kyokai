@@ -2308,6 +2308,8 @@ function showOptions() {
       <button type="button" class="optrow" data-act="soundPanel"><b>音の設定</b><small>現在：${Sound.on ? "オン" : "オフ"}</small></button>
       ${Account.data && Account.status !== "free" ? `<button type="button" class="optrow" data-act="scMode"><b>ホームの飾り棚</b><small>現在：${Account.data.scMode === "fav" ? "お気に入りのカードだけを回す" : "持っているカードをすべて回す"}（押すと切り替え）</small></button>` : ""}
       <button type="button" class="optrow" data-act="ecoToggle" aria-pressed="${Eco.on}"><b>省エネモード</b><small>現在：${Eco.on ? "オン（ずっと動き続ける光や回転を止めて、本体の発熱と電池の減りをおさえる）" : "オフ"}</small></button>
+      <button type="button" class="optrow" data-act="toTitleApp"><b>タイトル画面に戻る</b><small>起動したときの画面に戻る</small></button>
+      <button type="button" class="optrow" data-act="appReload"><b>最新の状態に読み込み直す</b><small>アップデートが来たときに。アプリを閉じなくても、最新の状態でタイトル画面から始まります</small></button>
       <button type="button" class="optrow" data-act="fxToggle" aria-pressed="${Fx.on}"><b>カードの光の動き</b><small>現在：${Fx.on ? "オン" : "オフ（UR・レジェンドの光を止めて軽くする）"}</small></button>
     </div>
     <p class="datainfo">${info}</p>
@@ -3066,6 +3068,12 @@ function handleAct(act, el) {
     case "back": goBack(); break;
     case "menu": showMenu(); break;
     case "toTitle": toTitle(); break;
+    case "toTitleApp": $("#overlay").hidden = true; Splash.show(); Splash.setReady(() => showStart()); break;
+    case "appReload": {   // 保存待ちを先に書いてから読み込み直す（サービスワーカーは通信優先なので、読み込み直せば最新になる）
+      const go = () => location.reload();
+      try { if (Account.saveTimer) { clearTimeout(Account.saveTimer); Account.saveTimer = null; Promise.race([Account.saveNow(), new Promise(r => setTimeout(r, 2000))]).then(go); } else go(); } catch (e) { go(); }
+      break;
+    }
     case "surrender": Online.surrender(); break;
     case "closeOverlay": $("#overlay").hidden = true; break;
     case "showResult": if (S && S.over) showResult(myResult()); break;

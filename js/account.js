@@ -220,6 +220,7 @@ const Account = {
       } catch (e) { /* まだつながらない。次の機会に */ }
       finally { this.retrying = false; }
     };
+    this.retryNow = tryNow;
     window.addEventListener("online", () => setTimeout(tryNow, 1500));
     setInterval(tryNow, 30000);
   },
@@ -426,13 +427,38 @@ const NetBanner = {
     if (off || cut) this.timer = setTimeout(() => this.show(off), off ? 0 : 3000);
     else this.hide();
   },
+  // 閉じると右上の小さな印だけになる（押すとまた開く）。「つなぎ直す」で今すぐ確かめる
+  small: false,
   show(off) {
     let b = document.getElementById("netbanner");
-    if (!b) { b = document.createElement("div"); b.id = "netbanner"; b.setAttribute("role", "status"); document.body.appendChild(b); }
-    b.innerHTML = off
-      ? "<b>オフライン</b>手に入れたカードやGはこの端末に残り、通信が戻ると自動で保存されます。オンライン対戦・シリアルコードは使えません"
-      : "<b>通信が切れています</b>つながると自動で保存されます。保存されるまで、できればアプリを閉じないでください";
+    if (!b) {
+      b = document.createElement("div"); b.id = "netbanner"; b.setAttribute("role", "status"); document.body.appendChild(b);
+      b.addEventListener("click", e => {
+        const a = e.target.closest("[data-nb]"); if (!a) return;
+        if (a.dataset.nb === "close") { this.small = true; this.update(); }
+        else if (a.dataset.nb === "open") { this.small = false; this.update(); }
+        else if (a.dataset.nb === "retry") this.retry(a);
+      });
+    }
+    this.off = off;
+    b.classList.toggle("small", this.small);
+    b.innerHTML = this.small
+      ? `<button type="button" class="nb-pill" data-nb="open" aria-label="通信の知らせを開く">${off ? "オフライン" : "通信が切れています"}</button>`
+      : `<div class="nb-text">${off
+          ? "<b>オフライン</b>手に入れたカードやGはこの端末に残り、通信が戻ると自動で保存されます。オンライン対戦・シリアルコードは使えません"
+          : "<b>通信が切れています</b>つながると自動で保存されます。保存されるまで、できればアプリを閉じないでください"}</div>
+        <div class="nb-btns"><button type="button" class="nb-retry" data-nb="retry">つなぎ直す</button><button type="button" class="nb-x" data-nb="close" aria-label="小さくする">×</button></div>`;
     b.hidden = false;
+  },
+  async retry(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = "確かめています…"; }
+    try {
+      if (this.off && Account.retryNow) await Account.retryNow();
+      else if (window.firebase && firebase.database) { firebase.database().goOffline(); firebase.database().goOnline(); await new Promise(r => setTimeout(r, 2500)); }
+    } catch (e) {}
+    const still = Account.status === "offline" || (Account.status === "ready" && Account.connected === false);
+    if (still && typeof toast === "function") toast("まだつながりません。電波のよい場所で、もう一度試してください");
+    this.update();
   },
   hide() { const b = document.getElementById("netbanner"); if (b) b.hidden = true; }
 };
