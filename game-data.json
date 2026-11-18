@@ -1,5 +1,5 @@
 {
- "version": 190,
+ "version": 191,
  "updated": "2026-11-18",
  "config": {
   "PLAYER_HP": 20,
@@ -1269,6 +1269,29 @@
     "x-tochka": 1
    },
    "level": "test"
+  },
+  {
+   "id": "t-keeper",
+   "name": "【検証】店員のカード",
+   "level": "test",
+   "cards": {
+    "stargaze": 2,
+    "archer": 3,
+    "n-dwarf": 2,
+    "n-mist": 1,
+    "shadow": 2,
+    "n-moonwitch": 2,
+    "priestess": 2,
+    "dragon": 2,
+    "n-bear": 2,
+    "cmvr35s2x5dv": 2,
+    "n-kitsune": 1,
+    "n-ancienttree": 1,
+    "cmvr3jwcugk8": 1,
+    "k-ruu": 3,
+    "k-dorgan": 2,
+    "k-weiss": 2
+   }
   }
  ],
  "serials": [
@@ -9774,8 +9797,8 @@
    "world": "fan",
    "type": "char",
    "cost": 3,
-   "atk": 1,
-   "hp": 4,
+   "atk": 2,
+   "hp": 2,
    "glyph": "幻",
    "limit": 3,
    "rarity": "ur",
@@ -9799,8 +9822,8 @@
      "n": 2
     },
     {
-     "kind": "mendCard",
-     "n": 2,
+     "kind": "callCard",
+     "n": 1,
      "when": "wake",
      "card": "tk-button"
     }
@@ -9821,7 +9844,8 @@
    "limit": 0,
    "rarity": "sr",
    "keywords": [
-    "guard"
+    "guard",
+    "rush"
    ],
    "effects": [],
    "token": true,
