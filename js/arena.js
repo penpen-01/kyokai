@@ -82,7 +82,7 @@ const Arena = {
   show(msg) {
     const now = Date.now(), c = this.current(now), up = this.sessions(now).filter(x => x.end > now).slice(0, 8);
     const rule = c ? ARENA_RULES[c.rule] : null;
-    openOverlay(`<div class="panel ar">
+    openOverlay(`<div class="panel ar nv-on nv-fab nv-t-play nv-ret-arenaOpen nv-back-arenaClose">
       <h2 class="title sm">アリーナ <i class="beta-tag">β版</i></h2>
       ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営・メンテ通過の端末のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
         <p class="lead small">${rule.desc}勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点（同じ相手は${ARENA_VS_MAX}戦まで・すぐ降参した対戦は0点）。</p>
@@ -96,7 +96,6 @@ const Arena = {
       <span class="gl">開催の予定（日本時間）</span>
       <ul class="ar-list">${up.map(x => `<li class="${c && c.sid === x.sid ? "on" : ""}"><span>${this.dayLabel(x.start)} ${this.hm(x.start)}〜${this.hm(x.end)}</span><b>${ARENA_RULES[x.rule].name}</b></li>`).join("") || `<li><span>予定はありません</span></li>`}</ul>
       <p class="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
-      <button type="button" class="btn" data-act="arenaClose">戻る</button>
     </div>`, "lobby", true);
     if (c) this.watchRank(c.sid);
     this.loadPast();

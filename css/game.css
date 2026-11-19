@@ -3189,3 +3189,38 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .openstage.hi-ur .bigpack .foil,.openstage.hi-ur .fan-i .foil{filter:drop-shadow(0 0 22px rgba(255,200,80,.9))}
 .openstage.hi-legend .bigpack .foil,.openstage.hi-legend .fan-i .foil{animation:hileg 1.2s linear infinite}
 @keyframes hileg{0%{filter:drop-shadow(0 0 20px #ff6b9a)}33%{filter:drop-shadow(0 0 20px #ffd36e)}66%{filter:drop-shadow(0 0 20px #6ec8ff)}100%{filter:drop-shadow(0 0 20px #ff6b9a)}}
+
+/* ===== 下のメニュー（ホーム以外）と左下のデッキボタン（2026-11-20） ===== */
+.gnav-bar{position:fixed;left:0;right:0;bottom:0;z-index:45;margin:0;grid-template-columns:repeat(6,minmax(0,1fr));padding-top:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+.gnav-bar[hidden],#overlay[hidden] ~ .gnav-bar,#overlay[hidden] ~ .gfab{display:none}
+.gnav-bar .navbtn.on b{color:var(--gold)}
+.gnav-bar .navbtn.on svg{stroke:#ffe9a8;filter:drop-shadow(0 0 6px rgba(255,214,120,.6))}
+.gnav-bar .navbtn.on::after{content:"";position:absolute;bottom:-4px;left:30%;right:30%;height:2px;border-radius:2px;background:var(--gold)}
+.gnav-bar .gback svg{stroke:#cfd6ff}
+.gnav-bar .gback{border-right:1px solid rgba(255,255,255,.08);border-radius:0}
+.overlay.gnav-on{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.overlay.gfab-on{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+/* 下に戻るボタンがあるので、上の帯の「戻る」は消す（見出しだけ残す） */
+.overlay.gnav-on .topbar > .btn.sm:first-child{display:none}
+.gfab{all:unset;box-sizing:border-box;cursor:pointer;position:fixed;z-index:46;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;gap:8px;max-width:min(60vw,240px);padding:6px 14px 6px 6px;border-radius:99px;
+  background:linear-gradient(180deg,rgba(30,34,60,.97),rgba(14,16,30,.97));border:1px solid rgba(232,195,106,.6);box-shadow:0 6px 18px rgba(0,0,0,.5),0 0 0 3px rgba(0,0,0,.25)}
+.gfab[hidden]{display:none}
+.gfab-art{flex:none;width:40px;height:40px;border-radius:50%;background:#1a1f3a center 18%/140% auto no-repeat;box-shadow:0 0 0 2px #c9a24a}
+.gfab-txt{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+.gfab-txt small{font-size:10px;color:var(--gold)}
+.gfab-txt b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gfab:active{transform:scale(.96)}
+/* パックの選ぶ画面：下のメニューの分だけ低く */
+.overlay.gnav-on:has(.pkshop){padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}
+.overlay.gnav-on .panel.pkshop{height:calc(100dvh - 78px - env(safe-area-inset-bottom,0px))}
+/* 飛ばすボタン（右下）・めくるカードの束 */
+.os-skip{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;z-index:20;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;gap:4px;padding:8px 12px 8px 14px;border-radius:99px;font-size:12px;font-weight:700;color:#e9e4ff;background:rgba(10,12,28,.7);border:1px solid rgba(255,255,255,.25);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.os-skip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.os-skip.fixed{position:fixed;z-index:60}
+.os-stack{position:absolute;inset:0 0 auto;aspect-ratio:5/7;z-index:-1;pointer-events:none}
+.os-stack i{position:absolute;inset:0;border-radius:7% / 5%;background:#14183a url("../ui/card-back.webp") center/cover no-repeat;box-shadow:0 6px 16px rgba(0,0,0,.5);
+  transform:translate(calc(var(--i) * 5px),calc(var(--i) * 5px)) rotate(calc(var(--i) * 1.5deg));filter:brightness(calc(1 - var(--i) * .12))}
+.os-slot{isolation:isolate}
+.os-card{touch-action:pan-y;transition:transform .22s ease-in}

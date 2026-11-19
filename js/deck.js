@@ -275,7 +275,7 @@ const Decks = {
     const list = tab === "cpu" ? PRESETS : all.filter(d => this.kindOf(d) === tab);
     const tabBtn = (v, label, n) => `<button type="button" role="tab" data-act="deckListTab" data-v="${v}" aria-pressed="${tab === v}">${label}${n != null ? ` <small>${n}</small>` : ""}</button>`;
     const newTile = tab === "cpu" ? "" : `<button type="button" class="dbt new" data-act="${{ sample: "deckNewSample", world: "deckNewWorld" }[tab] || "deckNew"}"><span class="dbt-plus" aria-hidden="true">＋</span><b>新しく作る</b></button>`;
-    openOverlay(`<div class="panel wide">
+    openOverlay(`<div class="panel wide nv-on nv-t-decks">
       ${this.topbar("デッキ編成", "deckBack")}
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
       ${true ? `<div class="seg wide dl-tabs" role="tablist">
@@ -641,9 +641,9 @@ const Decks = {
     const id = el && el.dataset.id;
     const ed = this.editing;
     switch (act) {
-      case "decks": this.showList(); return true;
+      case "decks": if (!(el && el.closest && el.closest("#gfab"))) this.ret = null; this.showList(); return true;
       case "deckListTab": this.listTab = el.dataset.v; this.showList(); return true;
-      case "deckBack": this.editing = null; this.viewing = null; showStart(); return true;
+      case "deckBack": { this.editing = null; this.viewing = null; const r = this.ret; this.ret = null; if (r) handleAct(r); else showStart(); return true; }   // 左下のデッキボタンから来たら、元の画面へ
       case "deckUse": this.select(id); if (this.viewing) this.showView(this.viewing); else this.showList(); return true;
       case "deckView": this.detail = null; this.codeFor = null; this.showView(id); return true;
       case "deckNew": if (this.full(false)) return true; this.startEdit({ id: this.newId("d"), name: "新しいデッキ", cards: {} }, true); return true;

@@ -141,7 +141,7 @@ const Packs = {
         </div>
       </section>`;
     };
-    openOverlay(`<div class="panel wide pkshop">
+    openOverlay(`<div class="panel wide pkshop nv-on nv-t-packs">
       <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>パック</b>${goldTag(Account.gold)}</div>
       ${acctNote}
       ${msg ? `<p class="callout warn">${esc(msg)}</p>` : ""}
@@ -266,6 +266,7 @@ const Packs = {
         </button>
       </div>
       <p class="os-hint">${Motion.reduced ? "タップして開ける" : L.multi ? "パックの上を横になぞって、全部開けよう" : "上の線を横になぞって開けよう"}</p>
+      <button type="button" class="os-skip" data-act="packQuick" aria-label="すぐに開けて結果を見る">すぐ開ける<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l7 7-7 7M12 5l7 7-7 7"/></svg></button>
     </div>`, "start", true);
     if (!Motion.reduced) this.bindTear();
   },
@@ -278,9 +279,9 @@ const Packs = {
     openOverlay(`<div class="openstage">
       <div class="os-top">
         <span class="os-count">${L.idx + 1} / ${L.cards.length}</span>
-        <button type="button" class="btn sm" data-act="packSkip">スキップ</button>
       </div>
       <div class="os-slot r-${c.rarity} ${L.faceUp ? "shown" : ""} ${burst ? "burst" : ""}">
+        <span class="os-stack" aria-hidden="true">${Array.from({ length: Math.min(4, L.cards.length - L.idx - 1) }, (_, i) => `<i style="--i:${i + 1}"></i>`).join("")}</span>
         ${L.faceUp
           ? `<button type="button" class="os-card" data-act="packNext" aria-label="次へ">${cardHTML(c, { look: null, static: true })}</button>
              <div class="os-info">
@@ -290,11 +291,26 @@ const Packs = {
           : `<button type="button" class="os-back ${r >= 2 ? "glow" : ""} ${isLast && L.cards.length > 1 ? "last" : ""}" data-act="packFlip" aria-label="めくる">
              </button>`}
       </div>
-      <p class="os-hint">${L.faceUp ? (isLast ? "タップで結果を見る" : "タップで次のカード") : isLast && L.cards.length > 1 ? "最後の1枚（レア以上）" : "タップしてめくる"}</p>
+      <p class="os-hint">${L.faceUp ? (isLast ? "横に払って結果へ" : "横に払って次のカード") : isLast && L.cards.length > 1 ? "最後の1枚（レア以上）" : "タップしてめくる"}</p>
+      <button type="button" class="os-skip" data-act="packSkip" aria-label="飛ばして結果を見る">飛ばす<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l7 7-7 7M12 5l7 7-7 7"/></svg></button>
       <div class="os-dots">${L.cards.map((_, i) => `<i class="${i < L.idx || (i === L.idx && L.faceUp) ? "on" : ""}"></i>`).join("")}</div>
     </div>`, "start", true);
+    if (L.faceUp) this.bindSwipe();
   },
 
+  /* めくったカードを横に払うと次へ（タップでも次へ） */
+  bindSwipe() {
+    const card = $(".os-card"); if (!card) return;
+    let st = null;
+    card.addEventListener("pointerdown", e => { st = { x: e.clientX, y: e.clientY, dx: 0 }; try { card.setPointerCapture(e.pointerId); } catch (x) {} card.style.transition = "none"; });
+    card.addEventListener("pointermove", e => { if (!st) return; st.dx = e.clientX - st.x; card.style.transform = `translateX(${st.dx}px) rotate(${st.dx / 18}deg)`; });
+    const up = e => {
+      if (!st) return; const dx = st.dx; st = null; card.style.transition = "";
+      if (Math.abs(dx) > 60) { suppressClickUntil = Date.now() + 400; card.style.transform = `translateX(${dx > 0 ? 130 : -130}vw) rotate(${dx > 0 ? 30 : -30}deg)`; Sound.play("flip"); setTimeout(() => this.next(), 220); }
+      else card.style.transform = "";
+    };
+    card.addEventListener("pointerup", up); card.addEventListener("pointercancel", up);
+  },
   /* 開封結果：4枚入りは2×2、5枚入りは上3枚＋下2枚。カードごとに NEW か「所持 1→2」と、デッキに入れられる数の丸 */
   showSummary() {
     const L = this.last, n = L.cards.length;
@@ -345,7 +361,7 @@ const Packs = {
       ? `<button type="button" class="btn primary" data-act="packOpenTicket10" data-id="${esc(L.pack.id)}" ${Account.tickets >= 10 ? "" : "disabled"}>もう10パック（パック券 残り${Account.tickets}枚）</button>`
       : `<button type="button" class="btn primary" data-act="packOpen10" data-id="${esc(L.pack.id)}" ${Account.gold >= L.pack.price * 10 ? "" : "disabled"}>もう10パック（${L.pack.price * 10}G）</button>`;
     openOverlay(`<div class="panel wide">
-      <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>10パックの結果</b>${goldTag(Account.gold)}</div>
+      <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>10パック</b>${goldTag(Account.gold)}</div>
       <div class="ms-grid n${L.pack.size}">${L.rows.map((row, i) => `<div class="ms-row"><span class="ms-no">${i + 1}</span>${row.map(cell).join("")}</div>`).join("")}</div>
       <div class="ms-sum ${play ? "hidden-until" : ""}">
         <div class="ms-counts">${RARITY_ORDER.map(r => `<span class="r-${r}"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}</span>`).join("")}<span class="ms-new">NEW ${newN}</span></div>
@@ -358,14 +374,16 @@ const Packs = {
   },
 
   /* 10連：上から順にめくる。UR・レジェンドの番が来たら、めくる直前にカットインを入れる。画面をタップすると残りを一気に表示 */
-  stopReveal() { if (this.revealStop) this.revealStop(); this.revealStop = null; const c = document.getElementById("cutin"); if (c) c.remove(); },
+  stopReveal() { if (this.revealStop) this.revealStop(); this.revealStop = null; const c = document.getElementById("cutin"); if (c) c.remove(); const k = document.getElementById("ms-skip"); if (k) k.remove(); },
   revealMulti(all) {
     this.stopReveal();
     const L = this.last, slots = [...document.querySelectorAll(".mslot.wait")];
     let i = 0, stop = false, t = null;
     // 全部めくり終わったら、当たりのまとめと「もう10パック」を出す（先に見せるとネタばれになる）
-    const done = () => document.querySelectorAll(".hidden-until").forEach(el => { el.classList.remove("hidden-until"); el.classList.add("pop"); });
+    const done = () => { document.querySelectorAll(".hidden-until").forEach(el => { el.classList.remove("hidden-until"); el.classList.add("pop"); }); const k = $("#ms-skip"); if (k) k.remove(); };
     const finish = () => { stop = true; clearTimeout(t); document.querySelectorAll(".mslot.wait").forEach(el => el.classList.remove("wait")); done(); };
+    this.finishMulti = () => { finish(); const k = $("#ms-skip"); if (k) k.remove(); };
+    document.body.insertAdjacentHTML("beforeend", `<button type="button" id="ms-skip" class="os-skip fixed" data-act="packMsSkip" aria-label="全部めくる">全部めくる<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l7 7-7 7M12 5l7 7-7 7"/></svg></button>`);
     this.revealStop = () => { stop = true; clearTimeout(t); };
     document.querySelector(".ms-grid").addEventListener("click", e => { if (document.querySelector(".mslot.wait")) { e.stopPropagation(); finish(); } }, { capture: true, once: true });
     const ov = $("#overlay");
@@ -523,6 +541,8 @@ const Packs = {
       case "packFlip": this.flip(); return true;
       case "packNext": this.next(); return true;
       case "packSkip": this.skip(); return true;
+      case "packQuick": { const L = this.last; if (!L || L.stage !== "pack") return true; Sound.play("burst", 0); this.whenReady(L, () => { L.stage = "done"; if (L.multi) { L.shown = true; this.showMulti(false); } else this.showSummary(); }); return true; }
+      case "packMsSkip": this.finishMulti && this.finishMulti(); return true;
       case "packDetail": { this.detailId = el.dataset.id; const o = $("#overlay"), y = o.scrollTop; if (this.logOpen) this.showLog(); else if (this.listId) this.showList(this.listId); else this.showOpening(); o.scrollTop = y; return true; }
       case "packDetailClose": this.detailId = null; if (this.logOpen) this.showLog(); else if (this.listId) this.showList(this.listId); else this.showOpening(); return true;
       case "packList": this.listId = el.dataset.id; this.detailId = null; this.showList(this.listId); return true;

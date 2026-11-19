@@ -216,7 +216,7 @@ const Shop = {
     const slotCost = CONFIG.DECK_SLOT_COST ?? 1500, slotLeft = (CONFIG.DECK_SLOT_MAX ?? 10) - Account.deckSlots;
     const soon = /[?&]shopsoon\b/.test(location.search);
     const fut = SHOP_CATS.filter(x => !x.ready && !(x.id === "limited" && limitedOn()));
-    openOverlay(`<div class="panel wide shop shophub">
+    openOverlay(`<div class="panel wide shop shophub nv-on nv-t-shop">
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>ショップ</b>${stoneTag(Account.stones)}</div>
       ${Keeper.stageHTML()}</div>
       ${this.noteHTML()}
@@ -253,7 +253,7 @@ const Shop = {
     if (msg) toast(msg); this.msg = null;
     const cap = this.cap(), use = this.usable(), L = this.limitedList();
     const a = this.limAsk && L.find(c => c.id === this.limAsk);
-    openOverlay(`<div class="panel wide shop">
+    openOverlay(`<div class="panel wide shop nv-on nv-t-shop">
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>限定カード</b>${stoneTag(Account.stones)}</div>
       ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
@@ -305,7 +305,7 @@ const Shop = {
     const surN = sur.reduce((a, x) => a + x.n, 0), surS = sur.reduce((a, x) => a + x.stones, 0);
     const cap = this.cap(), tc = this.ticketCost();
     const list = this.pool().filter(c => (this.rar === "all" || c.rarity === this.rar) && (!this.onlyNeed || Account.owned(c.id) < cap));
-    openOverlay(`<div class="panel wide shop">
+    openOverlay(`<div class="panel wide shop nv-on nv-t-shop">
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>カードと交換</b>${stoneTag(Account.stones)}</div>
       ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
@@ -335,7 +335,7 @@ const Shop = {
     const allN = sur.reduce((a, x) => a + x.n, 0), allS = sur.reduce((a, x) => a + x.stones, 0);
     const pick = x => Math.min(x.n, this.sel[x.c.id] || 0);
     const selN = sur.reduce((a, x) => a + pick(x), 0), selS = sur.reduce((a, x) => a + pick(x) * this.getRate(x.c.rarity), 0);
-    openOverlay(`<div class="panel wide shop">
+    openOverlay(`<div class="panel wide shop nv-on nv-t-shop">
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b>${stoneTag(Account.stones)}</div>
       ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
@@ -833,7 +833,7 @@ Object.assign(Shop, {
     }).join("");
     const a = this.infoAsk, ax = a && (a.kind === "info" ? list.find(x => x.id === a.id) : this.goods().find(x => x.id === a.id));
     const rd = this.infoRead, rx = rd && list.find(x => x.id === rd.id);
-    openOverlay(`<div class="panel wide shop">
+    openOverlay(`<div class="panel wide shop nv-on nv-t-shop">
       <div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>情報屋</b>${goldTag(g)}</div>
       ${this.noteHTML()}
       ${this.msg ? `<p class="shopmsg" role="status">${esc(this.msg)}</p>` : ""}

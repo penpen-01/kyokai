@@ -47,13 +47,8 @@ const Online = {
   /* オンラインで遊ぶ：アリーナと、友達と対戦（部屋を作る／合言葉で入る）。説明は最小限（オーナー 11-20） */
   showLobby(msg) {
     const deck = Decks.selected(), key = deck ? Decks.keyCard(deck) : null;
-    openOverlay(`<div class="panel hub">
+    openOverlay(`<div class="panel hub nv-on nv-fab nv-t-play nv-ret-online">
       ${Decks.topbar("オンラインで遊ぶ", "onlBack")}
-      <div class="cs-deck">
-        <span class="cs-deck-art" ${key && key.art ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
-        <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck ? deck.name : "未選択")}</b></span>
-        <button type="button" class="btn sm" data-act="decks">変更</button>
-      </div>
       ${typeof Arena !== "undefined" ? Arena.lobbyHTML() : ""}
       <h3 class="sec">友達と対戦</h3>
       <div class="hub-grid">
@@ -69,7 +64,7 @@ const Online = {
     const cur = this.ruleSel || (store.get(WORLD_RULE_KEY) === "1" ? "world" : "std");
     const R = [["std", "通常", "いつものデッキで戦う"], ["world", "世界限定", "2人とも、1つの世界だけのデッキで戦う"], ...(sen ? [["sen", `選定戦${Sentei.beta() ? "β" : ""}`, "デッキは持ち込まず、カードを取り合ってその場で作る"]] : [])];
     const sel = R.find(r => r[0] === cur) ? cur : "std", tl = this.prefLimit();
-    openOverlay(`<div class="panel hub">
+    openOverlay(`<div class="panel hub nv-on nv-fab nv-t-play nv-ret-onlCreateOpen">
       ${Decks.topbar("部屋を作る", "online")}
       <h3 class="sec">ルール</h3>
       <div class="hub-rules">${R.map(([k, n, d]) => `<button type="button" class="hub-rule ${k === sel ? "on" : ""}" data-act="onlRule" data-v="${k}" aria-pressed="${k === sel}"><b>${n}</b><small>${d}</small></button>`).join("")}</div>
@@ -82,7 +77,7 @@ const Online = {
     </div>`, "lobby", true);
   },
   showJoin(msg) {
-    openOverlay(`<div class="panel hub">
+    openOverlay(`<div class="panel hub nv-on nv-t-play">
       ${Decks.topbar("合言葉で入る", "online")}
       <p class="lead small">友達から聞いた4文字を入れてください。</p>
       <input class="otxt code hub-code" id="onl-code" placeholder="ABCD" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go" maxlength="8">

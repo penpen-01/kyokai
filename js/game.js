@@ -2207,7 +2207,37 @@ function openOverlay(html, from, solid) {
   o.hidden = false;
   o.scrollTop = keep;
   if (from) overlayFrom = from;
+  GNav.sync(html);
 }
+/* ---------- 下のメニュー（ホーム以外の画面でも出す）と、左下のデッキボタン（2026-11-20） ----------
+   画面の panel に印を付けて出し分ける：nv-on＝下のメニューを出す、nv-t-◯◯＝光らせるタブ（play/decks/packs/shop/cards）、
+   nv-fab＝左下にデッキボタン、nv-ret-◯◯＝デッキを選んだあとに戻る画面（data-act の名前）、nv-back-◯◯＝戻るボタンの行き先（無ければ上の帯の「戻る」と同じ） */
+const GNav = {
+  sync(html) {
+    const o = $("#overlay"), head = (/class="panel([^"]*)"/.exec(html) || ["", ""])[1], has = k => new RegExp(`(^|\\s)${k}(\\s|$)`).test(head);
+    let nav = document.getElementById("gnav"), fab = document.getElementById("gfab");
+    if (!nav) { nav = document.createElement("nav"); nav.id = "gnav"; nav.className = "homenav gnav-bar"; nav.setAttribute("aria-label", "メニュー"); o.after(nav); }
+    if (!fab) { fab = document.createElement("button"); fab.id = "gfab"; fab.type = "button"; fab.className = "gfab"; fab.dataset.act = "fabDeck"; nav.after(fab); }
+    const on = has("nv-on") && !DATA_INFO.draft;
+    o.classList.toggle("gnav-on", on); nav.hidden = !on;
+    if (on) {
+      const tab = ((/(?:^|\s)nv-t-(\w+)/.exec(head)) || [])[1] || "";
+      const back = ((/(?:^|\s)nv-back-(\w+)/.exec(head)) || [])[1] || ((/class="topbar"[^>]*>\s*<button[^>]*data-act="(\w+)"/.exec(html)) || [])[1] || "back";
+      const goldOK = Account.status !== "none" && Account.status !== "free";
+      const b = (act, ic, label, t) => `<button type="button" class="navbtn ${tab === t ? "on" : ""}" data-act="${act}" ${tab === t ? 'aria-current="page"' : ""}>${ic}<b>${label}</b></button>`;
+      nav.innerHTML = `<button type="button" class="navbtn gback" data-act="${back}" aria-label="戻る"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><b>戻る</b></button>
+        ${b("goHome", HOME_ICON.home, "ホーム", "home")}${b("decks", HOME_ICON.decks, "デッキ", "decks")}${b("packs", HOME_ICON.packs, "パック", "packs")}${goldOK ? b("shop", HOME_ICON.shop, "ショップ", "shop") : ""}${b("cards", HOME_ICON.cards, "カード", "cards")}`;
+    }
+    const f = on && has("nv-fab");
+    fab.hidden = !f; o.classList.toggle("gfab-on", f);
+    if (f) {
+      const d = Decks.selected(), k = d ? Decks.keyCard(d) : null;
+      fab.dataset.ret = ((/(?:^|\s)nv-ret-(\w+)/.exec(head)) || [])[1] || "";
+      fab.innerHTML = `<span class="gfab-art" ${k && k.art ? `style="background-image:url('${esc(k.art)}')"` : ""}></span><span class="gfab-txt"><small>デッキ</small><b>${esc(d ? d.name : "未選択")}</b></span>`;
+      fab.setAttribute("aria-label", `使うデッキ：${d ? d.name : "未選択"}（変更する）`);
+    }
+  }
+};
 function goBack() {
   if (overlayFrom === "menu") showMenu();
   else if (overlayFrom === "result" && S && S.over) showResult(myResult());
@@ -2219,6 +2249,7 @@ function goBack() {
 
 /* ホーム画面のアイコン（線画のSVG） */
 const HOME_ICON = {
+  home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg>',
   cpu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/><path d="M9.5 6.5 13 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg>',
   online: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M2.5 19.5c.6-3.4 2.8-5.3 5.5-5.3s4.9 1.9 5.5 5.3M13.6 14.6c.9-.6 1.9-.9 2.9-.9 2.3 0 4.2 1.6 4.8 4.6"/></svg>',
   decks: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="5" width="11" height="15" rx="1.6"/><path d="M4.5 16.5V4.8c0-.9.7-1.6 1.6-1.6h8.6"/><path d="M10.5 12.5l2 -2.5 2 2.5-2 2.5z"/></svg>',
@@ -2388,7 +2419,7 @@ function showCardList() {
       </div>`).join("")}</div>`;
   const d = CL.detail && DEF[CL.detail];
   const o = $("#overlay"), y = o.hidden ? 0 : o.scrollTop, keep = !o.hidden && o.querySelector(".cl-tools");
-  openOverlay(`<div class="panel wide">
+  openOverlay(`<div class="panel ${S ? "" : "nv-on nv-t-cards"} wide">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>カード一覧</b></div>
     <div class="totals"><span>${collect ? `集めたカード <b>${ownedN}</b> / ${usable.length}種` : `全<b>${usable.length}</b>種`}</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
     <div class="cl-tools">
@@ -2663,13 +2694,8 @@ function showCpuSelect() {
   const FACE = { easy: "squire", normal: "wargod", hard: "n-seraph", ex: "f2-tamamo" };
   const face = lv => { const c = DEF[FACE[lv]]; return c && c.art ? c.art : ""; };
   const stars = { easy: 1, normal: 2, hard: 3, ex: 3 };
-  openOverlay(`<div class="panel">
+  openOverlay(`<div class="panel nv-on nv-fab nv-t-play nv-ret-cpu">
     ${Decks.topbar("CPU戦", "solo")}
-    <div class="cs-deck">
-      <span class="cs-deck-art" ${key ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
-      <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck.name)}</b></span>
-      <button type="button" class="btn sm" data-act="decks">変更</button>
-    </div>
     ${deck.free && Decks.sampleOK() && CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝や隠しボスにも数えません（CPU戦でも使えます）。</p>` : ""}
     ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキは CPU戦で使えません</b>サンプルデッキが使えるのは、練習対戦と友達との対戦だけです。「変更」から、自分のカードで組んだデッキを選んでください。</p>` : ""}
     <div class="lvls ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "lvls-off" : ""}">${cpuLevels(true).map(([k, v]) => `
@@ -2699,7 +2725,7 @@ function showPractice() {
       <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
       <span class="cs-deck-txt"><small>${tag}</small><b>${esc(d.name)}</b></span>${PRACTICE.deck === d.id ? `<span class="usingtag">CPU が使う</span>` : ""}</button>`; };
   const lv = cpuLevels(false).map(([k, v]) => `<button type="button" data-act="prLevel" data-v="${k}" aria-pressed="${PRACTICE.level === k}">${v.label}</button>`).join("");
-  openOverlay(`<div class="panel">
+  openOverlay(`<div class="panel nv-on nv-fab nv-t-play nv-ret-practice">
     ${Decks.topbar("練習対戦", "solo")}
     <p class="lead small">あなたは「${esc(Decks.selected().name)}」で戦います。Gと連勝はつきません。</p>
     <h3 class="sec">CPU の強さ</h3>
@@ -2885,7 +2911,7 @@ function showSolo() {
       <span class="lvl-body"><span class="lvl-head"><b>${title}</b>${opts.tag ? `<small class="ptag">${opts.tag}</small>` : ""}</span><span class="lvl-desc">${desc}</span></span>
       <span class="lvl-go" aria-hidden="true">${opts.off ? "" : "›"}</span></button>`;
   const art = id => (DEF[id] && DEF[id].art) || "";
-  openOverlay(`<div class="panel">
+  openOverlay(`<div class="panel nv-on nv-fab nv-t-play nv-ret-solo">
     ${Decks.topbar("一人で遊ぶ", "back")}
     <div class="lvls solo-main">
       ${tile("start", "CPU戦", "勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
@@ -2942,7 +2968,7 @@ function showGate() {
       <span class="cs-deck-art" ${art ? `style="background-image:url('${esc(art)}')"` : ""}></span>
       <span class="cs-deck-txt"><small>${esc(setName(x.set))}・${gateRule(x).label}${x.gateRule !== "free" && x.gateWorld ? `（${WORLDS[x.gateWorld]}）` : ""}</small><b>${esc(x.name)}</b></span>
       ${done ? `<span class="usingtag done">開放ずみ</span>` : `<span class="lvl-go" aria-hidden="true">›</span>`}</button>`; };
-  openOverlay(`<div class="panel">
+  openOverlay(`<div class="panel nv-on nv-t-play">
     ${Decks.topbar("パック開放戦", "solo")}
     ${GATE_TEST ? `<p class="callout">試しモード（?gatetest）：販売前のパックにも挑めます。勝っても開放はされません。CPU戦の超級も出ます。</p>` : ""}
     <p class="lead small">開放戦に勝つと、そのパックが買えるようになります。</p>
@@ -2961,7 +2987,7 @@ function showGatePack() {
       <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
       <span class="cs-deck-txt">${w ? `<small class="wtag w-${w}">${WORLDS[w]}だけ</small>` : `<small>いろいろな世界</small>`}<b>${esc(d.name)}</b></span>${GATE.deck === d.id ? `<span class="usingtag">使う</span>` : ""}</button>`; };
   const art = gateArt(p);
-  openOverlay(`<div class="panel">
+  openOverlay(`<div class="panel nv-on nv-t-play">
     ${Decks.topbar("パック開放戦", "gateBack")}
     <div class="gate-head" ${art ? `style="--gart:url('${esc(art)}')"` : ""}><small>${esc(setName(p.set))}</small><b>${esc(p.name)}</b></div>
     <div class="gate-rule">
@@ -3016,7 +3042,7 @@ function showWorldSelect() {
       <span class="cs-deck-art" ${k ? `style="background-image:url('${esc(k.art)}')"` : ""}></span>
       <span class="cs-deck-txt"><small class="wtag w-${w}">${WORLDS[w]}${d.free ? "・サンプル" : ""}</small><b>${esc(d.name)}</b></span>${WORLDB.deck === d.id ? `<span class="usingtag">使う</span>` : ""}</button>`; };
   const stars = { easy: 1, normal: 2, hard: 3 };
-  openOverlay(`<div class="panel">
+  openOverlay(`<div class="panel nv-on nv-t-play">
     ${Decks.topbar("世界限定戦", "solo")}
     <p class="lead small">1つの世界だけのデッキ同士で戦います。連勝ボーナスはありません。</p>
     <h3 class="sec">使うデッキ</h3>
@@ -3072,6 +3098,8 @@ function handleAct(act, el) {
     case "cpuAgain": battleAgain(); break;
     case "cpuReselect": battleReselect(); break;
     case "solo": showSolo(); return;
+    case "goHome": if (typeof Decks !== "undefined") Decks.ret = null; showStart(); return;
+    case "fabDeck": Decks.ret = el && el.dataset.ret || null; Decks.showList(); return;
     case "worldMode": showWorldSelect(); return;
     case "gate": showGate(); return;
     case "gatePack": GATE.pack = el.dataset.id; showGatePack(); return;
