@@ -1106,6 +1106,10 @@ function curIcon(kind, cls) {
   if (kind === "stone") return `<img class="${c} cur-img" src="ui/cur-stone.webp" alt="" aria-hidden="true" draggable="false">`;
   return `<img class="${c} cur-img" src="ui/cur-gold.webp" alt="" aria-hidden="true" draggable="false">`;
 }
+/* 説明は画面に長く書かず、見出しの横の「？」から小窓で出す（2026-11-20 オーナー：説明文が商業ゲームっぽくない） */
+function helpBtn(title, html) { return `<button type="button" class="helpbtn" data-act="help" data-t="${esc(title)}" data-h="${esc(html)}" aria-label="${esc(title)}の説明">?</button>`; }
+/* 大事な決まりだけ、短い札で並べる */
+function ruleChips(list) { const L = list.filter(Boolean); return L.length ? `<div class="rchips">${L.map(x => `<span class="rchip">${x}</span>`).join("")}</div>` : ""; }
 /* 所持数の札（絵＋数）。読み上げ用に「1200G」「魔石 30」の名前を付ける */
 function goldTag(n) { return `<span class="goldtag" aria-label="所持 ${n}G">${curIcon("gold")}<span>${n.toLocaleString()}</span></span>`; }
 function stoneTag(n) { return `<span class="stonetag" aria-label="魔石 ${n}個">${curIcon("stone")}<span>${n.toLocaleString()}</span></span>`; }

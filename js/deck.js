@@ -241,8 +241,8 @@ const Decks = {
     this.sorted(deck.cards).forEach(({ c, n: k }) => { if (c) { n[c.world] += k; t += k; } });
     return t ? `<span class="dworlds" aria-label="${Object.keys(n).map(w => `${WORLDS[w]}${n[w]}枚`).join("・")}">${Object.keys(n).filter(w => n[w]).map(w => `<i class="w-${w}" style="flex:${n[w]}"></i>`).join("")}</span>` : "";
   },
-  topbar(title, backAct) {
-    return `<div class="topbar"><button type="button" class="btn sm" data-act="${backAct}">← 戻る</button><b>${title}</b></div>`;
+  topbar(title, backAct, extra = "") {
+    return `<div class="topbar"><button type="button" class="btn sm" data-act="${backAct}">← 戻る</button><b>${title}</b>${extra}</div>`;
   },
 
   /* ---------- 一覧 ----------
@@ -276,7 +276,9 @@ const Decks = {
     const tabBtn = (v, label, n) => `<button type="button" role="tab" data-act="deckListTab" data-v="${v}" aria-pressed="${tab === v}">${label}${n != null ? ` <small>${n}</small>` : ""}</button>`;
     const newTile = tab === "cpu" ? "" : `<button type="button" class="dbt new" data-act="${{ sample: "deckNewSample", world: "deckNewWorld" }[tab] || "deckNew"}"><span class="dbt-plus" aria-hidden="true">＋</span><b>新しく作る</b></button>`;
     openOverlay(`<div class="panel wide nv-on nv-t-decks">
-      ${this.topbar("デッキ編成", "deckBack")}
+      ${this.topbar("デッキ編成", "deckBack", helpBtn("デッキ編成", `${tab === "world" ? "限定構築は、開放戦などの縛りがあるルール用のデッキです。作るときに縛りを選びます（あとから変えられません）。"
+        : tab === "sample" ? `サンプルデッキは、持っていないカードも含めて、すべてのカードで組めます。勝ってもGはもらえません。<br>使える場所：練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで）${CONFIG.SAMPLE_CPU ? "、CPU戦" : ""}。`
+        : `デッキは${CONFIG.DECK_SIZE}枚、同じカードは${CONFIG.COPY_MAX}枚まで。持っていないカードも入れて保存できます（そろうまで対戦には使えません）。`}<br>デッキを長押しすると、順番を並び替えられます。<br>マイデッキ・限定構築・サンプルは、下のボタンか、一覧を横に払って切り替えます。`))}
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
       ${true ? `<div class="seg wide dl-tabs" role="tablist">
         ${tabBtn("mine", this.free() ? "自分のデッキ" : "マイデッキ", `${all.filter(d => this.kindOf(d) === "mine").length}/${this.max("mine")}`)}
@@ -284,12 +286,7 @@ const Decks = {
         ${samp ? tabBtn("sample", "サンプル", `${all.filter(d => d.free).length}/${CONFIG.DECK_MAX}`) : ""}
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
-      ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）${CONFIG.SAMPLE_CPU ? "。CPU戦でも使えます（Gと連勝・隠しボスはなし）" : "だけです。CPU戦では使えません"}。</p>` : ""}
-      <p class="hint dl-hint">${tab === "world" ? "開放戦などの縛りがあるルール用のデッキです。作るときに縛りを選びます。"
-        : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです。勝ってもGはもらえません。"
-        : tab === "cpu" ? "CPU が使っているデッキです。"
-        : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っていないカードも入れて保存できます（そろうまで対戦には使えません）。"}`}
-        ${tab !== "cpu" && list.length > 1 ? "<br>デッキを長押しすると、順番を並び替えられます。" : ""}</p>
+      ${tab === "mine" ? ruleChips([`${CONFIG.DECK_SIZE}枚`, `同じカード${CONFIG.COPY_MAX}枚まで`, this.free() ? "全カード使える" : ""]) : tab === "world" ? ruleChips(["1つの世界だけ", "開放戦などで使う"]) : tab === "sample" ? ruleChips(["全カードで組める", "Gなし", `友達対戦 今日あと${this.sampleLeft()}回`]) : ""}
       <div class="dbgrid" id="dbgrid" data-tab="${tab}">${list.map(d => this.deckTileHTML(d, sel, tab !== "cpu")).join("")}${newTile}</div>
       ${tab === "cpu" ? "" : `<div class="pre-btns">
         <button type="button" class="btn" data-act="deckImport">デッキコードから作る</button>

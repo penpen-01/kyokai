@@ -85,7 +85,7 @@ const Arena = {
     openOverlay(`<div class="panel ar nv-on nv-fab nv-t-play nv-ret-arenaOpen nv-back-arenaClose">
       <h2 class="title sm">アリーナ <i class="beta-tag">β版</i></h2>
       ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営・メンテ通過の端末のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
-        <p class="lead small">${rule.desc}勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点（同じ相手は${ARENA_VS_MAX}戦まで・すぐ降参した対戦は0点）。</p>
+        <div class="rchips">${[`勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点`, `同じ相手は${ARENA_VS_MAX}戦まで`].map(x => `<span class="rchip">${x}</span>`).join("")}${helpBtn("アリーナ", `${rule.desc}<br>同じ時間に探している人と、ランダムに対戦します。勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点。<br>同じ相手からの点は、1回の開催で${ARENA_VS_MAX}戦まで。お互い3ターンやる前に降参・接続切れで決着した対戦は、両方0点です。<br>報酬は、回が終わった1時間後にホームで受け取れます。`)}</div>
         ${c.test ? `<div class="ar-test">テストのルール：${Object.entries(ARENA_RULES).map(([k, r]) => `<button type="button" class="btn sm ${c.rule === k ? "primary" : ""}" data-act="arenaTestRule" data-v="${k}">${r.name}</button>`).join("")}</div>` : ""}
         ${this.searching ? `<div class="ar-search"><b>相手を探しています<span class="pg-dots"><i></i><i></i><i></i></span></b><small id="ar-wait"></small><button type="button" class="btn" data-act="arenaStop">探すのをやめる</button></div>`
           : `<button type="button" class="btn primary ar-go" data-act="arenaSearch">相手を探す</button>`}

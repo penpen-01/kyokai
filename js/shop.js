@@ -258,7 +258,7 @@ const Shop = {
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>限定カード</b>${stoneTag(Account.stones)}</div>
       ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
-      <p class="hint">ここでしか手に入らないカードです（1種類${cap}枚まで）。</p>
+      <div class="rchips"><span class="rchip">ここだけのカード</span><span class="rchip">1種類${cap}枚まで</span></div>
       ${L.length ? `<div class="lim-grid">${L.map(c => {
         const own = Account.owned(c.id), price = this.limitedPrice(c), full = own >= cap;
         return `<div class="lim-item"><button type="button" class="lim-card cdlink" data-tk="${esc(c.id)}" aria-label="${esc(c.name)}（押すと効果）">${cardHTML(c, { static: true, cls: own <= 0 ? "dim" : "" })}</button>
@@ -340,7 +340,7 @@ const Shop = {
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>分解</b>${stoneTag(Account.stones)}</div>
       ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
-      <p class="callout"><b>分解できるのはダブりだけ</b>同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。</p>
+      <div class="rchips"><span class="rchip">${cap}枚より多い分だけ</span>${helpBtn("分解", `同じカードを${cap}枚より多く持っている分だけを、魔石にできます。デッキに入れられるのは${cap}枚までなので、分解しても遊び方は変わりません。`)}</div>
       <p class="rates">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${this.getRate(r)}</span>`).join("")}</p>
       ${sur.length ? `
         <ul class="dislist">${sur.map(x => {

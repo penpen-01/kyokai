@@ -2463,8 +2463,8 @@ function showCardList() {
   const d = CL.detail && DEF[CL.detail];
   const o = $("#overlay"), y = o.hidden ? 0 : o.scrollTop, keep = !o.hidden && o.querySelector(".cl-tools");
   openOverlay(`<div class="panel ${S ? "" : "nv-on nv-t-cards"} wide">
-    <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>カード一覧</b></div>
-    <div class="totals"><span>${collect ? `集めたカード <b>${ownedN}</b> / ${usable.length}種` : `全<b>${usable.length}</b>種`}</span><span>デッキ${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで</span></div>
+    <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>カード一覧</b>${helpBtn("カード一覧", `カードを押すと、効果や手に入れ方を見られます。<br>デッキは${CONFIG.DECK_SIZE}枚、同じカードは${CONFIG.COPY_MAX}枚まで入れられます。`)}</div>
+    <div class="cl-total">${collect ? `<small>集めたカード</small><b>${ownedN}</b><i>/ ${usable.length}</i><span class="cl-bar"><s style="width:${usable.length ? Math.round(ownedN / usable.length * 100) : 0}%"></s></span>` : `<small>全</small><b>${usable.length}</b><i>種</i>`}</div>
     <div class="cl-tools">
       <input class="otxt" id="cl-q" type="search" placeholder="名前や効果で探す（例：守護、ドロー）" value="${esc(CL.q)}" autocomplete="off">
       ${collect ? `<div class="seg wide">${chip("own", "", "すべて")}${chip("own", "y", "所持")}${chip("own", "n", "未所持")}</div>` : ""}
@@ -2472,7 +2472,7 @@ function showCardList() {
       ${CL.more ? `<div class="cl-filters">${CardFilter.rowsHTML(CL.f, "clFilterM", usable)}${CardFilter.count(CL.f) ? `<button type="button" class="btn sm" data-act="clFilterReset">絞り込みを解除</button>` : ""}</div>` : ""}
       <label class="cl-text"><input type="checkbox" data-act="clText" ${CL.text ? "checked" : ""}> 効果も一覧で表示</label>
     </div>
-    <p class="hint">${list.length}種 ・ ${CL.text ? "" : "カードを押すと効果を見られます"}</p>
+    <p class="cl-count">${list.length}種</p>
     ${list.length ? (CL.text ? rows : grid) : `<p class="callout">条件に合うカードがありません。</p>`}
     ${d ? `<div class="dmodal" data-act="clClose"><div class="dmodal-in" role="dialog" aria-label="${esc(d.name)}" data-act="noop">
       ${detailNavHTML(CL.ids, d.id, "clStep")}
@@ -2537,7 +2537,6 @@ function showGrave(pi) {
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>墓地</b></div>
     <div class="gv-tabs" role="tablist">${[OP, ME].map(x => `<button type="button" role="tab" data-act="grave" data-p="${x}" aria-selected="${x === t}">${x === OP ? "相手" : "自分"}（${graveOf(x).length}）</button>`).join("")}</div>
     ${sec("カード", g, "まだありません")}
-    <p class="hint">新しい順。押すと効果を見られます。</p>
   </div>`, "game");
 }
 /* ログの文の中のカード名を、押すと効果を見られる文字にする */
@@ -2738,7 +2737,7 @@ function showCpuSelect() {
   const face = lv => { const c = DEF[FACE[lv]]; return c && c.art ? c.art : ""; };
   const stars = { easy: 1, normal: 2, hard: 3, ex: 3 };
   openOverlay(`<div class="panel nv-on nv-fab nv-t-play nv-ret-cpu">
-    ${Decks.topbar("CPU戦", "solo")}
+    ${Decks.topbar("CPU戦", "solo", helpBtn("CPU戦", `勝つとGがもらえます。負けたときは0Gです。${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `<br>同じ強さで連勝すると、2連勝目から報酬が${CONFIG.STREAK_STEP}%ずつ増えます（最大${CONFIG.STREAK_MAX}%）。負けるか、途中でやめると0に戻ります。` : ""}<br>上級・超級に勝つと、まれに隠しボスが現れます。${Account.status === "free" || Account.status === "none" ? "<br>今の状態では、Gは保存されません。" : ""}`))}
     ${deck.free && Decks.sampleOK() && CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキです</b>勝ってもGはもらえず、連勝や隠しボスにも数えません（CPU戦でも使えます）。</p>` : ""}
     ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? `<p class="callout warn"><b>サンプルデッキは CPU戦で使えません</b>サンプルデッキが使えるのは、練習対戦と友達との対戦だけです。「変更」から、自分のカードで組んだデッキを選んでください。</p>` : ""}
     <div class="lvls ${deck.free && Decks.sampleOK() && !CONFIG.SAMPLE_CPU ? "lvls-off" : ""}">${cpuLevels(true).map(([k, v]) => `
@@ -2752,7 +2751,6 @@ function showCpuSelect() {
         </span>
         <span class="lvl-go" aria-hidden="true">›</span>
       </button>`).join("")}</div>
-    <p class="hint cs-note">${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると報酬が${CONFIG.STREAK_STEP}%ずつ増える（最大${CONFIG.STREAK_MAX}%）。` : ""}${Account.status === "free" || Account.status === "none" ? "今の状態では、Gは保存されません。" : ""}</p>
   </div>`, "start", true);
 }
 
@@ -2769,8 +2767,8 @@ function showPractice() {
       <span class="cs-deck-txt"><small>${tag}</small><b>${esc(d.name)}</b></span>${PRACTICE.deck === d.id ? `<span class="usingtag">CPU が使う</span>` : ""}</button>`; };
   const lv = cpuLevels(false).map(([k, v]) => `<button type="button" data-act="prLevel" data-v="${k}" aria-pressed="${PRACTICE.level === k}">${v.label}</button>`).join("");
   openOverlay(`<div class="panel nv-on nv-fab nv-t-play nv-ret-practice">
-    ${Decks.topbar("練習対戦", "solo")}
-    <p class="lead small">あなたは「${esc(Decks.selected().name)}」で戦います。Gと連勝はつきません。</p>
+    ${Decks.topbar("練習対戦", "solo", helpBtn("練習対戦", "自分のデッキやCPU用のデッキを、CPUに使わせて戦えます。あなたは左下のデッキで戦います。<br>練習なので、Gと連勝はつきません。"))}
+    ${ruleChips(["Gなし", "連勝なし"])}
     <h3 class="sec">CPU の強さ</h3>
     <div class="seg wide">${lv}</div>
     <h3 class="sec">CPU に使わせるデッキ</h3>
@@ -3012,9 +3010,8 @@ function showGate() {
       <span class="cs-deck-txt"><small>${esc(setName(x.set))}・${gateRule(x).label}${x.gateRule !== "free" && x.gateWorld ? `（${WORLDS[x.gateWorld]}）` : ""}</small><b>${esc(x.name)}</b></span>
       ${done ? `<span class="usingtag done">開放ずみ</span>` : `<span class="lvl-go" aria-hidden="true">›</span>`}</button>`; };
   openOverlay(`<div class="panel nv-on nv-t-play">
-    ${Decks.topbar("パック開放戦", "solo")}
+    ${Decks.topbar("パック開放戦", "solo", helpBtn("パック開放戦", "新しいパックは、そのパックの開放戦に勝つとショップに並びます。それまでは、そのパックのカードはカード一覧にも出ず、交換もできません。"))}
     ${GATE_TEST ? `<p class="callout">試しモード（?gatetest）：販売前のパックにも挑めます。勝っても開放はされません。CPU戦の超級も出ます。</p>` : ""}
-    <p class="lead small">開放戦に勝つと、そのパックが買えるようになります。</p>
     ${all.length ? `<h3 class="sec">挑むパックを選ぶ</h3><div class="pr-list">${all.map(row).join("")}</div>` : `<p class="callout">開放戦のあるパックは、まだありません。</p>`}
   </div>`, "start", true);
 }
@@ -3086,8 +3083,7 @@ function showWorldSelect() {
       <span class="cs-deck-txt"><small class="wtag w-${w}">${WORLDS[w]}${d.free ? "・サンプル" : ""}</small><b>${esc(d.name)}</b></span>${WORLDB.deck === d.id ? `<span class="usingtag">使う</span>` : ""}</button>`; };
   const stars = { easy: 1, normal: 2, hard: 3 };
   openOverlay(`<div class="panel nv-on nv-t-play">
-    ${Decks.topbar("世界限定戦", "solo")}
-    <p class="lead small">1つの世界だけのデッキ同士で戦います。連勝ボーナスはありません。</p>
+    ${Decks.topbar("世界限定戦", "solo", helpBtn("世界限定戦", "30枚すべて同じ世界のカードで組んだデッキ（限定構築）で戦います。相手のCPUも、1つの世界だけのデッキを使います。<br>勝ったときのGはCPU戦と同じで、連勝ボーナスはありません。"))}
     <h3 class="sec">使うデッキ</h3>
     ${list.length ? `<div class="pr-list">${list.map(row).join("")}</div>`
       : `<p class="callout">使える限定構築のデッキがありません。デッキ編成の「限定構築」で作ってください。</p>
@@ -3141,6 +3137,13 @@ function handleAct(act, el) {
     case "cpuAgain": battleAgain(); break;
     case "cpuReselect": battleReselect(); break;
     case "solo": showSolo(); return;
+    case "help": {
+      const o = $("#overlay"); if (!o || !el) return;
+      const old = o.querySelector(".helpbox"); if (old) old.remove();
+      o.insertAdjacentHTML("beforeend", `<div class="dmodal helpbox" data-act="helpClose"><div class="dmodal-in" role="dialog" aria-label="${esc(el.dataset.t)}" data-act="noop"><b class="hb-t">${esc(el.dataset.t)}</b><div class="hb-h">${el.dataset.h}</div><button type="button" class="btn" data-act="helpClose">閉じる</button></div></div>`);
+      return;
+    }
+    case "helpClose": { const m = document.querySelector(".helpbox"); if (m) m.remove(); return; }
     case "goHome": if (typeof Decks !== "undefined") Decks.ret = null; showStart(); return;
     case "fabDeck": Decks.ret = el && el.dataset.ret || null; Decks.showList(); return;
     case "worldMode": showWorldSelect(); return;
