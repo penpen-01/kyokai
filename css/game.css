@@ -3284,3 +3284,30 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .overlay.gnav-on .shophub .sh-sticky{padding-top:calc(6px + env(safe-area-inset-top,0px));background:linear-gradient(#090a14,#0b0c18)}
 .overlay.gnav-on .shophub .sh-sticky > .topbar{top:calc(14px + env(safe-area-inset-top,0px));right:8px}
 @media (max-width:600px){.overlay.gnav-on .shophub .sh-sticky .kp-stage{border-radius:14px 14px 0 0}}
+
+/* ===== Gemini の素材（2026-11-20）：紋章のアイコン・所持数の枠・開封の背景・一人で遊ぶの絵 ===== */
+.navbtn .nav-ic{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));margin-bottom:-2px}
+.gnav-bar .navbtn .nav-ic{width:30px;height:30px}
+.gnav-bar .navbtn:not(.on) .nav-ic{filter:saturate(.75) brightness(.85) drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.gnav-bar .navbtn.on .nav-ic{filter:drop-shadow(0 0 6px rgba(255,214,120,.7))}
+.bicon.img{background:none;box-shadow:none;width:74px;height:74px}
+.bicon.img .nav-ic{width:74px;height:74px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))}
+.battlebtn{overflow:hidden}
+.battlebtn .bart{position:absolute;inset:0;z-index:0;pointer-events:none;background:center/cover no-repeat;opacity:.55}
+.battlebtn.cpu .bart{background-image:linear-gradient(180deg,rgba(9,10,20,.15),rgba(9,10,20,.75) 70%),url("../ui/mode-solo.webp");background-position:center,62% 30%;background-size:cover,cover}
+.battlebtn > *:not(.bart){position:relative;z-index:1}
+/* 左上の所持数（G・魔石・デッキ）：金の飾り枠。左の丸い台座にアイコンを入れる */
+.hb-left .goldtag,.hb-left .stonetag,.hb-left .deckplate{background:url("../ui/pill-frame.webp") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:none;
+  height:34px;min-width:140px;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;padding:0 14px 0 3px}
+.hb-left .goldtag > :first-child,.hb-left .stonetag > :first-child,.hb-left .deckplate > svg{flex:none;width:22px;height:22px;margin-left:2px}
+.hb-left .deckplate{max-width:200px}
+.hb-left .deckplate span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* パックを開ける画面の背景 */
+.overlay:has(.openstage){background:linear-gradient(rgba(8,9,20,.15),rgba(8,9,20,.45)),url("../ui/bg-open.webp") center 30%/cover no-repeat,#07080f}
+/* カードの詳しい説明が長いとき、小窓ごとスクロールできるように（前は前後の矢印のために、はみ出しを見せる設定で、下の「戻る」に届かなかった） */
+.dmodal:has(.dm-nav){display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.dmodal:has(.dm-nav) .dmodal-in{margin:auto;max-height:none;flex:none}
+/* カードの詳しい説明などの小窓が出ている間は、下のメニューとデッキボタンを隠す（小窓の「閉じる」に重なっていた） */
+#overlay:has(.dmodal) ~ .gnav-bar,#overlay:has(.dmodal) ~ .gfab{display:none}
+.hb-left .goldtag,.hb-left .stonetag{min-width:128px}
+.hb-left .deckplate{min-width:128px;max-width:142px}

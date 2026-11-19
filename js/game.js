@@ -2266,7 +2266,7 @@ const GNav = {
       const goldOK = Account.status !== "none" && Account.status !== "free";
       const b = (act, ic, label, t) => `<button type="button" class="navbtn ${tab === t ? "on" : ""}" data-act="${act}" ${tab === t ? 'aria-current="page"' : ""}>${ic}<b>${label}</b></button>`;
       nav.innerHTML = `<button type="button" class="navbtn gback" data-act="${back}" aria-label="戻る"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><b>戻る</b></button>
-        ${b("goHome", HOME_ICON.home, "ホーム", "home")}${b("decks", HOME_ICON.decks, "デッキ", "decks")}${b("packs", HOME_ICON.packs, "パック", "packs")}${goldOK ? b("shop", HOME_ICON.shop, "ショップ", "shop") : ""}${b("cards", HOME_ICON.cards, "カード", "cards")}`;
+        ${b("goHome", HOME_ICON.home, "ホーム", "home")}${b("decks", HOME_IMG("decks"), "デッキ", "decks")}${b("packs", HOME_IMG("packs"), "パック", "packs")}${goldOK ? b("shop", HOME_IMG("shop"), "ショップ", "shop") : ""}${b("cards", HOME_IMG("cards"), "カード", "cards")}`;
     }
     const f = on && has("nv-fab");
     fab.hidden = !f; o.classList.toggle("gfab-on", f);
@@ -2289,6 +2289,8 @@ function goBack() {
 }
 
 /* ホーム画面のアイコン（線画のSVG） */
+/* Gemini で描いた紋章のアイコン（ui/ic/。緑の背景は抜いてある） */
+const HOME_IMG = n => `<img class="nav-ic" src="ui/ic/${n}.webp" alt="" aria-hidden="true" draggable="false">`;
 const HOME_ICON = {
   home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg>',
   cpu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/><path d="M9.5 6.5 13 3h3v3l-3.5 3.5M5 14l4 4M7 17l-3 3M3 19l2 2"/></svg>',
@@ -2338,17 +2340,17 @@ function showStart() {
     </div>
     <div class="battles">
       <button type="button" class="battlebtn cpu" data-act="solo">
-        <span class="bicon">${HOME_ICON.cpu}</span><b>一人で遊ぶ</b><small>CPU戦・選定戦・練習</small>
+        <span class="bart" aria-hidden="true"></span><span class="bicon img">${HOME_IMG("solo")}</span><b>一人で遊ぶ</b><small>CPU戦・選定戦・練習</small>
       </button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="battlebtn online" data-act="online">
-        <span class="bicon">${HOME_ICON.online}</span><b>オンラインで遊ぶ</b><small>アリーナ・友達と対戦</small>
+        <span class="bart" aria-hidden="true"></span><span class="bicon img">${HOME_IMG("online")}</span><b>オンラインで遊ぶ</b><small>アリーナ・友達と対戦</small>
       </button>`}
     </div>
     <nav class="homenav" aria-label="メニュー">
-      <button type="button" class="navbtn" data-act="decks">${HOME_ICON.decks}<b>デッキ</b></button>
-      <button type="button" class="navbtn" data-act="packs">${HOME_ICON.packs}<b>パック</b>${badge(tickets, `パック券${tickets}枚`)}</button>
-      ${goldOK ? `<button type="button" class="navbtn" data-act="shop">${HOME_ICON.shop}<b>ショップ</b>${badge(dupes, `分解できるカード${dupes}枚`)}</button>` : ""}
-      <button type="button" class="navbtn" data-act="cards">${HOME_ICON.cards}<b>カード</b></button>
+      <button type="button" class="navbtn" data-act="decks">${HOME_IMG("decks")}<b>デッキ</b></button>
+      <button type="button" class="navbtn" data-act="packs">${HOME_IMG("packs")}<b>パック</b>${badge(tickets, `パック券${tickets}枚`)}</button>
+      ${goldOK ? `<button type="button" class="navbtn" data-act="shop">${HOME_IMG("shop")}<b>ショップ</b>${badge(dupes, `分解できるカード${dupes}枚`)}</button>` : ""}
+      <button type="button" class="navbtn" data-act="cards">${HOME_IMG("cards")}<b>カード</b></button>
     </nav>
   </div>`, "start", true);
   Showcase.start();
