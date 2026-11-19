@@ -2301,7 +2301,7 @@ function setPlayerName(n) {
 function showName(msg) {
   openOverlay(`<div class="panel">
     <div class="topbar"><button type="button" class="btn sm" data-act="${typeof Profile !== "undefined" && Profile.nameFrom ? "profile" : "options"}">← 戻る</button><b>プレイヤー名</b></div>
-    <p class="lead small">対戦で表示される名前です（10文字まで）。友達と対戦するときも、この名前が相手に見えます。</p>
+    <p class="lead small">対戦で相手に見える名前です（10文字まで）。</p>
     <div class="obox"><div class="ofield"><label for="pl-name">名前</label>
       <input class="otxt" id="pl-name" maxlength="10" placeholder="例：見習いプレイヤー" value="${esc(playerName(""))}" autocomplete="nickname"></div>
       <button type="button" class="btn primary" data-act="nameSave">決定</button>
@@ -2463,7 +2463,7 @@ function showGrave(pi) {
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>墓地</b></div>
     <div class="gv-tabs" role="tablist">${[OP, ME].map(x => `<button type="button" role="tab" data-act="grave" data-p="${x}" aria-selected="${x === t}">${x === OP ? "相手" : "自分"}（${graveOf(x).length}）</button>`).join("")}</div>
     ${sec("カード", g, "まだありません")}
-    <p class="hint">倒されたキャラ・使った魔法・捨てたカードが、新しい順に並んでいます。カードを押すと効果を見られます。</p>
+    <p class="hint">新しい順。押すと効果を見られます。</p>
   </div>`, "game");
 }
 /* ログの文の中のカード名を、押すと効果を見られる文字にする */
@@ -2701,7 +2701,7 @@ function showPractice() {
   const lv = cpuLevels(false).map(([k, v]) => `<button type="button" data-act="prLevel" data-v="${k}" aria-pressed="${PRACTICE.level === k}">${v.label}</button>`).join("");
   openOverlay(`<div class="panel">
     ${Decks.topbar("練習対戦", "solo")}
-    <p class="lead small">CPU に使わせるデッキと、CPU の強さを選んでください。あなたは「${esc(Decks.selected().name)}」で戦います。練習なので、Gと連勝はつきません。</p>
+    <p class="lead small">あなたは「${esc(Decks.selected().name)}」で戦います。Gと連勝はつきません。</p>
     <h3 class="sec">CPU の強さ</h3>
     <div class="seg wide">${lv}</div>
     <h3 class="sec">CPU に使わせるデッキ</h3>
@@ -2945,7 +2945,7 @@ function showGate() {
   openOverlay(`<div class="panel">
     ${Decks.topbar("パック開放戦", "solo")}
     ${GATE_TEST ? `<p class="callout">試しモード（?gatetest）：販売前のパックにも挑めます。勝っても開放はされません。CPU戦の超級も出ます。</p>` : ""}
-    <p class="lead small">新しいパックは、そのパックの開放戦に勝つとショップに並びます。それまでは、そのパックのカードはカード一覧にも出ず、交換もできません。</p>
+    <p class="lead small">開放戦に勝つと、そのパックが買えるようになります。</p>
     ${all.length ? `<h3 class="sec">挑むパックを選ぶ</h3><div class="pr-list">${all.map(row).join("")}</div>` : `<p class="callout">開放戦のあるパックは、まだありません。</p>`}
   </div>`, "start", true);
 }
@@ -3018,7 +3018,7 @@ function showWorldSelect() {
   const stars = { easy: 1, normal: 2, hard: 3 };
   openOverlay(`<div class="panel">
     ${Decks.topbar("世界限定戦", "solo")}
-    <p class="lead small">30枚すべて同じ世界のカードで組んだデッキだけで戦います。相手の CPU も、1つの世界だけのデッキを使います。勝ったときのGは CPU戦と同じで、連勝ボーナスはありません。</p>
+    <p class="lead small">1つの世界だけのデッキ同士で戦います。連勝ボーナスはありません。</p>
     <h3 class="sec">使うデッキ</h3>
     ${list.length ? `<div class="pr-list">${list.map(row).join("")}</div>`
       : `<p class="callout">使える限定構築のデッキがありません。デッキ編成の「限定構築」で作ってください。</p>

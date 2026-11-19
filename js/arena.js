@@ -7,8 +7,8 @@
    ・報酬：参加賞と1〜3位（ARENA.rewards。回が終わって1時間後に受け取れる）。運営アカウントは、いつでも「テスト」の回に入れる */
 let ARENA = { on: 1, start: "21:00", end: "22:00", days: ARENA_DAYS_DEF.slice(), extra: [] };
 const ARENA_RULES = {
-  std:  { name: "通常戦",     desc: "持っているカードで組んだ、いつものデッキで戦います。" },
-  sen:  { name: "選定戦",     desc: "デッキは持ち込みません。2人でカードを取り合って、その場でデッキを作ります。" },
+  std:  { name: "通常戦",     desc: "いつものデッキで戦います。" },
+  sen:  { name: "選定戦",     desc: "カードを取り合って、その場でデッキを作ります。" },
   set1: { name: "第1弾限定",  desc: "第1弾のカードだけで組んだデッキで戦います。" }
 };
 const ARENA_MIN_TURNS = 6;       // これより短く降参・接続切れで決着した対戦は点にしない（お互い3ターン）
@@ -85,7 +85,7 @@ const Arena = {
     openOverlay(`<div class="panel ar">
       <h2 class="title sm">アリーナ <i class="beta-tag">β版</i></h2>
       ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営・メンテ通過の端末のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
-        <p class="lead small">${rule.desc}同じ時間に探している人と、ランダムに対戦します。勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点。同じ相手からの点は${ARENA_VS_MAX}戦まで、すぐ降参した対戦は点になりません。</p>
+        <p class="lead small">${rule.desc}勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点（同じ相手は${ARENA_VS_MAX}戦まで・すぐ降参した対戦は0点）。</p>
         ${c.test ? `<div class="ar-test">テストのルール：${Object.entries(ARENA_RULES).map(([k, r]) => `<button type="button" class="btn sm ${c.rule === k ? "primary" : ""}" data-act="arenaTestRule" data-v="${k}">${r.name}</button>`).join("")}</div>` : ""}
         ${this.searching ? `<div class="ar-search"><b>相手を探しています<span class="pg-dots"><i></i><i></i><i></i></span></b><small id="ar-wait"></small><button type="button" class="btn" data-act="arenaStop">探すのをやめる</button></div>`
           : `<button type="button" class="btn primary ar-go" data-act="arenaSearch">相手を探す</button>`}

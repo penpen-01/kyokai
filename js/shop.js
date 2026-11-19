@@ -238,7 +238,7 @@ const Shop = {
         ${limitedOn() ? `<button type="button" class="sh-cat art c-limited" data-act="shopLimited" ${use ? "" : "disabled"}><span class="sh-art" style="background-image:url('ui/shop-limited.webp')" aria-hidden="true"></span><b>限定カード</b><small>ここでしか手に入らないカードを魔石で</small>${CONFIG.LIMITED_ON ? "" : `<i class="sh-soon">運営のみ</i>`}</button>` : ""}
         ${fut.map(x => `<div class="sh-cat art soon"><span class="sh-art" style="background-image:url('ui/shop-${x.id}.webp')" aria-hidden="true"></span><b>${esc(x.name)}</b><small>${esc(x.sub)}</small><i class="sh-soon">準備中</i></div>`).join("")}
       </div>
-      <p class="hint sh-foot">魔石は、ダブったカードの分解とログインボーナスで手に入ります。パック券1枚で、どのパックでも1パック開けられます（パックの画面で使います）。</p>
+      <p class="hint sh-foot">魔石はダブったカードの分解などで手に入ります。パック券はパックの画面で使えます。</p>
       ${this.detailHTML()}
       ${this.hubAskHTML(tc, slotCost)}
       ${this.exchHTML()}
@@ -257,7 +257,7 @@ const Shop = {
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>限定カード</b>${stoneTag(Account.stones)}</div>
       ${Keeper.miniHTML()}</div>
       ${this.noteHTML()}
-      <p class="hint">ここでしか手に入らないカードです。パックからは出ません。1種類${cap}枚まで交換できます。カードを押すと効果を見られます。</p>
+      <p class="hint">ここでしか手に入らないカードです（1種類${cap}枚まで）。</p>
       ${L.length ? `<div class="lim-grid">${L.map(c => {
         const own = Account.owned(c.id), price = this.limitedPrice(c), full = own >= cap;
         return `<div class="lim-item"><button type="button" class="lim-card cdlink" data-tk="${esc(c.id)}" aria-label="${esc(c.name)}（押すと効果）">${cardHTML(c, { static: true, cls: own <= 0 ? "dim" : "" })}</button>

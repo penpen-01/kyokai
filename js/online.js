@@ -102,10 +102,10 @@ const Online = {
   showWaiting() {
     openOverlay(`<div class="panel">
       <h2 class="title sm">相手を待っています</h2>
-      <p class="lead">この合言葉を相手に伝えてください。相手が入力すると対戦が始まります。</p>
+      <p class="lead">この合言葉を相手に伝えてください。</p>
       <div class="roomcode" aria-label="合言葉">${esc(this.code)}</div>
-      ${this.senRule ? `<p class="callout"><b>選定戦ルール</b>デッキは使いません。相手が入ったら、じゃんけんのあと、2人でカードを取り合ってデッキを作ります。</p>` : ""}
-      ${!this.senRule && store.get(WORLD_RULE_KEY) === "1" ? `<p class="callout"><b>世界限定ルール</b>相手も、30枚すべて同じ世界のカードのデッキで参加します。</p>` : ""}
+      ${this.senRule ? `<p class="callout"><b>選定戦ルール</b>相手が入ったら、カードを取り合ってデッキを作ります。</p>` : ""}
+      ${!this.senRule && store.get(WORLD_RULE_KEY) === "1" ? `<p class="callout"><b>世界限定ルール</b>2人とも、1つの世界だけのデッキで戦います。</p>` : ""}
       <p class="lead small">1ターンの持ち時間：${this.prefLimit() ? `<b>${this.prefLimit()}秒</b>（過ぎたら自動でターン終了）` : "なし"}</p>
       <button type="button" class="btn" data-act="onlCopy">合言葉をコピー</button>
       <p class="onl-msg" id="onl-msg" role="status"></p>

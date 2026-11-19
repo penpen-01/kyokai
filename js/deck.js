@@ -285,7 +285,7 @@ const Decks = {
         ${this.free() ? tabBtn("cpu", "CPU用") : ""}
       </div>` : ""}
       ${tab === "sample" ? `<p class="callout"><b>使える場所</b>練習対戦と、友達との対戦（1日${CONFIG.SAMPLE_ONLINE_DAY ?? 3}回まで・今日はあと${this.sampleLeft()}回）${CONFIG.SAMPLE_CPU ? "。CPU戦でも使えます（Gと連勝・隠しボスはなし）" : "だけです。CPU戦では使えません"}。</p>` : ""}
-      <p class="hint dl-hint">${tab === "world" ? "縛りのあるルール（パック開放戦・イベント戦など）で使うデッキの置き場です。マイデッキを崩さずに、ルールに合わせたデッキを別に組めます。作るときに縛りを選びます。"
+      <p class="hint dl-hint">${tab === "world" ? "開放戦などの縛りがあるルール用のデッキです。作るときに縛りを選びます。"
         : tab === "sample" ? "持っていないカードも含めて、すべてのカードで組めるデッキです。勝ってもGはもらえません。"
         : tab === "cpu" ? "CPU が使っているデッキです。"
         : `${CONFIG.DECK_SIZE}枚・同じカードは${CONFIG.COPY_MAX}枚まで。${this.free() ? "試遊モードなので、すべてのカードを使えます。" : "持っていないカードも入れて保存できます（そろうまで対戦には使えません）。"}`}
@@ -310,7 +310,7 @@ const Decks = {
   showWorldPick() {
     openOverlay(`<div class="panel">
       ${this.topbar("限定構築：縛りを選ぶ", "decks")}
-      <p class="lead small">このデッキの縛りを選んでください。あとから変えることはできません（変えたいときは新しく作ります）。</p>
+      <p class="lead small">縛りを選んでください（あとから変えられません）。</p>
       <div class="lvls">${Object.entries(WORLDS).map(([k, v]) => `<button type="button" class="lvl lvl-mode wpick w-${k}" data-act="deckNewWorldGo" data-v="${k}">
         <span class="lvl-body"><span class="lvl-head"><b>${v}</b></span><span class="lvl-desc">世界限定：${v}のカードだけで30枚を組む</span></span><span class="lvl-go" aria-hidden="true">›</span></button>`).join("")}</div>
     </div>`, "start", true);
@@ -328,7 +328,7 @@ const Decks = {
   showImport(msg) {
     openOverlay(`<div class="panel">
       ${this.topbar("デッキコードから作る", "decks")}
-      <p class="lead small">友達が「デッキコードをコピー」で送ってくれたコードを貼り付けてください。メッセージごと貼り付けても、コードの部分だけを読み取ります。</p>
+      <p class="lead small">友達から届いたデッキコードを貼り付けてください（メッセージごとでも大丈夫です）。</p>
       <textarea class="otxt" id="deck-code" rows="4" placeholder="KYK2:..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
       ${this.sampleOK() && !this.free() ? `<label class="ownchk"><input type="checkbox" id="deck-code-sample"> サンプルデッキとして作る（全カード使用可）</label>` : ""}
       ${msg ? `<p class="onl-msg">${esc(msg)}</p>` : ""}
@@ -355,7 +355,7 @@ const Decks = {
              <button type="button" class="btn" data-act="deckCopy" data-id="${esc(id)}">複製</button>`}
         <button type="button" class="btn" data-act="deckCode" data-id="${esc(id)}">デッキコードを送る</button>
       </div>
-      <p class="hint">カードをタップすると、効果を見られます。${isPreset ? "" : "そこから「代表カード」（一覧に出る絵）も選べます。"}</p>
+      <p class="hint">押すと効果を見られます。${isPreset ? "" : "代表カード（一覧に出る絵）もそこで選べます。"}</p>
       ${this.stripsHTML(d.cards, "deckDetail", d)}
       ${this.wantHTML(d, false)}
       ${this.codeHTML(d)}
@@ -370,7 +370,7 @@ const Decks = {
     return `<div class="dmodal" data-act="deckCodeClose">
       <div class="dmodal-in codebox" role="dialog" aria-label="デッキコード" data-act="noop">
         <b class="dm-name">デッキコード</b>
-        <p class="hint">このコードを友達に送ると、「デッキコードから作る」で同じデッキを作れます。${this.wantCount(d) ? "まだ持っていないカードも含めた、完成形のデッキのコードです。" : ""}</p>
+        <p class="hint">友達に送ると、同じデッキを作れます。${this.wantCount(d) ? "持っていないカードも含みます。" : ""}</p>
         <textarea class="otxt codetxt" id="deck-code-out" rows="4" readonly>${esc(code)}</textarea>
         <div class="pre-btns">
           ${canShare ? `<button type="button" class="btn primary" data-act="deckCodeShare">LINE などで送る</button>` : ""}

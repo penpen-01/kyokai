@@ -393,7 +393,7 @@ const Account = {
     const back = this.iconFrom === "options" ? "options" : "optBack";
     openOverlay(`<div class="panel wide">
       <div class="topbar"><button type="button" class="btn sm" data-act="${back}">← 戻る</button><b>アイコン</b></div>
-      <p class="lead small">対戦で顔として表示されます。持っているキャラカードの絵から選べます（${list.length} / ${total}種）。カードを集めるほど増えます。</p>
+      <p class="lead small">持っているキャラの絵から選べます（${list.length} / ${total}種）。</p>
       <div class="iconpick">
         <button type="button" class="iconopt auto ${cur ? "" : "on"}" data-act="iconSet" data-id="" aria-label="おまかせ"><span class="iface">${DEFAULT_AVATAR_HTML}</span><small>おまかせ</small></button>
         ${list.map(c => `<button type="button" class="iconopt r-${c.rarity} ${cur === c.id ? "on" : ""}" data-act="iconSet" data-id="${esc(c.id)}" aria-label="${esc(c.name)}"><span class="iface">${iconImgHTML(c.id)}</span><small>${esc(c.name)}</small></button>`).join("")}

@@ -189,11 +189,11 @@ const Quest = {
       let n = 0; list.forEach(([kk, LL]) => LL.forEach(x => { if (this.done(kk, x) && !this.got(kk, x)) n++; })); if (k === "beginner" && this.beginnerDone()) n++; return n ? `<span class="navbadge">${n}</span>` : ""; };
     let body = "";
     if (this.tab === "guide") body = this.guideHTML();
-    else if (this.tab === "daily") body = `<p class="hint">毎日3つ、新しいクエストが届きます（日付が変わると入れ替わります。受け取っていない報酬も消えます）。</p><ul class="qlist">${this.daily().map(x => this.rowHTML("d", x)).join("")}</ul>`;
+    else if (this.tab === "daily") body = `<p class="hint">毎日3つ。日付が変わると入れ替わります（受け取っていない報酬も消えます）。</p><ul class="qlist">${this.daily().map(x => this.rowHTML("d", x)).join("")}</ul>`;
     else if (this.tab === "limited") body = `<p class="hint">期間中だけのクエストです。</p><ul class="qlist">${L.map(x => this.rowHTML("l", x)).join("")}</ul>`;
     else {
       const all = this.beginnerDone(), gifts = this.gifts();
-      body = `<p class="hint">はじめての人へ。全部クリアすると、3つの世界のデッキから好きな1つ（レジェンド入り・30枚）がもらえます。</p>
+      body = `<p class="hint">全部クリアすると、好きな世界のデッキ（レジェンド入り）が1つもらえます。</p>
         <ul class="qlist">${this.begin().map(x => this.rowHTML("b", x)).join("")}</ul>
         <div class="q-gift ${all ? "ready" : ""}">
           <h3>全部クリアの贈り物：デッキを1つ選ぶ</h3>

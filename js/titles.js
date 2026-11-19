@@ -233,7 +233,7 @@ const Profile = {
   },
   stampHTML() {
     const set = Stamps.set(), own = Stamps.ownedList();
-    return `<p class="hint">対戦に持っていくスタンプを、${STAMP_MAX}個まで選びます（押すと入れたり外したりできます）。対戦中は、自分の情報欄の吹き出しのボタンから送れます。</p>
+    return `<p class="hint">対戦に持っていくスタンプを${STAMP_MAX}個まで選びます。</p>
       <p class="pf-sub">持っていく（${set.length} / ${STAMP_MAX}）</p>
       <div class="stamp-grid">${set.map(id => STAMPS.find(s => s.id === id)).filter(Boolean).map(s => `<button type="button" class="stamp-item on ${s.art ? "art" : ""}" data-act="stampPick" data-id="${esc(s.id)}">${Stamps.html(s)}</button>`).join("")}</div>
       <p class="pf-sub">持っているスタンプ（${own.length}）</p>
