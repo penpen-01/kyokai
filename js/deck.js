@@ -299,10 +299,16 @@ const Decks = {
   },
   /* 並び替えたあとの順番を保存する（同じタブのデッキだけを、画面の並びのとおりにする） */
   saveOrder(ids) {
-    const list = this.mine(), sample = this.listTab === "sample";
-    const moved = ids.map(id => list.find(d => d.id === id)).filter(Boolean);
+    // 前は「サンプルかどうか」だけで同じタブとみなしていたので、マイデッキを並び替えると限定構築のデッキの場所にも
+    // マイデッキが入り、限定構築のデッキが消えて、マイデッキが2つになっていた（2026-11-20 オーナー報告）。
+    // 今は、タブの種類（mine / world / sample）で同じものだけを並べ替え、数が合わないときは何もしない
+    const list = this.mine(), tab = this.listTab || "mine";
+    const same = list.filter(d => this.kindOf(d) === tab);
+    const moved = ids.map(id => same.find(d => d.id === id)).filter(Boolean);
+    if (moved.length !== same.length || new Set(moved.map(d => d.id)).size !== moved.length) return;
     let k = 0;
-    const next = list.map(d => (!!d.free === sample ? moved[k++] || d : d));
+    const next = list.map(d => (this.kindOf(d) === tab ? moved[k++] : d));
+    if (next.length !== list.length || new Set(next.map(d => d.id)).size !== next.length) return;
     if (!this.saveMine(next)) toast("保存できませんでした（サーバーに接続できていません）");
   },
 
