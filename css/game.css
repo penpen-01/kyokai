@@ -3032,3 +3032,43 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .ar-rw-row.r1{border-color:#e8c36a;background:linear-gradient(90deg,rgba(232,195,106,.18),rgba(255,255,255,.03))}
 .ar-rw-row.r2{border-color:#c9d1dc}.ar-rw-row.r3{border-color:#c98b5a}
 .ar-rwline{font-size:12px;margin:6px 0 10px;line-height:1.6}.ar-rwline b{color:var(--gold,#e8c36a);margin-right:8px}.ar-rwline small{display:block;opacity:.65;font-size:11px}
+
+/* ===== オンラインで遊ぶ（2026-11-20 作り直し） ===== */
+.hub .cs-deck{margin-bottom:12px}
+.hub-hero{position:relative;display:flex;align-items:center;width:100%;min-height:118px;padding:14px 16px;border-radius:16px;overflow:hidden;text-align:left;color:inherit;cursor:pointer;
+  border:1px solid rgba(232,195,106,.45);background:linear-gradient(90deg,#0d0f18 35%,rgba(13,15,24,.2)),#141826;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.hub-hero-art{position:absolute;inset:0 0 0 40%;background:url(../ui/arena-door.webp) 60% 22%/110% auto no-repeat;opacity:.55;-webkit-mask:linear-gradient(90deg,transparent,#000 45%);mask:linear-gradient(90deg,transparent,#000 45%)}
+.hub-hero-txt{position:relative;display:flex;flex-direction:column;gap:3px;flex:1}
+.hub-hero-txt b{font-size:22px;letter-spacing:.04em;font-family:var(--title-font,inherit)}
+.hub-hero-txt small{font-size:12px;opacity:.75}
+.hub-hero-txt em{font-style:normal;font-size:13px;font-weight:700;margin-top:4px;color:#e8c36a}
+.hub-hero .lvl-go{position:relative}
+.hub-hero.live{border-color:#e8c36a;box-shadow:0 0 0 1px rgba(232,195,106,.4),0 6px 24px rgba(232,195,106,.18)}
+.hub-hero .ar-live{display:inline-block;font-style:normal;background:#c0392b;color:#fff;font-size:11px;padding:1px 7px;border-radius:99px;margin-right:6px;vertical-align:1px}
+.hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hub-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px 14px;border-radius:16px;color:inherit;cursor:pointer;
+  border:1px solid rgba(120,160,255,.35);background:radial-gradient(120% 90% at 50% 0%,rgba(90,130,230,.18),rgba(13,15,24,.9) 70%),#121624}
+.hub-btn b{font-size:16px}.hub-btn small{font-size:11px;opacity:.7}
+.hub-ic{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(120,160,255,.5);color:#9cb8ff;margin-bottom:4px}
+.hub-ic svg{width:26px;height:26px}
+.hub-btn:active,.hub-hero:active{transform:scale(.98)}
+.hub-rules{display:flex;flex-direction:column;gap:8px}
+.hub-rule{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;border-radius:12px;text-align:left;color:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+.hub-rule b{font-size:15px}.hub-rule small{font-size:12px;opacity:.7}
+.hub-rule.on{border-color:#e8c36a;background:linear-gradient(90deg,rgba(232,195,106,.16),rgba(255,255,255,.03))}
+.hub-rule.on b{color:#e8c36a}
+.hub-go{width:100%;margin-top:16px;min-height:50px;font-size:16px}
+.hub-code{display:block;width:100%;text-align:center;font-size:34px;letter-spacing:.35em;padding:14px 0 14px .35em;margin-top:8px}
+
+/* 一人で遊ぶ：CPU戦・選定戦は大きく、ほかは2列の小さいタイル（2026-11-20） */
+.solo-sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.solo-sub .lvl{min-height:96px;padding:12px}
+.solo-sub .lvl .lvl-head b{font-size:16px}
+.solo-sub .lvl .lvl-desc{font-size:11px}
+.solo-sub .lvl .lvl-go{display:none}
+.cs-note{text-align:center;font-size:11px;margin-top:8px}
+.battlebtn b{font-size:clamp(15px,4.9vw,21px);letter-spacing:.02em}
+.solo-sub .lvl-head{flex-direction:column;align-items:flex-start;gap:2px}
+.solo-sub .lvl-head b{white-space:nowrap;font-size:15px}
+.solo-sub .lvl-head .ptag{margin:0}
+.solo-sub .lvl-body{min-width:0}

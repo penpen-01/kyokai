@@ -2266,10 +2266,10 @@ function showStart() {
     </div>
     <div class="battles">
       <button type="button" class="battlebtn cpu" data-act="solo">
-        <span class="bicon">${HOME_ICON.cpu}</span><b>一人で対戦</b><small>CPU戦・練習・チュートリアルなど</small>
+        <span class="bicon">${HOME_ICON.cpu}</span><b>一人で遊ぶ</b><small>CPU戦・選定戦・練習</small>
       </button>
       ${DATA_INFO.draft ? "" : `<button type="button" class="battlebtn online" data-act="online">
-        <span class="bicon">${HOME_ICON.online}</span><b>友達と対戦</b><small>合言葉で部屋に入る</small>
+        <span class="bicon">${HOME_ICON.online}</span><b>オンラインで遊ぶ</b><small>アリーナ・友達と対戦</small>
       </button>`}
     </div>
     <nav class="homenav" aria-label="メニュー">
@@ -2678,12 +2678,12 @@ function showCpuSelect() {
         <span class="lvl-body">
           <span class="lvl-head"><b>${v.label}</b><i class="lvl-stars" aria-label="難しさ${stars[k]}">${"★".repeat(stars[k])}<s>${"★".repeat(3 - stars[k])}</s></i></span>
           <span class="lvl-desc">${v.desc}</span>
-          ${k === "hard" ? `<span class="lvl-boss">勝つと、まれに<b>隠しボス</b>が現れる。倒すとボスの<b>限定レジェンド</b>が手に入る</span>` : k === "ex" ? (bossExOn() ? `<span class="lvl-boss">勝つと、まれに<b>冥府の剣鬼</b>が現れる。倒すと冥府の<b>限定レジェンド</b>が手に入る</span>` : `<span class="lvl-boss">超級の隠しボスは近日登場</span>`) : ""}
+          ${k === "hard" ? `<span class="lvl-boss">まれに<b>隠しボス</b>が現れる</span>` : k === "ex" ? (bossExOn() ? `<span class="lvl-boss">まれに<b>冥府の剣鬼</b>が現れる</span>` : "") : ""}
           <span class="lvl-foot"><em class="lvl-g">勝利で <b>${CONFIG[REWARD_KEY[k]]}</b>G</em>${streakTag(k)}</span>
         </span>
         <span class="lvl-go" aria-hidden="true">›</span>
       </button>`).join("")}</div>
-    <div class="callout"><b>報酬のきまり</b>負けたときは0Gです。${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると、2連勝目から報酬が${CONFIG.STREAK_STEP}%ずつ増えます（最大${CONFIG.STREAK_MAX}%）。負けるか、途中でやめると0に戻ります。` : ""}${Account.status === "free" || Account.status === "none" ? "（今の状態では、Gは保存されません）" : ""}</div>
+    <p class="hint cs-note">${CONFIG.STREAK_STEP && CONFIG.STREAK_MAX ? `同じ強さで連勝すると報酬が${CONFIG.STREAK_STEP}%ずつ増える（最大${CONFIG.STREAK_MAX}%）。` : ""}${Account.status === "free" || Account.status === "none" ? "今の状態では、Gは保存されません。" : ""}</p>
   </div>`, "start", true);
 }
 
@@ -2886,15 +2886,17 @@ function showSolo() {
       <span class="lvl-go" aria-hidden="true">${opts.off ? "" : "›"}</span></button>`;
   const art = id => (DEF[id] && DEF[id].art) || "";
   openOverlay(`<div class="panel">
-    ${Decks.topbar("一人で対戦", "back")}
-    <div class="lvls">
-      ${tile("start", "CPU戦", "初級・中級・上級の CPU と戦う。勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
-      ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "限定構築（30枚すべて同じ世界のカード）のデッキ同士で戦う。勝つとGがもらえる", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
-      ${typeof Sentei !== "undefined" && Sentei.on() ? tile("senOpen", "選定戦", `3枚ずつのセットを選んでその場でデッキを作り、${SEN_WIN}勝を目指す${Sentei.beta() ? "（β版：無料・報酬なし）" : `（入場料${Sentei.fee()}G）`}`, { art: art("f2-tamamo"), cls: "m-sen", tag: Sentei.run() ? "挑戦中" : !CONFIG.SEN_ON ? "運営のみ" : Sentei.beta() ? "β版" : "" }) : ""}
-      ${tile("practice", "練習対戦", "自分で作ったデッキを CPU に使わせて戦う（Gと連勝はなし）", { cls: "m-prac" })}
-      ${TUTORIAL_OPEN ? tile("tutorial", "チュートリアル", `遊び方を、実際に1戦しながら覚える（何度でも遊べる）${Tut.done() ? "" : `。初めてクリアするとパック券${TUT_REWARD.tickets}枚${TUT_REWARD.gold ? `と${TUT_REWARD.gold}G` : ""}`}`, { tag: Tut.done() ? "クリア済み" : "報酬あり", cls: "m-tut", art: art("squire") }) : ""}
+    ${Decks.topbar("一人で遊ぶ", "back")}
+    <div class="lvls solo-main">
+      ${tile("start", "CPU戦", "勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
+      ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "1つの世界だけのデッキで戦う", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
+      ${typeof Sentei !== "undefined" && Sentei.on() ? tile("senOpen", "選定戦", `その場でデッキを作って${SEN_WIN}勝を目指す${Sentei.beta() ? "" : `（入場料${Sentei.fee()}G）`}`, { art: art("f2-tamamo"), cls: "m-sen", tag: Sentei.run() ? "挑戦中" : !CONFIG.SEN_ON ? "運営のみ" : Sentei.beta() ? "β版" : "" }) : ""}
+    </div>
+    <div class="lvls solo-sub">
+      ${tile("practice", "練習対戦", "CPU に好きなデッキを使わせる", { cls: "m-prac", art: art("x-rush") })}
+      ${TUTORIAL_OPEN ? tile("tutorial", "チュートリアル", "1戦しながら遊び方を覚える", { tag: Tut.done() ? "クリア済み" : "報酬あり", cls: "m-tut", art: art("squire") }) : ""}
       ${(() => { const g = gatePacks(), all = gatePacks(true);
-        return tile("gate", "パック開放戦", "パックごとに決められたルールのもとで勝つと、新しいパックが開く",
+        return tile("gate", "パック開放戦", "勝つと新しいパックが開く",
           { off: !g.length, tag: !all.length ? "第2弾から" : !g.length ? "すべて開放ずみ" : `あと${g.length}つ`, cls: g.length ? "m-gate" : "m-off", art: g.length ? gateArt(g[0]) : "" }); })()}
     </div>
   </div>`, "start", true);

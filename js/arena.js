@@ -72,8 +72,12 @@ const Arena = {
   lobbyHTML() {
     if (!ARENA.on) return "";
     const c = this.current(), n = this.next();
-    const line = c && !c.test ? `<b class="ar-live">開催中</b> ${ARENA_RULES[c.rule].name}（${this.hm(c.end)}まで）` : n ? `次は ${this.dayLabel(n.start)} ${this.hm(n.start)}〜 ${ARENA_RULES[n.rule].name}` : "開催の予定はありません";
-    return `<div class="obox ar-box"><h3>アリーナ <i class="beta-tag">β</i></h3><p class="lead small">決まった時間だけ開く、ランダム対戦。${line}</p><button type="button" class="btn ${c && !c.test ? "primary" : ""}" data-act="arenaOpen">アリーナへ</button></div>`;
+    const live = c && !c.test;
+    const line = live ? `${ARENA_RULES[c.rule].name}・${this.hm(c.end)}まで` : n ? `次は ${this.dayLabel(n.start)} ${this.hm(n.start)}〜・${ARENA_RULES[n.rule].name}` : "開催の予定はありません";
+    return `<button type="button" class="hub-hero ar-hero ${live ? "live" : ""}" data-act="arenaOpen">
+      <span class="hub-hero-art" aria-hidden="true"></span>
+      <span class="hub-hero-txt"><b>アリーナ <i class="beta-tag">β</i></b><small>決まった時間のランダム対戦</small><em>${live ? `<i class="ar-live">開催中</i>` : ""}${line}</em></span>
+      <span class="lvl-go" aria-hidden="true">›</span></button>`;
   },
   show(msg) {
     const now = Date.now(), c = this.current(now), up = this.sessions(now).filter(x => x.end > now).slice(0, 8);

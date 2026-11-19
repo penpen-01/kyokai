@@ -10,6 +10,11 @@ const ROOM_KEY = "kyokai-room";
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 見間違えやすい O/0, I/1 は使わない
 const SEND_TIMEOUT = 10000;
 const TURN_LIMIT_KEY = "kyokai-turn-limit";
+/* オンラインの画面のアイコン（線画） */
+const HUB_IC = {
+  create: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/><path d="M12 7.5v3M10.5 9h3"/></svg>`,
+  join: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="3.5"/><path d="M11.5 12H21M18 12v3M15 12v2"/></svg>`
+};
 const TURN_LIMITS = [0, 60, 90, 120];   // 1ターンの持ち時間（秒）。0＝なし
 const MULL_LIMIT = 30;                  // 最初の手札の引き直しを決める時間（秒）
 const TURN_GRACE = 3;                  // 「あなたのターン」などの演出の分だけ、おまけで足す（表示は持ち時間を超えない）
@@ -39,40 +44,52 @@ const Online = {
   oppUid() { return this.room ? (this.role === "host" ? this.room.guest : this.room.host) : null; },
 
   /* ---------- 画面 ---------- */
+  /* オンラインで遊ぶ：アリーナと、友達と対戦（部屋を作る／合言葉で入る）。説明は最小限（オーナー 11-20） */
   showLobby(msg) {
-    const name = playerName("");
-    openOverlay(`<div class="panel">
-      <h2 class="title sm">友達と対戦</h2>
-      <p class="lead small">片方が部屋を作り、表示された合言葉をもう片方が入力すると対戦が始まります。</p>
-      <div class="obox">
-        <div class="ofield">
-          <label for="onl-name">あなたの名前</label>
-          <input class="otxt" id="onl-name" maxlength="10" placeholder="例：見習いプレイヤー" value="${esc(name)}" autocomplete="nickname">
-        </div>
+    const deck = Decks.selected(), key = deck ? Decks.keyCard(deck) : null;
+    openOverlay(`<div class="panel hub">
+      ${Decks.topbar("オンラインで遊ぶ", "onlBack")}
+      <div class="cs-deck">
+        <span class="cs-deck-art" ${key && key.art ? `style="background-image:url('${esc(key.art)}')"` : ""}></span>
+        <span class="cs-deck-txt"><small>使うデッキ</small><b>${esc(deck ? deck.name : "未選択")}</b></span>
+        <button type="button" class="btn sm" data-act="decks">変更</button>
       </div>
       ${typeof Arena !== "undefined" ? Arena.lobbyHTML() : ""}
-      <div class="obox">
-        <h3>部屋を作る</h3>
-        <label class="ownchk"><input type="checkbox" id="onl-world" ${store.get(WORLD_RULE_KEY) === "1" ? "checked" : ""}> 世界限定ルール（2人とも、30枚すべて同じ世界のカードのデッキで戦う）</label>
-        ${typeof Sentei !== "undefined" && Sentei.on() ? `<label class="ownchk"><input type="checkbox" id="onl-sen"> 選定戦ルール${Sentei.beta() ? "（β版・報酬なし）" : ""}（デッキは持ち込まない。2人で3枚ずつのセットを取り合って、その場で30枚のデッキを作る）</label>` : ""}
-        <div class="ofield"><label for="onl-tl">1ターンの持ち時間（過ぎたら自動でターン終了）</label>
-          <select class="otxt" id="onl-tl">${TURN_LIMITS.map(v => `<option value="${v}" ${v === this.prefLimit() ? "selected" : ""}>${v ? v + "秒" : "なし（時間制限なし）"}</option>`).join("")}</select></div>
-        <button type="button" class="btn primary" data-act="onlCreate">部屋を作って合言葉を出す</button>
-      </div>
-      <div class="obox">
-        <h3>友達の部屋に入る</h3>
-        <div class="ofield">
-          <label for="onl-code">合言葉（4文字）</label>
-          <div class="joinrow">
-            <input class="otxt code" id="onl-code" placeholder="ABCD" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go">
-            <button type="button" class="btn primary" data-act="onlJoin">参加する</button>
-          </div>
-        </div>
+      <h3 class="sec">友達と対戦</h3>
+      <div class="hub-grid">
+        <button type="button" class="hub-btn" data-act="onlCreateOpen"><span class="hub-ic" aria-hidden="true">${HUB_IC.create}</span><b>部屋を作る</b><small>合言葉を友達に伝える</small></button>
+        <button type="button" class="hub-btn" data-act="onlJoinOpen"><span class="hub-ic" aria-hidden="true">${HUB_IC.join}</span><b>合言葉で入る</b><small>友達の部屋に参加</small></button>
       </div>
       <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
-      <button type="button" class="btn" data-act="onlBack">戻る</button>
-      <p class="datainfo">2人とも、カードデータが同じ（最新）である必要があります。合わないときは両方ともページを開き直してください。</p>
     </div>`, "lobby", true);
+  },
+  /* 部屋を作る：ルールと持ち時間を選ぶ */
+  showCreate(msg) {
+    const sen = typeof Sentei !== "undefined" && Sentei.on();
+    const cur = this.ruleSel || (store.get(WORLD_RULE_KEY) === "1" ? "world" : "std");
+    const R = [["std", "通常", "いつものデッキで戦う"], ["world", "世界限定", "2人とも、1つの世界だけのデッキで戦う"], ...(sen ? [["sen", `選定戦${Sentei.beta() ? "β" : ""}`, "デッキは持ち込まず、カードを取り合ってその場で作る"]] : [])];
+    const sel = R.find(r => r[0] === cur) ? cur : "std", tl = this.prefLimit();
+    openOverlay(`<div class="panel hub">
+      ${Decks.topbar("部屋を作る", "online")}
+      <h3 class="sec">ルール</h3>
+      <div class="hub-rules">${R.map(([k, n, d]) => `<button type="button" class="hub-rule ${k === sel ? "on" : ""}" data-act="onlRule" data-v="${k}" aria-pressed="${k === sel}"><b>${n}</b><small>${d}</small></button>`).join("")}</div>
+      <input type="checkbox" id="onl-world" hidden ${sel === "world" ? "checked" : ""}><input type="checkbox" id="onl-sen" hidden ${sel === "sen" ? "checked" : ""}>
+      <h3 class="sec">1ターンの持ち時間</h3>
+      <div class="seg wide">${TURN_LIMITS.map(v => `<button type="button" data-act="onlTl" data-v="${v}" aria-pressed="${v === tl}">${v ? v + "秒" : "なし"}</button>`).join("")}</div>
+      <input type="hidden" id="onl-tl" value="${tl}">
+      <button type="button" class="btn primary hub-go" data-act="onlCreate">部屋を作る</button>
+      <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
+    </div>`, "lobby", true);
+  },
+  showJoin(msg) {
+    openOverlay(`<div class="panel hub">
+      ${Decks.topbar("合言葉で入る", "online")}
+      <p class="lead small">友達から聞いた4文字を入れてください。</p>
+      <input class="otxt code hub-code" id="onl-code" placeholder="ABCD" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" enterkeyhint="go" maxlength="8">
+      <button type="button" class="btn primary hub-go" data-act="onlJoin">参加する</button>
+      <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
+    </div>`, "lobby", true);
+    setTimeout(() => { const el = $("#onl-code"); if (el) el.focus(); }, 50);
   },
 
   /* 合言葉の欄：全角・小文字・記号を取り除いて、半角の大文字4文字に */
@@ -122,6 +139,10 @@ const Online = {
       case "onlDeck": this.showDeckPick(); break;
       case "onlDeckSet": this.setDeck(el && el.dataset.id); break;
       case "onlDeckBack": if (S && S.over) showResult(myResult()); else $("#overlay").hidden = true; break;
+      case "onlCreateOpen": this.showCreate(); break;
+      case "onlJoinOpen": this.showJoin(); break;
+      case "onlRule": this.ruleSel = el.dataset.v; this.showCreate(); break;
+      case "onlTl": { const v = +el.dataset.v; store.set(TURN_LIMIT_KEY, v); const i = $("#onl-tl"); if (i) i.value = v; document.querySelectorAll('[data-act="onlTl"]').forEach(b => b.setAttribute("aria-pressed", b === el)); break; }
       case "onlCreate": this.create(); break;
       case "onlJoin": this.join(); break;
       case "onlBack": showStart(); break;
