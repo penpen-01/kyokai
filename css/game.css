@@ -3198,8 +3198,13 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .gnav-bar .navbtn.on::after{content:"";position:absolute;bottom:-4px;left:30%;right:30%;height:2px;border-radius:2px;background:var(--gold)}
 .gnav-bar .gback svg{stroke:#cfd6ff}
 .gnav-bar .gback{border-right:1px solid rgba(255,255,255,.08);border-radius:0}
-.overlay.gnav-on{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-.overlay.gfab-on{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+.overlay.gnav-on{padding-bottom:0}
+/* 下のメニューの分の余白は、中身の最後に足す（iPhone の Safari は、スクロールする箱の下の余白を無視することがあり、一番下まで行けなかった） */
+.overlay.gnav-on .panel::after{content:"";display:block;flex:none;height:calc(84px + env(safe-area-inset-bottom,0px))}
+.overlay.gfab-on .panel::after{height:calc(140px + env(safe-area-inset-bottom,0px))}
+.overlay.gnav-on:has(.disbar) .panel::after{height:calc(200px + env(safe-area-inset-bottom,0px))}
+.overlay.gnav-on:has(.dl-tabs) .panel::after{height:calc(140px + env(safe-area-inset-bottom,0px))}
+.overlay.gnav-on .panel.pkshop::after{display:none}
 /* 下に戻るボタンがあるので、上の帯の「戻る」は消す（見出しだけ残す） */
 .overlay.gnav-on .topbar > .btn.sm:first-child{display:none}
 .gfab{all:unset;box-sizing:border-box;cursor:pointer;position:fixed;z-index:46;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));
@@ -3239,7 +3244,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .overlay.gnav-on .shophub .sh-sticky{background:transparent}
 /* 分解などの下に固定した操作の帯は、下のメニューの上に出す */
 .overlay.gnav-on .disbar{bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:44}
-.overlay.gnav-on:has(.disbar){padding-bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+
 /* デッキボタン：長押しで動かせる */
 .gfab{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .gfab.dragging{transform:scale(1.08);box-shadow:0 12px 28px rgba(0,0,0,.6),0 0 0 3px rgba(232,195,106,.6);opacity:.95}
@@ -3247,7 +3252,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 /* デッキ一覧：タブは下のメニューのすぐ上に（指が届く）。横に払っても切り替わる */
 .overlay.gnav-on .dl-tabs{position:fixed;z-index:44;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(72px + env(safe-area-inset-bottom,0px));
   margin:0 auto;max-width:520px;background:rgba(14,16,30,.96);box-shadow:0 6px 18px rgba(0,0,0,.5);border-radius:12px}
-.overlay.gnav-on:has(.dl-tabs){padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+
 .overlay.gnav-on:has(.dl-tabs) .panel{touch-action:pan-y}
 /* 一人で遊ぶ：見出しの下を広く使う */
 .overlay.gnav-on .solo-main .lvl{min-height:118px}
@@ -3266,3 +3271,12 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .kp-swapone.on{border-color:#e8c36a;background:rgba(232,195,106,.14)}
 .kp-swapone .kp-mini{display:block}.kp-swapone .kp-man{display:block;width:60px;height:60px;cursor:pointer}
 .kp-rnd{width:60px;height:60px;border-radius:12px;display:grid;place-items:center;font-size:30px;font-weight:800;color:#e8c36a;border:1px dashed rgba(232,195,106,.6)}
+
+/* ショップ・スキン：見出しの行はなくして、魔石は店員の右上に（その分、売り場を上に詰める） */
+.overlay.gnav-on .sh-sticky{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.overlay.gnav-on .shophub .sh-sticky{padding-top:0}
+.overlay.gnav-on .sh-sticky > .topbar{position:absolute;z-index:5;top:calc(8px + env(safe-area-inset-top,0px));right:0;left:auto;min-height:0;padding:0}
+.overlay.gnav-on .sh-sticky > .topbar > b{display:none}
+.overlay.gnav-on .shophub .sh-sticky > .topbar{top:calc(10px + env(safe-area-inset-top,0px));right:4px}
+.overlay.gnav-on .shophub .sh-sticky > .topbar::before{display:none}
+.overlay.gnav-on .sh-sticky .kp-mini .kp-bubble{margin-top:34px}
