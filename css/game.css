@@ -3313,3 +3313,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .goldtag > .cur-ic,.stonetag > .cur-ic{position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:34px;height:34px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
 .hb-left .goldtag,.hb-left .stonetag{min-width:118px;font-size:15px;padding:0 12px 0 32px}
 .topbar .goldtag,.topbar .stonetag{font-size:15px;padding:0 12px 0 32px}
+/* ホームの G・魔石：小さめにして左へ寄せる */
+.hb-left{padding-left:4px;margin-left:-6px}
+.hb-left .goldtag,.hb-left .stonetag{height:24px;min-width:92px;font-size:12.5px;padding:0 9px 0 25px;margin-left:6px;border-radius:6px}
+.hb-left .goldtag > .cur-ic,.hb-left .stonetag > .cur-ic{width:27px;height:27px;left:-8px}
