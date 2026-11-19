@@ -20,15 +20,15 @@ const Arena = {
   at(date, hm) { const [y, m, d] = date.split("-").map(Number), [h, mi] = hm.split(":").map(Number); return Date.UTC(y, m - 1, d, h, mi) - JST; },
   ymd(ms) { const t = new Date(ms + JST); return `${t.getUTCFullYear()}-${String(t.getUTCMonth() + 1).padStart(2, "0")}-${String(t.getUTCDate()).padStart(2, "0")}`; },
   /* 今日の前後の回の一覧（開始の早い順） */
-  sessions(now = Date.now(), days = 7) {
+  sessions(now = Date.now(), days = 7, from = -1, all = false) {
     const A = ARENA, L = [];
     if (!A.on) return L;
-    for (let i = -1; i <= days; i++) {
+    for (let i = from; i <= days; i++) {
       const ms = now + i * 86400e3, date = this.ymd(ms), dow = new Date(ms + JST).getUTCDay(), rule = A.days[dow];
       if (rule) { const s = this.at(date, A.start); let e = this.at(date, A.end); if (e <= s) e += 86400e3; L.push({ sid: `${date.replace(/-/g, "")}-${A.start.replace(":", "")}`, start: s, end: e, rule }); }
     }
     A.extra.forEach(x => { const s = this.at(x.date, x.start); let e = this.at(x.date, x.end); if (e <= s) e += 86400e3; L.push({ sid: `${x.date.replace(/-/g, "")}-${x.start.replace(":", "")}x`, start: s, end: e, rule: x.rule, extra: true }); });
-    return L.filter(x => x.end > now - 3600e3).sort((a, b) => a.start - b.start);
+    return all ? L.sort((a, b) => a.start - b.start) : L.filter(x => x.end > now - 3600e3).sort((a, b) => a.start - b.start);
   },
   current(now = Date.now()) {
     const c = this.sessions(now).find(x => x.start <= now && now < x.end);
@@ -36,6 +36,8 @@ const Arena = {
     if ((typeof adminOn === "function" && adminOn()) || (typeof Maint !== "undefined" && Maint.pass())) return { sid: "test-" + this.ymd(now).replace(/-/g, ""), start: now, end: now + 3600e3, rule: this.testRule || "std", test: true };   // 運営のテスト
     return null;
   },
+  /* 終わった回（新しい順。過去14日・最大8回） */
+  past(now = Date.now()) { return this.sessions(now, 0, -14, true).filter(x => x.end <= now && x.start >= this.at("2026-11-18", "00:00")).sort((a, b) => b.start - a.start).slice(0, 8); },
   /* 一般の回が開いているか（運営のテストは含まない）。開いている間、ホームの飾り棚が「アリーナの扉」になる */
   live(now = Date.now()) { return !!this.sessions(now).find(x => x.start <= now && now < x.end); },
   doorHTML() {
@@ -82,13 +84,29 @@ const Arena = {
           : `<button type="button" class="btn primary ar-go" data-act="arenaSearch">相手を探す</button>`}
         <span class="gl">ランキング（この回）</span><div id="ar-rank" class="ar-rank"><p class="hint">読み込み中…</p></div>`
         : `<p class="lead">いまは開いていません。</p>`}
+      ${this.pastHTML()}
       <span class="gl">開催の予定（日本時間）</span>
       <ul class="ar-list">${up.map(x => `<li class="${c && c.sid === x.sid ? "on" : ""}"><span>${this.dayLabel(x.start)} ${this.hm(x.start)}〜${this.hm(x.end)}</span><b>${ARENA_RULES[x.rule].name}</b></li>`).join("") || `<li><span>予定はありません</span></li>`}</ul>
       <p class="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
       <button type="button" class="btn" data-act="arenaClose">戻る</button>
     </div>`, "lobby", true);
     if (c) this.watchRank(c.sid);
+    this.loadPast();
     if (this.searching) this.paintWait();
+  },
+  /* これまでの結果：回を選ぶと、その回のランキングを読み込む */
+  pastHTML() {
+    const P = this.past(); if (!P.length) return "";
+    if (!this.pastSid || !P.find(x => x.sid === this.pastSid)) this.pastSid = P[0].sid;
+    return `<span class="gl">これまでの結果</span>
+      <div class="ar-past">${P.map(x => `<button type="button" class="btn sm ${x.sid === this.pastSid ? "primary" : ""}" data-act="arenaPast" data-v="${x.sid}">${this.dayLabel(x.start)} ${this.hm(x.start)}<small>${ARENA_RULES[x.rule].name}</small></button>`).join("")}</div>
+      <div id="ar-past-rank" class="ar-rank"><p class="hint">読み込み中…</p></div>`;
+  },
+  async loadPast() {
+    const sid = this.pastSid; if (!sid) return;
+    let v = null;
+    try { this.uid = await Net.init(); v = await Net.get(`arena/r/${sid}`); } catch (e) { return this.paintRank(null, true, "ar-past-rank"); }
+    if (sid === this.pastSid) this.paintRank(v, false, "ar-past-rank", "誰も対戦しませんでした。");
   },
   watchRank(sid) {
     if (this.rankSid === sid && this.rankOff) { this.paintRank(this.rankV); return; }
@@ -96,11 +114,11 @@ const Arena = {
     this.rankSid = sid;
     Net.init().then(uid => { this.uid = uid; this.rankOff = Net.on(`arena/r/${sid}`, v => { this.rankV = v; this.paintRank(v); }); }).catch(() => this.paintRank(null, true));
   },
-  paintRank(v, err) {
-    const el = document.getElementById("ar-rank"); if (!el) return;
+  paintRank(v, err, id = "ar-rank", none = "まだ誰も戦っていません。") {
+    const el = document.getElementById(id); if (!el) return;
     if (err) { el.innerHTML = `<p class="hint">ランキングを読み込めませんでした。</p>`; return; }
     const L = Object.entries(v || {}).map(([u, x]) => ({ u, ...x })).sort((a, b) => (b.pts || 0) - (a.pts || 0) || (b.w || 0) - (a.w || 0)).slice(0, 20);
-    el.innerHTML = L.length ? `<ol>${L.map((x, i) => `<li class="${x.u === this.uid ? "me" : ""}"><i>${i + 1}</i><b>${esc(x.name || "召喚士")}</b><span>${x.pts || 0}点</span><small>${x.w || 0}勝${x.l || 0}敗</small></li>`).join("")}</ol>` : `<p class="hint">まだ誰も戦っていません。</p>`;
+    el.innerHTML = L.length ? `<ol>${L.map((x, i) => `<li class="${x.u === this.uid ? "me" : ""}"><i>${i + 1}</i><b>${esc(x.name || "召喚士")}</b><span>${x.pts || 0}点</span><small>${x.w || 0}勝${x.l || 0}敗${x.d ? `${x.d}分` : ""}</small></li>`).join("")}</ol>` : `<p class="hint">${none}</p>`;
   },
   /* ルールに合うデッキ（選定戦はその場で作るので、メタ情報だけ） */
   deckFor(rule, fail) {
@@ -191,6 +209,11 @@ const Arena = {
       case "arenaDoor": this.openDoor(); return true;
       case "arenaStop": this.stop(); this.show(); return true;
       case "arenaClose": this.stop(); if (this.rankOff) { try { this.rankOff(); } catch (e) {} this.rankOff = null; this.rankSid = null; } Online.showLobby(); return true;
+      case "arenaPast":
+        this.pastSid = el.dataset.v;
+        document.querySelectorAll('[data-act="arenaPast"]').forEach(b => b.classList.toggle("primary", b === el));
+        { const r = document.getElementById("ar-past-rank"); if (r) r.innerHTML = `<p class="hint">読み込み中…</p>`; }
+        this.loadPast(); return true;
       case "arenaTestRule": this.testRule = el.dataset.v; this.stop(); this.show(); return true;
       case "arenaNext": Online.leave(); MODE = "cpu"; S = null; app.innerHTML = ""; this.search(); return true;
     }

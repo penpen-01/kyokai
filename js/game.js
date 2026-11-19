@@ -204,7 +204,8 @@ function draw(pi, silent) {
   }
   const id = p.deck.pop();
   if (p.hand.length >= CONFIG.HAND_MAX) {
-    if (!silent) { log(`${pname(pi)}の手札があふれ、${cname(id)}は捨て札へ。`); fx("reveal", id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); }
+    gyAdd(p, id);
+    if (!silent) { log(`${pname(pi)}の手札があふれ、${cname(id)}は墓地へ。`); fx("reveal", id, `reveal:${pi}:手札があふれて墓地へ行ったカード`); }
     return;
   }
   p.hand.push(id);
@@ -252,7 +253,7 @@ function resolveDig(pi, i) {
   const me = S.players[pi], k = Math.max(0, Math.min(D.ids.length - 1, +i || 0)), id = D.ids[k];
   S.dig = null;
   me.deck.unshift(...D.ids.filter((_, j) => j !== k));   // 残りは山札の下へ
-  if (me.hand.length >= CONFIG.HAND_MAX) { log(`手札がいっぱいで、${cname(id)}は捨て札へ。`); fx("reveal", id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); }
+  if (me.hand.length >= CONFIG.HAND_MAX) { gyAdd(me, id); log(`手札がいっぱいで、${cname(id)}は墓地へ。`); fx("reveal", id, `reveal:${pi}:手札があふれて墓地へ行ったカード`); }
   else { me.hand.push(id); log(`${pname(pi)}は山札から1枚を選んで手札に加えた。`, { pi, msg: `${pname(pi)}は${cname(id)}を選んで手札に加えた。` }); if (!SIM && S.phase === "play") fx("draw", String(pi), "draw"); }
   if (!SIM) render();
   return true;
@@ -496,7 +497,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   S.numBonus = grow && d.grow.num ? grow : 0;
   try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
   stat(pi, d.type === "spell" ? "spell" : "char");
-  if (d.type === "spell") { trigUnits(pi, "spell"); (p.used || (p.used = [])).push(id); p.lastG = id; }   // 使った魔法（墓地の画面で見せる）
+  if (d.type === "spell") { trigUnits(pi, "spell"); (p.used || (p.used = [])).push(id); gyAdd(p, id); }   // 使った魔法（墓地の画面で見せる）
   trigUnits(pi, "cardPlay", self, { card: id });
   // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
   p.hand.forEach((hid, i) => { const h = DEF[hid], k = h && h.shrink;
@@ -694,13 +695,17 @@ function spendGears(p, n) {
   p.gears = Math.max(0, (p.gears || 0) - n);
   if (!p.gears) { const i = p.hand.indexOf(GEAR_ID); if (i >= 0) handTake(p, i); }
 }
+/* 墓地の表示用の記録（倒されたキャラ・使った魔法・捨てたカードを、起きた順にまとめる）。
+   効果で使う p.grave（倒されたキャラ）・p.used（使った魔法）とは別。表示だけに使う */
+function gyAdd(p, id) { (p.gy || (p.gy = [])).push(id); p.lastG = id; }
+function gyDel(p, id) { if (!p.gy) return; const i = p.gy.lastIndexOf(id); if (i >= 0) p.gy.splice(i, 1); }
 /* 手札をランダムに1枚捨てる。重なった歯車に当たったら、歯車を1枚だけ失う */
 function discardRandom(q, pi) {
   const p = S.players[q];
   if (!p.hand.length) return;
   const i = Math.floor(Math.random() * p.hand.length);
   if (p.hand[i] === GEAR_ID) { spendGears(p, 1); log(`${pname(q)}は歯車を1枚捨て${q === pi ? "た" : "させられた"}（残り${p.gears || 0}枚）。`); return; }
-  const id = handTake(p, i);
+  const id = handTake(p, i); gyAdd(p, id);
   log(`${pname(q)}は${cname(id)}を捨て${q === pi ? "た" : "させられた"}。`);
   fx("reveal", id, `reveal:${q}:捨て${q === pi ? "た" : "させられた"}カード`);
 }
@@ -824,7 +829,7 @@ function effect(pi, e, targets, self) {
     case "recycle": {
       const g = me.grave || [];
       const pick = g.filter(id => DEF[id] && !DEF[id].token && (!e.world || DEF[id].world === e.world)).slice(-n);
-      pick.forEach(id => { g.splice(g.lastIndexOf(id), 1); me.deck.splice(Math.floor(Math.random() * (me.deck.length + 1)), 0, id); });
+      pick.forEach(id => { g.splice(g.lastIndexOf(id), 1); gyDel(me, id); me.deck.splice(Math.floor(Math.random() * (me.deck.length + 1)), 0, id); });
       S.recycled = pick.length;
       log(pick.length ? `倒された${pick.map(cname).join("・")}を山札に混ぜた。` : "山札に戻せるキャラがいなかった。");
       break;
@@ -867,7 +872,7 @@ function effect(pi, e, targets, self) {
       if (!cands.length) { log("条件に合うカードが山札になかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
       me.deck.splice(pick.i, 1);
-      if (me.hand.length >= CONFIG.HAND_MAX) { log(`手札がいっぱいで、${cname(pick.id)}は捨て札へ。`); fx("reveal", pick.id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); break; }
+      if (me.hand.length >= CONFIG.HAND_MAX) { gyAdd(me, pick.id); log(`手札がいっぱいで、${cname(pick.id)}は墓地へ。`); fx("reveal", pick.id, `reveal:${pi}:手札があふれて墓地へ行ったカード`); break; }
       me.hand.push(pick.id);
       log(`${pname(pi)}は山札からカードを1枚手札に加えた。`, { pi, msg: `${pname(pi)}は山札から${cname(pick.id)}を手札に加えた。` });
       break;
@@ -905,7 +910,7 @@ function effect(pi, e, targets, self) {
       const cands = g.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && !DEF[x.id].token && inCost(DEF[x.id], n, e));
       if (!cands.length) { log("復活できるキャラがいなかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
-      g.splice(pick.i, 1);
+      g.splice(pick.i, 1); gyDel(me, pick.id);
       addUnit(pi, pick.id);
       log(`${cname(pick.id)}が復活した！`);
       break;
@@ -946,7 +951,7 @@ function grant(u, e) {
   if (e.kw === "noattack") u.ready = false;
   fx(unitSel(u.uid), KEYWORDS[e.kw].label, "heal");
 }
-/* 場のキャラを手札（to="hand"）か山札（"deck"）へ。トークンは消える。手札があふれたら捨て札 */
+/* 場のキャラを手札（to="hand"）か山札（"deck"）へ。トークンは消える。手札があふれたら墓地 */
 function bounce(pi, u, to) {
   S.players[pi].field = S.players[pi].field.filter(x => x !== u);
   // 奪われたキャラは、元の持ち主の手札・山札に戻る（2026-11-04）
@@ -955,7 +960,7 @@ function bounce(pi, u, to) {
   fx(unitSel(u.uid), to === "hand" ? "手札へ" : "山札へ", `${to === "hand" ? "tohand" : "todeck"}:${pi}`);
   if (DEF[u.id] && DEF[u.id].token) { log(`${cname(u.id)}（トークン）は消えた。`); return; }
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
-  if (p.hand.length >= CONFIG.HAND_MAX) { log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は捨て札へ。`); fx("reveal", u.id, `reveal:${pi}:手札があふれて捨て札へ行ったカード`); return; }
+  if (p.hand.length >= CONFIG.HAND_MAX) { gyAdd(p, u.id); log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は墓地へ。`); fx("reveal", u.id, `reveal:${pi}:手札があふれて墓地へ行ったカード`); return; }
   p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
   S.bouncedNow = (S.bouncedNow || 0) + 1;   // 「戻せたら」の条件用
   // 場から手札に戻ったとき の効果（対象はランダム。戻す効果が続けて起きすぎないように3回まで）
@@ -1045,7 +1050,7 @@ function fireTrig(t) {
 function onDeath(pi, u) {
   stat(opp(pi), "kill"); stat(pi, "lost");
   const p = S.players[u.owner != null ? u.owner : pi];   // 奪われたキャラは元の持ち主の墓地へ
-  (p.grave || (p.grave = [])).push(u.id); p.lastG = u.id;   // この対戦で破壊された自分のキャラ（復活の効果で使う）
+  (p.grave || (p.grave = [])).push(u.id); gyAdd(p, u.id);   // この対戦で破壊された自分のキャラ（復活の効果で使う）
   queueTrig(pi, "death", u);
   trigUnits(pi, "allyDeath", u);
 }
@@ -2436,10 +2441,11 @@ function cardSourcesHTML(d) {
 }
 
 /* 墓地：倒されたキャラ（grave）と使った魔法（used）。中央の段に、いちばん上の1枚と枚数を出す */
-const graveOf = pi => { const p = S.players[pi]; return { chars: p.grave || [], spells: p.used || [] }; };
+/* 墓地に見せるカード（起きた順）。古い対戦の記録で gy がなければ、倒されたキャラ＋使った魔法 */
+const graveOf = pi => { const p = S.players[pi]; return p.gy ? p.gy : [...(p.grave || []), ...(p.used || [])]; };
 function graveBtnHTML(pi) {
-  const g = graveOf(pi), all = [...g.chars, ...g.spells], n = all.length;
-  const top = n ? DEF[S.players[pi].lastG || g.chars[g.chars.length - 1] || g.spells[g.spells.length - 1]] : null;
+  const all = graveOf(pi), n = all.length;
+  const top = n ? DEF[all[n - 1]] : null;
   return `<button type="button" class="grave ${pi === OP ? "op" : "me"}" data-act="grave" data-p="${pi}" aria-label="${pi === OP ? "相手" : "自分"}の墓地 ${n}枚">
     <span class="gv-top ${n ? "" : "empty"}" ${top && top.art ? `style="background-image:url('${esc(top.art)}')"` : ""}></span>
     <span class="gv-l"><small>${pi === OP ? "相手" : "自分"}の墓地</small><b>${n}</b></span></button>`;
@@ -2453,10 +2459,9 @@ function showGrave(pi) {
   const sec = (label, ids, none) => `<h3 class="sec">${label}<small class="hint">${ids.length}枚</small></h3>${ids.length ? `<div class="gv-grid">${ids.slice().reverse().map(cell).join("")}</div>` : `<p class="hint">${none}</p>`}`;
   openOverlay(`<div class="panel wide gvp">
     <div class="topbar"><button type="button" class="btn sm" data-act="back">← 戻る</button><b>墓地</b></div>
-    <div class="gv-tabs" role="tablist">${[OP, ME].map(x => `<button type="button" role="tab" data-act="grave" data-p="${x}" aria-selected="${x === t}">${x === OP ? "相手" : "自分"}（${graveOf(x).chars.length + graveOf(x).spells.length}）</button>`).join("")}</div>
-    ${sec("倒されたキャラ", g.chars, "まだいません")}
-    ${sec("使った魔法", g.spells, "まだありません")}
-    <p class="hint">新しい順に並んでいます。カードを押すと効果を見られます。</p>
+    <div class="gv-tabs" role="tablist">${[OP, ME].map(x => `<button type="button" role="tab" data-act="grave" data-p="${x}" aria-selected="${x === t}">${x === OP ? "相手" : "自分"}（${graveOf(x).length}）</button>`).join("")}</div>
+    ${sec("カード", g, "まだありません")}
+    <p class="hint">倒されたキャラ・使った魔法・捨てたカードが、新しい順に並んでいます。カードを押すと効果を見られます。</p>
   </div>`, "game");
 }
 /* ログの文の中のカード名を、押すと効果を見られる文字にする */

@@ -597,7 +597,7 @@ if (typeof document !== "undefined") document.addEventListener("click", e => {
 
 /* カードの見た目。unit を渡すと場のキャラの現在値を表示する */
 /* プレイヤーアイコン：キャラカードの絵を丸く切り抜く。顔が上の方にない絵だけ、切り抜く位置を個別に決める */
-const ICON_POS = { "x-rush": "50% 40%", garm: "50% 55%" };
+const ICON_POS = { "x-rush": "50% 40%", garm: "50% 55%", "k-ruu": "55% 33%" };
 /* アイコンを選んでいないとき（おまかせ）に出す、フードの召喚士の絵 */
 const DEFAULT_AVATAR_HTML = `<span class="iimg" style="background-image:url('ui/avatar-default.webp');background-size:cover;background-position:50% 30%"></span>`;
 function iconImgHTML(id) {

@@ -88,7 +88,7 @@ const Tut = {
         show: () => turnIs(3) && !!T.opUnit("st-recruit"), next: true, hl: () => unitSel("op", "st-recruit") },
       { say: "<b>魔法</b>「小さな火花」で、見習い兵に2ダメージ。<br>魔法は、カードを<b>相手の見習い兵の上までドラッグして離す</b>と使えます（カードをタップ→見習い兵をタップでもOK）。",
         show: () => turnIs(3), done: () => !T.opUnit("st-recruit"), allow: { play: "st-spark", to: "st-recruit" }, hl: () => T.me().hand.includes("st-spark") ? `${hand("st-spark")}, ${unitSel("op", "st-recruit")}` : unitSel("op", "st-recruit") },
-      { say: "魔法は使うとすぐ効果が出て、捨て札へ。<br>守護がいなくなったので、<b>見習い剣士</b>を<b>相手の顔までドラッグ</b>して攻撃しましょう（タップ→相手の顔でもOK）。",
+      { say: "魔法は使うとすぐ効果が出て、墓地へ。<br>守護がいなくなったので、<b>見習い剣士</b>を<b>相手の顔までドラッグ</b>して攻撃しましょう（タップ→相手の顔でもOK）。",
         show: () => turnIs(3) && !T.opUnit("st-recruit"), done: () => T.op().hp <= 7, allow: { attack: "squire", to: "player" }, hl: () => `${unitSel("me", "squire")}, ${face()}` },
       { say: "<b>攻撃力（左下の数字）</b>のぶん、相手の体力が減りました。<b>相手の体力を0にすれば勝ち</b>です。「<b>ターン終了</b>」。",
         show: () => turnIs(3) && T.op().hp <= 7, done: () => S.turn !== ME, allow: { end: true }, hl: () => end },
