@@ -12,6 +12,19 @@ const Packs = {
   last: null, // 直前に開けた結果 { pack, cards: [{id, isNew}] , flipped: [] }
 
   /* パックの表の絵。パックごとに art があればそれ、なければ第1弾の絵（Gemini：ui/pack-art.webp） */
+  /* 銀の袋のパック（上下のギザギザ・光の反射）。shop＝選ぶ画面、big＝開ける画面、mini＝10連の扇 */
+  foilHTML(p, cls = "", extra = "") {
+    const art = this.art(p), m = p.name.match(/^(第\S+)\s+(.+)$/), no = m ? m[1] : "", nm = m ? m[2] : p.name;
+    return `<span class="foil ${cls}">
+      <span class="foil-crimp t"></span>
+      <span class="foil-body ${art ? "has-art" : ""}" ${art ? `style="background-image:url('${esc(art)}')"` : ""}>
+        <span class="foil-logo"><small>境界の召喚士</small><b>${esc(nm)}</b>${no ? `<em>${esc(no)}</em>` : ""}</span>
+        ${extra}
+        <span class="foil-shine"></span>
+      </span>
+      <span class="foil-crimp b"></span>
+    </span>`;
+  },
   art(pack) { return pack.art || (pack.id === "pack1" ? "ui/pack-art.webp" : ""); },
 
   pool(pack) {
@@ -101,30 +114,26 @@ const Packs = {
       const pool = this.pool(p), cnt = r => pool.filter(c => c.rarity === r).length;
       const got = Account.status === "free" ? 0 : pool.filter(c => Account.owned(c.id) > 0).length;
       const ten = p.price * 10, t = title(p), art = this.art(p);
+      const tk = Account.tickets, srt = Account.srTickets;
       return `<section class="pk2 ${p.id === this.cur ? "on" : ""}" data-pk="${esc(p.id)}" aria-label="${esc(p.name)}">
-        <div class="pk2-art ${art ? "has-art" : ""}" ${art ? `style="background-image:url('${esc(art)}')"` : ""}>
-          <span class="pk2-title"><small>${esc(t.no)}</small><b>${esc(t.nm)}</b></span>
-          <span class="pk2-size">${p.size}枚入り</span>
-        </div>
+        <div class="pk2-stage">${this.foilHTML(p, "shop", `<span class="foil-size">${p.size}枚入り</span>`)}</div>
         <div class="pk2-meta">
-          ${Account.status === "free" ? "" : `<div class="pk2-got"><span>集めたカード <b>${got}</b>/${pool.length}種</span><i><s style="width:${pool.length ? Math.round(got / pool.length * 100) : 0}%"></s></i></div>`}
+          ${Account.status === "free" ? "" : `<div class="pk2-got"><span>集めたカード <b>${got}</b>/${pool.length}</span><i><s style="width:${pool.length ? Math.round(got / pool.length * 100) : 0}%"></s></i></div>`}
           <div class="pk2-rar">${RARITY_ORDER.map(r => `<span><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}</span>`).join("")}</div>
-          <p class="pk2-note">最後の1枚はレア以上</p>
         </div>
         <div class="pk-buy">
           <button type="button" class="pk-btn one" data-act="packOpen" data-id="${esc(p.id)}" ${Account.gold < p.price || !can ? "disabled" : ""}><small>1パック</small><b>${p.price}G</b></button>
           <button type="button" class="pk-btn ten" data-act="packOpen10" data-id="${esc(p.id)}" ${Account.gold < ten || !can ? "disabled" : ""}><small>10パック</small><b>${ten}G</b></button>
-          ${Account.srTickets > 0 ? `<button type="button" class="pk-btn tk sr" data-act="packOpenSR" data-id="${esc(p.id)}" ${can ? "" : "disabled"}><small>SR以上確定パック券で1パック</small><b>残り${Account.srTickets}枚</b></button>` : ""}
-          ${Account.tickets > 0 ? `<button type="button" class="pk-btn tk" data-act="packOpenTicket" data-id="${esc(p.id)}" ${can ? "" : "disabled"}><small>パック券で1パック</small><b>残り${Account.tickets}枚</b></button>` : ""}
-          ${Account.tickets >= 10 ? `<button type="button" class="pk-btn tk" data-act="packOpenTicket10" data-id="${esc(p.id)}" ${can ? "" : "disabled"}><small>パック券で10パック</small><b>10枚使う</b></button>` : ""}
         </div>
+        ${tk > 0 || srt > 0 ? `<div class="pk-tk">
+          ${srt > 0 ? `<button type="button" class="pk-chip sr" data-act="packOpenSR" data-id="${esc(p.id)}" ${can ? "" : "disabled"}>SR確定券で開ける<small>${srt}枚</small></button>` : ""}
+          ${tk > 0 ? `<button type="button" class="pk-chip" data-act="packOpenTicket" data-id="${esc(p.id)}" ${can ? "" : "disabled"}>券で1パック<small>${tk}枚</small></button>` : ""}
+          ${tk >= 10 ? `<button type="button" class="pk-chip" data-act="packOpenTicket10" data-id="${esc(p.id)}" ${can ? "" : "disabled"}>券で10パック</button>` : ""}
+        </div>` : ""}
         <div class="pk2-links">
-          <button type="button" class="linkbtn" data-act="packList" data-id="${esc(p.id)}">封入カード（${pool.length}種）</button>
-          <details class="pk-odds"><summary>排出率</summary>
-            <table><tr><th></th>${RARITY_ORDER.map(r => `<th>${RARITY_SHORT[r]}</th>`).join("")}</tr>
-              <tr><td>1〜${p.size - 1}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.normal[r]}%</td>`).join("")}</tr>
-              <tr><td>${p.size}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.last[r]}%</td>`).join("")}</tr></table>
-          </details>
+          <button type="button" class="linkbtn" data-act="packList" data-id="${esc(p.id)}">封入カード</button>
+          <button type="button" class="linkbtn" data-act="packOdds" data-id="${esc(p.id)}">排出率</button>
+          <button type="button" class="linkbtn" data-act="packLog">開封履歴</button>
         </div>
       </section>`;
     };
@@ -135,11 +144,20 @@ const Packs = {
       ${open.length ? `
         <div class="pk2-tabs ${open.length === 1 ? "one" : ""}" role="tablist">${open.map(p => `<button type="button" role="tab" data-act="packPick" data-id="${esc(p.id)}" aria-selected="${p.id === this.cur}"><small>${esc(this.shortName(p))}</small>${esc(title(p).nm)}</button>`).join("")}</div>
         <div class="pk2-track ${open.length === 1 ? "one" : ""}" id="pk-track">${open.map(slide).join("")}</div>
-        <p class="pk2-hint">${open.length > 1 ? "横にスワイプしてパックを選ぶ" : ""}</p>
-        <button type="button" class="linkbtn pk2-log" data-act="packLog">開封履歴を見る</button>`
+        ${this.oddsHTML()}`
         : `<p class="callout">今は買えるパックがありません。</p>`}
     </div>`, "start", true);
     this.bindTrack();
+  },
+  /* 排出率の小窓 */
+  oddsHTML() {
+    const p = this.oddsId && PACKS.find(x => x.id === this.oddsId); if (!p) return "";
+    return `<div class="dmodal" data-act="packOddsClose"><div class="dmodal-in pk-oddsbox" role="dialog" aria-label="排出率" data-act="noop">
+      <b class="dm-name">排出率</b><small class="hint">${esc(p.name)}・最後の1枚はレア以上</small>
+      <table><tr><th></th>${RARITY_ORDER.map(r => `<th>${RARITY_SHORT[r]}</th>`).join("")}</tr>
+        <tr><td>1〜${p.size - 1}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.normal[r]}%</td>`).join("")}</tr>
+        <tr><td>${p.size}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.last[r]}%</td>`).join("")}</tr></table>
+      <button type="button" class="btn" data-act="packOddsClose">閉じる</button></div></div>`;
   },
   /* 横並びのパック：真ん中に来たパックを「選択中」にして、タブと合わせる */
   bindTrack() {
@@ -237,15 +255,13 @@ const Packs = {
     requestAnimationFrame(() => { ov.scrollTop = 0; requestAnimationFrame(() => { ov.scrollTop = 0; ov.style.overflow = ""; }); });
     openOverlay(`<div class="openstage">
       <div class="os-top">${goldTag(Account.gold)}</div>
-      <div class="bp-wrap">${L.multi ? Array.from({ length: L.multi - 1 }, (_, i) => `<span class="bp-ghost" style="--i:${L.multi - 1 - i}${this.art(L.pack) ? `;background-image:url('${esc(this.art(L.pack))}')` : ""}"></span>`).join("") : ""}
-      <button type="button" class="bigpack ${L.multi ? "multi" : ""}" data-act="packTear" aria-label="パックを開ける">
-        <span class="bp-tear"></span>
-        <span class="bp-body ${this.art(L.pack) ? "has-art" : ""}" ${this.art(L.pack) ? `style="background-image:url('${esc(this.art(L.pack))}')"` : ""}>
-          <span class="bp-bands"><i class="w-myth"></i><i class="w-fan"></i><i class="w-mech"></i></span>
-          <span class="bp-logo"><small>境界の召喚士</small><b>${esc(L.pack.name)}</b><em>${L.multi ? `${L.multi}パック分 ・ ${L.multi * L.pack.size}枚` : `${L.pack.size}枚入り`}</em></span>
-        </span>
-      </button></div>
-      <p class="os-hint">${L.multi ? `${L.multi}パックまとめて開ける` : "タップして開ける"}</p>
+      <div class="bp-wrap ${L.multi ? "fan" : ""}">
+        ${L.multi ? Array.from({ length: L.multi }, (_, i) => `<span class="fan-i" style="--k:${i - (L.multi - 1) / 2};--d:${i}">${this.foilHTML(L.pack, "mini")}</span>`).join("") : ""}
+        <button type="button" class="bigpack ${L.multi ? "multi" : ""}" data-act="packTear" aria-label="パックを開ける">
+          ${L.multi ? "" : this.foilHTML(L.pack, "big", `<span class="foil-size">${L.pack.size}枚入り</span>`)}
+        </button>
+      </div>
+      <p class="os-hint">${L.multi ? `タップして${L.multi}パックまとめて開ける` : "タップして開ける"}</p>
     </div>`, "start", true);
   },
 
@@ -289,8 +305,8 @@ const Packs = {
       const pip = Array.from({ length: pips }, (_, i) => `<i class="${i < after ? "on" : ""} ${i === after - 1 ? "nw" : ""}"></i>`).join("");
       return `<button type="button" class="rs-card r-${c.rarity}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}の効果を見る">
         <span class="rs-fr">${cardHTML(c, { look: null, static: true })}${x.isNew ? `<span class="rs-new">NEW</span>` : ""}</span>
-        <span class="rs-tag"><i class="rtag r-${c.rarity}">${RARITY_SHORT[c.rarity]}</i><b>${esc(c.name)}</b></span>
-        <span class="rs-own">${x.isNew ? `<em>はじめて手に入れた</em>` : `所持 ${before}<span aria-hidden="true">→</span><b>${after}</b>`}<span class="rs-pip" aria-label="デッキに入れられるのは${lim}枚まで">${pip}</span>${after > CONFIG.COPY_MAX ? `<small>余り${after - CONFIG.COPY_MAX}</small>` : ""}</span>
+        <span class="rs-tag"><i class="rtag r-${c.rarity}">${RARITY_SHORT[c.rarity]}</i></span>
+        <span class="rs-own">${x.isNew ? `<em>NEW</em>` : `所持 ${before}<span aria-hidden="true">→</span><b>${after}</b>`}<span class="rs-pip" aria-label="デッキに入れられるのは${lim}枚まで">${pip}</span>${after > CONFIG.COPY_MAX ? `<small>余り${after - CONFIG.COPY_MAX}</small>` : ""}</span>
       </button>`;
     };
     openOverlay(`<div class="panel wide rs">
@@ -298,9 +314,8 @@ const Packs = {
       <div class="rs-head"><small>${esc(L.pack.name)}</small>
         <p>${newN ? `<b class="rs-newn">NEW ${newN}枚</b>` : ""}いちばんの当たり：<i class="rtag r-${DEF[best.id].rarity}">${RARITY_SHORT[DEF[best.id].rarity]}</i>${esc(DEF[best.id].name)}</p></div>
       <div class="rs-grid n${n}">${L.cards.map(card).join("")}</div>
-      <p class="hint rs-hint">カードを押すと効果を見られます。丸はデッキに入れられる枚数（同じカード${CONFIG.COPY_MAX}枚まで）。余りは交換所で魔石にできます。</p>
       <div class="pre-btns rs-btns">
-        ${Account.tickets > 0 ? `<button type="button" class="btn primary" data-act="packOpenTicket" data-id="${esc(L.pack.id)}">もう1パック（パック券 残り${Account.tickets}枚）</button>`
+        ${Account.tickets > 0 ? `<button type="button" class="btn primary" data-act="packOpenTicket" data-id="${esc(L.pack.id)}">もう1パック<small>（券 残り${Account.tickets}）</small></button>`
           : `<button type="button" class="btn primary" data-act="packOpen" data-id="${esc(L.pack.id)}" ${Account.gold < L.pack.price ? "disabled" : ""}>もう1パック（${L.pack.price}G）</button>`}
         <button type="button" class="btn" data-act="packs">パック一覧へ</button>
       </div>
@@ -436,6 +451,8 @@ const Packs = {
         this.showOpening();
         return true;
       }
+      case "packOdds": this.oddsId = el.dataset.id; this.cur = el.dataset.id; this.showShop(); return true;
+      case "packOddsClose": this.oddsId = null; this.showShop(); return true;
       case "packPick": if (this.pickTo) this.pickTo(el.dataset.id); return true;
       case "packTear": this.tear(); return true;
       case "packFlip": this.flip(); return true;

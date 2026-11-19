@@ -3072,3 +3072,72 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .solo-sub .lvl-head b{white-space:nowrap;font-size:15px}
 .solo-sub .lvl-head .ptag{margin:0}
 .solo-sub .lvl-body{min-width:0}
+
+/* ===== パック：銀の袋（2026-11-20） ===== */
+.foil{--crimp:5.5%;position:relative;display:block;aspect-ratio:5/7.6;filter:drop-shadow(0 14px 22px rgba(0,0,0,.6))}
+.foil-crimp{position:absolute;left:1%;right:1%;height:var(--crimp);z-index:2;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 1px,transparent 1px 4px),linear-gradient(180deg,#f2f4f7,#a9afb8 45%,#e3e6ea 70%,#8e949d)}
+.foil-crimp.t{top:0;-webkit-mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/9px 100%;mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/9px 100%}
+.foil-crimp.b{bottom:0;-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/9px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/9px 100%}
+.foil-body{position:absolute;left:0;right:0;top:calc(var(--crimp) - 1px);bottom:calc(var(--crimp) - 1px);overflow:hidden;border-radius:3px;
+  background:linear-gradient(160deg,#2b3270,#141733) center/cover no-repeat;background-color:#141733;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),inset 10px 0 16px -8px rgba(255,255,255,.35),inset -10px 0 16px -8px rgba(0,0,0,.6),inset 0 18px 18px -14px rgba(0,0,0,.6)}
+/* ふくらみ（真ん中が明るく、端が暗い）と、うっすら虹色の箔 */
+.foil-body::before{content:"";position:absolute;inset:0;background:radial-gradient(90% 70% at 50% 45%,rgba(255,255,255,.08),transparent 60%,rgba(0,0,0,.35));pointer-events:none}
+.foil-body::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,80,160,.0),rgba(120,200,255,.18),rgba(255,230,120,.12),rgba(255,80,160,0));mix-blend-mode:overlay;pointer-events:none}
+.foil-shine{position:absolute;inset:-20%;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.38) 48%,rgba(255,255,255,.05) 55%,transparent 62%);background-size:260% 100%;mix-blend-mode:screen;animation:foilshine 4.5s ease-in-out infinite;pointer-events:none}
+@keyframes foilshine{0%,30%{background-position:120% 0}70%,100%{background-position:-60% 0}}
+.foil-logo{position:absolute;z-index:1;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;padding:9% 8% 14%;text-align:center;
+  background:linear-gradient(rgba(5,7,18,.88),rgba(5,7,18,.55) 65%,transparent)}
+.foil-logo small{font-family:var(--f-display);font-size:.62em;letter-spacing:.32em;color:#e9d7a6;font-weight:700}
+.foil-logo b{font-family:var(--f-display);font-weight:800;font-size:1.5em;letter-spacing:.06em;line-height:1.2;color:#fff6dc;text-shadow:0 0 12px rgba(255,213,106,.55),0 2px 4px #000;word-break:keep-all}
+.foil-logo em{font-style:normal;font-size:.62em;color:#e9c873;font-weight:700;margin-top:2px}
+.foil-size{position:absolute;z-index:1;left:50%;bottom:6%;transform:translateX(-50%);font-size:.7em;font-weight:700;color:#fff;padding:2px 12px;border-radius:99px;background:rgba(0,0,0,.6);border:1px solid rgba(255,232,168,.5);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){.foil-shine{animation:none}}
+
+/* 選ぶ画面：縦にスクロールしない（パックの大きさは画面の高さに合わせる） */
+.overlay:has(.pkshop){padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.panel.pkshop{height:calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));gap:8px;margin:0 auto}
+.pkshop .pk2-track{flex:1;min-height:0;padding:2px 0 4px;--pkw:min(86%,360px)}
+.pkshop .pk2{height:100%;min-height:0;gap:8px}
+.pk2-stage{flex:1;min-height:0;container-type:size;display:grid;place-items:center}
+.foil.shop{width:min(100cqw,100cqh * 5 / 7.6);font-size:clamp(11px,4.2cqh,16px)}
+.pk2.on .foil.shop{filter:drop-shadow(0 0 18px rgba(255,214,120,.25)) drop-shadow(0 14px 22px rgba(0,0,0,.6))}
+.pkshop .pk2-meta{gap:5px}
+.pkshop .pk2-got{flex-direction:row;align-items:center;gap:8px}.pkshop .pk2-got i{flex:1}
+.pkshop .pk-btn{padding:7px 8px}
+.pkshop .pk-btn b{font-size:20px}
+.pk-tk{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.pk-chip{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;background:linear-gradient(180deg,#3a2f6a,#241c48);border:1px solid #8a76e0}
+.pk-chip small{font-size:11px;opacity:.8}
+.pk-chip.sr{border-color:#ff9fb4;background:linear-gradient(180deg,#5a1530,#2a0a18)}
+.pk-chip[disabled]{opacity:.4}
+.pkshop .pk2-links{justify-content:center;gap:4px 18px;font-size:12px}
+.pk-oddsbox{flex-direction:column;align-items:stretch;gap:8px;max-width:360px}
+.pk-oddsbox table{width:100%;font-size:12px;text-align:center;border-collapse:collapse}
+.pk-oddsbox td,.pk-oddsbox th{padding:4px 2px;border-bottom:1px solid var(--line)}
+
+/* 開ける画面 */
+.bigpack{width:min(62vw,250px,40dvh * 5 / 7.6);aspect-ratio:5/7.6;font-size:min(4.4vw,17px)}
+.bigpack .foil{width:100%;height:100%}
+.bigpack.tearing .foil-crimp.t{animation:foiltear .6s .15s cubic-bezier(.3,.6,.4,1) forwards}
+@keyframes foiltear{to{transform:translate(50px,-110px) rotate(26deg);opacity:0}}
+/* 10連：10個の袋を扇に広げる。タップでまとめて開ける */
+.bp-wrap.fan{width:100%;height:min(54dvh,420px)}
+.bigpack.multi{position:absolute;inset:0;width:auto;aspect-ratio:auto;animation:none;z-index:3}
+.fan-i{position:absolute;left:50%;top:50%;width:min(27vw,118px);margin-left:calc(min(27vw,118px) / -2);margin-top:calc(min(27vw,118px) * -0.9);font-size:min(2.6vw,10px);
+  transform-origin:50% 220%;transform:rotate(calc(var(--k) * 4.5deg));animation:fanin .5s calc(var(--d) * 50ms) both}
+.fan-i .foil{width:100%}
+@keyframes fanin{from{transform:rotate(0) translateY(40px);opacity:0}}
+.bp-wrap.fan:has(.tearing) .fan-i{animation:fanshake .45s ease-in-out}
+.bp-wrap.fan:has(.tearing) .fan-i .foil-crimp.t{animation:foiltear .55s calc(.1s + var(--d) * 30ms) cubic-bezier(.3,.6,.4,1) forwards}
+@keyframes fanshake{30%{translate:0 -6px}60%{translate:0 3px}}
+.foil.mini .foil-logo small,.foil.mini .foil-logo em{display:none}
+.foil.mini .foil-logo b{font-size:1.25em}
+/* 開封結果：1画面に収める（2026-11-20） */
+.panel.rs{gap:10px}
+.rs .rs-grid{gap:10px 10px}
+.rs .rs-card{gap:3px}
+.rs .rs-tag .rtag{position:static}
+.rs .rs-own{font-size:11px}
+.rs .rs-own em{font-style:normal;color:#ff8fa3;font-weight:800}
