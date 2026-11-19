@@ -3179,3 +3179,13 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .fan-i.cut{translate:0 8px;transition:translate .3s}
 .bp-wrap.fan .bigpack.multi{touch-action:none}
 .bigpack{touch-action:none}
+/* 開いた瞬間の光（高レアの気配があると、虹色・金色で長く強く） */
+.openstage:has(.bigpack){touch-action:none}
+.os-burst{position:absolute;inset:0;z-index:30;pointer-events:none;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.95),rgba(255,236,190,.55) 18%,transparent 50%);opacity:0;animation:osburst .9s ease-out forwards}
+@keyframes osburst{15%{opacity:1}100%{opacity:0}}
+.os-burst.ur{background:radial-gradient(circle at 50% 38%,#fff,rgba(255,214,90,.85) 20%,rgba(255,170,40,.35) 45%,transparent 70%);animation-duration:1.5s}
+.os-burst.legend{background:conic-gradient(from 0deg at 50% 38%,#ff6b9a,#ffd36e,#7dffb0,#6ec8ff,#c58bff,#ff6b9a);-webkit-mask:radial-gradient(circle at 50% 38%,#000 0,#000 12%,rgba(0,0,0,.6) 35%,transparent 72%);mask:radial-gradient(circle at 50% 38%,#000 0,#000 12%,rgba(0,0,0,.6) 35%,transparent 72%);animation:osburstL 1.6s ease-out forwards}
+@keyframes osburstL{0%{opacity:0;transform:scale(.6) rotate(0)}20%{opacity:1}100%{opacity:0;transform:scale(1.5) rotate(60deg)}}
+.openstage.hi-ur .bigpack .foil,.openstage.hi-ur .fan-i .foil{filter:drop-shadow(0 0 22px rgba(255,200,80,.9))}
+.openstage.hi-legend .bigpack .foil,.openstage.hi-legend .fan-i .foil{animation:hileg 1.2s linear infinite}
+@keyframes hileg{0%{filter:drop-shadow(0 0 20px #ff6b9a)}33%{filter:drop-shadow(0 0 20px #ffd36e)}66%{filter:drop-shadow(0 0 20px #6ec8ff)}100%{filter:drop-shadow(0 0 20px #ff6b9a)}}

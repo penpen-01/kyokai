@@ -406,56 +406,70 @@ const Packs = {
      1パック：横になぞった長さだけ上が破れていき、端まで行くと開く。指を離しても途中まで破れたまま。
      10パック：扇の上を横になぞると、指が通ったパックから1つずつ破れる。全部破れたら開く */
   bindTear() {
-    const L = this.last, wrap = $(".bp-wrap"), bp = $(".bigpack"); if (!wrap || !bp) return;
+    const L = this.last, wrap = $(".bp-wrap"), bp = $(".bigpack"), stage = $(".openstage"); if (!wrap || !bp || !stage) return;
     bp.removeAttribute("data-act");   // タップだけでは開かない（キーボードの Enter だけは開ける）
     bp.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.tear(); } });
     const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} };
-    let st = null;
     const hint = () => { const h = $(".os-hint"); if (h) { h.classList.remove("nudge"); void h.offsetWidth; h.classList.add("nudge"); } };
+    let st = null;
+    // 画面のどこからなぞり始めてもよい（パックの外から入ってきてもよい）。指の動きは画面全体で受け取る
+    const on = (ev, fn) => stage.addEventListener(ev, fn);
     if (!L.multi) {
-      const foil = bp.querySelector(".foil"); let base = 0, step = 0;
-      bp.addEventListener("pointerdown", e => { if (this.busy) return; st = { x: e.clientX, min: e.clientX, max: e.clientX, w: foil.getBoundingClientRect().width, moved: false }; try { bp.setPointerCapture(e.pointerId); } catch (x) {} });
-      bp.addEventListener("pointermove", e => {
+      /* 切れ目（T）は端から始まり、指が「切れ目のすぐ先」を進んだときだけ伸びる。
+         戻ったり、離れたところを触ったりしても伸びない（往復で開けられないように） */
+      const foil = bp.querySelector(".foil"); let T = null, dir = 0, step = 0;
+      const box = () => foil.getBoundingClientRect();
+      const set = (r) => { const p = Math.max(0, Math.min(1, dir > 0 ? (T - r.left) / r.width : (r.right - T) / r.width)); foil.style.setProperty("--p", p.toFixed(3)); return p; };
+      on("pointerdown", e => { if (this.busy || e.target.closest("button:not(.bigpack)")) return; st = { x: e.clientX, moved: false }; try { stage.setPointerCapture(e.pointerId); } catch (x) {} });
+      on("pointermove", e => {
         if (!st || this.busy) return;
-        st.min = Math.min(st.min, e.clientX); st.max = Math.max(st.max, e.clientX);
-        if (!st.moved && Math.abs(e.clientX - st.x) > 6) {
-          st.moved = true;
-          if (!foil.dataset.dir) { const d = e.clientX > st.x ? 1 : -1; foil.dataset.dir = d; foil.style.setProperty("--s", d); foil.style.setProperty("--ho", d > 0 ? "100%" : "0%"); foil.style.setProperty("--ro", d > 0 ? "0%" : "100%"); foil.classList.add("opening"); }
+        const r = box(), x = e.clientX, y = e.clientY, inY = y > r.top - 70 && y < r.bottom + 20;
+        if (Math.abs(x - st.x) > 6) st.moved = true;
+        if (!dir) {   // 最初に動いた向きで、どちらの端から破るかを決める
+          if (!st.moved || !inY) return;
+          dir = x > st.x ? 1 : -1; T = dir > 0 ? r.left : r.right;
+          foil.style.setProperty("--s", dir); foil.style.setProperty("--ho", dir > 0 ? "100%" : "0%"); foil.style.setProperty("--ro", dir > 0 ? "0%" : "100%"); foil.classList.add("opening");
         }
-        const p = Math.min(1, base + (st.max - st.min) / (st.w * .85));
-        foil.style.setProperty("--p", p.toFixed(3));
-        const k = Math.floor(p * 6); if (k > step) { step = k; buzz(6); Sound.play("flip"); }
-        if (p >= 1) { st = null; this.tear(); }
+        // 指が切れ目より先にあり、先へ進みすぎていない（パックの幅の4分の1まで）ときだけ、切れ目を指まで伸ばす
+        if (inY && (x - T) * dir > 0 && (x - T) * dir < r.width * .25) T = x;
+        const p = set(r);
+        const k = Math.floor(p * 8); if (k > step) { step = k; buzz(5); Sound.play("rip"); }
+        if (p >= .97) { st = null; this.tear(); }
       });
-      const up = () => { if (!st) return; if (!st.moved) hint(); else base = Math.min(1, base + (st.max - st.min) / (st.w * .85)); st = null; };
-      bp.addEventListener("pointerup", up); bp.addEventListener("pointercancel", up);
+      const up = () => { if (!st) return; if (!st.moved) hint(); st = null; };
+      on("pointerup", up); on("pointercancel", up);
       return;
     }
-    // 10パック：指が各パックの真ん中を横切ったら、そのパックを破る
+    // 10パック：指が各パックの真ん中を横切ったら、そのパックを破る（外からなぞってきてもよい）
     const items = [...wrap.querySelectorAll(".fan-i")];
     const mid = () => items.map(el => { const r = el.getBoundingClientRect(); return { el, cx: r.left + r.width / 2, top: r.top, bot: r.bottom }; });
     let M = null, last = null;
-    const tearOne = it => { if (it.el.classList.contains("cut")) return; it.el.classList.add("cut"); it.el.querySelector(".foil").classList.add("torn"); buzz(10); Sound.play("flip");
-      if (items.every(x => x.classList.contains("cut"))) { st = null; setTimeout(() => this.tear(), 350); } };
-    bp.addEventListener("pointerdown", e => { if (this.busy) return; M = mid(); last = e.clientX; st = { moved: false, x: e.clientX }; try { bp.setPointerCapture(e.pointerId); } catch (x) {} });
-    bp.addEventListener("pointermove", e => {
+    const tearOne = it => { if (it.el.classList.contains("cut")) return; it.el.classList.add("cut"); it.el.querySelector(".foil").classList.add("torn"); buzz(8); Sound.play("rip");
+      if (items.every(x => x.classList.contains("cut"))) { st = null; setTimeout(() => this.tear(), 300); } };
+    on("pointerdown", e => { if (this.busy || e.target.closest("button:not(.bigpack)")) return; M = mid(); last = e.clientX; st = { moved: false, x: e.clientX }; try { stage.setPointerCapture(e.pointerId); } catch (x) {} });
+    on("pointermove", e => {
       if (!st || !M) return;
       if (Math.abs(e.clientX - st.x) > 6) st.moved = true;
-      M.forEach(it => { if ((last - it.cx) * (e.clientX - it.cx) <= 0 && e.clientY > it.top - 60 && e.clientY < it.bot + 60) tearOne(it); });
+      M.forEach(it => { if ((last - it.cx) * (e.clientX - it.cx) <= 0 && e.clientY > it.top - 70 && e.clientY < it.bot + 40) tearOne(it); });
       last = e.clientX;
     });
     const up = () => { if (st && !st.moved) hint(); st = null; };
-    bp.addEventListener("pointerup", up); bp.addEventListener("pointercancel", up);
+    on("pointerup", up); on("pointercancel", up);
   },
   tear() {
     const L = this.last; if (!L || L.stage !== "pack" || this.busy) return;
     const bp = $(".bigpack");
-    Sound.play("open");
+    // 高レアの気配：レジェンドなら4回に3回、URなら2回に1回、開いた瞬間の光が変わる（毎回ではない＝出たら「おっ」となる）
+    const all = L.multi ? L.rows.flat() : L.cards, best = Math.max(...all.map(x => RARITY_ORDER.indexOf(DEF[x.id].rarity)));
+    if (L.hi == null) L.hi = best >= 4 && Math.random() < .75 ? 2 : best >= 3 && Math.random() < .5 ? 1 : 0;
+    Sound.play("burst", L.hi);
     if (bp && !Motion.reduced) {
       this.busy = true;
       bp.classList.add("tearing");
+      const stg = $(".openstage"); if (stg && L.hi) stg.classList.add(L.hi >= 2 ? "hi-legend" : "hi-ur");
+      if (stg) stg.insertAdjacentHTML("beforeend", `<span class="os-burst ${L.hi >= 2 ? "legend" : L.hi ? "ur" : ""}" aria-hidden="true"></span>`);
       document.querySelectorAll(".bp-wrap .foil").forEach(f => f.classList.add("torn"));
-      setTimeout(() => this.whenReady(L, () => { this.busy = false; if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }), 900);
+      setTimeout(() => this.whenReady(L, () => { this.busy = false; if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }), L.hi ? 1500 : 900);
     } else this.whenReady(L, () => { if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; this.showReveal(); } });
   },
 

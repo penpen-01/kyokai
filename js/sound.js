@@ -70,6 +70,16 @@ const Sound = {
     src.start(t);
   },
 
+  /* 帯域がずれていくノイズ（紙や袋が裂ける「シャッ」・風の「ヒュッ」） */
+  sweep(start, dur, vol, f0, f1, q = 1, type = "bandpass") {
+    const c = this.ctx, t = c.currentTime + start;
+    const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) { const k = i / d.length; d[i] = (Math.random() * 2 - 1) * Math.min(1, k * 12) * (1 - k); }
+    const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = buf; f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.value = vol; src.connect(f); f.connect(g); g.connect(this.master); src.start(t);
+  },
   play(name, level = 0) {
     if (!this.on) return;
     if (!this.ctx) { this.unlock(); if (!this.ctx) return; }
@@ -97,6 +107,19 @@ const Sound = {
         case "win": [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * 0.12, 0.35, "triangle", 0.3)); break;
         case "lose": [392, 349, 311, 262].forEach((f, i) => this.tone(f, i * 0.16, 0.4, "sine", 0.25)); break;
         case "open": this.noise(0, 0.4, 0.3, 2400); this.tone(220, 0, 0.4, "triangle", 0.2, 440); break;
+        case "rip": {   // なぞっている途中の「ピリッ」：細かいノイズを3つ重ねて、銀の袋が裂ける感じ
+          for (let i = 0; i < 3; i++) this.sweep(i * 0.018, 0.045 + Math.random() * 0.02, 0.22, 5200 + Math.random() * 1500, 3200, 3);
+          break;
+        }
+        case "burst": {   // 開いた瞬間：「ビリッ」と裂ける→ふわっと風→きらっと鈴の音（level 1＝UR、2＝レジェンドの気配で豪華に）
+          this.sweep(0, 0.16, 0.5, 6000, 2200, 1.4);
+          this.sweep(0.06, 0.55, 0.16, 500, 3800, 0.7, "lowpass");
+          this.tone(95, 0.02, 0.22, "sine", 0.35, 60);
+          const notes = level >= 2 ? [0, 4, 7, 11, 14, 19, 24] : level >= 1 ? [0, 4, 7, 12, 16] : [0, 7, 12, 16];
+          notes.forEach((st, i) => { const f = 1046 * Math.pow(2, st / 12); this.tone(f, 0.12 + i * 0.055, 0.5 + level * 0.25, "sine", 0.14); this.tone(f * 2, 0.12 + i * 0.055, 0.25, "triangle", 0.03); });
+          if (level >= 1) { this.sweep(0.15, 1.1, 0.08, 7000, 11000, 2, "highpass"); this.tone(523, 0.15, 1.3, "sine", 0.1); this.tone(784, 0.15, 1.3, "sine", 0.08); }
+          break;
+        }
         case "creak": {   // 重い扉がきしむ「キィィ…」：ゆらぐ高めの音を細かくつなぐ＋低い木の響き
           let t = 0; for (let i = 0; i < 16; i++) { const f = 520 + Math.sin(i * 1.7) * 120 - i * 14, d = 0.07 + (i % 3) * 0.02; this.tone(f, t, d + 0.03, "sawtooth", 0.045, f * 0.93); t += d; }
           this.tone(70, 0, 1.6, "triangle", 0.18, 52); this.noise(0.05, 1.4, 0.07, 500);
