@@ -100,7 +100,7 @@ const EFFECTS = {
   merge:       { group: "トークン", label: "合体（場の部品を破壊して、キャラを出す）", text: (n, e) => `自分の場に「${tokName(e)}」が${n}体以上いれば、それを${n}体破壊して、${intoDesc(e)}を出す（登場時の効果も発動する）。`, opts: ["token", "into"], tokenType: "char" },
   costDown:    { group: "エナジー", label: "手札のカードのコストを下げる（このターン・ずっと）", text: (n, e) => `${e && e.dur === "game" ? "" : "このターン、"}今の自分の手札の${worldNo(e)}${ctypeName(e)}すべてのコストを${n}下げる（0より下がらない${e && e.dur === "game" ? "。手札にある間ずっと" : ""}）。`, opts: ["world", "ctype", "dur"] },
   wakeTimer:   { group: "このキャラ", label: "目覚め（自分のターンの始めをN回むかえると、このキャラは沈黙する＝不動などが解ける）", text: n => `自分のターンの始めを${n}回むかえると、このキャラは沈黙する（不動などの能力が消え、攻撃できるようになる）。`, self: true },
-  recycle:     { group: "ドロー", label: "倒された自分のキャラを山札に戻す（墓地からN枚）", text: (n, e) => `この対戦で倒された自分の${worldNo(e)}キャラを${n}枚まで、山札に混ぜる。`, opts: ["world"] },
+  recycle:     { group: "ドロー", label: "自分の墓地のキャラを山札に戻す（N枚）", text: (n, e) => `自分の墓地の${worldNo(e)}キャラを${n}枚まで、山札に混ぜる。`, opts: ["world"] },
   peekDiscard: { group: "妨害", label: "相手の手札を見て、いちばんコストの高いカードを捨てさせる", text: () => "相手の手札をすべて見て、いちばんコストの高いカード1枚を捨てさせる。", noN: true },
   winTimer:    { group: "このキャラ", label: "特殊勝利（場にいるまま、自分のターンの始めをN回むかえると勝ち）", text: n => `このキャラが場にいるまま、自分のターンの始めを${n}回むかえると、勝利する（場を離れると数え直し）。`, self: true },
   draw:        { legacy: true, group: "ドロー", label: "カードを引く",                  text: n => `カードを${n}枚引く。` },
@@ -151,7 +151,7 @@ const EFFECTS = {
   swapEnemy:   { legacy: true, group: "妨害",   label: "相手キャラの攻撃力と体力を入れ替える", text: () => "相手キャラ1体の攻撃力と体力を入れ替える。", target: "enemyUnit", noN: true },
   swapOwn:     { legacy: true, group: "強化",   label: "自分のキャラの攻撃力と体力を入れ替える", text: () => "自分のキャラ1体の攻撃力と体力を入れ替える。", target: "ownUnit", noN: true },
   bounceOwn:   { legacy: true, group: "強化",   label: "自分のキャラを手札に戻す",     text: () => "自分のキャラ1体を手札に戻す（トークンは消える）。", target: "ownUnit", noN: true },
-  revive:      { group: "召喚",   label: "破壊された自分のキャラを復活させる", text: (n, e) => `この対戦で破壊された自分の${costRange(n, e, true)}キャラをランダムに1体、場に出す（登場時効果は発動しない）。`, opts: ["cmin"] },
+  revive:      { group: "召喚",   label: "自分の墓地のキャラを復活させる", text: (n, e) => `自分の墓地の${costRange(n, e, true)}キャラをランダムに1体、場に出す（登場時効果は発動しない）。`, opts: ["cmin"] },
   banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true }
 };
 
@@ -597,7 +597,7 @@ if (typeof document !== "undefined") document.addEventListener("click", e => {
 
 /* カードの見た目。unit を渡すと場のキャラの現在値を表示する */
 /* プレイヤーアイコン：キャラカードの絵を丸く切り抜く。顔が上の方にない絵だけ、切り抜く位置を個別に決める */
-const ICON_POS = { "x-rush": "50% 40%", garm: "50% 55%", "k-ruu": "55% 33%" };
+const ICON_POS = { "x-rush": "50% 40%", garm: "50% 55%", "k-ruu": "55% 37%" };
 /* アイコンを選んでいないとき（おまかせ）に出す、フードの召喚士の絵 */
 const DEFAULT_AVATAR_HTML = `<span class="iimg" style="background-image:url('ui/avatar-default.webp');background-size:cover;background-position:50% 30%"></span>`;
 function iconImgHTML(id) {

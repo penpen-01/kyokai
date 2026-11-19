@@ -11,6 +11,9 @@ const ARENA_RULES = {
   sen:  { name: "選定戦",     desc: "デッキは持ち込みません。2人でカードを取り合って、その場でデッキを作ります。" },
   set1: { name: "第1弾限定",  desc: "第1弾のカードだけで組んだデッキで戦います。" }
 };
+const ARENA_MIN_TURNS = 6;       // これより短く降参・接続切れで決着した対戦は点にしない（お互い3ターン）
+const ARENA_VS_MAX = 2;          // 1回の開催で、同じ相手から点をもらえる対戦の数
+const ARENA_REMATCH_WAIT = 20;   // 直前の相手と続けて組むまでに待つ秒数（ほかに誰もいないとき）
 const ARENA_PTS = { win: 3, lose: 1, draw: 1 };
 const ARENA_DOOR_ART = "ui/arena-door.webp";   // 扉の絵（左右に分けて開く。空なら CSS で描いた仮の扉）
 const JST = 9 * 3600e3;
@@ -78,7 +81,7 @@ const Arena = {
     openOverlay(`<div class="panel ar">
       <h2 class="title sm">アリーナ <i class="beta-tag">β版・報酬なし</i></h2>
       ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営・メンテ通過の端末のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
-        <p class="lead small">${rule.desc}同じ時間に探している人と、ランダムに対戦します。勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点。何回でも戦えます。</p>
+        <p class="lead small">${rule.desc}同じ時間に探している人と、ランダムに対戦します。勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点。同じ相手からの点は${ARENA_VS_MAX}戦まで、すぐ降参した対戦は点になりません。</p>
         ${c.test ? `<div class="ar-test">テストのルール：${Object.entries(ARENA_RULES).map(([k, r]) => `<button type="button" class="btn sm ${c.rule === k ? "primary" : ""}" data-act="arenaTestRule" data-v="${k}">${r.name}</button>`).join("")}</div>` : ""}
         ${this.searching ? `<div class="ar-search"><b>相手を探しています<span class="pg-dots"><i></i><i></i><i></i></span></b><small id="ar-wait"></small><button type="button" class="btn" data-act="arenaStop">探すのをやめる</button></div>`
           : `<button type="button" class="btn primary ar-go" data-act="arenaSearch">相手を探す</button>`}
@@ -136,7 +139,7 @@ const Arena = {
     Object.assign(this, { searching: true, sid: c.sid, rule: c.rule, deck, uid, since: Date.now() });
     const me = `arena/q/${c.sid}/${uid}`;
     try {
-      await Net.set(me, { at: Date.now(), name: playerName("召喚士") });
+      await Net.set(me, { at: Date.now(), t0: Date.now(), name: playerName("召喚士"), ...(this.last && this.last.sid === c.sid ? { last: this.last.uid } : {}) });
       Net.onDisconnectRemove(me);
     } catch (e) { console.error(e); this.searching = false; return this.show("アリーナに入れませんでした（サーバーの設定がまだかもしれません）。"); }
     this.unsubs.push(Net.on(me, v => { if (v && v.room && this.searching) this.matched(v.room, false); }));
@@ -160,7 +163,10 @@ const Arena = {
     const q = this.queue || {};
     if (!this.searching) return;
     const now = Date.now();
-    const cands = Object.entries(q || {}).filter(([u, x]) => u > this.uid && x && !x.room && !(x.lock && now - x.lock < 8000) && now - (x.at || 0) < 60000).sort((a, b) => a[1].at - b[1].at);
+    // 直前に戦った相手とは、どちらかが REMATCH_WAIT 秒以上待つまで組まない（人が少ないので、完全には禁止しない）
+    const lastMe = this.last && this.last.sid === this.sid ? this.last.uid : null;
+    const fresh = (u, x) => !(u === lastMe || x.last === this.uid) || (now - this.since > ARENA_REMATCH_WAIT * 1000 && now - (x.t0 || x.at || now) > ARENA_REMATCH_WAIT * 1000);
+    const cands = Object.entries(q || {}).filter(([u, x]) => u > this.uid && x && !x.room && !(x.lock && now - x.lock < 8000) && now - (x.at || 0) < 60000 && fresh(u, x)).sort((a, b) => a[1].at - b[1].at);
     if (!cands.length || !this.searching) return;
     this.claiming = true;
     try {
@@ -192,15 +198,27 @@ const Arena = {
     this.searching = false; this.claiming = false;
   },
   /* 対戦が終わった：点を記録する（1つの対戦で1回だけ） */
+  /* 対戦の結果を記録する。点にならない対戦（すぐ決着・同じ相手と3戦目以降）も、記録（g）には残す */
   record(res) {
     const R = Online.room; if (!R || !R.arena || !S || this.recorded === S.gid) return null;
     this.recorded = S.gid;
-    const add = ARENA_PTS[res] || 0, name = playerName("召喚士");
+    const vs = Online.oppUid(), turns = S.turnNo || 0, name = playerName("召喚士");
+    this.last = { sid: R.arena, uid: vs };
+    const short = turns < ARENA_MIN_TURNS && !!S.endBy;   // お互い3ターンやる前に、降参・接続切れで決着
+    const out = { add: 0, short, capped: false };
+    const prevVs = this.rv && this.rv.sid === R.arena ? (this.rv.vs[vs] || 0) : 0;
+    if (!short && prevVs >= ARENA_VS_MAX) out.capped = true;
+    if (!short && !out.capped) out.add = ARENA_PTS[res] || 0;
     Net.init().then(uid => Net.tx(`arena/r/${R.arena}/${uid}`, cur => {
-      const x = cur || {};
-      return { name, pts: (x.pts || 0) + add, w: (x.w || 0) + (res === "win" ? 1 : 0), l: (x.l || 0) + (res === "lose" ? 1 : 0), d: (x.d || 0) + (res === "draw" ? 1 : 0) };
-    })).catch(e => console.error(e));
-    return { add };
+      const x = cur || {}, cnt = x.vs ? (x.vs[vs] || 0) : 0;
+      const ok = !short && cnt < ARENA_VS_MAX, add = ok ? ARENA_PTS[res] || 0 : 0;
+      const g = Array.isArray(x.g) ? x.g.slice(-40) : [];
+      g.push({ vs: vs || "", at: Date.now(), t: turns, res, pts: add, ...(S.endBy ? { why: String(S.endBy).slice(0, 20) } : {}) });
+      return { name, pts: (x.pts || 0) + add, w: (x.w || 0) + (ok && res === "win" ? 1 : 0), l: (x.l || 0) + (ok && res === "lose" ? 1 : 0), d: (x.d || 0) + (ok && res === "draw" ? 1 : 0),
+        vs: { ...(x.vs || {}), ...(ok && vs ? { [vs]: cnt + 1 } : {}) }, g };
+    }).then(r => { if (r && r.val) this.rv = { sid: R.arena, vs: r.val.vs || {} }; })).catch(e => console.error(e));
+    if (!out.short && !out.capped) { this.rv = this.rv && this.rv.sid === R.arena ? this.rv : { sid: R.arena, vs: {} }; this.rv.vs[vs] = prevVs + 1; }
+    return out;
   },
   handleAct(act, el) {
     switch (act) {

@@ -699,6 +699,9 @@ function spendGears(p, n) {
    効果で使う p.grave（倒されたキャラ）・p.used（使った魔法）とは別。表示だけに使う */
 function gyAdd(p, id) { (p.gy || (p.gy = [])).push(id); p.lastG = id; }
 function gyDel(p, id) { if (!p.gy) return; const i = p.gy.lastIndexOf(id); if (i >= 0) p.gy.splice(i, 1); }
+/* 墓地から取り出す（復活・山札に戻す）。倒されたキャラも捨てたキャラも対象（オーナー 11-20）。p.grave にあれば一緒に消す */
+function gyChars(p) { return (p.gy || p.grave || []).filter(id => DEF[id] && DEF[id].type === "char" && !DEF[id].token); }
+function gyTake(p, id) { gyDel(p, id); const g = p.grave || []; const i = g.lastIndexOf(id); if (i >= 0) g.splice(i, 1); }
 /* 手札をランダムに1枚捨てる。重なった歯車に当たったら、歯車を1枚だけ失う */
 function discardRandom(q, pi) {
   const p = S.players[q];
@@ -827,11 +830,10 @@ function effect(pi, e, targets, self) {
     }
     case "wakeTimer": if (self && self.hp > 0) { self.wakeIn = n; fx(unitSel(self.uid), `目覚めまで${n}`, "trig"); } break;
     case "recycle": {
-      const g = me.grave || [];
-      const pick = g.filter(id => DEF[id] && !DEF[id].token && (!e.world || DEF[id].world === e.world)).slice(-n);
-      pick.forEach(id => { g.splice(g.lastIndexOf(id), 1); gyDel(me, id); me.deck.splice(Math.floor(Math.random() * (me.deck.length + 1)), 0, id); });
+      const pick = gyChars(me).filter(id => !e.world || DEF[id].world === e.world).slice(-n);
+      pick.forEach(id => { gyTake(me, id); me.deck.splice(Math.floor(Math.random() * (me.deck.length + 1)), 0, id); });
       S.recycled = pick.length;
-      log(pick.length ? `倒された${pick.map(cname).join("・")}を山札に混ぜた。` : "山札に戻せるキャラがいなかった。");
+      log(pick.length ? `墓地の${pick.map(cname).join("・")}を山札に混ぜた。` : "山札に戻せるキャラがいなかった。");
       break;
     }
     case "peekDiscard": {
@@ -906,11 +908,10 @@ function effect(pi, e, targets, self) {
     case "swapOwn": { const u = ownT(); if (u) swapStats(u); break; }
     case "revive": {
       if (fieldFull(me)) { log("場に空いている場所がなく、復活できなかった。"); break; }
-      const g = me.grave || [];
-      const cands = g.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && !DEF[x.id].token && inCost(DEF[x.id], n, e));
+      const cands = gyChars(me).map(id => ({ id })).filter(x => inCost(DEF[x.id], n, e));
       if (!cands.length) { log("復活できるキャラがいなかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
-      g.splice(pick.i, 1); gyDel(me, pick.id);
+      gyTake(me, pick.id);
       addUnit(pi, pick.id);
       log(`${cname(pick.id)}が復活した！`);
       break;
@@ -1155,7 +1156,7 @@ function attack(pi, uid, target) {
 function forfeit(pi, reason) {
   if (!S || S.over) return;
   S.over = true;
-  S.winner = opp(pi);
+  S.winner = opp(pi); S.endBy = reason;
   S.log.push({ sep: true, msg: `決着：${pname(pi)}が${reason}。${pname(opp(pi))}の勝利` });
   finishGame();
 }
@@ -2576,7 +2577,7 @@ function showResult(res) {
     r.online && r.online.capped ? `友達との対戦でGを受け取れるのは1日${r.online.max}回までです（今日の分は受け取り済み）` : "",
     r.online && r.g ? `友達との対戦の報酬：今日 ${r.online.used}/${r.online.max}回目` : "",
     r.senBeta ? "選定戦β版のため、報酬はありません" : "",
-    r.arena ? `アリーナ：+${r.arena.add}点（ランキングはアリーナの画面で）` : ""
+    r.arena ? (r.arena.short ? "アリーナ：すぐに決着したので、点になりませんでした" : r.arena.capped ? `アリーナ：同じ相手からの点は1回の開催で${ARENA_VS_MAX}戦までです` : `アリーナ：+${r.arena.add}点（ランキングはアリーナの画面で）`) : ""
   ].filter(Boolean);
   // 次にすること：大きいボタン1つ＋小さいボタン
   const again = online
