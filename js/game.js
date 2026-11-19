@@ -2236,6 +2236,7 @@ function showStart() {
   if (typeof Skins !== "undefined") try { Skins.apply(); } catch (e) { console.error(e); }
   if (typeof Maint !== "undefined" && Maint.pending && !Maint.pass()) { Maint.screen(); return; }   // メンテナンスが始まった
   if (typeof Inbox !== "undefined" && Inbox.checkLogin()) return;   // 今日初めて開いたら、先にログインボーナス
+  if (typeof Arena !== "undefined") Arena.claim();   // 終わったアリーナの報酬（あれば小窓）
   const deck = Decks.selected();
   const goldOK = Account.status !== "none" && Account.status !== "free";
   const icon = goldOK ? Account.icon() : null;

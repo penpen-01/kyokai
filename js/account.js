@@ -154,6 +154,8 @@ const Account = {
         w: Math.max(0, Math.floor(+d.sen.w || 0)), l: Math.max(0, Math.floor(+d.sen.l || 0)), ...(d.sen.fight ? { fight: 1 } : {}) } } : {}),
       ...(+d.senBest > 0 ? { senBest: Math.floor(+d.senBest) } : {}), ...(+d.senRuns > 0 ? { senRuns: Math.floor(+d.senRuns) } : {}),
       ...(Array.isArray(d.iconRecent) ? { iconRecent: d.iconRecent.filter(x => /^[\w-]{1,40}$/.test(x)).slice(0, 12) } : {}),
+      // アリーナ：報酬を受け取った回（sid の一覧。古いものから消す）
+      ...(Array.isArray(d.arenaGot) ? { arenaGot: d.arenaGot.filter(x => typeof x === "string" && x.length <= 24).slice(-40) } : {}),
       // 友達との対戦でGを受け取った回数（1日ごと）
       ...(d.onlDay && /^\d{4}-\d{2}-\d{2}$/.test(d.onlDay.d) ? { onlDay: { d: d.onlDay.d, n: Math.max(0, Math.floor(+d.onlDay.n || 0)) } } : {}),
       // 隠しボス：最後に会ってから上級で勝った回数（天井用）と、次の上級戦でボスが出るか

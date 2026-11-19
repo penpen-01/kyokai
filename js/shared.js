@@ -707,6 +707,12 @@ const KEEPER_SCENES = {
   singCaught:{ label: "歌っているところを見られた", hint: "ルゥだけ。歌っている最中に押されたとき（照れる）" }
 };
 /* アリーナの曜日ごとのルール（日〜土）。std＝通常戦、sen＝選定戦、set1＝第1弾限定 */
+const ARENA_REWARDS_DEF = { since: "2026-11-20", part: { gold: 0, stones: 0, tickets: 1 }, rank: [{ gold: 1000, stones: 0, tickets: 3 }, { gold: 500, stones: 0, tickets: 2 }, { gold: 0, stones: 0, tickets: 1 }] };
+function arenaRewards(r) {
+  const one = x => ({ gold: Math.max(0, Math.floor(+(x && x.gold) || 0)), stones: Math.max(0, Math.floor(+(x && x.stones) || 0)), tickets: Math.max(0, Math.floor(+(x && x.tickets) || 0)) });
+  if (!r || typeof r !== "object") return JSON.parse(JSON.stringify(ARENA_REWARDS_DEF));
+  return { since: /^\d{4}-\d{2}-\d{2}$/.test(r.since || "") ? r.since : ARENA_REWARDS_DEF.since, part: one(r.part), rank: (Array.isArray(r.rank) ? r.rank : []).slice(0, 10).map(one) };
+}
 const ARENA_DAYS_DEF = ["std", "std", "sen", "set1", "std", "sen", "set1"];
 /* 情報屋で売る情報の種類。peek＝買ったその時だけ見られる「今の状態」、ほかは買ってから INFO_HOURS 時間読める */
 const INFO_CATS = { peek: "今の状態（買ったその時だけ）", boss: "ボスの秘密", legend: "限定レジェンドの解説と考察", cpu: "CPUのデッキ帳", card: "噂の強カード", gate: "パック開放戦の攻略" };
@@ -966,7 +972,9 @@ function normalizeData(data) {
   const A0 = d.arena || {}, AR = ["std", "sen", "set1"], hm = v => /^\d{2}:\d{2}$/.test(v || "") ? v : null;
   const arena = { on: A0.on === 0 ? 0 : 1, start: hm(A0.start) || "21:00", end: hm(A0.end) || "22:00",
     days: Array.from({ length: 7 }, (_, i) => { const v = Array.isArray(A0.days) ? A0.days[i] : ARENA_DAYS_DEF[i]; return v === "" ? "" : AR.includes(v) ? v : ARENA_DAYS_DEF[i]; }),
-    extra: (Array.isArray(A0.extra) ? A0.extra : []).filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && hm(x.start) && hm(x.end) && AR.includes(x.rule)).map(x => ({ date: x.date, start: x.start, end: x.end, rule: x.rule })).slice(0, 60) };
+    extra: (Array.isArray(A0.extra) ? A0.extra : []).filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && hm(x.start) && hm(x.end) && AR.includes(x.rule)).map(x => ({ date: x.date, start: x.start, end: x.end, rule: x.rule })).slice(0, 60),
+    // 報酬：part＝参加賞（点が入った対戦が1戦以上）、rank＝1位から順。since の日より後の回から配る
+    rewards: arenaRewards(A0.rewards) };
   return { version: +d.version || 1, updated: d.updated || "", config, cards, decks, packs, serials, news, mail, login, picks, quests, daily, beginner, keepers, info, titles, stamps, skins, sen, arena };
 }
 

@@ -3024,3 +3024,11 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .ar-past{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px;-webkit-overflow-scrolling:touch}
 .ar-past .btn{flex:none;display:flex;flex-direction:column;align-items:center;line-height:1.2;padding:5px 9px}
 .ar-past .btn small{font-size:10px;opacity:.8}
+/* アリーナの報酬の小窓 */
+.ar-rw-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;padding:10px 12px;margin:8px 0;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
+.ar-rw-row span{font-size:13px}.ar-rw-row span small{margin-left:6px;opacity:.7}
+.ar-rw-row b{font-size:20px;color:var(--gold,#e8c36a)}.ar-rw-row b small{font-size:11px;opacity:.7;margin-left:2px}
+.ar-rw-row em{grid-column:1/-1;font-style:normal;font-weight:700}
+.ar-rw-row.r1{border-color:#e8c36a;background:linear-gradient(90deg,rgba(232,195,106,.18),rgba(255,255,255,.03))}
+.ar-rw-row.r2{border-color:#c9d1dc}.ar-rw-row.r3{border-color:#c98b5a}
+.ar-rwline{font-size:12px;margin:6px 0 10px;line-height:1.6}.ar-rwline b{color:var(--gold,#e8c36a);margin-right:8px}.ar-rwline small{display:block;opacity:.65;font-size:11px}

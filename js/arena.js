@@ -4,7 +4,7 @@
      （同時に呼び合わないように、呼ぶ側は自分の欄に lock を立ててから呼ぶ）
    ・対戦は友達対戦の部屋（rooms）をそのまま使う。部屋に arena＝回のID を書いておき、終わったら点を記録
    ・点：勝ち3・負け1（引き分け1）。arena/r/<回のID>/<uid> = { name, pts, w, l, d }
-   ・β版の間は報酬なし。運営アカウントは、いつでも「テスト」の回に入れる */
+   ・報酬：参加賞と1〜3位（ARENA.rewards。回が終わって1時間後に受け取れる）。運営アカウントは、いつでも「テスト」の回に入れる */
 let ARENA = { on: 1, start: "21:00", end: "22:00", days: ARENA_DAYS_DEF.slice(), extra: [] };
 const ARENA_RULES = {
   std:  { name: "通常戦",     desc: "持っているカードで組んだ、いつものデッキで戦います。" },
@@ -79,12 +79,13 @@ const Arena = {
     const now = Date.now(), c = this.current(now), up = this.sessions(now).filter(x => x.end > now).slice(0, 8);
     const rule = c ? ARENA_RULES[c.rule] : null;
     openOverlay(`<div class="panel ar">
-      <h2 class="title sm">アリーナ <i class="beta-tag">β版・報酬なし</i></h2>
+      <h2 class="title sm">アリーナ <i class="beta-tag">β版</i></h2>
       ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営・メンテ通過の端末のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
         <p class="lead small">${rule.desc}同じ時間に探している人と、ランダムに対戦します。勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点。同じ相手からの点は${ARENA_VS_MAX}戦まで、すぐ降参した対戦は点になりません。</p>
         ${c.test ? `<div class="ar-test">テストのルール：${Object.entries(ARENA_RULES).map(([k, r]) => `<button type="button" class="btn sm ${c.rule === k ? "primary" : ""}" data-act="arenaTestRule" data-v="${k}">${r.name}</button>`).join("")}</div>` : ""}
         ${this.searching ? `<div class="ar-search"><b>相手を探しています<span class="pg-dots"><i></i><i></i><i></i></span></b><small id="ar-wait"></small><button type="button" class="btn" data-act="arenaStop">探すのをやめる</button></div>`
           : `<button type="button" class="btn primary ar-go" data-act="arenaSearch">相手を探す</button>`}
+        ${this.rewardLine()}
         <span class="gl">ランキング（この回）</span><div id="ar-rank" class="ar-rank"><p class="hint">読み込み中…</p></div>`
         : `<p class="lead">いまは開いていません。</p>`}
       ${this.pastHTML()}
@@ -198,6 +199,49 @@ const Arena = {
     this.searching = false; this.claiming = false;
   },
   /* 対戦が終わった：点を記録する（1つの対戦で1回だけ） */
+  /* 終わった回の報酬を受け取る。回が終わってから1時間たってから（終わる前に始めた対戦の結果を待つ）。
+     点が入った対戦が1戦以上で参加賞、さらに順位（点→勝ち数。同点は同じ順位）で rank の報酬 */
+  async claim() {
+    if (this.claimingR || !Account.data || ["free", "none"].includes(Account.status) || !ARENA.on) return;
+    if (Date.now() - (this.claimAt || 0) < 5 * 60e3) return;
+    this.claimAt = Date.now(); this.claimingR = true;
+    try {
+      const RW = ARENA.rewards, since = this.at(RW.since, "00:00"), got = Account.data.arenaGot || [];
+      const todo = this.past().filter(x => x.start >= since && x.end + 3600e3 <= Date.now() && !got.includes(x.sid));
+      if (!todo.length) return;
+      const uid = await Net.init(), out = [];
+      for (const x of todo) {
+        const v = await Net.get(`arena/r/${x.sid}`), me = v && v[uid];
+        const done = (Account.data.arenaGot || []).concat(x.sid).slice(-40);
+        if (!me || !(me.pts > 0)) { Account.data.arenaGot = done; continue; }
+        const L = Object.values(v).filter(y => y && y.pts > 0);
+        const rank = 1 + L.filter(y => y.pts > me.pts || (y.pts === me.pts && (y.w || 0) > (me.w || 0))).length;
+        const r = RW.rank[rank - 1], add = { gold: RW.part.gold + (r ? r.gold : 0), stones: RW.part.stones + (r ? r.stones : 0), tickets: RW.part.tickets + (r ? r.tickets : 0) };
+        const d = Account.data; d.gold = (d.gold || 0) + add.gold; d.stones = (d.stones || 0) + add.stones; d.tickets = (d.tickets || 0) + add.tickets; d.arenaGot = done;
+        out.push({ x, rank, n: L.length, add, top: !!r });
+      }
+      Account.saveNow();
+      if (out.length) this.rewardPop(out);
+    } catch (e) { console.error(e); this.claimAt = 0; }
+    finally { this.claimingR = false; }
+  },
+  /* ホーム画面を見ているか（ホームも overlay の中に描かれるので、ホームのボタンがあるかで見る） */
+  rewardLine() {
+    const R = ARENA.rewards, it = a => [a.gold ? `${a.gold}G` : "", a.stones ? `魔石${a.stones}` : "", a.tickets ? `券${a.tickets}` : ""].filter(Boolean).join("＋");
+    const parts = [it(R.part) ? `参加 ${it(R.part)}` : "", ...R.rank.map((r, i) => it(r) ? `${i + 1}位 ${it(r)}` : "")].filter(Boolean);
+    return parts.length ? `<p class="ar-rwline"><b>報酬</b>${parts.join("　")}<small>回が終わった1時間後に、ホームで受け取れます</small></p>` : "";
+  },
+  onHome() { const ov = document.getElementById("overlay"); return !!(ov && !ov.hidden && ov.querySelector('[data-act="solo"]')); },
+  rewardPop(out) {
+    if (!Arena.onHome()) { setTimeout(() => this.rewardPop(out), 4000); return; }   // ホームにいるときに出す
+    const items = a => [a.gold ? `${a.gold.toLocaleString()}G` : "", a.stones ? `魔石${a.stones}` : "", a.tickets ? `パック券${a.tickets}枚` : ""].filter(Boolean).join("・");
+    openOverlay(`<div class="panel ar-rw">
+      <h2 class="title sm">アリーナの報酬</h2>
+      ${out.map(o => `<div class="ar-rw-row ${o.top && o.rank <= 3 ? `r${o.rank}` : ""}"><span>${this.dayLabel(o.x.start)} ${this.hm(o.x.start)}<small>${ARENA_RULES[o.x.rule].name}</small></span><b>${o.rank}位<small>/${o.n}人</small></b><em>${items(o.add)}</em></div>`).join("")}
+      <button type="button" class="btn primary" data-act="back">受け取る</button>
+    </div>`, "start");
+    if (typeof Sound !== "undefined" && Sound.play) try { Sound.play("win"); } catch (e) {}
+  },
   /* 対戦の結果を記録する。点にならない対戦（すぐ決着・同じ相手と3戦目以降）も、記録（g）には残す */
   record(res) {
     const R = Online.room; if (!R || !R.arena || !S || this.recorded === S.gid) return null;
@@ -243,7 +287,7 @@ const Arena = {
 setInterval(() => {
   try {
     if (typeof ARENA === "undefined" || !ARENA.on || S || (typeof DATA_INFO !== "undefined" && DATA_INFO.draft)) return;
-    const ov = document.getElementById("overlay"); if (ov && !ov.hidden) return;
+    if (!Arena.onHome()) return;
     const door = document.getElementById("ar-door"), sc = document.getElementById("showcase");
     if (door && door.classList.contains("opening")) return;
     const live = Arena.live();
