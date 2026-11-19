@@ -3303,7 +3303,9 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .dmodal:has(.dm-nav){display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .dmodal:has(.dm-nav) .dmodal-in{margin:auto;max-height:none;flex:none}
 /* カードの詳しい説明などの小窓が出ている間は、下のメニューとデッキボタンを隠す（小窓の「閉じる」に重なっていた） */
-#overlay:has(.dmodal) ~ .gnav-bar,#overlay:has(.dmodal) ~ .gfab{display:none}
+#overlay:has(.dmodal:not(.helpbox):not(.kp-swapbox)) ~ .gnav-bar,#overlay:has(.dmodal:not(.helpbox):not(.kp-swapbox)) ~ .gfab{display:none}
+/* 「？」の説明・店員を変える小窓は短いので、下のメニューは出したまま */
+.helpbox,.kp-swapbox{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 .battlebtn.online .bart{background-image:linear-gradient(180deg,rgba(9,10,20,.15),rgba(9,10,20,.75) 70%),url("../ui/mode-online.webp");background-position:center,72% 25%;background-size:cover,cover}
 
 /* G・魔石の札（どの画面でも同じ形）：細い金の二重線の黒い札。絵は左にはみ出して大きく（2026-11-20） */
