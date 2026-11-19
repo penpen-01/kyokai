@@ -3280,3 +3280,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .overlay.gnav-on .shophub .sh-sticky > .topbar{top:calc(10px + env(safe-area-inset-top,0px));right:4px}
 .overlay.gnav-on .shophub .sh-sticky > .topbar::before{display:none}
 .overlay.gnav-on .sh-sticky .kp-mini .kp-bubble{margin-top:34px}
+/* ショップの入口：店員の舞台は時計・電池の表示（ノッチ）の下から。上の余白は暗い帯で埋める */
+.overlay.gnav-on .shophub .sh-sticky{padding-top:calc(6px + env(safe-area-inset-top,0px));background:linear-gradient(#090a14,#0b0c18)}
+.overlay.gnav-on .shophub .sh-sticky > .topbar{top:calc(14px + env(safe-area-inset-top,0px));right:8px}
+@media (max-width:600px){.overlay.gnav-on .shophub .sh-sticky .kp-stage{border-radius:14px 14px 0 0}}
