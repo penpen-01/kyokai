@@ -15,14 +15,18 @@ const Packs = {
   /* 銀の袋のパック（上下のギザギザ・光の反射）。shop＝選ぶ画面、big＝開ける画面、mini＝10連の扇 */
   foilHTML(p, cls = "", extra = "") {
     const art = this.art(p), m = p.name.match(/^(第\S+)\s+(.+)$/), no = m ? m[1] : "", nm = m ? m[2] : p.name;
+    const bg = art ? `style="background-image:url('${esc(art)}')"` : "";
+    // 上の切り口より上（foil-cap）は別の部品。なぞると、そこだけが破れて持ち上がる
     return `<span class="foil ${cls}">
-      <span class="foil-crimp t"></span>
-      <span class="foil-body ${art ? "has-art" : ""}" ${art ? `style="background-image:url('${esc(art)}')"` : ""}>
+      <span class="foil-body ${art ? "has-art" : ""}" ${bg}>
         <span class="foil-logo"><small>境界の召喚士</small><b>${esc(nm)}</b>${no ? `<em>${esc(no)}</em>` : ""}</span>
         ${extra}
-        <span class="foil-shine"></span>
+        <span class="foil-metal"></span><span class="foil-shine"></span>
       </span>
       <span class="foil-crimp b"></span>
+      <span class="foil-cap"><span class="foil-crimp t"></span><span class="foil-capbody" ${bg}><span class="foil-metal"></span></span></span>
+      <span class="foil-rip"></span>
+      ${cls === "big" ? `<span class="foil-guide"><i></i></span>` : ""}
     </span>`;
   },
   art(pack) { return pack.art || (pack.id === "pack1" ? "ui/pack-art.webp" : ""); },
@@ -257,12 +261,13 @@ const Packs = {
       <div class="os-top">${goldTag(Account.gold)}</div>
       <div class="bp-wrap ${L.multi ? "fan" : ""}">
         ${L.multi ? Array.from({ length: L.multi }, (_, i) => `<span class="fan-i" style="--k:${i - (L.multi - 1) / 2};--d:${i}">${this.foilHTML(L.pack, "mini")}</span>`).join("") : ""}
-        <button type="button" class="bigpack ${L.multi ? "multi" : ""}" data-act="packTear" aria-label="パックを開ける">
+        <button type="button" class="bigpack ${L.multi ? "multi" : ""}" data-act="packTear" aria-label="パックを開ける（横になぞる）">
           ${L.multi ? "" : this.foilHTML(L.pack, "big", `<span class="foil-size">${L.pack.size}枚入り</span>`)}
         </button>
       </div>
-      <p class="os-hint">${L.multi ? `タップして${L.multi}パックまとめて開ける` : "タップして開ける"}</p>
+      <p class="os-hint">${Motion.reduced ? "タップして開ける" : L.multi ? "パックの上を横になぞって、全部開けよう" : "上の線を横になぞって開けよう"}</p>
     </div>`, "start", true);
+    if (!Motion.reduced) this.bindTear();
   },
 
   /* 1枚ずつめくる */
@@ -397,6 +402,51 @@ const Packs = {
     </div>`;
   },
 
+  /* なぞって開ける（2026-11-20 オーナー要望：タップで勝手に開くと、開けている感じが薄い）。
+     1パック：横になぞった長さだけ上が破れていき、端まで行くと開く。指を離しても途中まで破れたまま。
+     10パック：扇の上を横になぞると、指が通ったパックから1つずつ破れる。全部破れたら開く */
+  bindTear() {
+    const L = this.last, wrap = $(".bp-wrap"), bp = $(".bigpack"); if (!wrap || !bp) return;
+    bp.removeAttribute("data-act");   // タップだけでは開かない（キーボードの Enter だけは開ける）
+    bp.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.tear(); } });
+    const buzz = ms => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} };
+    let st = null;
+    const hint = () => { const h = $(".os-hint"); if (h) { h.classList.remove("nudge"); void h.offsetWidth; h.classList.add("nudge"); } };
+    if (!L.multi) {
+      const foil = bp.querySelector(".foil"); let base = 0, step = 0;
+      bp.addEventListener("pointerdown", e => { if (this.busy) return; st = { x: e.clientX, min: e.clientX, max: e.clientX, w: foil.getBoundingClientRect().width, moved: false }; try { bp.setPointerCapture(e.pointerId); } catch (x) {} });
+      bp.addEventListener("pointermove", e => {
+        if (!st || this.busy) return;
+        st.min = Math.min(st.min, e.clientX); st.max = Math.max(st.max, e.clientX);
+        if (!st.moved && Math.abs(e.clientX - st.x) > 6) {
+          st.moved = true;
+          if (!foil.dataset.dir) { const d = e.clientX > st.x ? 1 : -1; foil.dataset.dir = d; foil.style.setProperty("--s", d); foil.style.setProperty("--ho", d > 0 ? "100%" : "0%"); foil.style.setProperty("--ro", d > 0 ? "0%" : "100%"); foil.classList.add("opening"); }
+        }
+        const p = Math.min(1, base + (st.max - st.min) / (st.w * .85));
+        foil.style.setProperty("--p", p.toFixed(3));
+        const k = Math.floor(p * 6); if (k > step) { step = k; buzz(6); Sound.play("flip"); }
+        if (p >= 1) { st = null; this.tear(); }
+      });
+      const up = () => { if (!st) return; if (!st.moved) hint(); else base = Math.min(1, base + (st.max - st.min) / (st.w * .85)); st = null; };
+      bp.addEventListener("pointerup", up); bp.addEventListener("pointercancel", up);
+      return;
+    }
+    // 10パック：指が各パックの真ん中を横切ったら、そのパックを破る
+    const items = [...wrap.querySelectorAll(".fan-i")];
+    const mid = () => items.map(el => { const r = el.getBoundingClientRect(); return { el, cx: r.left + r.width / 2, top: r.top, bot: r.bottom }; });
+    let M = null, last = null;
+    const tearOne = it => { if (it.el.classList.contains("cut")) return; it.el.classList.add("cut"); it.el.querySelector(".foil").classList.add("torn"); buzz(10); Sound.play("flip");
+      if (items.every(x => x.classList.contains("cut"))) { st = null; setTimeout(() => this.tear(), 350); } };
+    bp.addEventListener("pointerdown", e => { if (this.busy) return; M = mid(); last = e.clientX; st = { moved: false, x: e.clientX }; try { bp.setPointerCapture(e.pointerId); } catch (x) {} });
+    bp.addEventListener("pointermove", e => {
+      if (!st || !M) return;
+      if (Math.abs(e.clientX - st.x) > 6) st.moved = true;
+      M.forEach(it => { if ((last - it.cx) * (e.clientX - it.cx) <= 0 && e.clientY > it.top - 60 && e.clientY < it.bot + 60) tearOne(it); });
+      last = e.clientX;
+    });
+    const up = () => { if (st && !st.moved) hint(); st = null; };
+    bp.addEventListener("pointerup", up); bp.addEventListener("pointercancel", up);
+  },
   tear() {
     const L = this.last; if (!L || L.stage !== "pack" || this.busy) return;
     const bp = $(".bigpack");
@@ -404,7 +454,8 @@ const Packs = {
     if (bp && !Motion.reduced) {
       this.busy = true;
       bp.classList.add("tearing");
-      setTimeout(() => this.whenReady(L, () => { this.busy = false; if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }), 700);
+      document.querySelectorAll(".bp-wrap .foil").forEach(f => f.classList.add("torn"));
+      setTimeout(() => this.whenReady(L, () => { this.busy = false; if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; L.idx = 0; L.faceUp = false; this.showReveal(); } }), 900);
     } else this.whenReady(L, () => { if (L.multi) { L.stage = "done"; this.showMulti(true); } else { L.stage = "reveal"; this.showReveal(); } });
   },
 

@@ -3074,7 +3074,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .solo-sub .lvl-body{min-width:0}
 
 /* ===== パック：銀の袋（2026-11-20） ===== */
-.foil{--crimp:5.5%;position:relative;display:block;aspect-ratio:5/7.6;filter:drop-shadow(0 14px 22px rgba(0,0,0,.6))}
+.foil{--crimp:5%;--cutb:6.5%;position:relative;display:block;aspect-ratio:5/8;filter:drop-shadow(0 14px 22px rgba(0,0,0,.6))}
 .foil-crimp{position:absolute;left:1%;right:1%;height:var(--crimp);z-index:2;
   background:repeating-linear-gradient(90deg,rgba(0,0,0,.18) 0 1px,transparent 1px 4px),linear-gradient(180deg,#f2f4f7,#a9afb8 45%,#e3e6ea 70%,#8e949d)}
 .foil-crimp.t{top:0;-webkit-mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/9px 100%;mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50%/9px 100%}
@@ -3087,7 +3087,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .foil-body::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,80,160,.0),rgba(120,200,255,.18),rgba(255,230,120,.12),rgba(255,80,160,0));mix-blend-mode:overlay;pointer-events:none}
 .foil-shine{position:absolute;inset:-20%;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.38) 48%,rgba(255,255,255,.05) 55%,transparent 62%);background-size:260% 100%;mix-blend-mode:screen;animation:foilshine 4.5s ease-in-out infinite;pointer-events:none}
 @keyframes foilshine{0%,30%{background-position:120% 0}70%,100%{background-position:-60% 0}}
-.foil-logo{position:absolute;z-index:1;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;padding:9% 8% 14%;text-align:center;
+.foil-logo{position:absolute;z-index:1;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center;padding:15% 8% 14%;text-align:center;
   background:linear-gradient(rgba(5,7,18,.88),rgba(5,7,18,.55) 65%,transparent)}
 .foil-logo small{font-family:var(--f-display);font-size:.62em;letter-spacing:.32em;color:#e9d7a6;font-weight:700}
 .foil-logo b{font-family:var(--f-display);font-weight:800;font-size:1.5em;letter-spacing:.06em;line-height:1.2;color:#fff6dc;text-shadow:0 0 12px rgba(255,213,106,.55),0 2px 4px #000;word-break:keep-all}
@@ -3096,12 +3096,12 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 @media (prefers-reduced-motion:reduce){.foil-shine{animation:none}}
 
 /* 選ぶ画面：縦にスクロールしない（パックの大きさは画面の高さに合わせる） */
-.overlay:has(.pkshop){padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
-.panel.pkshop{height:calc(100dvh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));gap:8px;margin:0 auto}
+.overlay:has(.pkshop){padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.panel.pkshop{height:calc(100dvh - 12px - env(safe-area-inset-bottom,0px));gap:8px;margin:0 auto}
 .pkshop .pk2-track{flex:1;min-height:0;padding:2px 0 4px;--pkw:min(86%,360px)}
 .pkshop .pk2{height:100%;min-height:0;gap:8px}
 .pk2-stage{flex:1;min-height:0;container-type:size;display:grid;place-items:center}
-.foil.shop{width:min(100cqw,100cqh * 5 / 7.6);font-size:clamp(11px,4.2cqh,16px)}
+.foil.shop{width:min(100cqw,100cqh * 5 / 8);font-size:clamp(11px,4.2cqh,16px)}
 .pk2.on .foil.shop{filter:drop-shadow(0 0 18px rgba(255,214,120,.25)) drop-shadow(0 14px 22px rgba(0,0,0,.6))}
 .pkshop .pk2-meta{gap:5px}
 .pkshop .pk2-got{flex-direction:row;align-items:center;gap:8px}.pkshop .pk2-got i{flex:1}
@@ -3118,9 +3118,9 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .pk-oddsbox td,.pk-oddsbox th{padding:4px 2px;border-bottom:1px solid var(--line)}
 
 /* 開ける画面 */
-.bigpack{width:min(62vw,250px,40dvh * 5 / 7.6);aspect-ratio:5/7.6;font-size:min(4.4vw,17px)}
+.bigpack{width:min(66vw,270px,52dvh * 5 / 8);aspect-ratio:5/8;font-size:min(4.4vw,17px)}
 .bigpack .foil{width:100%;height:100%}
-.bigpack.tearing .foil-crimp.t{animation:foiltear .6s .15s cubic-bezier(.3,.6,.4,1) forwards}
+
 @keyframes foiltear{to{transform:translate(50px,-110px) rotate(26deg);opacity:0}}
 /* 10連：10個の袋を扇に広げる。タップでまとめて開ける */
 .bp-wrap.fan{width:100%;height:min(54dvh,420px)}
@@ -3130,7 +3130,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .fan-i .foil{width:100%}
 @keyframes fanin{from{transform:rotate(0) translateY(40px);opacity:0}}
 .bp-wrap.fan:has(.tearing) .fan-i{animation:fanshake .45s ease-in-out}
-.bp-wrap.fan:has(.tearing) .fan-i .foil-crimp.t{animation:foiltear .55s calc(.1s + var(--d) * 30ms) cubic-bezier(.3,.6,.4,1) forwards}
+
 @keyframes fanshake{30%{translate:0 -6px}60%{translate:0 3px}}
 .foil.mini .foil-logo small,.foil.mini .foil-logo em{display:none}
 .foil.mini .foil-logo b{font-size:1.25em}
@@ -3141,3 +3141,41 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .rs .rs-tag .rtag{position:static}
 .rs .rs-own{font-size:11px}
 .rs .rs-own em{font-style:normal;color:#ff8fa3;font-weight:800}
+
+/* ===== パックの破れる部品・金属の質感（2026-11-20 改） ===== */
+.foil-body{clip-path:inset(var(--cutb) 0 0 0)}
+.foil-cap{position:absolute;inset:0;z-index:3;pointer-events:none;transform-origin:var(--ho,100%) 11%;
+  transform:rotate(calc(var(--p,0) * var(--s,1) * 11deg)) translateY(calc(var(--p,0) * -5px));transition:transform .08s linear}
+.foil-capbody{position:absolute;left:0;right:0;top:calc(var(--crimp) - 1px);bottom:calc(var(--crimp) - 1px);border-radius:3px;overflow:hidden;
+  background:#141733 center/cover no-repeat;clip-path:inset(0 0 calc(100% - var(--cutb)) 0);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.foil-capbody::before{content:"";position:absolute;inset:0;background:rgba(5,7,18,.85)}
+/* 切り口の光：なぞった分だけ伸びる */
+.foil-rip{position:absolute;z-index:4;left:0;right:0;top:calc(var(--crimp) + (100% - 2 * var(--crimp)) * .065 - 1px);height:3px;border-radius:2px;pointer-events:none;
+  background:linear-gradient(90deg,#fff,#ffe9a8,#fff);box-shadow:0 0 10px 3px rgba(255,226,150,.85),0 0 26px 8px rgba(255,214,120,.45);
+  transform:scaleX(var(--p,0));transform-origin:var(--ro,0%) 50%;opacity:calc(var(--p,0) * 4)}
+/* なぞる線の案内（光の粒が左から右へ流れる） */
+.foil-guide{position:absolute;z-index:5;left:-4%;right:-4%;top:calc(var(--crimp) + (100% - 2 * var(--crimp)) * .065 - 1px);height:2px;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,240,200,.85) 0 6px,transparent 6px 11px);filter:drop-shadow(0 0 4px rgba(255,220,140,.9))}
+.foil-guide i{position:absolute;top:50%;left:0;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:radial-gradient(circle,#fff 0 22%,rgba(255,226,150,.8) 35%,transparent 70%);animation:guidemove 1.8s ease-in-out infinite}
+@keyframes guidemove{0%{left:0;opacity:0}15%{opacity:1}85%{opacity:1}100%{left:100%;opacity:0}}
+.foil.opening .foil-guide,.foil.torn .foil-guide{opacity:0;transition:opacity .2s}
+.bigpack .foil.opening{animation:none}
+/* 破れきった：上がちぎれて飛び、中から光があふれる */
+.foil.torn .foil-cap{animation:capfly .7s cubic-bezier(.25,.6,.35,1) forwards;transition:none}
+@keyframes capfly{to{transform:translate(calc(var(--s,1) * -70px),-140px) rotate(calc(var(--s,1) * 32deg));opacity:0}}
+.foil.torn .foil-rip{--p:1;opacity:1;animation:ripflash .8s ease-out forwards}
+@keyframes ripflash{40%{box-shadow:0 0 18px 8px #fff,0 -20px 60px 30px rgba(255,226,150,.8)}100%{box-shadow:0 0 30px 14px rgba(255,255,255,.6),0 -30px 90px 50px rgba(255,226,150,.5)}}
+.bigpack.tearing{animation:none}
+.bigpack.tearing .foil{animation:packshake .35s ease-in-out}
+/* 金属の質感：細い横の筋（ヘアライン）と、角度で明るさが変わる銀の反射 */
+.foil-metal{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,rgba(0,0,0,.05) 1px 2px),
+    linear-gradient(100deg,rgba(255,255,255,.28),rgba(255,255,255,0) 18%,rgba(0,0,0,.18) 45%,rgba(255,255,255,.22) 72%,rgba(255,255,255,0) 90%);
+  mix-blend-mode:soft-light}
+.foil-body{box-shadow:inset 0 0 0 1.5px rgba(225,230,238,.55),inset 10px 0 16px -8px rgba(255,255,255,.4),inset -10px 0 16px -8px rgba(0,0,0,.6),inset 0 18px 18px -14px rgba(0,0,0,.6)}
+.os-hint.nudge{animation:hintnudge .5s ease}
+@keyframes hintnudge{20%,60%{transform:translateX(-6px);color:#ffe9a8}40%,80%{transform:translateX(6px)}}
+/* 10連：破れたパックは少し下がる */
+.fan-i.cut{translate:0 8px;transition:translate .3s}
+.bp-wrap.fan .bigpack.multi{touch-action:none}
+.bigpack{touch-action:none}
