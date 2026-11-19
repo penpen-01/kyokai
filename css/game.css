@@ -3317,3 +3317,5 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .hb-left{padding-left:4px;margin-left:-6px}
 .hb-left .goldtag,.hb-left .stonetag{height:24px;min-width:92px;font-size:12.5px;padding:0 9px 0 25px;margin-left:6px;border-radius:6px}
 .hb-left .goldtag > .cur-ic,.hb-left .stonetag > .cur-ic{width:27px;height:27px;left:-8px}
+/* クエストの看板：メールなどのボタンのすぐ下へ */
+.homebar .qboard{bottom:auto;top:56px}
