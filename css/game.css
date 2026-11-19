@@ -1415,8 +1415,9 @@ body{
 
 /* ---- 所持数の札：G は金貨、魔石は紫の宝石の絵＋数 ---- */
 .goldtag,.stonetag,.tickettag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-variant-numeric:tabular-nums;
-  background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.25));padding-left:4px!important}
-.tickettag{font-weight:800;font-size:13px;color:#f3dca0;padding:4px 10px;border:1px solid #b8862e;border-radius:999px}
+  background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.25))}
+
+.tickettag{font-weight:800;font-size:13px;color:#f3dca0;padding:4px 10px 4px 4px;border:1px solid #b8862e;border-radius:999px}
 .cur-ic{width:1.45em;height:1.45em;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
 .hb-left .goldtag,.hb-left .stonetag{min-width:96px}
 
@@ -3296,12 +3297,6 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .battlebtn .bart{position:absolute;inset:0;z-index:0;pointer-events:none;background:center/cover no-repeat;opacity:.55}
 .battlebtn.cpu .bart{background-image:linear-gradient(180deg,rgba(9,10,20,.15),rgba(9,10,20,.75) 70%),url("../ui/mode-solo.webp");background-position:center,62% 30%;background-size:cover,cover}
 .battlebtn > *:not(.bart){position:relative;z-index:1}
-/* 左上の所持数（G・魔石・デッキ）：金の飾り枠。左の丸い台座にアイコンを入れる */
-.hb-left .goldtag,.hb-left .stonetag,.hb-left .deckplate{background:url("../ui/pill-frame.webp") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:none;
-  height:34px;min-width:140px;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;padding:0 14px 0 3px}
-.hb-left .goldtag > :first-child,.hb-left .stonetag > :first-child,.hb-left .deckplate > svg{flex:none;width:22px;height:22px;margin-left:2px}
-.hb-left .deckplate{max-width:200px}
-.hb-left .deckplate span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* パックを開ける画面の背景 */
 .overlay:has(.openstage){background:linear-gradient(rgba(8,9,20,.15),rgba(8,9,20,.45)),url("../ui/bg-open.webp") center 30%/cover no-repeat,#07080f}
 /* カードの詳しい説明が長いとき、小窓ごとスクロールできるように（前は前後の矢印のために、はみ出しを見せる設定で、下の「戻る」に届かなかった） */
@@ -3309,6 +3304,12 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .dmodal:has(.dm-nav) .dmodal-in{margin:auto;max-height:none;flex:none}
 /* カードの詳しい説明などの小窓が出ている間は、下のメニューとデッキボタンを隠す（小窓の「閉じる」に重なっていた） */
 #overlay:has(.dmodal) ~ .gnav-bar,#overlay:has(.dmodal) ~ .gfab{display:none}
-.hb-left .goldtag,.hb-left .stonetag{min-width:128px}
-.hb-left .deckplate{min-width:128px;max-width:142px}
 .battlebtn.online .bart{background-image:linear-gradient(180deg,rgba(9,10,20,.15),rgba(9,10,20,.75) 70%),url("../ui/mode-online.webp");background-position:center,72% 25%;background-size:cover,cover}
+
+/* G・魔石の札（どの画面でも同じ形）：細い金の二重線の黒い札。絵は左にはみ出して大きく（2026-11-20） */
+.goldtag,.stonetag{position:relative;height:30px;box-sizing:border-box;padding:0 12px 0 32px;margin-left:8px;border-radius:7px;font-family:var(--f-display);font-size:15px;line-height:1;
+  background:linear-gradient(180deg,#1a1d2e,#0b0d18);border:1px solid #b8913e;box-shadow:inset 0 0 0 2px #0b0d18,inset 0 0 0 3px rgba(232,195,106,.3),0 2px 6px rgba(0,0,0,.5)}
+.goldtag{color:#f1d27a}.stonetag{color:#c9b8ff}
+.goldtag > .cur-ic,.stonetag > .cur-ic{position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:34px;height:34px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.hb-left .goldtag,.hb-left .stonetag{min-width:118px;font-size:15px;padding:0 12px 0 32px}
+.topbar .goldtag,.topbar .stonetag{font-size:15px;padding:0 12px 0 32px}
