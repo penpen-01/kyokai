@@ -2217,20 +2217,28 @@ const GNav = {
   posKey: "kyokai-fab-pos",
   place(fab) {
     let p = null; try { p = JSON.parse(localStorage.getItem(this.posKey) || "null"); } catch (e) {}
-    if (p && typeof p.x === "number") { fab.style.left = `${Math.round(p.x * 100)}%`; fab.style.top = `${Math.round(p.y * 100)}%`; fab.style.bottom = "auto"; fab.classList.add("moved"); }
+    if (p && typeof p.x === "number") {
+      fab.style.left = `${Math.round(p.x * 100)}%`; fab.style.top = `${Math.round(p.y * 100)}%`; fab.style.bottom = "auto"; fab.classList.add("moved");
+      requestAnimationFrame(() => {   // 画面の大きさが変わって、下のメニューや画面の外にはみ出したら戻す
+        const r = fab.getBoundingClientRect(), nav = document.getElementById("gnav"), navH = nav && !nav.hidden ? nav.getBoundingClientRect().height : 0;
+        const y = Math.max(40, Math.min(innerHeight - navH - r.height - 10, r.top)), x = Math.max(4, Math.min(innerWidth - r.width - 4, r.left));
+        if (y !== r.top || x !== r.left) { fab.style.top = `${y}px`; fab.style.left = `${x}px`; }
+      });
+    }
     else { fab.style.left = ""; fab.style.top = ""; fab.style.bottom = ""; fab.classList.remove("moved"); }
     if (fab.dataset.bound) return; fab.dataset.bound = "1";
     let st = null, timer = null;
     fab.addEventListener("pointerdown", e => {
       st = { x: e.clientX, y: e.clientY, drag: false, id: e.pointerId };
-      timer = setTimeout(() => { if (!st) return; st.drag = true; fab.classList.add("dragging"); try { fab.setPointerCapture(st.id); navigator.vibrate && navigator.vibrate(15); } catch (x) {} }, 380);
+      timer = setTimeout(() => { if (!st) return; st.drag = true; fab.classList.add("dragging"); try { fab.setPointerCapture(st.id); navigator.vibrate && navigator.vibrate(15); } catch (x) {} }, 230);
     });
     fab.addEventListener("pointermove", e => {
       if (!st) return;
       if (!st.drag) { if (Math.hypot(e.clientX - st.x, e.clientY - st.y) > 10) { clearTimeout(timer); st = null; } return; }
       e.preventDefault();
       const r = fab.getBoundingClientRect(), W = innerWidth, H = innerHeight;
-      const x = Math.max(4, Math.min(W - r.width - 4, e.clientX - r.width / 2)), y = Math.max(40, Math.min(H - r.height - 80, e.clientY - r.height / 2));
+      const nav = document.getElementById("gnav"), navH = nav && !nav.hidden ? nav.getBoundingClientRect().height : 0;   // 下のメニューにかからないところまで
+      const x = Math.max(4, Math.min(W - r.width - 4, e.clientX - r.width / 2)), y = Math.max(40, Math.min(H - navH - r.height - 10, e.clientY - r.height / 2));
       fab.style.left = `${x}px`; fab.style.top = `${y}px`; fab.style.bottom = "auto"; fab.classList.add("moved");
     });
     const up = () => {

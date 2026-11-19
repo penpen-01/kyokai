@@ -3224,15 +3224,19 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
   transform:translate(calc(var(--i) * 5px),calc(var(--i) * 5px)) rotate(calc(var(--i) * 1.5deg));filter:brightness(calc(1 - var(--i) * .12))}
 .os-slot{isolation:isolate}
 .os-card{touch-action:pan-y;transition:transform .22s ease-in}
-/* 下のメニューがある画面は、上の見出しの帯をなくして広く使う。G・魔石の表示だけ右上に小さく残す（2026-11-20） */
-.overlay.gnav-on{padding-top:calc(10px + env(safe-area-inset-top,0px))}
-.overlay.gnav-on .topbar{position:absolute;z-index:6;top:calc(8px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));left:auto;padding:0;background:none !important;border:0;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;pointer-events:none}
+/* 下のメニューがある画面：上の見出しは「固定の帯」ではなく、中身といっしょに流れる細い見出しの行にする。
+   左に大きめの見出し、右に G・魔石。戻るは下のメニューにあるので消す（2026-11-20 改） */
+.overlay.gnav-on .topbar{position:relative;top:auto;background:none !important;border:0;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 2px 4px;min-height:44px}
 .overlay.gnav-on .topbar::before{display:none}
-.overlay.gnav-on .topbar > b,.overlay.gnav-on .topbar > .btn{display:none}
-.overlay.gnav-on .topbar > *{pointer-events:auto}
-.overlay.gnav-on:has(.topbar .goldtag,.topbar .stonetag) .panel{padding-top:34px}
-.overlay.gnav-on .panel{position:relative}
-.overlay.gnav-on .sh-sticky > .topbar{position:absolute;top:0}
+.overlay.gnav-on .topbar > .btn.sm:first-child{display:none}
+.overlay.gnav-on .topbar > b{font-family:var(--f-display);font-size:22px;font-weight:800;letter-spacing:.06em;color:#f3e6c4;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.overlay.gnav-on .topbar > .goldtag,.overlay.gnav-on .topbar > .stonetag{margin-left:auto}
+/* ショップ・スキン：店員と見出しを上に固定。後ろでスクロールする中身が透けないように、ほぼ不透明に */
+.overlay.gnav-on .sh-sticky{padding-top:0}
+.overlay.gnav-on .sh-sticky::before{background:rgba(10,11,24,.94)}
+.overlay.gnav-on .shophub .sh-sticky > .topbar::before{display:block;top:0;bottom:-1px;background:rgba(10,11,24,.94);border:0}
+.overlay.gnav-on .shophub .sh-sticky{background:transparent}
 /* 分解などの下に固定した操作の帯は、下のメニューの上に出す */
 .overlay.gnav-on .disbar{bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:44}
 .overlay.gnav-on:has(.disbar){padding-bottom:calc(200px + env(safe-area-inset-bottom,0px))}
@@ -3240,3 +3244,25 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .gfab{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .gfab.dragging{transform:scale(1.08);box-shadow:0 12px 28px rgba(0,0,0,.6),0 0 0 3px rgba(232,195,106,.6);opacity:.95}
 .overlay.gnav-on .panel.pkshop{height:calc(100dvh - 90px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+/* デッキ一覧：タブは下のメニューのすぐ上に（指が届く）。横に払っても切り替わる */
+.overlay.gnav-on .dl-tabs{position:fixed;z-index:44;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(72px + env(safe-area-inset-bottom,0px));
+  margin:0 auto;max-width:520px;background:rgba(14,16,30,.96);box-shadow:0 6px 18px rgba(0,0,0,.5);border-radius:12px}
+.overlay.gnav-on:has(.dl-tabs){padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))}
+.overlay.gnav-on:has(.dl-tabs) .panel{touch-action:pan-y}
+/* 一人で遊ぶ：見出しの下を広く使う */
+.overlay.gnav-on .solo-main .lvl{min-height:118px}
+.overlay.gnav-on .solo-sub .lvl{min-height:116px}
+/* 店員を変えるボタン（店員の左上）と小窓 */
+.kp-stage,.kp-mini{position:relative}
+.kp-swap{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;z-index:4;left:8px;top:8px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(10,11,24,.75);border:1px solid rgba(232,195,106,.6);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.kp-mini .kp-swap{left:-6px;top:-6px;width:26px;height:26px}
+.kp-swap svg{width:18px;height:18px;fill:none;stroke:#f1d999;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kp-mini .kp-swap svg{width:14px;height:14px}
+.kp-swapbox .dmodal-in{flex-direction:column;align-items:stretch;gap:10px;max-width:380px}
+.kp-swaplist{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kp-swapone{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);text-align:center}
+.kp-swapone b{font-size:11px;line-height:1.3}.kp-swapone small{font-size:9px;opacity:.7}
+.kp-swapone.on{border-color:#e8c36a;background:rgba(232,195,106,.14)}
+.kp-swapone .kp-mini{display:block}.kp-swapone .kp-man{display:block;width:60px;height:60px;cursor:pointer}
+.kp-rnd{width:60px;height:60px;border-radius:12px;display:grid;place-items:center;font-size:30px;font-weight:800;color:#e8c36a;border:1px dashed rgba(232,195,106,.6)}

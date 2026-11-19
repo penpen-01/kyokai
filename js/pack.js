@@ -275,8 +275,8 @@ const Packs = {
   showReveal(burst) {
     const L = this.last, x = L.cards[L.idx], c = DEF[x.id];
     const r = RARITY_ORDER.indexOf(c.rarity);
-    // コモン・レアは表のまま出す（1枚につき1回のタップで進める）。SR以上だけ、裏で光らせてからめくる
-    if (!L.faceUp && r < 2 && !(L.idx === L.cards.length - 1 && L.cards.length > 1)) { L.faceUp = true; Sound.play("flip"); }
+    // 全部表のまま出す（1枚につき1回のタップか、横に払うだけで次へ）。SR以上が出てきた瞬間は光と音で知らせる（オーナー 11-20）
+    if (!L.faceUp) { L.faceUp = true; burst = r >= 2; Sound.play(r >= 2 ? "rare" : "flip", r); if (r >= 3 && !Motion.reduced && typeof Motion.cutin === "function") Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！"); }
     const isLast = L.idx === L.cards.length - 1;
     openOverlay(`<div class="openstage">
       <div class="os-top">

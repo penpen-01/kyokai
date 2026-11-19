@@ -296,6 +296,22 @@ const Decks = {
         ${tab === "sample" ? `<button type="button" class="btn" data-act="deckPresets">用意されたデッキから作る</button>` : ""}
       </div>`}
     </div>`, "start", true);
+    this.bindTabSwipe();
+  },
+  /* デッキ一覧：横にさっと払うと、マイデッキ・限定構築・サンプルのタブを切り替える（パックの選択と同じ感覚） */
+  bindTabSwipe() {
+    const pn = document.querySelector("#overlay .panel"); if (!pn) return;
+    const tabs = [...pn.querySelectorAll('[data-act="deckListTab"]')].map(b => b.dataset.v); if (tabs.length < 2) return;
+    let st = null;
+    pn.addEventListener("pointerdown", e => { if (e.target.closest("input,textarea,select")) return; st = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+    pn.addEventListener("pointerup", e => {
+      if (!st) return; const dx = e.clientX - st.x, dy = e.clientY - st.y, dt = Date.now() - st.t; st = null;
+      if (dt > 600 || Math.abs(dx) < 70 || Math.abs(dy) > 50 || document.querySelector(".dbt.lift")) return;
+      const i = tabs.indexOf(this.listTab || "mine"), j = i + (dx < 0 ? 1 : -1);
+      if (j < 0 || j >= tabs.length) return;
+      suppressClickUntil = Date.now() + 350;
+      this.listTab = tabs[j]; Sound.play("click"); this.showList();
+    });
   },
   /* 並び替えたあとの順番を保存する（同じタブのデッキだけを、画面の並びのとおりにする） */
   saveOrder(ids) {

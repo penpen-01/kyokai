@@ -208,6 +208,7 @@ const Shop = {
     return list[h % list.length];   // 日ごとに変わる（その日は同じカード）
   },
   show(msg) {
+    if (!document.querySelector("#overlay .panel.shop")) Keeper.rpick = null;   // 外から入ってきたら、ランダムの店員を選び直す
     this.view = "hub";
     if (msg) toast(msg); this.msg = null;   // 交換した知らせは、上の紫の欄ではなく短い通知で（店員の場所を動かさない）
     const sur = this.surplus();
@@ -397,6 +398,9 @@ const Shop = {
   handleAct(act, el) {
     switch (act) {
       case "kpTap": Keeper.tap(); return true;
+      case "kpSwap": { const o = document.getElementById("overlay"); if (o && !o.querySelector(".kp-swapbox")) o.insertAdjacentHTML("beforeend", Keeper.swapHTML()); return true; }
+      case "kpSwapClose": { const m = document.querySelector(".kp-swapbox"); if (m) m.remove(); return true; }
+      case "kpPick": Keeper.pick(el.dataset.v); return true;
       case "exchOpen": this.exch = { g: Math.min(100, Math.floor(Account.stones / this.rate())) }; this.show(); return true;
       case "exchClose": this.exch = null; this.show(); return true;
       case "exchAdd": if (this.exch) { const max = Math.floor(Account.stones / this.rate()); const v = el.dataset.v; this.exch.g = v === "max" ? max : Math.max(0, Math.min(max, this.exch.g + +v)); this.show(); } return true;
@@ -484,7 +488,37 @@ const Keeper = {
   cur() {
     const L = (typeof KEEPERS !== "undefined" ? KEEPERS : []).filter(k => keeperOpen(k.id) || (k.art && k.art.idle));
     const want = Account.data && Account.data.keeper;
+    if (want === "random") {   // 持っている店員から、ショップを開くたびにランダム
+      const O = this.owned();
+      if (!this.rpick || !O.some(k => k.id === this.rpick)) this.rpick = O.length ? O[Math.floor(Math.random() * O.length)].id : null;
+      return L.find(k => k.id === this.rpick) || L[0] || null;
+    }
     return L.find(k => k.id === want) || L[0] || null;
+  },
+  /* 持っている店員（スキンの「店員」を買ったもの＋最初からいる店員） */
+  owned() {
+    const L = (typeof KEEPERS !== "undefined" ? KEEPERS : []).filter(k => keeperOpen(k.id) || (k.art && k.art.idle));
+    if (typeof Skins === "undefined") return L.slice(0, 1);
+    const S = Skins.list("keeper");
+    return L.filter((k, i) => { const s = S.find(x => x.ref === k.id); return s ? Skins.owned(s) : i === 0; });
+  },
+  /* 店員を変える小窓（ショップの店員の左上のボタンから） */
+  swapHTML() {
+    const O = this.owned(), cur = Account.data && Account.data.keeper;
+    const face = k => { const [fx, fy] = KEEPER_FACE[k.id] || [240, 150], W = 230; return `--kw:${(480 / W * 100).toFixed(1)}%;--kl:${(-(fx - W / 2) / W * 100).toFixed(1)}%;--kt:${(-(fy - W * .46) / W * 100).toFixed(1)}%`; };
+    return `<div class="dmodal kp-swapbox" data-act="kpSwapClose"><div class="dmodal-in" role="dialog" aria-label="店員を変える" data-act="noop">
+      <b class="dm-name">店員を変える</b>
+      <div class="kp-swaplist">${O.map(k => `<button type="button" class="kp-swapone ${cur === k.id ? "on" : ""}" data-act="kpPick" data-v="${esc(k.id)}"><span class="kp-mini"><span class="kp-man" style="${face(k)}"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></span></span><b>${esc(k.name)}</b></button>`).join("")}
+        <button type="button" class="kp-swapone rnd ${cur === "random" ? "on" : ""}" data-act="kpPick" data-v="random"><span class="kp-rnd" aria-hidden="true">?</span><b>ランダム</b><small>開くたびに変わる</small></button></div>
+      <button type="button" class="btn" data-act="kpSwapClose">閉じる</button></div></div>`;
+  },
+  pick(v) {
+    if (!Account.data) return;
+    Account.data.keeper = v; Account.save(); this.rpick = null; this.who = null;
+    const m = document.querySelector(".kp-swapbox"); if (m) m.remove();
+    const st = document.querySelector(".kp-stage"), mi = document.querySelector(".kp-mini:not(.kp-swapbox .kp-mini)");
+    if (st) st.outerHTML = this.stageHTML(); else if (mi) { const h = this.miniHTML(); if (h) mi.outerHTML = h; }
+    Sound.play("click");
   },
   frames(k) { return KEEPER_FRAMES.concat(KEEPER_EXTRA[k.id] || []); },
   has(k, f) { return this.frames(k).includes(f) || !!(k.art && k.art[f]); },
@@ -662,7 +696,7 @@ const Keeper = {
     const k = this.cur(); if (!k) return "";
     this.sync(k);
     this.preload(k); setTimeout(() => this.mount(), 0);
-    return `<div class="kp-stage">
+    return `<div class="kp-stage">${this.owned().length > 1 ? `<button type="button" class="kp-swap" data-act="kpSwap" aria-label="店員を変える"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button>` : ""}
       <button type="button" class="kp-man" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
       <div class="kp-bubble" data-act="kpNext" role="status" aria-live="polite"><b class="kp-name">${esc(k.name)}${k.title ? `<small>${esc(k.title)}</small>` : ""}</b><span class="kp-text">${esc(this.shown)}</span><span class="kp-extra">${this.typing ? "" : this.extra}</span><i class="kp-more" aria-hidden="true"></i></div>
     </div>`;
@@ -675,7 +709,7 @@ const Keeper = {
     this.preload(k); setTimeout(() => this.mount(), 0);
     const [fx, fy] = KEEPER_FACE[k.id] || [240, 150], W = 230;   // 顔の周り 230px 四方を見せる
     const pos = `--kw:${(480 / W * 100).toFixed(1)}%;--kl:${(-(fx - W / 2) / W * 100).toFixed(1)}%;--kt:${(-(fy - W * .46) / W * 100).toFixed(1)}%`;
-    return `<div class="kp-mini"><button type="button" class="kp-man" style="${pos}" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
+    return `<div class="kp-mini">${this.owned().length > 1 ? `<button type="button" class="kp-swap" data-act="kpSwap" aria-label="店員を変える"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></button>` : ""}<button type="button" class="kp-man" style="${pos}" data-act="kpTap" aria-label="${esc(k.name)}に話しかける"><img class="kp-img" src="${esc(this.src(k, "idle"))}" alt="" draggable="false"></button>
       <div class="kp-bubble" data-act="kpNext" role="status" aria-live="polite"><span class="kp-text">${esc(this.shown)}</span><span class="kp-extra"></span></div></div>`;
   },
   /* 描かれた画面で動かし始める（画面が描き直されると止まる） */
