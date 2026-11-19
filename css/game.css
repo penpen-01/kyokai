@@ -3311,3 +3311,4 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 #overlay:has(.dmodal) ~ .gnav-bar,#overlay:has(.dmodal) ~ .gfab{display:none}
 .hb-left .goldtag,.hb-left .stonetag{min-width:128px}
 .hb-left .deckplate{min-width:128px;max-width:142px}
+.battlebtn.online .bart{background-image:linear-gradient(180deg,rgba(9,10,20,.15),rgba(9,10,20,.75) 70%),url("../ui/mode-online.webp");background-position:center,72% 25%;background-size:cover,cover}
