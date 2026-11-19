@@ -2266,7 +2266,7 @@ const GNav = {
       const goldOK = Account.status !== "none" && Account.status !== "free";
       const b = (act, ic, label, t) => `<button type="button" class="navbtn ${tab === t ? "on" : ""}" data-act="${act}" ${tab === t ? 'aria-current="page"' : ""}>${ic}<b>${label}</b></button>`;
       nav.innerHTML = `<button type="button" class="navbtn gback" data-act="${back}" aria-label="戻る"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><b>戻る</b></button>
-        ${b("goHome", HOME_ICON.home, "ホーム", "home")}${b("decks", HOME_IMG("decks"), "デッキ", "decks")}${b("packs", HOME_IMG("packs"), "パック", "packs")}${goldOK ? b("shop", HOME_IMG("shop"), "ショップ", "shop") : ""}${b("cards", HOME_IMG("cards"), "カード", "cards")}`;
+        ${b("goHome", HOME_IMG("home"), "ホーム", "home")}${b("decks", HOME_IMG("decks"), "デッキ", "decks")}${b("packs", HOME_IMG("packs"), "パック", "packs")}${goldOK ? b("shop", HOME_IMG("shop"), "ショップ", "shop") : ""}${b("cards", HOME_IMG("cards"), "カード", "cards")}`;
     }
     const f = on && has("nv-fab");
     fab.hidden = !f; o.classList.toggle("gfab-on", f);
