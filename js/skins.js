@@ -140,7 +140,7 @@ const Skins = {
       body = L.length ? `<div class="sk-grid">${L.map(s => this.itemHTML(s, st, use)).join("")}</div>` : `<p class="sk-empty">準備中です。もうしばらくお待ちください。</p>`;
     }
     const a = this.ask, ax = a && (a.kind === "stamp" ? (() => { const s = STAMPS.find(x => x.id === a.id); return s && { name: `スタンプ「${s.text}」`, price: s.price }; })() : this.get(a.id));
-    openOverlay(`<div class="panel wide shop">
+    openOverlay(`<div class="panel wide shop nv-on nv-t-shop">
       <div class="sh-sticky"><div class="topbar"><button type="button" class="btn sm" data-act="shopMain">← ショップ</button><b>スキン</b>${stoneTag(st)}</div>
       ${Keeper.miniHTML()}</div>
       ${Shop.noteHTML()}

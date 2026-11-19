@@ -275,6 +275,8 @@ const Packs = {
   showReveal(burst) {
     const L = this.last, x = L.cards[L.idx], c = DEF[x.id];
     const r = RARITY_ORDER.indexOf(c.rarity);
+    // コモン・レアは表のまま出す（1枚につき1回のタップで進める）。SR以上だけ、裏で光らせてからめくる
+    if (!L.faceUp && r < 2 && !(L.idx === L.cards.length - 1 && L.cards.length > 1)) { L.faceUp = true; Sound.play("flip"); }
     const isLast = L.idx === L.cards.length - 1;
     openOverlay(`<div class="openstage">
       <div class="os-top">
@@ -291,7 +293,7 @@ const Packs = {
           : `<button type="button" class="os-back ${r >= 2 ? "glow" : ""} ${isLast && L.cards.length > 1 ? "last" : ""}" data-act="packFlip" aria-label="めくる">
              </button>`}
       </div>
-      <p class="os-hint">${L.faceUp ? (isLast ? "横に払って結果へ" : "横に払って次のカード") : isLast && L.cards.length > 1 ? "最後の1枚（レア以上）" : "タップしてめくる"}</p>
+      <p class="os-hint">${L.faceUp ? (isLast ? "タップで結果へ" : "タップで次のカード") : isLast && L.cards.length > 1 ? "最後の1枚（レア以上）" : "タップしてめくる"}</p>
       <button type="button" class="os-skip" data-act="packSkip" aria-label="飛ばして結果を見る">飛ばす<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l7 7-7 7M12 5l7 7-7 7"/></svg></button>
       <div class="os-dots">${L.cards.map((_, i) => `<i class="${i < L.idx || (i === L.idx && L.faceUp) ? "on" : ""}"></i>`).join("")}</div>
     </div>`, "start", true);

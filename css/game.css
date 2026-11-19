@@ -3224,3 +3224,19 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
   transform:translate(calc(var(--i) * 5px),calc(var(--i) * 5px)) rotate(calc(var(--i) * 1.5deg));filter:brightness(calc(1 - var(--i) * .12))}
 .os-slot{isolation:isolate}
 .os-card{touch-action:pan-y;transition:transform .22s ease-in}
+/* 下のメニューがある画面は、上の見出しの帯をなくして広く使う。G・魔石の表示だけ右上に小さく残す（2026-11-20） */
+.overlay.gnav-on{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.overlay.gnav-on .topbar{position:absolute;z-index:6;top:calc(8px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));left:auto;padding:0;background:none !important;border:0;-webkit-backdrop-filter:none !important;backdrop-filter:none !important;pointer-events:none}
+.overlay.gnav-on .topbar::before{display:none}
+.overlay.gnav-on .topbar > b,.overlay.gnav-on .topbar > .btn{display:none}
+.overlay.gnav-on .topbar > *{pointer-events:auto}
+.overlay.gnav-on:has(.topbar .goldtag,.topbar .stonetag) .panel{padding-top:34px}
+.overlay.gnav-on .panel{position:relative}
+.overlay.gnav-on .sh-sticky > .topbar{position:absolute;top:0}
+/* 分解などの下に固定した操作の帯は、下のメニューの上に出す */
+.overlay.gnav-on .disbar{bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:44}
+.overlay.gnav-on:has(.disbar){padding-bottom:calc(200px + env(safe-area-inset-bottom,0px))}
+/* デッキボタン：長押しで動かせる */
+.gfab{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.gfab.dragging{transform:scale(1.08);box-shadow:0 12px 28px rgba(0,0,0,.6),0 0 0 3px rgba(232,195,106,.6);opacity:.95}
+.overlay.gnav-on .panel.pkshop{height:calc(100dvh - 90px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}

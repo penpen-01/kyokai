@@ -2213,6 +2213,38 @@ function openOverlay(html, from, solid) {
    画面の panel に印を付けて出し分ける：nv-on＝下のメニューを出す、nv-t-◯◯＝光らせるタブ（play/decks/packs/shop/cards）、
    nv-fab＝左下にデッキボタン、nv-ret-◯◯＝デッキを選んだあとに戻る画面（data-act の名前）、nv-back-◯◯＝戻るボタンの行き先（無ければ上の帯の「戻る」と同じ） */
 const GNav = {
+  /* 左下のデッキボタンは、長押ししてから動かすと好きな場所へどかせる（場所は覚えておく） */
+  posKey: "kyokai-fab-pos",
+  place(fab) {
+    let p = null; try { p = JSON.parse(localStorage.getItem(this.posKey) || "null"); } catch (e) {}
+    if (p && typeof p.x === "number") { fab.style.left = `${Math.round(p.x * 100)}%`; fab.style.top = `${Math.round(p.y * 100)}%`; fab.style.bottom = "auto"; fab.classList.add("moved"); }
+    else { fab.style.left = ""; fab.style.top = ""; fab.style.bottom = ""; fab.classList.remove("moved"); }
+    if (fab.dataset.bound) return; fab.dataset.bound = "1";
+    let st = null, timer = null;
+    fab.addEventListener("pointerdown", e => {
+      st = { x: e.clientX, y: e.clientY, drag: false, id: e.pointerId };
+      timer = setTimeout(() => { if (!st) return; st.drag = true; fab.classList.add("dragging"); try { fab.setPointerCapture(st.id); navigator.vibrate && navigator.vibrate(15); } catch (x) {} }, 380);
+    });
+    fab.addEventListener("pointermove", e => {
+      if (!st) return;
+      if (!st.drag) { if (Math.hypot(e.clientX - st.x, e.clientY - st.y) > 10) { clearTimeout(timer); st = null; } return; }
+      e.preventDefault();
+      const r = fab.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+      const x = Math.max(4, Math.min(W - r.width - 4, e.clientX - r.width / 2)), y = Math.max(40, Math.min(H - r.height - 80, e.clientY - r.height / 2));
+      fab.style.left = `${x}px`; fab.style.top = `${y}px`; fab.style.bottom = "auto"; fab.classList.add("moved");
+    });
+    const up = () => {
+      clearTimeout(timer); if (!st) return;
+      if (st.drag) {
+        suppressClickUntil = Date.now() + 400; fab.classList.remove("dragging");
+        const r = fab.getBoundingClientRect();
+        try { localStorage.setItem(this.posKey, JSON.stringify({ x: r.left / innerWidth, y: r.top / innerHeight })); } catch (e) {}
+      }
+      st = null;
+    };
+    fab.addEventListener("pointerup", up); fab.addEventListener("pointercancel", up);
+    fab.addEventListener("contextmenu", e => e.preventDefault());
+  },
   sync(html) {
     const o = $("#overlay"), head = (/class="panel([^"]*)"/.exec(html) || ["", ""])[1], has = k => new RegExp(`(^|\\s)${k}(\\s|$)`).test(head);
     let nav = document.getElementById("gnav"), fab = document.getElementById("gfab");
@@ -2230,6 +2262,7 @@ const GNav = {
     }
     const f = on && has("nv-fab");
     fab.hidden = !f; o.classList.toggle("gfab-on", f);
+    if (f) this.place(fab);
     if (f) {
       const d = Decks.selected(), k = d ? Decks.keyCard(d) : null;
       fab.dataset.ret = ((/(?:^|\s)nv-ret-(\w+)/.exec(head)) || [])[1] || "";
