@@ -50,11 +50,11 @@ const Online = {
     openOverlay(`<div class="panel hub nv-on nv-fab nv-t-play nv-ret-online">
       ${Decks.topbar("オンラインで遊ぶ", "onlBack")}
       ${typeof Arena !== "undefined" ? Arena.lobbyHTML() : ""}
-      <h3 class="sec">友達と対戦</h3>
+      <div class="hub-friends"><i class="hf-art" aria-hidden="true"></i><b class="hf-t">友達と対戦</b>
       <div class="hub-grid">
         <button type="button" class="hub-btn" data-act="onlCreateOpen"><span class="hub-ic" aria-hidden="true">${HUB_IC.create}</span><b>部屋を作る</b><small>合言葉を友達に伝える</small></button>
         <button type="button" class="hub-btn" data-act="onlJoinOpen"><span class="hub-ic" aria-hidden="true">${HUB_IC.join}</span><b>合言葉で入る</b><small>友達の部屋に参加</small></button>
-      </div>
+      </div></div>
       <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
     </div>`, "lobby", true);
   },

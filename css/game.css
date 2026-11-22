@@ -3504,3 +3504,60 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 @keyframes resfly{0%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(1.3) rotate(0)}15%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translate(0,0) scale(.6) rotate(540deg)}}
 .fin-crest .fin-en{font-size:min(7.4vw,42px);letter-spacing:.04em}
 .res-crest .res-en{font-size:min(5.8vw,30px);letter-spacing:.04em}
+
+/* =========================================================
+   メニュー画面の作り直し（2026-11-23）：一人で遊ぶ・CPU戦・練習・オンライン
+   背景の絵・見出しの飾り板・タイルの金の枠
+   ========================================================= */
+.overlay:has(.panel.nv-ret-solo),.overlay:has(.panel.nv-ret-cpu),.overlay:has(.panel.nv-ret-practice){background:linear-gradient(180deg,rgba(5,6,14,.55),rgba(5,6,14,.35) 40%,rgba(5,6,14,.75)),url("../ui/bt/bg-solo.webp") center 30%/cover no-repeat,#07080f}
+.overlay:has(.panel.nv-ret-online),.overlay:has(.panel.nv-ret-onlCreateOpen),.overlay:has(.panel.hub),.overlay:has(.panel.ar){background:linear-gradient(180deg,rgba(5,6,14,.6),rgba(5,6,14,.3) 40%,rgba(5,6,14,.75)),url("../ui/bt/bg-online.webp") center 40%/cover no-repeat,#07080f}
+/* 見出し：金の縁の飾り板 */
+.overlay.gnav-on .topbar > b{display:inline-flex;align-items:center;min-height:44px;padding:4px 34px 6px;margin-left:-6px;font-size:21px;
+  background:url("../ui/bt/title-plate.webp") center/100% 100% no-repeat;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))}
+/* タイル：金の枠で囲み、絵を明るく大きく（文字の側だけ暗く） */
+.overlay.gnav-on .lvl{border:0;border-radius:2px;background:#0b0d1a;box-shadow:0 10px 22px rgba(0,0,0,.6)}
+.overlay.gnav-on .lvl::before{display:none}
+.overlay.gnav-on .lvl::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border:16px solid transparent;border-image:url("../ui/bt/tile-frame.webp") 70 / 16px stretch}
+.overlay.gnav-on .lvl:hover{transform:translateY(-2px)}
+.overlay.gnav-on .lvl:hover::after{filter:brightness(1.25) drop-shadow(0 0 6px rgba(255,214,120,.6))}
+.overlay.gnav-on .lvl-art{inset:5px;opacity:.95;background-position:70% 22%}
+.overlay.gnav-on .lvl-art::after{background:linear-gradient(90deg,rgba(8,10,22,.94) 10%,rgba(8,10,22,.6) 45%,rgba(8,10,22,0) 78%)}
+.overlay.gnav-on .lvl-body{padding:16px 18px 16px 24px}
+.overlay.gnav-on .lvl-go{padding-right:22px;color:#f1d999}
+.overlay.gnav-on .lvl-head b{font-size:26px;letter-spacing:.06em;text-shadow:0 2px 10px #000,0 0 18px rgba(0,0,0,.6)}
+.overlay.gnav-on .lvl-desc{font-size:12.5px;color:#e6e1d2}
+/* 一人で遊ぶ：CPU戦を大きく・選定戦を中・その他を下に3つ並べて1画面に */
+.overlay.gnav-on .solo-main{display:grid;gap:10px}
+.overlay.gnav-on .solo-main .lvl.m-cpu{min-height:clamp(150px,26vh,230px)}
+.overlay.gnav-on .solo-main .lvl.m-sen,.overlay.gnav-on .solo-main .lvl.m-world{min-height:clamp(104px,16vh,150px)}
+.overlay.gnav-on .solo-main .lvl-head b{font-size:32px}
+.overlay.gnav-on .solo-main .lvl.m-cpu .lvl-art{background-position:65% 18%}
+.overlay.gnav-on .solo-sub{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.overlay.gnav-on .solo-sub .lvl{min-height:clamp(112px,17vh,150px);padding:0}
+.overlay.gnav-on .solo-sub .lvl::after{border-width:12px;border-image-width:12px}
+.overlay.gnav-on .solo-sub .lvl-body{justify-content:flex-end;padding:10px 12px 12px}
+.overlay.gnav-on .solo-sub .lvl-head b{font-size:15px;white-space:normal;line-height:1.2}
+.overlay.gnav-on .solo-sub .lvl-desc{display:none}
+.overlay.gnav-on .solo-sub .lvl-art{background-position:50% 22%}
+.overlay.gnav-on .solo-sub .lvl-art::after{background:linear-gradient(0deg,rgba(8,10,22,.95) 22%,rgba(8,10,22,.2) 70%,rgba(8,10,22,0))}
+.overlay.gnav-on .solo-sub .ptag{font-size:9.5px;padding:1px 6px}
+.overlay.gnav-on .solo-sub .lvl.m-off{filter:grayscale(.7) brightness(.7)}
+.overlay.gnav-on:has(.solo-main) .panel::after{height:calc(150px + env(safe-area-inset-bottom,0px))}
+/* CPU戦：報酬の札にコインの絵 */
+.overlay.gnav-on .lvl-g{display:inline-flex;align-items:center;gap:4px;padding:2px 10px 2px 4px}
+.overlay.gnav-on .lvl-g::before{content:"";width:18px;height:18px;background:url("../ui/cur-gold.webp") center/contain no-repeat}
+.overlay.gnav-on .lvl-stars{font-size:16px;letter-spacing:3px;text-shadow:0 0 8px currentColor}
+/* オンライン：アリーナと友達と対戦も同じ金の枠 */
+.overlay.gnav-on .hub-hero{border:0;border-radius:2px;min-height:clamp(150px,24vh,210px);box-shadow:0 10px 22px rgba(0,0,0,.6)}
+.overlay.gnav-on .hub-hero::after,.hub-friends::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border:16px solid transparent;border-image:url("../ui/bt/tile-frame.webp") 70 / 16px stretch}
+.overlay.gnav-on .hub-hero .hub-hero-art{inset:5px 5px 5px 34%;opacity:.9}
+.overlay.gnav-on .hub-hero-txt{padding-left:10px}
+.overlay.gnav-on .hub-hero-txt b{font-size:28px}
+.hub-friends{position:relative;margin-top:14px;padding:18px 18px 20px;border-radius:2px;overflow:hidden;background:#0b0d1a;box-shadow:0 10px 22px rgba(0,0,0,.6)}
+.hf-art{position:absolute;inset:5px;background:url("../ui/mode-online.webp") 75% 25%/cover no-repeat;opacity:.75}
+.hf-art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,10,22,.25),rgba(8,10,22,.85) 75%)}
+.hf-t{position:relative;z-index:1;display:block;margin:2px 0 70px 8px;font-family:var(--f-display);font-size:26px;letter-spacing:.06em;color:#f1d999;text-shadow:0 2px 10px #000}
+.hub-friends .hub-grid{position:relative;z-index:3}
+.hub-friends .hub-btn{background:rgba(10,12,26,.78);border-color:rgba(232,195,106,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);padding:12px 8px 10px}
+.hub-friends .hub-ic{border-color:rgba(232,195,106,.6);color:#f1d999}
+.overlay.gnav-on .solo-sub .lvl-head b{font-size:13px;letter-spacing:0;white-space:nowrap}
