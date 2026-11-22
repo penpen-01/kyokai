@@ -87,53 +87,59 @@ const Cinema = {
       <div class="cv-seam" aria-hidden="true"></div>${extra}`;
   },
 
-  /* ---------- 試合開始：VS ---------- */
-  /* お互いのデッキの代表カードが斜めから飛び込んでぶつかり、はじけて左右に分かれ、VS */
+  /* ---------- 試合開始：VS（2026-11-23 作り直し） ----------
+     1 暗転して、真ん中に斜めの光の裂け目（境界）が走る
+     2 上から相手、下から自分の帯がすべり込む（代表カードの絵を大きく。名前・称号・デッキ名）
+     3 VS の紋章が叩きつけられる（白い光・衝撃の輪・火花・帯が揺れる）
+     4 帯が上下に割れて退場し、「BATTLE START」 */
   intro() {
     Sound.play("open");
-    const kc = (pi, cls) => { const c = this.keyCard(pi); return c ? `<div class="cv-kc ${cls}">${cardHTML(c, { static: true, pi })}</div>` : ""; };
-    this.layer("intro", this.bands(`<div class="cv-clash">${kc(OP, "op")}${kc(ME, "me")}<i class="cv-boom"></i></div><div class="cv-vs" aria-label="VS">VS</div>`));
-    if (!Motion.reduced) { setTimeout(() => Sound.play("destroy"), 480); setTimeout(() => Sound.play("hit"), 1050); }
-    return Motion.reduced ? 1200 : 2900;
+    // 絵は要素に直接（変数に url() を入れると、CSS のファイルの場所から探してしまい出なかった）
+    const art = pi => { const c = this.keyCard(pi); return c && c.art ? `style="background-image:url('${esc(c.art)}')"` : ""; };
+    const side = (pi, cls) => { const p = S.players[pi];
+      return `<div class="bi-side ${cls}"><i class="bi-art" ${art(pi)}></i><i class="bi-tint"></i>
+        <div class="bi-plate">${this.face(pi)}<span class="cv-name"><b>${esc(p.name)}</b>${p.title ? `<em>${esc(p.title)}</em>` : ""}<small>${esc(p.deckName || "")}</small></span></div></div>`; };
+    const sparks = Array.from({ length: 24 }, () => `<i style="--a:${Math.round(Math.random() * 360)}deg;--d:${Math.round(70 + Math.random() * 130)}px;--t:${(Math.random() * .2).toFixed(2)}s;--c:${Math.random() < .5 ? "#ffd27a" : "#9fd8ff"}"></i>`).join("");
+    const el = this.layer("intro2", `${side(OP, "op")}${side(ME, "me")}<div class="bi-rift"></div>
+      <div class="bi-vs"><i class="bi-ring"></i><i class="bi-ring r2"></i><img src="ui/bt/vs.webp" alt="VS" draggable="false"><span class="bi-sparks">${sparks}</span></div>
+      <div class="bi-start"><span>BATTLE START</span></div>`);
+    el.style.setProperty("--ang", `${(Math.atan2(-0.112 * innerHeight, innerWidth) * 180 / Math.PI).toFixed(2)}deg`);
+    if (!Motion.reduced) {
+      setTimeout(() => Sound.play("hit"), 820);
+      setTimeout(() => Sound.play("destroy"), 860);
+      setTimeout(() => Sound.play("rare", 1), 2150);
+      setTimeout(() => { try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }, 820);
+    }
+    return Motion.reduced ? 1200 : 3100;
   },
 
-  /* ---------- じゃんけん：お互いの手が上と下から飛び出して、すぐ結果 ---------- */
+  /* ---------- じゃんけん：お互いのカードが裏から表へめくれて、勝った方が光り、負けた方は砕ける ---------- */
   rps(last) {
     const v = last.winner == null ? "tie" : last.winner === ME ? "win" : "lose";
     const verdict = v === "tie" ? "あいこ！" : v === "win" ? "あなたの勝ち！" : "相手の勝ち";
-    const hands = `相手：${RPS[last.hands[OP]]} ／ あなた：${RPS[last.hands[ME]]}`;
-    const sub = hands;
-    const hand = (pi, cls) => `<div class="cv-hand ${cls} ${last.winner === pi ? "won" : last.winner == null ? "" : "lost"}">
-        <img class="real" src="ui/rps-${last.hands[pi]}.webp" alt="" draggable="false"></div>`;
-    this.layer("rpsc " + v, this.bands(`
-      ${hand(OP, "op")}${hand(ME, "me")}
-      <div class="cv-verdict ${v}"><b>${verdict}</b><small>${sub}</small></div>`));
+    const card = (pi, cls) => `<div class="br-card ${cls} ${last.winner === pi ? "won" : last.winner == null ? "tie" : "lost"}"><div class="br-in">
+        <i class="br-back"></i><img class="br-front" src="ui/bt/rps-${last.hands[pi]}.webp" alt="${RPS[last.hands[pi]]}" draggable="false"></div></div>`;
+    this.layer("rps2 " + v, `<i class="br-bg"></i>${card(OP, "op")}${card(ME, "me")}
+      <div class="br-verdict ${v}"><b>${verdict}</b><small>相手：${RPS[last.hands[OP]]} ／ あなた：${RPS[last.hands[ME]]}</small></div>`);
     if (!Motion.reduced) {
-      setTimeout(() => Sound.play("hit"), 260);
-      setTimeout(() => Sound.play(v === "win" ? "rare" : v === "lose" ? "flip" : "click"), 560);
+      setTimeout(() => Sound.play("flip"), 380);
+      setTimeout(() => Sound.play(v === "tie" ? "click" : "hit"), 820);
+      setTimeout(() => Sound.play(v === "win" ? "rare" : v === "lose" ? "destroy" : "click"), 1000);
     }
-    return Motion.reduced ? 1300 : 2000;
+    return Motion.reduced ? 1300 : 2300;
   },
 
-  /* ---------- 先攻／後攻 ---------- */
-  /* 先攻／後攻：大きな紋章が叩きつけられて、光の輪が広がる */
+  /* ---------- 先攻／後攻：紋章が叩きつけられ、後ろで光が回り、光の輪が広がる ---------- */
   order() {
-    const meFirst = S.first === ME;
-    // 光が集まる → 紋章のコインが高速で回る → 減速して表が決まる → 閃光と光の輪 → 説明
-    this.layer("orderc", this.bands(`<div class="cv-emb ${meFirst ? "first" : "second"}">
-        <i class="cv-gather"></i><i class="cv-ring"></i><i class="cv-ring r2"></i><i class="cv-ring r3"></i>
-        <div class="cv-coin"><div class="cv-coin-in">
-          <div class="cv-medal cv-face-back"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 10 62 38 90 50 62 62 50 90 38 62 10 50 38 38z" fill="none" stroke="#e9c873" stroke-width="3"/><circle cx="50" cy="50" r="9" fill="#e9c873"/></svg></div>
-          <div class="cv-medal cv-face-front"><span>${meFirst ? "FIRST" : "SECOND"}</span><b>${meFirst ? "先攻" : "後攻"}</b></div>
-        </div></div>
-        <i class="cv-burst"></i>
-        <p class="cv-emb-sub">${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」を持って始めます"}</p>
-      </div>`));
+    const meFirst = S.first === ME, k = meFirst ? "first" : "second";
+    this.layer("order2 " + k, `<i class="bo-rays"></i>
+      <div class="bo-emb"><i class="bi-ring"></i><i class="bi-ring r2"></i><img src="ui/bt/${k}.webp" alt="" draggable="false"></div>
+      <div class="bo-txt"><span>${meFirst ? "FIRST" : "SECOND"}</span><b>${meFirst ? "先攻" : "後攻"}</b><small>${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」を持って始めます"}</small></div>`);
     if (!Motion.reduced) {
-      [200, 420, 640, 860, 1060].forEach(t => setTimeout(() => Sound.play("flip"), t));
-      setTimeout(() => { Sound.play("hit"); Sound.play(meFirst ? "rare" : "buff"); }, 1450);
+      setTimeout(() => { Sound.play("hit"); Sound.play(meFirst ? "rare" : "buff"); }, 560);
+      setTimeout(() => { try { navigator.vibrate && navigator.vibrate(25); } catch (e) {} }, 560);
     }
-    return Motion.reduced ? 1400 : 3300;
+    return Motion.reduced ? 1400 : 2700;
   },
 
   /* ---------- マリガンのあと：決まった手札を見せる ---------- */

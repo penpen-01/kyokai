@@ -3344,3 +3344,163 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .cl-total{display:flex;align-items:baseline;gap:6px;font-family:var(--f-display);margin:2px 0 4px}
 .cl-total small{font-size:12px;color:#cdb984;letter-spacing:.08em}.cl-total b{font-size:24px;color:#f6e3a8}.cl-total i{font-style:normal;font-size:13px;color:var(--muted)}
 .cl-bar{flex:1;align-self:center;height:5px;margin-left:8px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.cl-bar s{display:block;height:100%;background:linear-gradient(90deg,#c8963c,#ffe7a3)}
+
+/* =========================================================
+   対戦の演出の作り直し（2026-11-23）：試合開始・じゃんけん・先攻後攻
+   ========================================================= */
+/* ---- 試合開始（3.1秒） ---- */
+.cine.intro2{background:#04050b}
+.bi-side{position:absolute;left:0;right:0;height:56%;overflow:hidden}
+.bi-side.op{top:0;clip-path:polygon(0 0,100% 0,100% 80%,0 100%);animation:biop 3.1s linear both}
+.bi-side.me{bottom:0;clip-path:polygon(0 20%,100% 0,100% 100%,0 100%);animation:bime 3.1s linear both}
+@keyframes biop{0%,5%{transform:translateY(-105%)}19%{transform:translateY(0)}26%{transform:translateY(0)}27.5%{transform:translate(-7px,-5px)}29%{transform:translate(6px,4px)}30.5%{transform:translate(-3px,0)}32%,63%{transform:translateY(0)}76%,100%{transform:translateY(-110%)}}
+@keyframes bime{0%,7%{transform:translateY(105%)}21%{transform:translateY(0)}26%{transform:translateY(0)}27.5%{transform:translate(7px,5px)}29%{transform:translate(-6px,-4px)}30.5%{transform:translate(3px,0)}32%,63%{transform:translateY(0)}76%,100%{transform:translateY(110%)}}
+.bi-art{position:absolute;inset:-8%;background-color:#141833;background-position:50% 22%;background-size:cover;background-repeat:no-repeat;animation:biart 3.1s ease-out both}
+.bi-side.me .bi-art{background-position:50% 26%}
+@keyframes biart{from{transform:scale(1.18)}to{transform:scale(1.02)}}
+.bi-tint{position:absolute;inset:0}
+.bi-side.op .bi-tint{background:linear-gradient(180deg,rgba(40,4,12,.25),rgba(120,14,34,.45) 55%,rgba(20,2,6,.85)),radial-gradient(ellipse at 20% 30%,transparent,rgba(0,0,0,.4))}
+.bi-side.me .bi-tint{background:linear-gradient(0deg,rgba(4,10,40,.25),rgba(16,46,130,.45) 55%,rgba(2,6,24,.85)),radial-gradient(ellipse at 80% 70%,transparent,rgba(0,0,0,.4))}
+.bi-plate{position:absolute;z-index:2;display:flex;align-items:center;gap:12px;animation:biplate 3.1s ease-out both}
+.bi-side.op .bi-plate{left:max(16px,env(safe-area-inset-left,0px));top:calc(16% + env(safe-area-inset-top,0px))}
+.bi-side.me .bi-plate{right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16% + env(safe-area-inset-bottom,0px));flex-direction:row-reverse;text-align:right}
+@keyframes biplate{0%,16%{opacity:0;transform:translateX(-30px)}24%,100%{opacity:1;transform:none}}
+.bi-side.me .bi-plate{animation-name:biplateme}
+@keyframes biplateme{0%,18%{opacity:0;transform:translateX(30px)}26%,100%{opacity:1;transform:none}}
+.bi-plate .cv-name em{font-style:normal;font-size:12px;color:#ffd98a;text-shadow:0 1px 4px #000}
+.bi-plate .cv-name b{font-size:24px}
+/* 光の裂け目 */
+.bi-rift{position:absolute;left:-30%;right:-30%;top:50%;height:4px;margin-top:-2px;z-index:3;transform:rotate(var(--ang,-13deg));
+  background:linear-gradient(90deg,transparent,#9fd8ff 15%,#fff 50%,#ffd98a 85%,transparent);box-shadow:0 0 16px 4px rgba(255,240,200,.8),0 0 50px 14px rgba(140,190,255,.45);
+  animation:birift 3.1s ease-out both}
+@keyframes birift{0%{transform:rotate(var(--ang,-13deg)) scaleX(0);opacity:0}9%{transform:rotate(var(--ang,-13deg)) scaleX(1);opacity:1}63%{transform:rotate(var(--ang,-13deg)) scaleX(1) scaleY(1);opacity:1}70%{transform:rotate(var(--ang,-13deg)) scaleX(1) scaleY(8);opacity:.7}78%,100%{transform:rotate(var(--ang,-13deg)) scaleX(1) scaleY(14);opacity:0}}
+/* VS の紋章 */
+.bi-vs{position:absolute;left:50%;top:50%;z-index:5;width:min(64vw,300px);aspect-ratio:520/489;transform:translate(-50%,-50%);animation:bivs 3.1s both}
+.bi-vs img{position:relative;z-index:2;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(0,0,0,.8)) drop-shadow(0 0 20px rgba(255,200,90,.45))}
+@keyframes bivs{0%,22%{opacity:0;transform:translate(-50%,-50%) scale(3.4) rotate(-18deg)}26.5%{opacity:1;transform:translate(-50%,-50%) scale(.9) rotate(2deg)}29%{transform:translate(-50%,-50%) scale(1.06) rotate(0)}31%,63%{opacity:1;transform:translate(-50%,-50%) scale(1)}74%,100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+.bi-ring{position:absolute;left:50%;top:50%;width:100%;aspect-ratio:1;margin:-50% 0 0 -50%;border-radius:50%;border:3px solid rgba(255,228,160,.9);box-shadow:0 0 24px rgba(255,214,120,.7),inset 0 0 24px rgba(255,214,120,.5);opacity:0;animation:biring .7s .82s ease-out both}
+.bi-ring.r2{border-color:rgba(160,210,255,.8);animation-delay:.95s}
+@keyframes biring{from{opacity:1;transform:scale(.35)}to{opacity:0;transform:scale(2.6)}}
+.bi-sparks{position:absolute;left:50%;top:50%;z-index:3}
+.bi-sparks i{position:absolute;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);opacity:0;animation:bispark .7s calc(.82s + var(--t)) ease-out both}
+@keyframes bispark{from{opacity:1;transform:rotate(var(--a)) translateX(10px)}to{opacity:0;transform:rotate(var(--a)) translateX(var(--d)) scale(.4)}}
+.cine.intro2::after{content:"";position:absolute;inset:0;z-index:6;background:#fff8e2;opacity:0;pointer-events:none;animation:biflash 3.1s linear both}
+@keyframes biflash{0%,25.5%{opacity:0}27%{opacity:.85}36%{opacity:0}66%{opacity:0}72%{opacity:.5}84%,100%{opacity:0}}
+/* BATTLE START */
+.bi-start{position:absolute;left:0;right:0;top:50%;z-index:7;transform:translateY(-50%);display:grid;place-items:center;height:min(17vw,84px);
+  background:url("../ui/bt/title-plate.webp") center/min(96vw,560px) 100% no-repeat;opacity:0;animation:bistart 3.1s both}
+.bi-start span{font-family:"Cinzel","Shippori Mincho B1",serif;font-weight:900;font-size:clamp(24px,8.4vw,44px);letter-spacing:.14em;padding-left:.14em;white-space:nowrap;
+  background:linear-gradient(180deg,#fffaf0,#ffe7a3 40%,#d8b468 60%,#8f6a2a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 2px 0 #2a1d08) drop-shadow(0 0 12px rgba(255,213,106,.6))}
+@keyframes bistart{0%,68%{opacity:0;transform:translateY(-50%) scaleX(.2)}74%{opacity:1;transform:translateY(-50%) scaleX(1.06)}77%,100%{opacity:1;transform:translateY(-50%) scaleX(1)}}
+
+/* ---- じゃんけん（2.3秒） ---- */
+.cine.rps2{background:radial-gradient(ellipse at 50% 50%,#1a1f3a,#05060d 70%)}
+.cine.rps2 .br-bg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(120,14,34,.35),transparent 40%,transparent 60%,rgba(16,46,130,.35))}
+.br-card{position:absolute;left:50%;z-index:2;width:min(36vw,160px);aspect-ratio:300/457;perspective:900px}
+.br-card.op{top:calc(9% + env(safe-area-inset-top,0px));animation:brinop .4s cubic-bezier(.2,1.2,.4,1) both}
+.br-card.me{bottom:calc(9% + env(safe-area-inset-bottom,0px));animation:brinme .4s .06s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes brinop{from{opacity:0;transform:translate(-50%,-60%) rotate(-10deg)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes brinme{from{opacity:0;transform:translate(-50%,60%) rotate(10deg)}to{opacity:1;transform:translate(-50%,0)}}
+.br-card{transform:translateX(-50%)}
+.br-in{position:absolute;inset:0;transform-style:preserve-3d;animation:brflip .45s .35s ease-in-out both}
+.br-card.me .br-in{animation-delay:.42s}
+@keyframes brflip{from{transform:rotateY(180deg)}to{transform:rotateY(0)}}
+.br-back,.br-front{position:absolute;inset:0;width:100%;height:100%;border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.br-back{background:#14183a url("../ui/card-back.webp") center/cover;transform:rotateY(180deg);box-shadow:0 0 0 2px #c9a24a}
+.br-front{object-fit:contain;filter:drop-shadow(0 10px 20px rgba(0,0,0,.8))}
+.br-card.won{animation-name:brinop,brwin;animation-duration:.4s,.5s;animation-delay:0s,.95s;animation-fill-mode:both,forwards}
+.br-card.me.won{animation-name:brinme,brwin}
+@keyframes brwin{to{transform:translateX(-50%) scale(1.12)}}
+.br-card.won .br-front{animation:brglow .5s .95s both}
+@keyframes brglow{to{filter:drop-shadow(0 0 22px rgba(255,214,120,.95)) drop-shadow(0 10px 20px rgba(0,0,0,.8))}}
+.br-card.lost .br-in{animation:brflip .45s .35s ease-in-out both,brlost .5s 1s ease-in forwards}
+.br-card.me.lost .br-in{animation-delay:.42s,1s}
+@keyframes brlost{0%{filter:none}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}100%{filter:grayscale(1) brightness(.45);transform:translateY(14px) rotate(-6deg)}}
+.br-card.tie .br-in{animation:brflip .45s .35s ease-in-out both,brtie .4s 1s ease-in-out}
+@keyframes brtie{50%{transform:scale(.9)}}
+.br-verdict{position:absolute;left:0;right:0;top:50%;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:min(20vw,96px);transform:translateY(-50%);
+  background:url("../ui/bt/title-plate.webp") center/min(96vw,560px) 100% no-repeat;animation:brverd .4s .95s cubic-bezier(.2,1.3,.4,1) both}
+.br-verdict b{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,8vw,38px);letter-spacing:.08em;text-shadow:0 2px 8px #000}
+.br-verdict small{font-size:12px;color:#d9d3c2}
+.br-verdict.win b{color:#ffe7a3;text-shadow:0 0 16px rgba(255,213,106,.8),0 2px 8px #000}
+.br-verdict.lose b{color:#ffb0a4}.br-verdict.tie b{color:#b5dbff}
+@keyframes brverd{from{opacity:0;transform:translateY(-50%) scaleX(.2)}to{opacity:1;transform:translateY(-50%) scaleX(1)}}
+
+/* ---- 先攻／後攻（2.7秒） ---- */
+.cine.order2{background:radial-gradient(ellipse at 50% 42%,#2a2010,#05060d 70%)}
+.cine.order2.second{background:radial-gradient(ellipse at 50% 42%,#14203a,#05060d 70%)}
+.bo-rays{position:absolute;left:50%;top:40%;width:170vmax;height:170vmax;margin:-85vmax 0 0 -85vmax;opacity:0;
+  background:repeating-conic-gradient(from 0deg,rgba(255,214,120,.16) 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 10%,transparent 60%);mask:radial-gradient(circle,#000 10%,transparent 60%);
+  animation:borays .5s .55s ease-out forwards,bospin 18s linear infinite}
+.order2.second .bo-rays{background:repeating-conic-gradient(from 0deg,rgba(160,210,255,.16) 0 6deg,transparent 6deg 18deg)}
+@keyframes borays{to{opacity:1}}
+@keyframes bospin{to{transform:rotate(360deg)}}
+.bo-emb{position:absolute;left:50%;top:40%;width:min(58vw,260px);aspect-ratio:1;transform:translate(-50%,-50%);animation:boemb .6s cubic-bezier(.2,1.2,.3,1) both}
+.bo-emb img{position:relative;z-index:2;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 26px rgba(0,0,0,.8))}
+.bo-emb .bi-ring{animation-delay:.56s}.bo-emb .bi-ring.r2{animation-delay:.7s}
+.order2.second .bo-emb .bi-ring{border-color:rgba(180,215,255,.9);box-shadow:0 0 24px rgba(140,190,255,.7),inset 0 0 24px rgba(140,190,255,.5)}
+@keyframes boemb{0%{opacity:0;transform:translate(-50%,-50%) scale(3) rotate(-25deg)}60%{opacity:1;transform:translate(-50%,-50%) scale(.92) rotate(3deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.bo-txt{position:absolute;left:0;right:0;top:calc(40% + min(31vw,140px));display:flex;flex-direction:column;align-items:center;gap:2px;animation:botxt .45s .75s cubic-bezier(.2,1.2,.4,1) both}
+.bo-txt span{font-family:"Cinzel",serif;font-weight:900;font-size:14px;letter-spacing:.5em;padding-left:.5em;color:#e9c873}
+.order2.second .bo-txt span{color:#b9c8e0}
+.bo-txt b{font-family:var(--f-display);font-weight:800;font-size:clamp(46px,15vw,72px);letter-spacing:.2em;padding-left:.2em;line-height:1.1;
+  background:linear-gradient(180deg,#fffaf0,#ffe7a3 40%,#d8b468 62%,#8f6a2a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 0 #2a1d08) drop-shadow(0 0 16px rgba(255,213,106,.55))}
+.order2.second .bo-txt b{background:linear-gradient(180deg,#ffffff,#dfe8f8 40%,#9aa8c4 62%,#4a5670);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 3px 0 #0e1322) drop-shadow(0 0 16px rgba(160,200,255,.55))}
+.bo-txt small{font-size:13px;color:#e4ddca;letter-spacing:.06em;text-shadow:0 1px 4px #000}
+@keyframes botxt{from{opacity:0;transform:translateY(20px) scale(1.2)}to{opacity:1;transform:none}}
+.cine.order2::after{content:"";position:absolute;inset:0;background:#fff8e2;opacity:0;pointer-events:none;animation:cvflash .5s .55s ease-out}
+.cine.reduced .bi-side,.cine.reduced .bi-vs,.cine.reduced .bi-plate{opacity:1}
+.cine.reduced .bi-start,.cine.reduced .bi-rift,.cine.reduced .bi-ring,.cine.reduced .bi-sparks{display:none}
+.cine.reduced .br-in{transform:none}
+/* じゃんけんを選ぶ：3枚のカードを扇に（2026-11-23） */
+.pg-rps{gap:2px;align-items:flex-end;padding-top:12px}
+.pg-hand{width:min(29vw,122px)}
+.pg-hand img,.pg-hand .rpsimg{width:100%;height:auto;aspect-ratio:300/457;object-fit:contain;padding:0;border-radius:8px;background:none;box-shadow:none;filter:drop-shadow(0 10px 18px rgba(0,0,0,.7));transition:transform .18s,filter .18s}
+.pg-hand:nth-child(1){transform:rotate(-8deg) translateY(10px)}
+.pg-hand:nth-child(3){transform:rotate(8deg) translateY(10px)}
+.pg-hand:hover img,.pg-hand:focus-visible img,.pg-hand:active img{transform:translateY(-14px) scale(1.06);box-shadow:none;filter:drop-shadow(0 0 16px rgba(255,214,120,.85)) drop-shadow(0 12px 20px rgba(0,0,0,.7))}
+.pg-hand span{font-family:var(--f-display);font-size:15px;letter-spacing:.2em;color:#f1dfae;text-shadow:0 1px 4px #000}
+.pg-chosen img{width:min(36vw,150px);height:auto;aspect-ratio:300/457;padding:0;border-radius:8px;background:none;box-shadow:none;filter:drop-shadow(0 0 18px rgba(255,214,120,.8)) drop-shadow(0 12px 20px rgba(0,0,0,.7))}
+/* 先攻・後攻を選ぶ：紋章の絵 */
+.pg-opt{padding:14px 8px 16px;gap:2px}
+.pg-oemb{width:min(26vw,108px);height:min(26vw,108px);object-fit:contain;margin:-4px 0 4px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));transition:transform .18s}
+.pg-opt:hover .pg-oemb,.pg-opt:active .pg-oemb{transform:scale(1.08) rotate(-4deg)}
+.pg-opt b{font-size:34px}
+.pg-opt small{font-size:11.5px;line-height:1.5}
+/* 対戦前の背景：見出しの文字の後ろに飾り板 */
+.pg-title:not(.sm){position:relative;padding:10px 30px 12px;background:url("../ui/bt/title-plate.webp") center/100% 100% no-repeat;min-width:min(86vw,420px)}
+.pg-title:not(.sm) b{font-size:clamp(28px,8.5vw,40px)}
+
+/* ---- 勝敗（2026-11-23）：金の月桂冠と翼の紋章の上に文字 ---- */
+.fin-crest{position:relative;width:min(96vw,560px);aspect-ratio:760/368;display:grid;place-items:center}
+.fin-crest img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 30px rgba(0,0,0,.7))}
+.fin-crest .fin-en{position:relative;z-index:1;font-size:min(10vw,58px);margin-top:-1%}
+.fin-lose .fin-crest img{filter:grayscale(1) brightness(.5) contrast(1.2) drop-shadow(0 10px 30px rgba(0,0,0,.8))}
+.fin-draw .fin-crest img{filter:grayscale(1) brightness(.85) drop-shadow(0 10px 30px rgba(0,0,0,.8))}
+.fin-lose .fin-crest{animation:fincrack .5s .9s ease-out both}
+@keyframes fincrack{30%{transform:translateY(4px) rotate(-1.5deg)}100%{transform:translateY(10px) rotate(-2.5deg)}}
+.fin-ja{margin-top:-6px}
+.res-crest{position:relative;width:min(84vw,420px);aspect-ratio:760/368;display:grid;place-items:center;margin:-8px 0 -10px}
+.res-crest img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.res-crest .res-en{position:relative;z-index:1;font-size:min(8.4vw,44px)}
+.res-lose .res-crest img{filter:grayscale(1) brightness(.5) contrast(1.2)}
+.res-draw .res-crest img{filter:grayscale(1) brightness(.85)}
+/* 連勝のメダル */
+.res-streak{flex-direction:row;justify-content:center;gap:12px;text-align:left}
+.res-st-txt{display:flex;flex-direction:column;gap:2px}
+.res-st-txt b{font-size:17px;color:#ffcf6b}
+.res-medal{position:relative;flex:none;width:86px;height:86px;display:grid;place-items:center;align-content:center;animation:medalin .5s .3s cubic-bezier(.2,1.4,.4,1) both}
+.res-medal img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))}
+.res-medal b{position:relative;font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:#fff1c4;text-shadow:0 0 8px rgba(255,150,40,.9),0 2px 3px #000}
+.res-medal small{position:relative;font-size:9px;font-weight:700;letter-spacing:.15em;color:#ffd98a}
+.res-medal.t1 img{filter:drop-shadow(0 0 12px rgba(120,190,255,.9)) drop-shadow(0 4px 10px rgba(0,0,0,.6))}
+.res-medal.t2 img{filter:drop-shadow(0 0 14px rgba(200,120,255,.95)) drop-shadow(0 4px 10px rgba(0,0,0,.6))}
+.res-medal.t3 img{animation:medalrb 2.4s linear infinite}
+@keyframes medalrb{0%{filter:drop-shadow(0 0 14px #ff6b9a)}33%{filter:drop-shadow(0 0 14px #ffd36e)}66%{filter:drop-shadow(0 0 14px #6ec8ff)}100%{filter:drop-shadow(0 0 14px #ff6b9a)}}
+@keyframes medalin{from{opacity:0;transform:scale(2.2) rotate(-30deg)}to{opacity:1;transform:none}}
+/* 飛んでくるコイン */
+.res-reward{position:relative;overflow:visible}
+.res-fly{position:absolute;width:26px;height:26px;pointer-events:none;z-index:3;opacity:0;animation:resfly .7s cubic-bezier(.5,0,.75,0) both}
+@keyframes resfly{0%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(1.3) rotate(0)}15%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translate(0,0) scale(.6) rotate(540deg)}}
+.fin-crest .fin-en{font-size:min(7.4vw,42px);letter-spacing:.04em}
+.res-crest .res-en{font-size:min(5.8vw,30px);letter-spacing:.04em}

@@ -1687,7 +1687,7 @@ const RPS_ICON = {
   p: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 27V12c0-1.7 1.3-3 3-3s3 1.3 3 3v11M20 22V7c0-1.7 1.3-3 3-3s3 1.3 3 3v15M26 22V8c0-1.7 1.3-3 3-3s3 1.3 3 3v15M32 24v-9c0-1.7 1.3-3 3-3s3 1.3 3 3v15c0 8-6 14-14 14h-1c-5 0-8-2.5-11-6l-5-7c-1-1.5-.6-3.4.9-4.4 1.4-.9 3.2-.6 4.2.7L14 29"/></svg>'
 };
 /* じゃんけんの手（Gemini の絵を切り分けたもの：ui/rps-g/c/p.webp） */
-const rpsImg = k => `<img class="rpsimg" src="ui/rps-${k}.webp" alt="" draggable="false">`;
+const rpsImg = k => `<img class="rpsimg" src="ui/bt/rps-${k}.webp" alt="" draggable="false">`;   // 2026-11-23：カードの絵に
 function pregameHTML(still) {
   const me = S.players[ME], op = S.players[OP];
   const wait = typeof Online !== "undefined" && MODE === "online" && Online.blocked();
@@ -1710,8 +1710,8 @@ function pregameHTML(still) {
       : `<div class="pg-title ${win ? "win" : ""}"><b>${win ? "あなたの勝ち！" : "相手の勝ち"}</b><small>${win ? "先攻か後攻かを選んでください" : ""}</small></div>`;
     body += `
       ${win ? `<div class="pg-order">
-          <button type="button" class="pg-opt first" data-act="choose" data-v="1" ${wait ? "disabled" : ""}><span class="pg-oen">FIRST</span><b>先攻</b><small>先に動ける<br>最初のターンは引かない</small></button>
-          <button type="button" class="pg-opt second" data-act="choose" data-v="0" ${wait ? "disabled" : ""}><span class="pg-oen">SECOND</span><b>後攻</b><small>「境界の欠片」で<br>1回だけエナジー+1</small></button>
+          <button type="button" class="pg-opt first" data-act="choose" data-v="1" ${wait ? "disabled" : ""}><img class="pg-oemb" src="ui/bt/first.webp" alt="" draggable="false"><span class="pg-oen">FIRST</span><b>先攻</b><small>先に動ける<br>最初のターンは引かない</small></button>
+          <button type="button" class="pg-opt second" data-act="choose" data-v="0" ${wait ? "disabled" : ""}><img class="pg-oemb" src="ui/bt/second.webp" alt="" draggable="false"><span class="pg-oen">SECOND</span><b>後攻</b><small>「境界の欠片」で<br>1回だけエナジー+1</small></button>
         </div>` : `<p class="pg-wait">相手が先攻・後攻を選んでいます${dots}</p>`}`;
   } else if (ph === "mulligan") {
     const done = S.mull[ME];
@@ -2627,9 +2627,9 @@ function streakHTML(r, res) {
     const next = Account.streakBonus(r.wins + 1);
     const now = r.wins >= 2 ? `${r.wins}連勝！${r.bonus ? `ボーナス +${r.bonus}%` : ""}` : "連勝スタート";
     const tail = next > r.bonus ? `次も勝てば +${next}%` : next ? `ボーナスは最大の +${next}%` : "";
-    const n = Math.min(r.wins, 10);
-    const flames = Array.from({ length: n }, (_, i) => `<i class="flame" style="--i:${i}"></i>`).join("") + (r.wins > 10 ? `<em>+${r.wins - 10}</em>` : "");
-    return `<div class="streak res-streak"><span class="flames" aria-hidden="true">${flames}</span><b>${now}</b>${tail ? `<small>${tail}</small>` : ""}</div>`;
+    // 炎の列はやめて、炎のメダルに連勝数（10・20・30連勝で光の色が変わる。2026-11-23）
+    const tier = r.wins >= 30 ? "t3" : r.wins >= 20 ? "t2" : r.wins >= 10 ? "t1" : "";
+    return `<div class="streak res-streak">${r.wins >= 2 ? `<div class="res-medal ${tier}" aria-hidden="true"><img src="ui/bt/medal.webp" alt="" draggable="false"><b>${r.wins}</b><small>連勝</small></div>` : ""}<div class="res-st-txt"><b>${now}</b>${tail ? `<small>${tail}</small>` : ""}</div></div>`;
   }
   return r.prev >= 2 ? `<p class="streak lost">${r.prev}連勝で途切れました</p>` : "";
 }
@@ -2671,7 +2671,7 @@ function showResult(res) {
     `<button type="button" class="res-sub" data-act="toTitle">${RES_IC.home}<span>${online ? "部屋を出る" : "タイトル"}</span></button>`
   ].join("");
   openOverlay(`<div class="panel res-panel res-${res}">
-    <div class="res-head"><span class="res-en">${en}</span><b class="res-ja">${ja}</b></div>
+    <div class="res-head"><div class="res-crest"><img src="ui/bt/victory.webp" alt="" draggable="false"><span class="res-en">${en}</span></div><b class="res-ja">${ja}</b></div>
     ${g ? `<div class="res-reward">${curIcon("gold", "res-coin")}<b class="res-g" data-to="${g}">+0</b><span class="res-gl">G</span><small>所持 ${Account.gold.toLocaleString()}G</small></div>` : ""}
     ${streakHTML(r, res)}
     ${B && B.kind === "tutorial" && typeof Tut !== "undefined" ? Tut.resultHTML(r.tut) : ""}
@@ -2691,6 +2691,12 @@ function showResult(res) {
       if (!el.isConnected) return; el.textContent = "+" + v.toLocaleString(); if (k < 1) requestAnimationFrame(step); else el.classList.add("done"); };
     requestAnimationFrame(step);
     Sound.play("rare", 1);
+    // コインが上から飛んできて、コインの絵に吸い込まれる
+    if (!Motion.reduced) { const box = document.querySelector(".res-reward"), ic = box && box.querySelector(".res-coin");
+      if (box && ic) { const b = box.getBoundingClientRect(), c = ic.getBoundingClientRect();
+        for (let i = 0; i < 12; i++) { const k = document.createElement("img"); k.src = "ui/cur-gold.webp"; k.className = "res-fly";
+          k.style.cssText = `left:${c.left - b.left}px;top:${c.top - b.top}px;--sx:${Math.round((Math.random() - .5) * 260)}px;--sy:${Math.round(-160 - Math.random() * 160)}px;animation-delay:${(i * 55)}ms`;
+          box.appendChild(k); setTimeout(() => k.remove(), 1400 + i * 55); } } }
   }
 }
 const RES_IC = {
