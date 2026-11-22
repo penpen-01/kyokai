@@ -1,5 +1,5 @@
 {
- "version": 204,
+ "version": 205,
  "updated": "2026-11-19",
  "config": {
   "PLAYER_HP": 20,
@@ -30,7 +30,7 @@
   "BOSS_RATE": 10,
   "BOSS_PITY": 15,
   "BOSS_HP": 25,
-  "MAINT": 1,
+  "MAINT": 0,
   "BOSS_EX_ON": 1,
   "BOSS_EX_RATE": 10,
   "BOSS_EX_PITY": 15,
