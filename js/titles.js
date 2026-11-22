@@ -11,7 +11,10 @@ const STAMP_BURST = [5, 30000];   // 30秒に5回まで
 /* ---------- 通算の記録と称号 ---------- */
 const Titles = {
   queue: [], showing: false,
-  st() { const d = Account.data; if (!d) return {}; d.st = d.st || {}; return d.st; },
+  st() { const d = Account.data; if (!d) return {}; d.st = d.st || {};
+    // 1回だけ：前の数え方で多くなっていた「上級以上の最高連勝」を、今の連勝数に合わせ直す（取った称号はそのまま。2026-11-23）
+    if (!d.st.shFix) { const k = d.streak || {}; d.st.streakHiMax = Math.max(k.hard || 0, k.ex || 0); delete d.st.streakHi; d.st.shFix = 1; }
+    return d.st; },
   bump(k, n = 1) { if (!Account.data || !n) return; const st = this.st(); st[k] = (st[k] || 0) + n; },
   bumpIn(k, sub, n = 1) { if (!Account.data) return; const st = this.st(); st[k] = st[k] || {}; st[k][sub] = (st[k][sub] || 0) + n; },
   max(k, n) { if (!Account.data) return; const st = this.st(); if (n > (st[k] || 0)) st[k] = n; },
@@ -26,7 +29,7 @@ const Titles = {
       case "winLv": return (st.winLv || {})[c.lv] || 0;
       case "streak": {   // 称号の記録を始める前からの連勝も数える（上級・最上級の連勝の記録の大きい方）
         const k = (Account.data && Account.data.streak) || {};
-        return Math.max(st.streakHiMax || 0, k.hard || 0, k.ex || 0, st.streakHi || 0);
+        return Math.max(st.streakHiMax || 0, k.hard || 0, k.ex || 0);
       }
       case "bossWin": {   // 記録を始める前にボスを倒した人：限定レジェンドを持っていれば1回とみなす
         const B = BOSSES[c.lv] || BOSSES.hard, had = B.legends.some(id => (Account.data.cards || {})[id] > 0) ? 1 : 0;
@@ -87,9 +90,10 @@ const Titles = {
     if (MODE === "cpu" && res === "win" && (!B || B.kind === "cpu")) this.bumpIn("winLv", CPU_LEVEL);
     // 上級以上の連勝（ボス戦も含む。初級・中級の対戦は数えも途切れもしない。負け・引き分けで0に戻る）
     if (MODE === "cpu" && (!B || B.kind === "cpu" || B.kind === "boss") && (CPU_LEVEL === "hard" || CPU_LEVEL === "ex")) {
+      // 連勝の称号は、CPU戦の画面に出ている連勝数（上級・超級それぞれ）と同じ数で決める（2026-11-23）。
+      // 前は上級と超級の勝ちを合わせて数え、途中でやめた対戦（連勝が0に戻る）でも途切れなかったので、実際より多くなっていた
       const st = this.st(), k = (Account.data && Account.data.streak) || {};
-      // 記録を始める前からの連勝も引き継ぐ（CPU戦の画面に出ている連勝数より小さくならないように）
-      st.streakHi = res === "win" ? Math.max((st.streakHi || 0) + 1, k[CPU_LEVEL] || 0) : 0; this.max("streakHiMax", st.streakHi);
+      st.streakHi = Math.max(k.hard || 0, k.ex || 0); this.max("streakHiMax", st.streakHi);
     }
     if (B && B.kind === "boss" && res === "win") this.bumpIn("bossWin", B.boss === "ex" ? "ex" : "hard");
     if (MODE === "online" && r && r.online && !r.online.short) { this.bump("onlineGame"); if (res === "win") this.bump("onlineWin"); }

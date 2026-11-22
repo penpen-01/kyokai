@@ -23,7 +23,9 @@ const Finale = {
       <div class="fin-bg"></div>
       ${res === "win" ? `<div class="fin-rays"></div>` : ""}
       <div class="fin-sparks">${Array.from({ length: 26 }, (_, i) => `<i style="--x:${Math.round(Math.random() * 100)}%;--d:${(Math.random() * 1.6).toFixed(2)}s;--s:${(0.6 + Math.random() * 1.2).toFixed(2)}"></i>`).join("")}</div>
-      <div class="fin-title"><div class="fin-crest"><img src="ui/bt/victory.webp" alt="" draggable="false"><span class="fin-en" data-t="${en}">${en}</span></div><b class="fin-ja">${ja}</b></div>
+      <div class="fin-title"><div class="fin-crest"><i class="fin-ring"></i><i class="fin-ring r2"></i><img src="ui/bt/victory.webp" alt="" draggable="false"><i class="fin-shine"></i><span class="fin-en" data-t="${en}">${en}</span>
+        <span class="fin-burst">${res === "win" ? Array.from({ length: 28 }, () => `<i style="--a:${Math.round(Math.random() * 360)}deg;--d:${Math.round(90 + Math.random() * 160)}px;--t:${(Math.random() * .15).toFixed(2)}s"></i>`).join("") : ""}</span>
+        ${res === "lose" ? `<svg class="fin-cracks" viewBox="0 0 100 50" preserveAspectRatio="none" aria-hidden="true"><path d="M50 24 42 10 44 2M50 24 60 14 66 4M50 24 38 30 26 33M50 24 63 31 76 30 86 36M50 24 48 38 52 48"/></svg>` : ""}</div><b class="fin-ja">${ja}</b></div>
       <p class="fin-tap">タップして続ける</p>`;
     document.body.appendChild(layer);
     this.el = layer;

@@ -87,15 +87,17 @@ const Arena = {
       ${c ? `<div class="ar-now"><b>${c.test ? "テスト（運営・メンテ通過の端末のみ）" : "開催中"}</b><span>${rule.name}</span><small>${c.test ? "いつでも入れます" : `${this.hm(c.end)}まで`}</small></div>
         <div class="rchips">${[`勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点`, `同じ相手は${ARENA_VS_MAX}戦まで`].map(x => `<span class="rchip">${x}</span>`).join("")}${helpBtn("アリーナ", `${rule.desc}<br>同じ時間に探している人と、ランダムに対戦します。勝ち${ARENA_PTS.win}点・負け${ARENA_PTS.lose}点。<br>同じ相手からの点は、1回の開催で${ARENA_VS_MAX}戦まで。お互い3ターンやる前に降参・接続切れで決着した対戦は、両方0点です。<br>報酬は、回が終わった1時間後にホームで受け取れます。`)}</div>
         ${c.test ? `<div class="ar-test">テストのルール：${Object.entries(ARENA_RULES).map(([k, r]) => `<button type="button" class="btn sm ${c.rule === k ? "primary" : ""}" data-act="arenaTestRule" data-v="${k}">${r.name}</button>`).join("")}</div>` : ""}
+        ${this.deckLine(c)}
+        ${msg ? `<p class="ar-warn" role="alert">${esc(msg)}</p>` : ""}
         ${this.searching ? `<div class="ar-search"><b>相手を探しています<span class="pg-dots"><i></i><i></i><i></i></span></b><small id="ar-wait"></small><button type="button" class="btn" data-act="arenaStop">探すのをやめる</button></div>`
-          : `<button type="button" class="btn primary ar-go" data-act="arenaSearch">相手を探す</button>`}
+          : `<button type="button" class="btn primary ar-go" data-act="arenaSearch" ${this.deckBad(c) ? "disabled" : ""}>相手を探す</button>`}
         ${this.rewardLine()}
         <span class="gl">ランキング（この回）</span><div id="ar-rank" class="ar-rank"><p class="hint">読み込み中…</p></div>`
         : `<p class="lead">いまは開いていません。</p>`}
       ${this.pastHTML()}
       <span class="gl">開催の予定（日本時間）</span>
       <ul class="ar-list">${up.map(x => `<li class="${c && c.sid === x.sid ? "on" : ""}"><span>${this.dayLabel(x.start)} ${this.hm(x.start)}〜${this.hm(x.end)}</span><b>${ARENA_RULES[x.rule].name}</b></li>`).join("") || `<li><span>予定はありません</span></li>`}</ul>
-      <p class="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
+      ${!c && msg ? `<p class="onl-msg" role="status">${esc(msg)}</p>` : ""}
     </div>`, "lobby", true);
     if (c) this.watchRank(c.sid);
     this.loadPast();
@@ -229,10 +231,24 @@ const Arena = {
     finally { this.claimingR = false; }
   },
   /* ホーム画面を見ているか（ホームも overlay の中に描かれるので、ホームのボタンがあるかで見る） */
+  /* 使うデッキ：この回のルールで使えるかを、探す前に見せる（第1弾限定で違うデッキでも、前は下の方に小さく出るだけで気づけなかった。2026-11-23） */
+  deckBad(c) {
+    if (!c || c.rule === "sen") return "";
+    const d = Decks.selected(); if (!d) return "デッキが選ばれていません";
+    if (c.rule === "set1" && !deckSet1(d)) return "第1弾以外のカードが入っています";
+    return "";
+  },
+  deckLine(c) {
+    if (!c) return "";
+    if (c.rule === "sen") return `<div class="ar-deck ok"><span>デッキ</span><b>その場で作る（選定戦）</b></div>`;
+    const d = Decks.selected(), bad = this.deckBad(c);
+    return `<div class="ar-deck ${bad ? "ng" : "ok"}"><span>使うデッキ</span><b>${esc(d ? d.name : "未選択")}</b><em>${bad ? `× ${bad}` : "✓ この回で使えます"}</em>${bad ? `<small>${c.rule === "set1" ? "第1弾のカードだけのデッキを、左下のデッキボタンから選んでください" : "左下のデッキボタンから選んでください"}</small>` : ""}</div>`;
+  },
+  /* 報酬：表にして、何をすればもらえるかを書く */
   rewardLine() {
-    const R = ARENA.rewards, it = a => [a.gold ? `${a.gold}G` : "", a.stones ? `魔石${a.stones}` : "", a.tickets ? `券${a.tickets}` : ""].filter(Boolean).join("＋");
-    const parts = [it(R.part) ? `参加 ${it(R.part)}` : "", ...R.rank.map((r, i) => it(r) ? `${i + 1}位 ${it(r)}` : "")].filter(Boolean);
-    return parts.length ? `<p class="ar-rwline"><b>報酬</b>${parts.join("　")}<small>回が終わった1時間後に、ホームで受け取れます</small></p>` : "";
+    const R = ARENA.rewards, it = a => [a.gold ? `${a.gold.toLocaleString()}G` : "", a.stones ? `魔石${a.stones}` : "", a.tickets ? `パック券${a.tickets}枚` : ""].filter(Boolean).join("・");
+    const rows = [it(R.part) ? [`参加賞`, "1戦でも点が入れば", it(R.part)] : null, ...R.rank.map((r, i) => it(r) ? [`${i + 1}位`, "参加賞に加えて", it(r)] : null)].filter(Boolean);
+    return rows.length ? `<div class="ar-rw"><b class="ar-rw-t">この回の報酬</b><table>${rows.map(([a, b, c]) => `<tr><th>${a}</th><td>${c}<small>${b}</small></td></tr>`).join("")}</table><small class="ar-rw-n">順位は点の合計で決まります。回が終わった1時間後に、ホームで受け取れます。</small></div>` : "";
   },
   onHome() { const ov = document.getElementById("overlay"); return !!(ov && !ov.hidden && ov.querySelector('[data-act="solo"]')); },
   rewardPop(out) {

@@ -1461,11 +1461,12 @@ function doEnd() {
 /* プレイヤーの顔（アイコン）にするカード。p.icon があればそれ、なければデッキでいちばんコストの高い絵付きキャラ */
 function playerIcon(pi) {
   const p = S.players[pi];
-  if (p.icon && DEF[p.icon] && DEF[p.icon].art) return p.icon;
+  const face = id => id && DEF[id] && DEF[id].art && DEF[id].type === "char";   // 顔にするのはキャラの絵だけ（選定戦の相手が魔法の絵になっていた。2026-11-23）
+  if (face(p.icon)) return p.icon;
   // おまかせ：デッキでいちばんコストの高いキャラ（同じならレア度の高い方）。魔法は顔にしない（2026-11-18）
   const dk = S.decks && S.decks[pi];
   // CPU・ボスの顔は、工房で決めたデッキの代表カード（プレイヤーのおまかせだけ、いちばんコストの高いキャラ）
-  if (MODE !== "online" && pi !== ME && dk && dk.key && DEF[dk.key] && DEF[dk.key].art) return dk.key;
+  if (MODE !== "online" && pi !== ME && dk && face(dk.key)) return dk.key;
   const deck = (dk && dk.cards) || {};
   const cands = Object.keys(deck).map(id => DEF[id]).filter(d => d && d.type === "char" && d.art);
   cands.sort((x, y) => y.cost - x.cost || RARITY_ORDER.indexOf(y.rarity) - RARITY_ORDER.indexOf(x.rarity));
