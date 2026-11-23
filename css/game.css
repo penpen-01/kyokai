@@ -3629,3 +3629,128 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 @keyframes finsink{to{transform:translateY(16px) rotate(-3deg);filter:brightness(.8)}}
 .fin-lose .fin-crest{animation:none}
 @media (prefers-reduced-motion:reduce){.fin.show,.fin.show .fin-title,.fin-shine,.fin-burst i,.fin-ring{animation:none!important}.fin.show .fin-title{opacity:1;transform:none;filter:none}}
+
+/* =========================================================
+   2026-11-24 直し：対戦前の画面・試合開始・じゃんけんのカード
+   ========================================================= */
+/* 背景は画面全体に（前は枠の中だけに敷かれて、iPhone では画面より右にずれた薄い赤い箱に見えていた） */
+.pre.pg{width:100%;min-width:0;max-width:100%}
+.pre.pg .pg-bg{position:fixed;inset:0}
+.pre.pg .pg-center{width:100%;min-width:0}
+/* 名前の札：相手は左上、自分は右下（向かい合わせ） */
+.pre.pg > .pg-plate.op{align-self:flex-start;margin:0;max-width:calc(100% - 92px);min-width:0}
+.pre.pg > .pg-plate.me{align-self:flex-end;margin:0;max-width:100%;min-width:0}
+.pre.pg > .pg-plate .pg-st{flex:none}
+
+/* ---- じゃんけんのカード ---- */
+.rk{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.rk-fan{position:relative;display:flex;justify-content:center;align-items:flex-end;width:100%;max-width:400px;padding:16px 0 4px;touch-action:none}
+.rk-card{all:unset;box-sizing:border-box;position:relative;width:min(27vw,116px);margin:0 -3px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transform:translateY(var(--ty,10px)) rotate(var(--rot,0deg)) scale(var(--sc,.9));transition:transform .22s cubic-bezier(.2,1.3,.4,1),filter .22s,opacity .25s;filter:brightness(.72) saturate(.85);
+  animation:rkin .5s calc(var(--i)*.08s) cubic-bezier(.2,1.3,.4,1) both}
+.rk-card:nth-child(1){--rot:-9deg}.rk-card:nth-child(3){--rot:9deg}.rk-card:nth-child(2){--ty:2px}
+.rk-card.on{--ty:-16px;--sc:1.08;--rot:0deg;filter:none;z-index:2}
+.rk-card:focus{outline:none}
+.rk-card:focus-visible .rk-in{outline:2px solid #fff3c4;outline-offset:3px}
+.rk-in{position:relative;display:block;width:100%;aspect-ratio:300/457}
+.rk-front{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 10px 16px rgba(0,0,0,.7));transition:opacity 0s .15s}
+.rk-card.on .rk-front{filter:drop-shadow(0 0 12px rgba(255,214,120,.85)) drop-shadow(0 12px 18px rgba(0,0,0,.7))}
+.rk-back{position:absolute;inset:2.5% 3%;border-radius:7px;background:#14183a center/cover no-repeat;box-shadow:0 0 0 2px #c9a24a,0 10px 18px rgba(0,0,0,.6);opacity:0;transition:opacity 0s .15s}
+.rk-card b{font-family:var(--f-display);font-size:15px;letter-spacing:.2em;padding-left:.2em;color:#d9c896;text-shadow:0 1px 4px #000}
+.rk-card.on b{color:#fff3c4;text-shadow:0 0 10px rgba(255,214,120,.8),0 1px 4px #000}
+@keyframes rkin{from{opacity:0;translate:0 40px;scale:.6}to{opacity:1;translate:0 0;scale:1}}
+.pg.noanim .rk-card{animation:none}
+/* おまかせ：裏返して混ぜ、1枚がめくれる（めくりは横に縮めて入れ替える。3D の裏返しは iPhone で絵が遅れて出ることがあった） */
+.rk-card.back .rk-front{opacity:0}
+.rk-card.back .rk-back{opacity:1}
+.rk-card.back .rk-in{animation:rkflip .3s ease-in-out}
+.rk-card.pick .rk-in{animation:rkflip2 .3s ease-in-out}
+.rk-card.back b{opacity:0}
+@keyframes rkflip{50%{scale:0 1}}
+@keyframes rkflip2{50%{scale:0 1}}
+.rk.shuf .rk-card{filter:none;--rot:0deg;--ty:0px;--sc:1}
+.pre.pg .rk.shuf .rk-card:nth-child(1){animation:rkshuf1 .9s .2s ease-in-out}
+.pre.pg .rk.shuf .rk-card:nth-child(2){animation:rkshuf2 .9s .2s ease-in-out}
+.pre.pg .rk.shuf .rk-card:nth-child(3){animation:rkshuf3 .9s .2s ease-in-out}
+@keyframes rkshuf1{25%{translate:100% -14px}50%{translate:200% 0}75%{translate:100% 14px}}
+@keyframes rkshuf2{25%{translate:-100% 14px}50%{translate:0 -20px}75%{translate:100% -10px}}
+@keyframes rkshuf3{25%{translate:-100% 10px}50%{translate:-200% 0}75%{translate:-100% -14px}}
+.rk-card.pick{--sc:1.14;--ty:-20px}
+/* 決定：選んだカードが上へ投げられ、残りは沈む */
+.pre.pg .rk .rk-card.thrown{animation:rkthrow .45s cubic-bezier(.45,0,.85,.45) forwards;z-index:3}
+@keyframes rkthrow{0%{translate:0 0;opacity:1}25%{translate:0 18px}100%{translate:0 -85vh;rotate:-12deg;scale:.6;opacity:0}}
+.rk-card.gone{opacity:0;--sc:.7;--ty:50px;pointer-events:none}
+.rk-ctl{display:flex;gap:10px;align-items:center;justify-content:center;transition:opacity .2s}
+.rk-go{min-width:150px;font-size:16px;padding:12px 18px}
+.rk-rand{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:9px 14px 9px 10px;border-radius:999px;font-size:13px;font-weight:700;color:#e9dcb5;background:rgba(10,12,26,.75);box-shadow:inset 0 0 0 1px rgba(233,200,115,.55);-webkit-tap-highlight-color:transparent;transition:transform .12s}
+.rk-rand i{width:18px;height:26px;border-radius:3px;background:#14183a center/cover;box-shadow:0 0 0 1px #c9a24a}
+.rk-rand:active{transform:scale(.94)}
+.rk-hint{font-size:11.5px;color:#bfb69c;letter-spacing:.06em;margin:0;transition:opacity .2s}
+.rk.sent .rk-ctl,.rk.sent .rk-hint,.rk.shuf .rk-ctl,.rk.shuf .rk-hint{opacity:0;pointer-events:none}
+.rk.off .rk-ctl,.rk.off .rk-fan{opacity:.55}
+.pg-chosen .rk-in{width:min(32vw,136px)}
+.pg-chosen .rk-front{filter:drop-shadow(0 0 16px rgba(255,214,120,.8)) drop-shadow(0 12px 20px rgba(0,0,0,.7))}
+
+/* ---- じゃんけんの結果：めくりは横に縮めて裏と表を入れ替える ---- */
+.br-in{transform-style:flat;animation:brflip2 .45s .35s ease-in-out both}
+.br-card.me .br-in{animation-delay:.42s}
+@keyframes brflip2{0%{scale:1 1}50%{scale:0 1}100%{scale:1 1}}
+.br-front{position:absolute;inset:0;width:100%;height:100%;backface-visibility:visible;-webkit-backface-visibility:visible}
+.br-back{position:absolute;inset:2.5% 3%;width:auto;height:auto;transform:none;background:#14183a center/cover no-repeat;backface-visibility:visible;-webkit-backface-visibility:visible;animation:brbackoff .45s .35s both}
+.br-card.me .br-back{animation-delay:.42s}
+@keyframes brbackoff{0%,49%{opacity:1}50%,100%{opacity:0}}
+.br-card.lost .br-in{animation:brflip2 .45s .35s ease-in-out both,brlost .5s 1s ease-in forwards}
+.br-card.me.lost .br-in{animation-delay:.42s,1s}
+.br-card.tie .br-in{animation:brflip2 .45s .35s ease-in-out both,brtie .4s 1s ease-in-out}
+.br-card.me.tie .br-in{animation-delay:.42s,1s}
+
+/* ---- 試合開始（2.8秒）：暗転しない。BATTLE START は帯の上に打ち込み、帯が割れて飛び去るとそのまま、じゃんけんの画面 ---- */
+.cine.intro2{animation:bibg 2.8s linear both}
+@keyframes bibg{0%,78%{background-color:#04050b}92%,100%{background-color:rgba(4,5,11,0)}}
+.bi-side.op{animation:biop 2.8s linear both}
+.bi-side.me{animation:bime 2.8s linear both}
+@keyframes biop{0%,4%{transform:translateY(-105%)}16%{transform:translateY(0)}27%{transform:translateY(0)}28.5%{transform:translate(-7px,-5px)}30%{transform:translate(6px,4px)}31.5%{transform:translate(-3px,0)}33%,62%{transform:translateY(0)}70%,80%{transform:translateY(-1%) scale(1.04)}93%,100%{transform:translate(-8%,-118%) rotate(-3deg)}}
+@keyframes bime{0%,6%{transform:translateY(105%)}18%{transform:translateY(0)}27%{transform:translateY(0)}28.5%{transform:translate(7px,5px)}30%{transform:translate(-6px,-4px)}31.5%{transform:translate(3px,0)}33%,62%{transform:translateY(0)}70%,80%{transform:translateY(1%) scale(1.04)}93%,100%{transform:translate(8%,118%) rotate(-3deg)}}
+.bi-art{animation:biart 2.8s ease-out both}
+.bi-plate{animation-duration:2.8s}
+.bi-rift{animation:birift 2.8s ease-out both}
+@keyframes birift{0%{transform:rotate(var(--ang,-13deg)) scaleX(0);opacity:0}9%{transform:rotate(var(--ang,-13deg)) scaleX(1);opacity:1}60%{transform:rotate(var(--ang,-13deg)) scaleX(1) scaleY(1);opacity:1}66%{transform:rotate(var(--ang,-13deg)) scaleX(1) scaleY(10);opacity:.8}74%,100%{transform:rotate(var(--ang,-13deg)) scaleX(1) scaleY(16);opacity:0}}
+.bi-vs{animation:bivs 2.8s both}
+@keyframes bivs{0%,22%{opacity:0;transform:translate(-50%,-50%) scale(3.4) rotate(-18deg)}26.5%{opacity:1;transform:translate(-50%,-50%) scale(.9) rotate(2deg)}29%{transform:translate(-50%,-50%) scale(1.06) rotate(0)}31%,62%{opacity:1;transform:translate(-50%,-50%) scale(1)}70%,100%{opacity:0;transform:translate(-50%,-50%) scale(2.3)}}
+.bi-ring{animation-delay:.76s}.bi-ring.r2{animation-delay:.9s}
+.bi-sparks i{animation-delay:calc(.76s + var(--t))}
+.cine.intro2::after{animation:biflash 2.8s linear both}
+@keyframes biflash{0%,25.5%{opacity:0}27%{opacity:.85}36%{opacity:0}63%{opacity:0}65%{opacity:.55}72%,100%{opacity:0}}
+.bi-start{animation:bistart 2.8s both;overflow:visible}
+@keyframes bistart{0%,63%{opacity:0;transform:translateY(-50%) scale(2.6)}68%{opacity:1;transform:translateY(-50%) scale(.94)}71%{transform:translateY(-50%) scale(1.04)}74%,86%{opacity:1;transform:translateY(-50%) scale(1)}100%{opacity:0;transform:translateY(-50%) scale(1.4)}}
+.bi-start span{position:relative;z-index:1}
+.bi-streak{position:absolute;left:-30%;right:-30%;top:50%;height:160%;transform:translateY(-50%);pointer-events:none;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,244,210,.0) 40%,rgba(255,244,210,.75) 50%,rgba(255,244,210,0) 60%,transparent 70%);opacity:0;animation:bistreak 2.8s linear both}
+@keyframes bistreak{0%,66%{opacity:0;translate:-60% 0}68%{opacity:1}80%,100%{opacity:0;translate:60% 0}}
+
+/* ---- 勝敗の揺れ：揺らすと画面の端に下の盤面が一瞬見えていたので、背景を外側まで広げる ---- */
+.fin{overflow:visible}
+.fin > .fin-bg,.fin > .fin-flash{inset:-40px}
+
+/* ---- 押した手ごたえ ---- */
+.punch{position:fixed;z-index:200;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;pointer-events:none;border:2px solid rgba(255,232,170,.95);box-shadow:0 0 14px rgba(255,214,120,.9),inset 0 0 10px rgba(255,214,120,.6);animation:punchring .45s ease-out forwards}
+.punch.big{border-width:3px;animation-duration:.6s}
+.punch.big::after{content:"";position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle,rgba(255,248,220,.95),rgba(255,214,120,.5) 40%,transparent 70%);animation:punchcore .35s ease-out forwards}
+@keyframes punchring{from{opacity:1;transform:scale(.6)}to{opacity:0;transform:scale(7)}}
+.punch.big{animation-name:punchring2}
+@keyframes punchring2{from{opacity:1;transform:scale(.8)}to{opacity:0;transform:scale(12)}}
+@keyframes punchcore{from{opacity:1;transform:scale(.5)}to{opacity:0;transform:scale(3.2)}}
+
+/* ---- 運営：サーバー ---- */
+.ops-live .ol-h{margin:14px 0 6px;font-size:15px;color:#f1dfae}
+.ops-live .ol-h b{font-size:20px;color:#ffe7a3;margin-left:6px}
+.ol-list{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px}
+.ol-list li{display:flex;justify-content:space-between;gap:6px;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.05);font-size:13px}
+.ol-list li span{color:var(--muted);font-size:11.5px}
+.ol-ses{flex-wrap:wrap}.ol-ses button small{display:block;font-size:10px;color:var(--muted)}
+.ol-deck{margin:6px 0;border-radius:10px;background:rgba(255,255,255,.05);padding:8px 12px}
+.ol-deck summary{display:flex;align-items:baseline;gap:10px;cursor:pointer;flex-wrap:wrap}
+.ol-deck summary span{color:#ffe7a3;font-weight:700}.ol-deck summary small{color:var(--muted)}
+.ol-deck ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 10px;font-size:12.5px}
+.ol-deck li{display:flex;gap:6px}.ol-deck li i{font-style:normal;color:#9fd8ff;width:1.4em;text-align:right}.ol-deck li em{font-style:normal;color:var(--muted);margin-left:auto}
+.ol-vs{margin:6px 0 0;font-size:12px;color:var(--muted)}

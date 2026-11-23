@@ -53,6 +53,10 @@ const Splash = {
 
   show() {
     this.shown = true;
+    // 2回目以降（メニューの「タイトル画面に戻る」）でもタップで入れるように、前回の「進んでいる途中」を消す
+    this.leaving = false; this.tapped = false;
+    // 降ってくるカードの裏は自分のスリーブ。起動したばかりでまだアカウントを読んでいないときは、前回のスリーブを使う
+    try { if (!document.documentElement.style.getPropertyValue("--sleeve")) { const sl = localStorage.getItem("kyokai-sleeve"); if (sl) document.documentElement.style.setProperty("--sleeve", `url("${new URL(sl, location.href).href}")`); } } catch (e) {}
     this.cardPool = this.pool();
     let falls = "", used = new Set(), i = 0;
     [[0, 5], [1, 5], [2, 4]].forEach(([layer, n]) => {

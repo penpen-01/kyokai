@@ -126,6 +126,17 @@ const Sound = {
           break;
         }
         case "flip": this.noise(0, 0.08, 0.3, 3000); this.tone(660, 0, 0.08, "triangle", 0.15); break;
+        case "go": {   // 「BATTLE START」：低い衝撃＋風が吹き抜ける＋金管の和音
+          this.noise(0, 0.22, 0.55, 260); this.tone(98, 0, 0.55, "sawtooth", 0.22, 46);
+          this.sweep(0, 0.45, 0.3, 300, 5200, 0.8);
+          [392, 523, 659, 784].forEach((f, i) => { this.tone(f, 0.04 + i * 0.015, 0.7, "triangle", 0.13); this.tone(f * 2, 0.04 + i * 0.015, 0.35, "sine", 0.04); });
+          break;
+        }
+        case "press": {   // 大事なボタンを押した「ガッ」：短い低音＋金属の響き
+          this.tone(170, 0, 0.1, "square", 0.13, 80); this.noise(0, 0.07, 0.3, 1800);
+          this.tone(1318, 0.02, 0.16, "sine", 0.1); this.tone(1976, 0.03, 0.12, "sine", 0.05);
+          break;
+        }
         case "rare": {
           // レア度が高いほど高く、長く
           const base = 523 * Math.pow(1.12, level);

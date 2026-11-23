@@ -745,6 +745,33 @@ const Maint = {
   }
 };
 
+/* ---------- いまアプリを開いている人（2026-11-24）----------
+   開いている間 presence/<uid> に { n: 名前, w: どこにいるか, at: 時刻 } を置き、閉じたり通信が切れたりしたらサーバーが消す。
+   運営アカウントの「運営」画面で、人数と一覧を見られる */
+const Presence = {
+  uid: null, w: "", started: false,
+  where() {
+    if (typeof S !== "undefined" && S) {
+      if (MODE === "online") return Online.room && Online.room.arena ? "arena" : "online";
+      return S.sen || (S.battle && S.battle.kind === "sen") ? "sen" : "cpu";
+    }
+    if (document.querySelector("#overlay:not([hidden]) .panel.ar")) return "arena";
+    return "home";
+  },
+  async start() {
+    if (this.started || (typeof DATA_INFO !== "undefined" && DATA_INFO.draft)) return;
+    this.started = true;
+    try { this.uid = await Net.init(); } catch (e) { this.started = false; return; }
+    const put = () => { this.w = this.where(); try { Net.set(`presence/${this.uid}`, { n: playerName("召喚士").slice(0, 10), w: this.w, at: Date.now() }).catch(() => {}); } catch (e) {} };
+    try {
+      Net.onConnected(on => { if (!on) return; try { Net.onDisconnectRemove(`presence/${this.uid}`); } catch (e) {} put(); });
+    } catch (e) { put(); }
+    // 場所が変わったときと、5分ごと（時刻を新しくして、消し忘れを見分けられるように）
+    let n = 0;
+    setInterval(() => { n++; if (document.hidden) return; if (this.where() !== this.w || n % 15 === 0) put(); }, 20000);
+  }
+};
+
 async function boot() {
   // カード工房の検証ラボから開かれたとき：画面は出さず、データだけ読んで知らせる
   if (new URLSearchParams(location.search).has("sim")) {
@@ -771,7 +798,7 @@ async function boot() {
   if (!DATA_INFO.draft) Splash.show();
   await Account.init();
   try { if (Account.code && CONFIG.ADMINS.length) Ops.admin = CONFIG.ADMINS.includes(await adminHash(Account.code)); } catch (e) {}
-  if (Account.status === "ready") Account.watchNet();
+  if (Account.status === "ready") { Account.watchNet(); Presence.start(); }
   NetBanner.update();
   if (Account.recovered) setTimeout(() => toast("前回、通信が切れて保存できていなかった分を保存しました"), 2500);
   const next = () => (Account.isNew ? Account.showWelcome() : showStart());

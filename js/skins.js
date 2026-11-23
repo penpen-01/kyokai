@@ -40,6 +40,7 @@ const Skins = {
   apply() {
     const root = document.documentElement, set = (v, s) => { if (s && s.art && !s.default) root.style.setProperty(v, `url("${new URL(s.art, location.href).href}")`)   /* 変数の url は使う側の CSS（css/）基準になるので、絶対パスにする */; else root.style.removeProperty(v); };
     set("--sleeve", this.equipped("sleeve")); set("--battlebg", this.equipped("bg")); set("--homebg", this.equipped("home"));
+    try { const sl = this.equipped("sleeve"); if (sl && sl.art && !sl.default) localStorage.setItem("kyokai-sleeve", sl.art); else localStorage.removeItem("kyokai-sleeve"); } catch (e) {}   // 次の起動画面で使う
     CARD_LOOK = this.looks();
   },
   /* 自分のカードの見た目（魔光加工・別イラスト）を {カードのID: {m, a}} にまとめる */

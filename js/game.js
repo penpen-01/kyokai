@@ -1639,6 +1639,7 @@ function render() {
   if (S.phase === "rps" || S.phase === "choose") {
     Mull.close(); $("#sheet").hidden = true;
     // 相手が手を選んだだけで、じゃんけんの手などの登場の動きが出直さないように（同じ場面の描き直しでは動かさない）
+    if (RK.busy) { RK.pend = true; return; }   // じゃんけんのカードを投げている途中は描き直さない（動きが消えるので）
     const k = `${S.gid}|${S.phase}|${S.rps.round}|${S.rps.picks[ME] || ""}`, h = pregameHTML(k === lastPreKey);
     lastPreKey = k;
     if (h !== lastPreHTML) { lastPreHTML = h; morphInto(app, h); }
@@ -1687,6 +1688,92 @@ const RPS_ICON = {
   c: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 27 14 7.5c-.6-2.4 1-4.5 3.2-4.5 1.6 0 2.9 1.1 3.3 2.7L25 22"/><path d="M27 22 31 5.5c.4-1.6 1.8-2.7 3.4-2.5 2.1.3 3.4 2.4 2.8 4.4L32 26"/><path d="M12 30c0-3 2-4.5 4.5-4.5h15c3 0 5 2 5 5v3c0 6-5 11-11 11h-3c-6 0-10.5-4.5-10.5-10.5z"/><path d="M17 33h13"/></svg>',
   p: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 27V12c0-1.7 1.3-3 3-3s3 1.3 3 3v11M20 22V7c0-1.7 1.3-3 3-3s3 1.3 3 3v15M26 22V8c0-1.7 1.3-3 3-3s3 1.3 3 3v15M32 24v-9c0-1.7 1.3-3 3-3s3 1.3 3 3v15c0 8-6 14-14 14h-1c-5 0-8-2.5-11-6l-5-7c-1-1.5-.6-3.4.9-4.4 1.4-.9 3.2-.6 4.2.7L14 29"/></svg>'
 };
+/* その人のスリーブ（カードの裏）の絵。CPU や付けていない人は初期の裏面 */
+function sleeveOf(pi) {
+  const p = S && S.players && S.players[pi];
+  if (p && typeof p.sleeve === "string" && p.sleeve) return p.sleeve;
+  if (pi === ME && typeof Skins !== "undefined") { const s = Skins.equipped("sleeve"); if (s && s.art && !s.default) return s.art; }
+  return "ui/card-back.webp";
+}
+
+/* ---------- じゃんけんのカードの選び方（2026-11-24）----------
+   ・左右になぞる：指の下のカードが前に出る（手札と同じ）
+   ・タップ：前に出す。前に出ているカードをもう一度タップすると決定
+   ・上にはじく：そのカードで決定（投げる）
+   ・「これで勝負！」：前に出ているカードで決定
+   ・「おまかせ」：3枚を裏返して混ぜ、1枚がめくれて決定 */
+const RK = {
+  f: 1, busy: false, pend: false, key: "", st: null,
+  root() { return document.getElementById("rk"); },
+  sync(k) { if (this.key !== k) { this.key = k; this.f = 1; this.busy = false; this.pend = false; } },
+  focus(i, quiet) {
+    const r = this.root(); if (!r || this.busy || r.classList.contains("off")) return;
+    i = Math.max(0, Math.min(2, i)); if (i === this.f) return;
+    this.f = i;
+    r.querySelectorAll(".rk-card").forEach((b, k) => b.classList.toggle("on", k === i));
+    if (!quiet) { Sound.play("flip"); try { navigator.vibrate && navigator.vibrate(6); } catch (e) {} }
+  },
+  done(v) {
+    setTimeout(() => { this.busy = false; const p = this.pend; this.pend = false; if (S && S.phase === "rps" && !S.rps.picks[ME]) doRps(v); else if (p) render(); }, Motion.reduced ? 60 : 420);
+  },
+  go(i) {
+    const r = this.root(); if (!r || this.busy || r.classList.contains("off")) return;
+    if (typeof Tut !== "undefined" && !Tut.allow("rps")) return;
+    if (i == null) i = this.f;
+    const cards = [...r.querySelectorAll(".rk-card")], c = cards[i]; if (!c) return;
+    this.busy = true; this.f = i;
+    cards.forEach((b, k) => { b.classList.toggle("on", k === i); b.classList.toggle("gone", k !== i); });
+    c.classList.add("thrown"); r.classList.add("sent");
+    Sound.play("swing"); try { navigator.vibrate && navigator.vibrate(15); } catch (e) {}
+    this.done(c.dataset.v);
+  },
+  rand() {
+    const r = this.root(); if (!r || this.busy || r.classList.contains("off")) return;
+    if (typeof Tut !== "undefined" && !Tut.allow("rps")) return;
+    this.busy = true;
+    const cards = [...r.querySelectorAll(".rk-card")], i = Math.floor(Math.random() * 3);
+    r.classList.add("shuf", "sent"); cards.forEach(b => b.classList.remove("on"));
+    const t = Motion.reduced ? 0 : 1;
+    Sound.play("flip");
+    setTimeout(() => { cards.forEach(b => b.classList.add("back")); }, 150 * t);
+    [380, 560, 740, 920].forEach(ms => setTimeout(() => Sound.play("flip"), ms * t));
+    setTimeout(() => { r.classList.remove("shuf"); cards[i].classList.add("on", "pick"); }, 1100 * t);
+    setTimeout(() => { cards[i].classList.remove("back"); Sound.play("rare"); }, 1300 * t);
+    setTimeout(() => { this.f = i; cards.forEach((b, k) => b.classList.toggle("gone", k !== i)); cards[i].classList.add("thrown"); r.classList.add("sent"); Sound.play("swing"); this.done(cards[i].dataset.v); }, 1850 * t);
+  },
+  /* 指の動き */
+  down(e) {
+    const r = this.root(), c = e.target.closest && e.target.closest(".rk-card");
+    if (!r || !c || this.busy || c.disabled || r.classList.contains("off")) return;
+    this.st = { x: e.clientX, y: e.clientY, t: performance.now(), i: +c.dataset.rk, was: this.f, moved: false, id: e.pointerId };
+    this.focus(+c.dataset.rk, true);
+  },
+  move(e) {
+    const st = this.st; if (!st || e.pointerId !== st.id) return;
+    const dx = e.clientX - st.x, dy = e.clientY - st.y;
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) st.moved = true;
+    // 上にはじいた
+    if (dy < -46 && Math.abs(dy) > Math.abs(dx) * 1.1) { this.st = null; this.go(this.f); return; }
+    // 横になぞった：指の下のカード
+    const el = document.elementFromPoint(e.clientX, Math.min(e.clientY, st.y + 20));
+    const c = el && el.closest && el.closest(".rk-card");
+    if (c && this.root() && this.root().contains(c) && +c.dataset.rk !== this.f) this.focus(+c.dataset.rk);
+  },
+  up(e) {
+    const st = this.st; if (!st || e.pointerId !== st.id) return;
+    this.st = null;
+    if (st.moved) return;
+    // タップ：前に出ていたカードをもう一度押したら決定
+    if (st.was === st.i) this.go(st.i);
+    else { Sound.play("flip"); try { navigator.vibrate && navigator.vibrate(6); } catch (e) {} }
+  }
+};
+document.addEventListener("pointerdown", e => RK.down(e));
+document.addEventListener("pointermove", e => RK.move(e), { passive: true });
+document.addEventListener("pointerup", e => RK.up(e));
+document.addEventListener("pointercancel", () => { RK.st = null; });
+document.addEventListener("click", e => { const c = e.target.closest && e.target.closest(".rk-card"); if (c && e.detail === 0) RK.go(+c.dataset.rk); });   // キーボードで押したとき
+
 /* じゃんけんの手（Gemini の絵を切り分けたもの：ui/rps-g/c/p.webp） */
 const rpsImg = k => `<img class="rpsimg" src="ui/bt/rps-${k}.webp" alt="" draggable="false">`;   // 2026-11-23：カードの絵に
 function pregameHTML(still) {
@@ -1702,9 +1789,15 @@ function pregameHTML(still) {
   else if (ph === "rps") {
     const mine = S.rps.picks[ME];
     opSt = S.rps.picks[OP] ? `<em class="ok">選択済み</em>` : `<em>考え中${dots}</em>`;
+    RK.sync(`${S.gid}|${S.rps.round}`);
+    const sl = esc(sleeveOf(ME));
+    if (typeof Cinema !== "undefined") Cinema.preload(["g", "c", "p"].map(k => `ui/bt/rps-${k}.webp`).concat([sleeveOf(ME), sleeveOf(OP), "ui/bt/first.webp", "ui/bt/second.webp"]));
     body = `<div class="pg-title"><b>${last ? "あいこ！" : "じゃんけん"}</b><small>${last ? "もう一度" : "勝てば先攻・後攻を選べる"}</small></div>
-      ${mine ? `<div class="pg-chosen">${rpsImg(mine)}<span>${RPS[mine]}</span></div><p class="pg-wait">相手を待っています${dots}</p>`
-        : `<div class="pg-rps">${Object.entries(RPS).map(([k, v], i) => `<button type="button" class="pg-hand" style="--i:${i}" data-act="rps" data-v="${k}" ${wait ? "disabled" : ""}>${rpsImg(k)}<span>${v}</span></button>`).join("")}</div>`}`;
+      ${mine ? `<div class="pg-chosen"><span class="rk-in"><img class="rk-front" src="ui/bt/rps-${mine}.webp" alt="" draggable="false"></span><span>${RPS[mine]}</span></div><p class="pg-wait">相手を待っています${dots}</p>`
+        : `<div class="rk ${wait ? "off" : ""}" id="rk">
+          <div class="rk-fan">${["g", "c", "p"].map((k, i) => `<button type="button" class="rk-card ${RK.f === i ? "on" : ""}" style="--i:${i}" data-rk="${i}" data-v="${k}" ${wait ? "disabled" : ""} aria-label="${RPS[k]}を出す"><span class="rk-in"><img class="rk-front" src="ui/bt/rps-${k}.webp" alt="" draggable="false"><i class="rk-back" style="background-image:url('${sl}')"></i></span><b>${RPS[k]}</b></button>`).join("")}</div>
+          <div class="rk-ctl"><button type="button" class="rk-rand" data-act="rkRand" ${wait ? "disabled" : ""}><i style="background-image:url('${sl}')"></i>おまかせ</button><button type="button" class="btn primary rk-go" data-act="rkGo" ${wait ? "disabled" : ""}>これで勝負！</button></div>
+          <p class="rk-hint">なぞって選ぶ ・ 上にはじくと決定</p></div>`}`;
   } else if (ph === "choose") {
     const win = S.rpsWinner === ME;
     body = S.sen ? `<div class="pg-title ${win ? "win" : ""}"><b>デッキ完成！</b><small>${win ? "じゃんけんに負けたあなたが、先攻か後攻かを選べます" : "じゃんけんに負けた相手が、先攻・後攻を選びます"}</small></div>`
@@ -3180,6 +3273,8 @@ function handleAct(act, el) {
     case "cancel": ui = { sel: null, mode: null }; render(); break;
     case "end": doEnd(); break;
     case "rps": if (S && el) doRps(el.dataset.v); break;
+    case "rkGo": RK.go(); break;
+    case "rkRand": RK.rand(); break;
     case "choose": if (S && el) doChoose(el.dataset.v === "1"); break;
     case "mull": if (S && el) doMull(el.dataset.v === "1"); break;
     case "dig": doDig(+el.dataset.i); break;
@@ -3238,12 +3333,40 @@ function showArtView(card) {
   v.addEventListener("click", ev => { ev.stopPropagation(); v.remove(); });
   document.body.appendChild(v);
 }
+/* ---------- 押した手ごたえ（2026-11-24）----------
+   対戦を始めるボタン：ボタンが沈み、押した所から光の輪がはじけ、「ガッ」と鳴って、ひと呼吸おいてから進む
+   メニューの大きなボタン（金色のボタン・タイル）：沈んで光の輪だけ（すぐ進む） */
+const Punch = {
+  BIG: new Set(["cpuLevel", "cpuAgain", "prStart", "gateGo", "senStart", "senFight", "arenaSearch", "arenaNext", "onlCreate", "onlJoin", "tutorial", "rkGo", "choose"]),
+  busy: false,
+  ring(el, e, big) {
+    const r = el.getBoundingClientRect(), x = e && e.clientX ? e.clientX : r.left + r.width / 2, y = e && e.clientY ? e.clientY : r.top + r.height / 2;
+    const d = document.createElement("i");
+    d.className = "punch" + (big ? " big" : ""); d.style.left = `${x}px`; d.style.top = `${y}px`;
+    document.body.appendChild(d); setTimeout(() => d.remove(), 700);
+  },
+  press(el, e, fn) {
+    if (Motion.reduced || (typeof DATA_INFO !== "undefined" && DATA_INFO.draft && new URLSearchParams(location.search).has("sim"))) return fn();
+    const act = el.dataset.act;
+    if (this.BIG.has(act)) {
+      if (this.busy) return;
+      this.busy = true;
+      try { el.animate([{ scale: 1, filter: "brightness(1)" }, { scale: .93, filter: "brightness(1.45)", offset: .35 }, { scale: .98, filter: "brightness(1.15)" }], { duration: 190, easing: "ease-out", fill: "forwards" }); } catch (x) {}
+      this.ring(el, e, true); Sound.play("press");
+      try { navigator.vibrate && navigator.vibrate(18); } catch (x) {}
+      setTimeout(() => { this.busy = false; fn(); try { el.getAnimations().forEach(a => { if (a instanceof CSSAnimation) return; a.cancel(); }); } catch (x) {} }, 190);
+      return;
+    }
+    if (el.matches(".btn.primary, .lvl, .hub-btn, .hub-hero, .bart, .pg-opt, .ar-go")) { try { el.animate([{ scale: 1 }, { scale: .96, offset: .4 }, { scale: 1 }], { duration: 240, easing: "ease-out" }); } catch (x) {} this.ring(el, e, false); }
+    fn();
+  }
+};
 document.addEventListener("click", e => {
   if (Date.now() < suppressClickUntil) { e.preventDefault(); return; }
   const zc = e.target.closest(".dmodal-card .card.has-art, #sheet .sheet-card .card.has-art");
   if (zc) { showArtView(zc); return; }
   const act = e.target.closest("[data-act]");
-  if (act) { if (!act.disabled) handleAct(act.dataset.act, act); return; }
+  if (act) { if (!act.disabled) Punch.press(act, e, () => handleAct(act.dataset.act, act)); return; }
   if (!S || S.over) return;
   const myTurn = canAct();
 
@@ -3346,6 +3469,7 @@ const OpsPanel = {
       <div class="ops-grid">${this.F.map(([k, l]) => `<label class="ops-f"><span>${l}</span><input class="txt" type="number" min="0" inputmode="numeric" data-opsn="${k}" value="${this.get(k)}">
         <span class="ops-q">${[1000, 10000, 100000].map(n => `<button type="button" class="btn sm" data-ops="add" data-k="${k}" data-v="${k === "gold" || k === "stones" ? n : Math.max(1, n / 1000)}">+${(k === "gold" || k === "stones" ? n : Math.max(1, n / 1000)).toLocaleString()}</button>`).join("")}</span></label>`).join("")}</div>
       <div class="ops-flags">${flag("bossNext", "次の上級戦でネザルが乱入する")}${flag("bossNextEx", "次の超級戦で黄泉丸が乱入する")}${flag("charm.hard", "弱体の御札（上級）を持っている")}${flag("charm.ex", "弱体の御札（超級）を持っている")}</div>
+      <div class="pre-btns"><button type="button" class="btn" data-ops="live">いま開いている人・アリーナのデッキを見る</button></div>
       <div class="pre-btns"><button type="button" class="btn primary" data-ops="save">保存</button><button type="button" class="btn" data-ops="clearInfo">情報屋で買った情報を未購入に戻す</button><button type="button" class="btn" data-ops="clearWeek">挑戦状の今週の購入数を0に</button></div>
     </div>`, "start", true);
   },
@@ -3360,11 +3484,63 @@ const OpsPanel = {
     this.show("保存しました。");
   }
 };
+/* 運営：いまアプリを開いている人（presence）と、アリーナで使われたデッキ（arena/d） */
+const OpsLive = {
+  off: null, pres: null, sid: null,
+  W: { home: "ホーム", cpu: "CPU戦", sen: "選定戦", online: "友達と対戦", arena: "アリーナ" },
+  show() {
+    if (!adminOn()) return;
+    const ses = typeof Arena !== "undefined" ? [...(Arena.current() ? [Arena.current()] : []), ...Arena.past()] : [];
+    if (!this.sid && ses[0]) this.sid = ses[0].sid;
+    openOverlay(`<div class="panel wide ops-live">
+      <div class="topbar"><button type="button" class="btn sm" data-ops="open">← 戻る</button><b>運営：サーバー</b></div>
+      <h3 class="ol-h">いまアプリを開いている人 <b id="ol-n">…</b></h3>
+      <div id="ol-pres" class="ol-pres"><p class="hint">読み込み中…</p></div>
+      <p class="hint">アプリを閉じる・通信が切れると、数十秒〜数分で消えます。</p>
+      <h3 class="ol-h">アリーナで使われたデッキ</h3>
+      <div class="seg ol-ses">${ses.map(x => `<button type="button" data-ops="olSes" data-v="${esc(x.sid)}" aria-pressed="${x.sid === this.sid}">${x.test ? "テスト" : `${Arena.dayLabel(x.start)} ${Arena.hm(x.start)}`}<small>${esc(ARENA_RULES[x.rule] ? ARENA_RULES[x.rule].name : "")}</small></button>`).join("")}</div>
+      <div id="ol-decks" class="ol-decks"><p class="hint">読み込み中…</p></div>
+    </div>`, "start", true);
+    this.watch(); this.loadDecks();
+  },
+  watch() {
+    if (this.off) { try { this.off(); } catch (e) {} this.off = null; }
+    Net.init().then(() => { this.off = Net.on("presence", v => { if (!document.getElementById("ol-pres")) { if (this.off) { this.off(); this.off = null; } return; } this.pres = v || {}; this.paint(); }); })
+      .catch(() => { const el = document.getElementById("ol-pres"); if (el) el.innerHTML = `<p class="hint">サーバーに接続できませんでした。</p>`; });
+  },
+  paint() {
+    const el = document.getElementById("ol-pres"), nEl = document.getElementById("ol-n"); if (!el) return;
+    const now = Date.now(), L = Object.values(this.pres || {}).filter(x => x && now - (x.at || 0) < 15 * 60e3).sort((a, b) => (b.at || 0) - (a.at || 0));
+    if (nEl) nEl.textContent = `${L.length}人`;
+    const cnt = {}; L.forEach(x => { cnt[x.w] = (cnt[x.w] || 0) + 1; });
+    el.innerHTML = L.length ? `<div class="rchips">${Object.entries(cnt).map(([w, n]) => `<span class="rchip">${esc(this.W[w] || w)} ${n}人</span>`).join("")}</div>
+      <ul class="ol-list">${L.map(x => `<li><b>${esc(x.n || "？")}</b><span>${esc(this.W[x.w] || x.w || "")}</span></li>`).join("")}</ul>` : `<p class="hint">いまは誰もいません。</p>`;
+  },
+  async loadDecks() {
+    const el = document.getElementById("ol-decks"); if (!el || !this.sid) { if (el) el.innerHTML = `<p class="hint">まだ回がありません。</p>`; return; }
+    let v; try { await Net.init(); v = await Net.get(`arena/d/${this.sid}`); } catch (e) { el.innerHTML = `<p class="hint">読み込めませんでした（サーバーのルールの更新がまだかもしれません）。</p>`; return; }
+    // 人ごと・デッキごとにまとめる（同じ中身なら1つ）
+    const rows = {};
+    Object.entries(v || {}).forEach(([uid, games]) => Object.values(games || {}).forEach(g => {
+      const key = uid + "|" + Object.keys(g.c || {}).sort().map(id => id + g.c[id]).join(",");
+      const r = rows[key] || (rows[key] = { n: g.n, dk: g.dk, c: g.c || {}, w: 0, l: 0, d: 0, ops: [] });
+      r[g.res === "win" ? "w" : g.res === "lose" ? "l" : "d"]++; if (g.op) r.ops.push(`${g.op}${g.res === "win" ? "○" : g.res === "lose" ? "●" : "△"}`);
+    }));
+    const L = Object.values(rows).sort((a, b) => b.w - a.w || a.l - b.l);
+    el.innerHTML = L.length ? L.map(r => { const ids = Object.keys(r.c).filter(id => DEF[id]).sort((a, b) => DEF[a].cost - DEF[b].cost || a.localeCompare(b));
+      return `<details class="ol-deck"><summary><b>${esc(r.n || "？")}</b><span>${r.w}勝${r.l}敗${r.d ? `${r.d}分` : ""}</span><small>${esc(r.dk || "")}</small></summary>
+        <p class="ol-vs">${esc(r.ops.join("　"))}</p>
+        <ul>${ids.map(id => `<li><i>${DEF[id].cost}</i>${esc(DEF[id].name)}<em>×${r.c[id]}</em></li>`).join("")}</ul></details>`; }).join("")
+      : `<p class="hint">この回のデッキの記録はありません（記録は 11-24 の更新から）。</p>`;
+  }
+};
 document.addEventListener("click", e => {
   const el = e.target.closest && e.target.closest("[data-ops]"); if (!el || !adminOn()) return;
   e.preventDefault(); e.stopPropagation();
   const k = el.dataset.ops;
   if (k === "open") OpsPanel.show();
+  else if (k === "live") OpsLive.show();
+  else if (k === "olSes") { OpsLive.sid = el.dataset.v; document.querySelectorAll('[data-ops="olSes"]').forEach(b => b.setAttribute("aria-pressed", b === el)); const d = document.getElementById("ol-decks"); if (d) d.innerHTML = `<p class="hint">読み込み中…</p>`; OpsLive.loadDecks(); }
   else if (k === "add") { const inp = document.querySelector(`[data-opsn="${el.dataset.k}"]`); if (inp) inp.value = Math.max(0, Math.floor(+inp.value || 0)) + (+el.dataset.v || 0); }
   else if (k === "save") OpsPanel.save();
   else if (k === "clearInfo") { Account.data.infoBuy = {}; Account.saveNow(); OpsPanel.show("情報屋で買った情報を、未購入に戻しました。"); }

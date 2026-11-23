@@ -970,7 +970,7 @@ function normalizeData(data) {
     checked: d.sen && Array.isArray(d.sen.checked) ? d.sen.checked.filter(x => typeof x === "string" && x.length <= 20).slice(0, 100) : [] };   // 出禁を確認したパック（工房の注意書き用）
   // アリーナ（決まった時間だけのランダム対戦）：曜日ごとのルール（"" は開かない）・開く時刻・特別に開く日時
   const A0 = d.arena || {}, AR = ["std", "sen", "set1"], hm = v => /^\d{2}:\d{2}$/.test(v || "") ? v : null;
-  const arena = { on: A0.on === 0 ? 0 : 1, start: hm(A0.start) || "21:00", end: hm(A0.end) || "22:00",
+  const arena = { on: A0.on === 0 ? 0 : 1, start: hm(A0.start) || "21:00", end: hm(A0.end) || "21:30",
     days: Array.from({ length: 7 }, (_, i) => { const v = Array.isArray(A0.days) ? A0.days[i] : ARENA_DAYS_DEF[i]; return v === "" ? "" : AR.includes(v) ? v : ARENA_DAYS_DEF[i]; }),
     extra: (Array.isArray(A0.extra) ? A0.extra : []).filter(x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.date) && hm(x.start) && hm(x.end) && AR.includes(x.rule)).map(x => ({ date: x.date, start: x.start, end: x.end, rule: x.rule })).slice(0, 60),
     // 報酬：part＝参加賞（点が入った対戦が1戦以上）、rank＝1位から順。since の日より後の回から配る

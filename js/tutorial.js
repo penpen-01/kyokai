@@ -71,8 +71,8 @@ const Tut = {
     const face = () => `[data-player="${OP}"]`;
     const end = ".endbtn";
     return [
-      { say: "ようこそ、召喚士！対戦の流れを1戦しながら覚えます。<br>対戦は<b>じゃんけん</b>から。好きな手を選んでください。",
-        show: () => S.phase === "rps", done: () => S.phase !== "rps", allow: { rps: true }, hl: () => ".pg-hand" },
+      { say: "ようこそ、召喚士！対戦の流れを1戦しながら覚えます。<br>対戦は<b>じゃんけん</b>から。カードをタップして選び、<b>もう一度タップ</b>するか<b>上にはじく</b>と決定です。",
+        show: () => S.phase === "rps", done: () => S.phase !== "rps", allow: { rps: true }, hl: () => ".rk-card" },
       { say: "勝つと<b>先攻・後攻</b>を選べます。<b>先攻</b>は先に動ける（最初のターンは引かない）。<b>後攻</b>は「境界の欠片」で1回だけエナジー+1。<br>今回は<b>先攻</b>を選びましょう。",
         show: () => S.phase === "choose" && S.rpsWinner === ME, done: () => S.phase !== "choose", allow: { first: true }, hl: () => ".pg-opt.first" },
       { say: "最初の手札は5枚。気に入らなければ<b>1回だけ全部引き直せます</b>（マリガン）。<br>今回は「<b>このまま始める</b>」を押しましょう。",

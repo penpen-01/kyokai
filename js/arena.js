@@ -5,7 +5,7 @@
    ・対戦は友達対戦の部屋（rooms）をそのまま使う。部屋に arena＝回のID を書いておき、終わったら点を記録
    ・点：勝ち3・負け1（引き分け1）。arena/r/<回のID>/<uid> = { name, pts, w, l, d }
    ・報酬：参加賞と1〜3位（ARENA.rewards。回が終わって1時間後に受け取れる）。運営アカウントは、いつでも「テスト」の回に入れる */
-let ARENA = { on: 1, start: "21:00", end: "22:00", days: ARENA_DAYS_DEF.slice(), extra: [] };
+let ARENA = { on: 1, start: "21:00", end: "21:30", days: ARENA_DAYS_DEF.slice(), extra: [] };
 const ARENA_RULES = {
   std:  { name: "通常戦",     desc: "いつものデッキで戦います。" },
   sen:  { name: "選定戦",     desc: "カードを取り合って、その場でデッキを作ります。" },
@@ -281,6 +281,13 @@ const Arena = {
         vs: { ...(x.vs || {}), ...(ok && vs ? { [vs]: cnt + 1 } : {}) }, g };
     }).then(r => { if (r && r.val) this.rv = { sid: R.arena, vs: r.val.vs || {} }; })).catch(e => console.error(e));
     if (!out.short && !out.capped) { this.rv = this.rv && this.rv.sid === R.arena ? this.rv : { sid: R.arena, vs: {} }; this.rv.vs[vs] = prevVs + 1; }
+    // 運営が見る用：この対戦で使ったデッキ（arena/d/<回>/<uid>/<自動の番号>）。選定戦の回は、その場で作ったデッキ
+    try {
+      const dk = (S.decks && S.decks[ME]) || this.deck || {}, src = dk.cards && typeof dk.cards === "object" ? dk.cards : {};
+      const c = {}; Object.keys(src).filter(id => /^[\w-]{1,40}$/.test(id) && +src[id] > 0).slice(0, 60).forEach(id => { c[id] = Math.min(9, Math.floor(+src[id])); });
+      const op = S.players && S.players[OP] ? String(S.players[OP].name || "") : "";
+      Net.init().then(uid => Net.push(`arena/d/${R.arena}/${uid}`, { at: Date.now(), res, n: name.slice(0, 10), dk: String(dk.name || "").slice(0, 20), c, op: op.slice(0, 10), t: turns })).catch(() => {});
+    } catch (e) { console.error(e); }
     return out;
   },
   handleAct(act, el) {

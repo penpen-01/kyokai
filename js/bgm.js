@@ -127,6 +127,29 @@ const Bgm = (() => {
           "E6:0:8 C6:8:8", "A5:0:8 F5:8:8", "B5:0:6 D6:6:2 G6:8:8", "E6:0:16", "A6:0:4 G6:4:4 E6:8:8", "F6:0:4 E6:4:4 C6:8:8", "D#6:0:8 F#6:8:8", "G#6:0:16"] },
         drums: { vol: .55, bars: ["T...T.s.T...T.s.", "T...T.s.T.T.TTTc"] } }
     ] },
+    // 選定戦（2026-11-24）：カードを取り合う間は張りつめた「選定の間」、対戦は太鼓が走る「選ばれし札」
+    sendraft: { name: "選定戦「選定の間」", group: "battle", bpm: 112, sections: [
+      { name: "読み合い", chords: C("C3,Eb3,G3 C3,Eb3,G3 Ab2,C3,Eb3 Bb2,D3,F3 C3,Eb3,G3 C3,Eb3,G3 Db3,F3,Ab3 G2,B2,D3"), pad: PADS.dark, bass: { vol: .16, pat: "r..r..r.r..r..r.", type: "saw" },
+        arp: { vol: .045, pat: [0, 2, 1, 2, 0, 2, 1, 2], step: 2, oct: 2, inst: "pizz" }, lead: { vol: .05, inst: "bell", bars: [
+          "G5:0:6 Eb5:6:2 C5:8:8", "", "Ab5:0:6 G5:6:2 Eb5:8:8", "F5:0:8 D5:8:8", "G5:0:4 C6:4:4 Bb5:8:4 G5:12:4", "Eb5:0:16", "F5:0:4 Ab5:4:4 Db6:8:8", "B5:0:8 D6:8:8"] },
+        drums: { vol: .42, bars: ["T.....t.T...t...", "T.....t.T...t.tt"] } },
+      { name: "決断", chords: C("Ab2,C3,Eb3 Bb2,D3,F3 G2,B2,D3 C3,Eb3,G3 Ab2,C3,Eb3 Bb2,D3,F3 Db3,F3,Ab3 G2,B2,D3"), pad: PADS.str, bass: { vol: .17, pat: "r.r.o.r.r.r.o.r.", type: "saw" },
+        arp: { vol: .04, pat: [0, 1, 2, 3], step: 1, oct: 2, inst: "harp" }, lead: { vol: .06, inst: "brass", bars: [
+          "Eb5:0:4 Ab5:4:4 C6:8:6 Bb5:14:2", "Bb5:0:4 F5:4:4 D6:8:8", "B5:0:4 D6:4:4 G6:8:8", "G5:0:12 Eb5:12:4",
+          "C6:0:4 Eb6:4:4 Ab6:8:6 G6:14:2", "F6:0:4 D6:4:4 Bb5:8:8", "Ab5:0:4 Db6:4:4 F6:8:8", "D6:0:8 B5:8:8"] },
+        drums: { vol: .48, bars: ["T.k.s.k.T.k.s.k.", "T.k.s.k.T.k.s.k.", "T.k.s.k.T.k.s.k.", "T...T...TtTtTTTc"] } }
+    ] },
+    senbattle: { name: "選定戦「選ばれし札」", group: "battle", bpm: 138, sections: [
+      { name: "A", chords: C("C3,Eb3,G3 Ab2,C3,Eb3 Bb2,D3,F3 G2,B2,D3 C3,Eb3,G3 Ab2,C3,Eb3 F2,Ab2,C3 G2,B2,D3"), pad: PADS.str, bass: { vol: .19, pat: "r.ror.r.r.ror.o.", type: "saw" },
+        arp: { vol: .035, pat: [0, 1, 2, 1], step: 1, oct: 2, inst: "pluck" }, lead: { vol: .065, inst: "brass", bars: [
+          "G5:0:3 G5:3:1 C6:4:4 Eb6:8:4 D6:12:4", "C6:0:8 Ab5:8:4 C6:12:4", "Bb5:0:3 Bb5:3:1 D6:4:4 F6:8:4 Eb6:12:4", "D6:0:12 B5:12:4",
+          "Eb6:0:4 D6:4:4 C6:8:4 G5:12:4", "Ab5:0:4 C6:4:4 Eb6:8:8", "F6:0:4 Eb6:4:4 C6:8:4 Ab5:12:4", "B5:0:8 D6:8:8"] },
+        drums: { vol: .52, bars: ["k.k.s..kk.k.s...", "k.k.s..kk.k.s.t.", "k.k.s..kk.k.s...", "k.k.s.k.t.t.TTTc"] } },
+      { name: "B", chords: C("Ab2,C3,Eb3 Eb3,G3,Bb3 Bb2,D3,F3 C3,Eb3,G3 Ab2,C3,Eb3 Eb3,G3,Bb3 Db3,F3,Ab3 G2,B2,D3"), pad: PADS.str, bass: { vol: .18, pat: "r.r.r.r.o.o.r.r.", type: "saw" },
+        arp: { vol: .04, pat: [0, 1, 2, 3, 2, 1], step: 1, oct: 2, inst: "harp" }, lead: { vol: .06, inst: "flute", bars: [
+          "C6:0:8 Eb6:8:8", "Bb5:0:8 G5:8:8", "F5:0:4 Bb5:4:4 D6:8:8", "Eb6:0:12 C6:12:4", "Ab6:0:4 G6:4:4 Eb6:8:8", "G6:0:4 F6:4:4 Eb6:8:4 Bb5:12:4", "Db6:0:8 F6:8:8", "D6:0:8 G6:8:8"] },
+        drums: { vol: .52, bars: ["T...k.s.T.k.s...", "T...k.s.T.k.s.k.", "T...k.s.T.k.s...", "T...T...TtTtTTTc"] } }
+    ] },
     shop: { name: "ショップ", group: "place", bpm: 104, swing: .12, sections: [
       { name: "A", chords: C("F3,A3,C4 D3,F3,A3 Bb2,D3,F3 C3,E3,G3 F3,A3,C4 D3,F3,A3 G3,Bb3,D4 C3,E3,G3"), pad: { vol: .03, type: "triangle" }, bass: { vol: .15, pat: "r...5...o...5...", short: true },
         arp: { vol: .05, pat: [0, 2, 1, 2], step: 2, oct: 1, inst: "pizz" }, lead: { vol: .065, inst: "box", bars: [
@@ -298,16 +321,18 @@ const BgmSet = {
     if (document.querySelector(".bossin")) return "warning";
     const o = document.getElementById("overlay"), vis = o && !o.hidden;
     const has = sel => vis && !!o.querySelector(sel);
+    if (has(".panel.sen")) return "sendraft";   // 1人で遊ぶ選定戦：カードを選ぶ画面
     if (has(".shop")) return "shop";
     if (has(".pkshop, .openstage, .rs, .ms-grid")) return "pack";
     if (has(".dedit, .cl-tools")) return "deck";
     const home = has(".panel.home");
     if (document.querySelector(".bossin")) return "warning";
     if (!home && typeof S !== "undefined" && S) {   // じゃんけんから結果の画面まで（タイトルに戻ると S は消える）
-      const boss = S.battle && S.battle.kind === "boss";
+      const boss = S.battle && S.battle.kind === "boss", sen = S.sen || (S.battle && S.battle.kind === "sen");
       if (S.over) return typeof myResult === "function" && myResult() === "win" ? "win" : "lose";
-      if (["rps", "choose", "mulligan"].includes(S.phase)) return boss ? "bossprep" : "prep";
-      return boss ? "boss" : this.battleTrack();
+      if (S.phase === "draft") return "sendraft";   // 選定戦のカードの取り合い
+      if (["rps", "choose", "mulligan"].includes(S.phase)) return boss ? "bossprep" : sen ? "sendraft" : "prep";
+      return boss ? "boss" : sen ? "senbattle" : this.battleTrack();
     }
     return Bgm.TRACKS[this.home] ? this.home : "home";
   },

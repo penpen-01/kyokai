@@ -16,7 +16,7 @@ const Cinema = {
     return new Promise(res => { const chk = () => (this.busy() ? setTimeout(chk, 80) : res()); chk(); });
   },
   reset() {
-    clearTimeout(this.timer); clearTimeout(this.fadeT);
+    clearTimeout(this.timer); clearTimeout(this.fadeT); this.clearSfx();
     this.q = []; this.playing = null; this.seen = new Set();
     const el = document.getElementById("cine"); if (el) el.remove();
   },
@@ -34,8 +34,18 @@ const Cinema = {
     if (!this.playing) this.next();
   },
 
+  /* 演出の中の音。飛ばしたら、まだ鳴っていない音も止める（前は飛ばしたあとに音だけ遅れて鳴っていた） */
+  sfxT: [],
+  sfx(ms, fn) { this.sfxT.push(setTimeout(() => { try { fn(); } catch (e) {} }, ms)); },
+  clearSfx() { this.sfxT.forEach(clearTimeout); this.sfxT = []; },
+  /* 絵を先に読み込んで、すぐ描ける状態にしておく（じゃんけんの手・スリーブ・紋章）。めくった瞬間に絵が出ないことがあった */
+  imgs: [],
+  preload(list) {
+    list.forEach(src => { if (!src || this.imgs.some(im => im._src === src)) return; const im = new Image(); im._src = src; im.src = src; try { im.decode && im.decode().catch(() => {}); } catch (e) {} this.imgs.push(im); });
+    if (this.imgs.length > 40) this.imgs = this.imgs.slice(-40);
+  },
   next() {
-    clearTimeout(this.timer); clearTimeout(this.fadeT);
+    clearTimeout(this.timer); clearTimeout(this.fadeT); this.clearSfx();
     const old = document.getElementById("cine"); if (old) old.remove();
     if (this.q.length && typeof Mull !== "undefined" && Mull.busy) { this.playing = "wait"; this.timer = setTimeout(() => this.next(), 100); return; }   // 手札を配り終わってから
     const fn = this.q.shift();
@@ -49,12 +59,14 @@ const Cinema = {
     this.fadeT = setTimeout(() => { const el = document.getElementById("cine"); if (el && !this.q.length) el.classList.add("out"); }, fade);
     this.timer = setTimeout(() => this.next(), ms);
   },
-  skip() { if (this.playing && this.playing.skippable !== false) this.next(); },
+  // 始まってすぐのタップは飛ばさない（前の画面のボタンを連打した指が、そのまま演出を消してしまっていた）
+  skip() { if (this.playing && this.playing.skippable !== false && performance.now() - (this.t0 || 0) > 650) this.next(); },
 
   /* 画面全体を覆う層を作る（tap で飛ばす） */
   layer(cls, html, skippable = true) {
     const el = document.createElement("div");
     el.id = "cine"; el.className = "cine " + cls + (Motion.reduced ? " reduced" : "");
+    this.t0 = performance.now();
     el.innerHTML = html;
     if (skippable) el.addEventListener("click", e => { e.stopPropagation(); this.skip(); });
     document.body.appendChild(el);
@@ -87,11 +99,11 @@ const Cinema = {
       <div class="cv-seam" aria-hidden="true"></div>${extra}`;
   },
 
-  /* ---------- 試合開始：VS（2026-11-23 作り直し） ----------
-     1 暗転して、真ん中に斜めの光の裂け目（境界）が走る
-     2 上から相手、下から自分の帯がすべり込む（代表カードの絵を大きく。名前・称号・デッキ名）
-     3 VS の紋章が叩きつけられる（白い光・衝撃の輪・火花・帯が揺れる）
-     4 帯が上下に割れて退場し、「BATTLE START」 */
+  /* ---------- 試合開始：VS（2026-11-24 作り直し・2.8秒） ----------
+     1 真ん中に斜めの光の裂け目が走り、上から相手、下から自分の帯がすべり込む（代表カードの絵・名前・称号・デッキ名）
+     2 VS の紋章が叩きつけられる（白い光・衝撃の輪・火花・帯が揺れる）
+     3 VS が手前へはじけて「BATTLE START」が打ち込まれる。帯は残したまま（暗転しない）
+     4 帯が上下に割れて飛び去り、そのまま、じゃんけんの画面が見える */
   intro() {
     Sound.play("open");
     // 絵は要素に直接（変数に url() を入れると、CSS のファイルの場所から探してしまい出なかった）
@@ -102,29 +114,29 @@ const Cinema = {
     const sparks = Array.from({ length: 24 }, () => `<i style="--a:${Math.round(Math.random() * 360)}deg;--d:${Math.round(70 + Math.random() * 130)}px;--t:${(Math.random() * .2).toFixed(2)}s;--c:${Math.random() < .5 ? "#ffd27a" : "#9fd8ff"}"></i>`).join("");
     const el = this.layer("intro2", `${side(OP, "op")}${side(ME, "me")}<div class="bi-rift"></div>
       <div class="bi-vs"><i class="bi-ring"></i><i class="bi-ring r2"></i><img src="ui/bt/vs.webp" alt="VS" draggable="false"><span class="bi-sparks">${sparks}</span></div>
-      <div class="bi-start"><span>BATTLE START</span></div>`);
+      <div class="bi-start"><i class="bi-streak"></i><span>BATTLE START</span></div>`);
     el.style.setProperty("--ang", `${(Math.atan2(-0.112 * innerHeight, innerWidth) * 180 / Math.PI).toFixed(2)}deg`);
     if (!Motion.reduced) {
-      setTimeout(() => Sound.play("hit"), 820);
-      setTimeout(() => Sound.play("destroy"), 860);
-      setTimeout(() => Sound.play("rare", 1), 2150);
-      setTimeout(() => { try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }, 820);
+      this.sfx(760, () => { Sound.play("hit"); Sound.play("destroy"); try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} });
+      this.sfx(1790, () => { Sound.play("go"); try { navigator.vibrate && navigator.vibrate(20); } catch (e) {} });
+      this.sfx(2250, () => Sound.play("swing"));
     }
-    return Motion.reduced ? 1200 : 3100;
+    return Motion.reduced ? 1200 : 2800;
   },
 
   /* ---------- じゃんけん：お互いのカードが裏から表へめくれて、勝った方が光り、負けた方は砕ける ---------- */
   rps(last) {
     const v = last.winner == null ? "tie" : last.winner === ME ? "win" : "lose";
     const verdict = v === "tie" ? "あいこ！" : v === "win" ? "あなたの勝ち！" : "相手の勝ち";
+    // 裏はその人のスリーブ。めくりは横に縮めて裏と表を入れ替える（3D で裏返すと、iPhone で表の絵がしばらく出ないことがあった）
     const card = (pi, cls) => `<div class="br-card ${cls} ${last.winner === pi ? "won" : last.winner == null ? "tie" : "lost"}"><div class="br-in">
-        <i class="br-back"></i><img class="br-front" src="ui/bt/rps-${last.hands[pi]}.webp" alt="${RPS[last.hands[pi]]}" draggable="false"></div></div>`;
+        <img class="br-front" src="ui/bt/rps-${last.hands[pi]}.webp" alt="${RPS[last.hands[pi]]}" draggable="false"><i class="br-back" style="background-image:url('${esc(sleeveOf(pi))}')"></i></div></div>`;
     this.layer("rps2 " + v, `<i class="br-bg"></i>${card(OP, "op")}${card(ME, "me")}
       <div class="br-verdict ${v}"><b>${verdict}</b><small>相手：${RPS[last.hands[OP]]} ／ あなた：${RPS[last.hands[ME]]}</small></div>`);
     if (!Motion.reduced) {
-      setTimeout(() => Sound.play("flip"), 380);
-      setTimeout(() => Sound.play(v === "tie" ? "click" : "hit"), 820);
-      setTimeout(() => Sound.play(v === "win" ? "rare" : v === "lose" ? "destroy" : "click"), 1000);
+      this.sfx(380, () => Sound.play("flip"));
+      this.sfx(820, () => Sound.play(v === "tie" ? "click" : "hit"));
+      this.sfx(1000, () => Sound.play(v === "win" ? "rare" : v === "lose" ? "destroy" : "click"));
     }
     return Motion.reduced ? 1300 : 2300;
   },
@@ -135,10 +147,7 @@ const Cinema = {
     this.layer("order2 " + k, `<i class="bo-rays"></i>
       <div class="bo-emb"><i class="bi-ring"></i><i class="bi-ring r2"></i><img src="ui/bt/${k}.webp" alt="" draggable="false"></div>
       <div class="bo-txt"><span>${meFirst ? "FIRST" : "SECOND"}</span><b>${meFirst ? "先攻" : "後攻"}</b><small>${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」を持って始めます"}</small></div>`);
-    if (!Motion.reduced) {
-      setTimeout(() => { Sound.play("hit"); Sound.play(meFirst ? "rare" : "buff"); }, 560);
-      setTimeout(() => { try { navigator.vibrate && navigator.vibrate(25); } catch (e) {} }, 560);
-    }
+    if (!Motion.reduced) this.sfx(560, () => { Sound.play("hit"); Sound.play(meFirst ? "rare" : "buff"); try { navigator.vibrate && navigator.vibrate(25); } catch (e) {} });
     return Motion.reduced ? 1400 : 2700;
   },
 

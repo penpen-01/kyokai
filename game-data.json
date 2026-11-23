@@ -1,5 +1,5 @@
 {
- "version": 205,
+ "version": 206,
  "updated": "2026-11-19",
  "config": {
   "PLAYER_HP": 20,
@@ -10061,7 +10061,7 @@
  "arena": {
   "on": 1,
   "start": "21:00",
-  "end": "22:00",
+  "end": "21:30",
   "days": [
    "std",
    "std",
