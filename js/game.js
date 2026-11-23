@@ -3066,7 +3066,7 @@ function showSolo() {
       ${tile("start", "CPU戦", "勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
       ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "1つの世界だけのデッキで戦う", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
       ${typeof Sentei !== "undefined" && Sentei.on() ? tile("senOpen", "選定戦", `その場でデッキを作って${SEN_WIN}勝を目指す${Sentei.beta() ? "" : `（入場料${Sentei.fee()}G）`}`, { art: art("f2-tamamo"), cls: "m-sen", tag: Sentei.run() ? "挑戦中" : !CONFIG.SEN_ON ? "運営のみ" : Sentei.beta() ? "β版" : "" }) : ""}
-      ${typeof Tower !== "undefined" ? tile("tower", "境界の塔", "週替わりの30階を登る", { art: art("b-janus") || art("tk-gate"), cls: "m-tower", tag: "β" }) : ""}
+      ${typeof Tower !== "undefined" ? tile("tower", `境界の塔 <i class="beta-tag">β</i>`, "週替わりの30階を登る", { art: art("b-janus") || art("tk-gate"), cls: "m-tower" }) : ""}
     </div>
     <div class="lvls solo-sub">
       ${tile("practice", "練習対戦", "CPU に好きなデッキを使わせる", { cls: "m-prac", art: art("x-rush") })}

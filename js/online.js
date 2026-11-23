@@ -56,7 +56,7 @@ const Online = {
         <button type="button" class="hub-btn" data-act="onlJoinOpen"><span class="hub-ic" aria-hidden="true">${HUB_IC.join}</span><b>合言葉で入る</b><small>友達の部屋に参加</small></button>
       </div></div>
       ${typeof Ghost !== "undefined" ? `<button type="button" class="lvl lvl-mode m-ghost" data-act="ghost"><span class="lvl-art" style="background-image:url('${esc((DEF["y2-kensei"] && DEF["y2-kensei"].art) || "")}')"></span>
-        <span class="lvl-body"><span class="lvl-head"><b>分身戦</b><small class="ptag">β</small></span><span class="lvl-desc">友達のデッキの分身と、いつでも戦える</span></span><span class="lvl-go" aria-hidden="true">›</span></button>` : ""}
+        <span class="lvl-body"><span class="lvl-head"><b>分身戦 <i class="beta-tag">β</i></b></span><span class="lvl-desc">友達のデッキの分身と、いつでも戦える</span></span><span class="lvl-go" aria-hidden="true">›</span></button>` : ""}
       <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
     </div>`, "lobby", true);
   },
