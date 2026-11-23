@@ -798,7 +798,10 @@ async function boot() {
   if (!DATA_INFO.draft) Splash.show();
   await Account.init();
   try { if (Account.code && CONFIG.ADMINS.length) Ops.admin = CONFIG.ADMINS.includes(await adminHash(Account.code)); } catch (e) {}
-  if (Account.status === "ready") { Account.watchNet(); Presence.start(); }
+  if (Account.status === "ready") Account.watchNet();
+  // いま開いている人に数える。起動したときに通信が不安定で、あとからつながった人・新しくアカウントを作った人も数えるように、10秒ごとに確かめる
+  const pres = () => { if (Account.status === "ready") Presence.start(); };
+  pres(); setInterval(pres, 10000);
   NetBanner.update();
   if (Account.recovered) setTimeout(() => toast("前回、通信が切れて保存できていなかった分を保存しました"), 2500);
   const next = () => (Account.isNew ? Account.showWelcome() : showStart());
