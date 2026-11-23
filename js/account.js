@@ -111,6 +111,8 @@ const Account = {
       tickets: Math.max(0, Math.floor(+d.tickets || 0)),
       // SR以上確定パック券（隠しボスの報酬）
       srTickets: Math.max(0, Math.floor(+d.srTickets || 0)),
+      // 選定戦の無料挑戦チケット（2026-11-24。挑むときは G より先に使う）
+      senTickets: Math.max(0, Math.floor(+d.senTickets || 0)),
       // ショップで増やしたデッキ枠（マイデッキ・限定構築それぞれ +1）
       deckSlots: Math.max(0, Math.min(50, Math.floor(+d.deckSlots || 0))),
       ...(d.q && typeof d.q === "object" ? { q: d.q } : {}),

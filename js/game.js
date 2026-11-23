@@ -2706,6 +2706,8 @@ function giveReward(res) {
     if (B.kind === "gate" && res === "win") r.gate = gateReward();
     if (B.kind === "tutorial") r.tut = Tut.reward(res);
     if (B.kind === "sen" && typeof Sentei !== "undefined") r.sen = Sentei.onGame(res);
+    if (B.kind === "tower" && typeof Tower !== "undefined") r.tower = Tower.onGame(res);
+    if (B.kind === "ghost" && typeof Ghost !== "undefined") r.ghost = Ghost.onGame(res);
   }
   if (counts && !(B && B.kind === "tutorial") && typeof Titles !== "undefined") Titles.onGame(res, r, B);   // 通算の記録（称号）
   if (r.g) Account.addGold(r.g);       // 連勝数も一緒に保存される
@@ -2745,6 +2747,8 @@ function showResult(res) {
     r.online && r.online.capped ? `友達との対戦でGを受け取れるのは1日${r.online.max}回までです（今日の分は受け取り済み）` : "",
     r.online && r.g ? `友達との対戦の報酬：今日 ${r.online.used}/${r.online.max}回目` : "",
     r.senBeta ? "選定戦β版のため、報酬はありません" : "",
+    r.tower ? (r.tower.clear ? (r.tower.top ? `境界の塔：${r.tower.floor}階を突破！今週の塔を登りきりました` : `境界の塔：${r.tower.floor}階を突破！`) : r.tower.old ? "境界の塔：週が変わったので、この対戦は数えません" : `境界の塔：${r.tower.floor}階はもう一度挑めます`) : "",
+    r.tower || r.ghost ? "β版のため、報酬はありません" : "",
     r.arena ? (r.arena.short ? "アリーナ：すぐに決着したので、点になりませんでした" : r.arena.capped ? `アリーナ：同じ相手からの点は1回の開催で${ARENA_VS_MAX}戦までです` : `アリーナ：+${r.arena.add}点（ランキングはアリーナの画面で）`) : ""
   ].filter(Boolean);
   // 次にすること：大きいボタン1つ＋小さいボタン
@@ -2755,10 +2759,12 @@ function showResult(res) {
     : B && B.kind === "tutorial" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度チュートリアル</button>`
     : B && B.kind === "gate" ? (r.gate ? "" : `<button type="button" class="btn primary res-main" data-act="cpuAgain">もう一度挑む</button>`)
     : B && B.kind === "sen" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">${r.sen && r.sen.done ? "選定戦の結果へ" : "選定戦へ戻る"}</button>`
+    : B && B.kind === "tower" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">${r.tower && r.tower.clear ? (r.tower.top ? "塔へ戻る" : "次の階へ") : "もう一度挑む"}</button>`
+    : B && B.kind === "ghost" ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">分身戦へ戻る</button>`
     : B && B.kind === "boss" && B.ticket ? `<button type="button" class="btn primary res-main" data-act="cpuAgain">情報屋へ（挑戦状 残り${(Account.data && Account.data.btk && Account.data.btk[B.boss]) || 0}枚）</button>`
     : `<button type="button" class="btn primary res-main" data-act="cpuAgain">同じ強さでもう一度</button>`;
   const sub = [
-    !online && !(B && B.kind === "gate" && r.gate) && !(B && ["tutorial", "sen"].includes(B.kind)) ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
+    !online && !(B && B.kind === "gate" && r.gate) && !(B && ["tutorial", "sen", "tower", "ghost"].includes(B.kind)) ? `<button type="button" class="res-sub" data-act="cpuReselect">${RES_IC.again}<span>${B && ["world", "gate"].includes(B.kind) ? "選び直す" : "強さを選ぶ"}</span></button>` : "",
     online && !Online.oppLeft && !Online.closed && !(Online.room && Online.room.rule === "sen") ? `<button type="button" class="res-sub" data-act="onlDeck">${RES_IC.deck}<span>デッキ変更</span></button>` : "",
     `<button type="button" class="res-sub" data-act="log">${RES_IC.log}<span>ログ</span></button>`,
     `<button type="button" class="res-sub" data-act="closeOverlay">${RES_IC.board}<span>盤面</span></button>`,
@@ -2928,6 +2934,8 @@ function battleAgain() {
   if (k === "tutorial") Tut.start();
   else if (k === "sen") { const x = rewarded[S.gid] && rewarded[S.gid].sen; if (x && x.done) Sentei.showEnd(x); else Sentei.show(); }
   else if (k === "practice") startPractice();
+  else if (k === "tower") Tower.show();
+  else if (k === "ghost") Ghost.show();
   else if (k === "world") startWorldGame(CPU_LEVEL);
   else if (k === "gate") { if (gatePacks().some(p => p.id === GATE.pack)) startGateGame(); else showGate(); }
   else if (k === "boss" && S.battle.test) startBossTest(S.battle.boss || "ex");
@@ -3058,6 +3066,7 @@ function showSolo() {
       ${tile("start", "CPU戦", "勝つとGがもらえる", { art: art("wargod"), cls: "m-cpu" })}
       ${WORLD_MODE_OPEN ? tile("worldMode", "世界限定戦", "1つの世界だけのデッキで戦う", { off: !WORLD_MODE_OPEN, tag: WORLD_MODE_OPEN ? "" : "準備中", art: WORLD_MODE_OPEN ? art("x-gigas") || art("omega") : "", cls: WORLD_MODE_OPEN ? "m-world" : "m-off" }) : ""}
       ${typeof Sentei !== "undefined" && Sentei.on() ? tile("senOpen", "選定戦", `その場でデッキを作って${SEN_WIN}勝を目指す${Sentei.beta() ? "" : `（入場料${Sentei.fee()}G）`}`, { art: art("f2-tamamo"), cls: "m-sen", tag: Sentei.run() ? "挑戦中" : !CONFIG.SEN_ON ? "運営のみ" : Sentei.beta() ? "β版" : "" }) : ""}
+      ${typeof Tower !== "undefined" ? tile("tower", "境界の塔", "週替わりの30階を登る", { art: art("b-janus") || art("tk-gate"), cls: "m-tower", tag: "β" }) : ""}
     </div>
     <div class="lvls solo-sub">
       ${tile("practice", "練習対戦", "CPU に好きなデッキを使わせる", { cls: "m-prac", art: art("x-rush") })}
@@ -3320,6 +3329,8 @@ function handleAct(act, el) {
       if (Showcase.handleAct(act, el)) return;
       if (Decks.handleAct(act, el)) return;
       if (typeof Arena !== "undefined" && Arena.handleAct(act, el)) return;
+      if (typeof Tower !== "undefined" && Tower.handleAct(act, el)) return;
+      if (typeof Ghost !== "undefined" && Ghost.handleAct(act, el)) return;
       if (typeof Online !== "undefined") Online.handleAct(act, el);
   }
 }
@@ -3337,7 +3348,7 @@ function showArtView(card) {
    対戦を始めるボタン：ボタンが沈み、押した所から光の輪がはじけ、「ガッ」と鳴って、ひと呼吸おいてから進む
    メニューの大きなボタン（金色のボタン・タイル）：沈んで光の輪だけ（すぐ進む） */
 const Punch = {
-  BIG: new Set(["cpuLevel", "cpuAgain", "prStart", "gateGo", "senStart", "senFight", "arenaSearch", "arenaNext", "onlCreate", "onlJoin", "tutorial", "rkGo", "choose"]),
+  BIG: new Set(["cpuLevel", "cpuAgain", "prStart", "gateGo", "senStart", "senFight", "arenaSearch", "arenaNext", "onlCreate", "onlJoin", "tutorial", "rkGo", "choose", "towerGo", "ghostGo"]),
   busy: false,
   ring(el, e, big) {
     const r = el.getBoundingClientRect(), x = e && e.clientX ? e.clientX : r.left + r.width / 2, y = e && e.clientY ? e.clientY : r.top + r.height / 2;
@@ -3456,7 +3467,7 @@ Fx.apply();
 
 /* ---------- 運営用アカウント：自分の持ち物を好きに変える（ホームの「運営」を押す） ---------- */
 const OpsPanel = {
-  F: [["gold", "G"], ["stones", "魔石"], ["tickets", "パック券"], ["srTickets", "SR以上確定パック券"], ["btk.hard", "挑戦状（上級）"], ["btk.ex", "挑戦状（超級）"], ["bossPity", "上級ボスの天井カウント"], ["bossPityEx", "超級ボスの天井カウント"]],
+  F: [["gold", "G"], ["stones", "魔石"], ["tickets", "パック券"], ["srTickets", "SR以上確定パック券"], ["senTickets", "選定戦の無料挑戦チケット"], ["btk.hard", "挑戦状（上級）"], ["btk.ex", "挑戦状（超級）"], ["bossPity", "上級ボスの天井カウント"], ["bossPityEx", "超級ボスの天井カウント"]],
   get(k) { const [a, b] = k.split("."); const d = Account.data || {}; return Math.max(0, Math.floor(+(b ? (d[a] || {})[b] : d[a]) || 0)); },
   set(k, v) { const [a, b] = k.split("."); v = Math.max(0, Math.min(99999999, Math.floor(+v || 0))); if (b) Account.data[a] = { ...(Account.data[a] || {}), [b]: v }; else Account.data[a] = v; },
   show(msg) {

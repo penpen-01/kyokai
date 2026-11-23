@@ -3755,3 +3755,78 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .ol-deck ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:2px 10px;font-size:12.5px}
 .ol-deck li{display:flex;gap:6px}.ol-deck li i{font-style:normal;color:#9fd8ff;width:1.4em;text-align:right}.ol-deck li em{font-style:normal;color:var(--muted);margin-left:auto}
 .ol-vs{margin:6px 0 0;font-size:12px;color:var(--muted)}
+
+/* 選定戦の無料挑戦チケット */
+.sen-tk{display:inline-block;width:22px;height:15px;margin-right:6px;vertical-align:-2px;border-radius:3px;background:linear-gradient(135deg,#f6dfa0,#c9963c);box-shadow:inset 0 0 0 1px #6e4c14;-webkit-mask:radial-gradient(circle at 0 50%,transparent 3px,#000 3.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 3px,#000 3.5px) right/51% 100% no-repeat;mask:radial-gradient(circle at 0 50%,transparent 3px,#000 3.5px) left/51% 100% no-repeat,radial-gradient(circle at 100% 50%,transparent 3px,#000 3.5px) right/51% 100% no-repeat}
+
+/* =========================================================
+   境界の塔・分身戦（β・2026-11-24）
+   ========================================================= */
+/* 一人で遊ぶ：選定戦と塔を横に並べて、1画面に収める */
+.overlay.gnav-on .solo-main:has(.m-tower){grid-template-columns:repeat(2,minmax(0,1fr))}
+.overlay.gnav-on .solo-main:has(.m-tower) > .lvl:not(.m-sen):not(.m-tower){grid-column:1/-1}
+.overlay.gnav-on .solo-main .lvl.m-tower,.overlay.gnav-on .solo-main:has(.m-tower) .lvl.m-sen{min-height:clamp(104px,16vh,150px)}
+.overlay.gnav-on .solo-main:has(.m-tower) .lvl.m-sen .lvl-head b,.overlay.gnav-on .solo-main .lvl.m-tower .lvl-head b{font-size:22px}
+.overlay.gnav-on .solo-main:has(.m-tower) .lvl.m-sen .lvl-body,.overlay.gnav-on .solo-main .lvl.m-tower .lvl-body{padding:12px 10px 12px 16px}
+.overlay.gnav-on .solo-main:has(.m-tower) .lvl.m-sen .lvl-desc,.overlay.gnav-on .solo-main .lvl.m-tower .lvl-desc{font-size:11px}
+.overlay.gnav-on .solo-main:has(.m-tower) .lvl.m-sen .lvl-go,.overlay.gnav-on .solo-main .lvl.m-tower .lvl-go{display:none}
+.overlay.gnav-on .solo-main .lvl.m-tower .lvl-art{background-position:50% 20%}
+.overlay.gnav-on .solo-main:has(.m-tower) .lvl-head{flex-wrap:wrap;gap:2px 6px}
+/* オンライン：分身戦 */
+.overlay.gnav-on .panel.hub .lvl.m-ghost{display:flex;width:100%;margin-top:12px;min-height:96px}
+.overlay.gnav-on .panel.hub .lvl.m-ghost .lvl-head b{font-size:24px}
+.overlay.gnav-on .panel.hub .lvl.m-ghost .lvl-art{background-position:50% 18%}
+
+/* ---- 塔の画面 ---- */
+.tw-main{display:grid;grid-template-columns:46px 1fr;gap:14px;margin-top:6px}
+.tw-tower{display:flex;flex-direction:column;gap:3px;padding:8px 9px;border-radius:24px 24px 6px 6px;background:linear-gradient(180deg,#1b1f38,#0b0d1a);box-shadow:inset 0 0 0 1px rgba(232,195,106,.45),0 8px 18px rgba(0,0,0,.5)}
+.tw-pip{display:block;height:9px;border-radius:2px;background:rgba(255,255,255,.08)}
+.tw-pip.guard{box-shadow:0 0 0 1px rgba(255,120,110,.7)}
+.tw-pip.clear{background:linear-gradient(90deg,#c8963c,#ffe7a3)}
+.tw-pip.now{background:#9fd8ff;box-shadow:0 0 10px #9fd8ff;animation:twnow 1.2s ease-in-out infinite}
+@keyframes twnow{50%{opacity:.45}}
+.tw-side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.tw-week{margin:0;font-size:13px;color:#d9c896;display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.tw-week small{color:var(--muted);font-size:11px}
+.tw-reach{margin:0;font-family:var(--f-display);line-height:1}
+.tw-reach b{font-size:44px;color:#ffe7a3;text-shadow:0 0 14px rgba(255,213,106,.5)}
+.tw-reach small{font-size:16px;color:var(--muted);margin-left:4px}
+.tw-card{position:relative;display:flex;flex-direction:column;gap:3px;padding:14px 14px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(30,34,62,.95),rgba(14,16,32,.95));box-shadow:inset 0 0 0 1px rgba(232,195,106,.4)}
+.tw-card.guard{box-shadow:inset 0 0 0 1px rgba(255,130,110,.6),0 0 18px rgba(255,90,70,.18)}
+.tw-card.done{text-align:center;padding:20px 14px}
+.tw-card.done b{color:#ffe7a3;font-size:17px}
+.tw-fl{font-family:var(--f-display);font-size:24px;color:#f1d999;display:flex;align-items:center;gap:8px}
+.tw-fl em{font-style:normal;font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(255,100,80,.2);color:#ffb0a4;font-family:inherit}
+.tw-opp{font-size:16px}
+.tw-card > small{color:var(--muted);font-size:12px}
+.tw-mods{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.tw-mods li{font-size:12.5px;color:#e6e1d2;padding:5px 8px;border-radius:8px;background:rgba(255,90,70,.1);box-shadow:inset 0 0 0 1px rgba(255,120,100,.3)}
+.tw-mods li b{color:#ffb0a4;margin-right:6px}
+.tw-nomod{margin:6px 0 0;font-size:12px;color:var(--muted)}
+.tw-go{font-size:17px;padding:14px}
+.tw-rank .tw-rl,.gh-rk ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.tw-rl li,.gh-rk li{display:flex;align-items:center;gap:10px;padding:7px 12px;border-radius:8px;background:rgba(255,255,255,.05);font-size:14px}
+.tw-rl li span{width:1.6em;text-align:center;color:#ffe7a3;font-weight:800}
+.tw-rl li b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tw-rl li em,.gh-rk li em{font-style:normal;color:#ffe7a3;font-weight:700}
+.tw-rl li.me,.gh-rk li.me{box-shadow:inset 0 0 0 1px rgba(159,216,255,.6);background:rgba(120,180,255,.1)}
+
+/* ---- 分身戦の画面 ---- */
+.gh-mine{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:12px;background:linear-gradient(180deg,rgba(30,34,62,.95),rgba(14,16,32,.95));box-shadow:inset 0 0 0 1px rgba(232,195,106,.4);margin-bottom:12px}
+.gh-now{margin:0;display:flex;flex-direction:column}
+.gh-now b{font-size:17px;color:#f1d999}.gh-now small{font-size:12px;color:var(--muted)}
+.gh-set{display:flex;gap:8px;align-items:center}
+.gh-set select{flex:1;min-width:0}
+.gh-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.gh-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.05)}
+.gh-face{flex:none;width:48px;height:48px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:#1a1e36;box-shadow:0 0 0 2px #1a1408,0 0 0 3.5px #e9c873}
+.gh-face img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;transform:scale(1.35);transform-origin:50% 22%}
+.gh-name{flex:1;min-width:0;display:flex;flex-direction:column}
+.gh-name b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh-name em{font-style:normal;font-size:10.5px;color:#e3b64f}
+.gh-name small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh-name .gh-rec{color:#bfb69c}
+.gh-rks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.gh-rk > b{display:block;font-size:13px;color:#d9c896;margin-bottom:4px}
+.gh-rk li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gh-face{position:relative}

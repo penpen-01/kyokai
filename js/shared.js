@@ -926,7 +926,7 @@ function normalizeData(data) {
   // メールの宛先 to：all＝全員（これから始める人にも届く）／before＝送った日までに始めた人だけ（お詫び・告知）／new＝送った日から後に始めた人（歓迎メール。期限なしで、ずっと届く）
   const mail = (Array.isArray(d.mail) ? d.mail : []).filter(x => x && x.id).map(x => ({ id: String(x.id), date: date(x.date), until: date(x.until), title: String(x.title || "運営からのメール").slice(0, 40), body: String(x.body || "").slice(0, 4000),
     to: ["all", "before", "new"].includes(x.to) ? x.to : "all",
-    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), cards: cleanDeckCards(x.cards), picks: cleanPicks(x.picks) }));
+    gold: Math.max(0, Math.floor(+x.gold || 0)), stones: Math.max(0, Math.floor(+x.stones || 0)), tickets: Math.max(0, Math.floor(+x.tickets || 0)), senTickets: Math.max(0, Math.min(99, Math.floor(+x.senTickets || 0))), cards: cleanDeckCards(x.cards), picks: cleanPicks(x.picks) }));
   // ログインボーナス（7日で1周。休んでも進んだ分は消えない）
   const login = (Array.isArray(d.login) && d.login.length ? d.login : DEFAULT_LOGIN).slice(0, 14).map(x => ({ gold: Math.max(0, Math.floor(+(x && x.gold) || 0)), stones: Math.max(0, Math.floor(+(x && x.stones) || 0)), tickets: Math.max(0, Math.floor(+(x && x.tickets) || 0)) }));
   // クエスト（工房の「クエスト」タブ）。1つのクエストは1つの目標と報酬

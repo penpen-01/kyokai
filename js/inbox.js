@@ -24,7 +24,7 @@ const Inbox = {
     return MAIL.filter(m => this.forMe(m) && (m.to === "new" || !m.until || m.until >= today || this.got(m.id))).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   },
   got(id) { return !!(Account.data && Account.data.mailGot && Account.data.mailGot[id]); },
-  hasGift(m) { return m.gold || m.stones || m.tickets || Object.keys(m.cards || {}).length || Object.keys(m.picks || {}).length; },
+  hasGift(m) { return m.gold || m.stones || m.tickets || m.senTickets || Object.keys(m.cards || {}).length || Object.keys(m.picks || {}).length; },
   pickDef(id) { return PICKS.find(p => p.id === id); },
   myPicks() { const o = (Account.data && Account.data.picks) || {}; return Object.entries(o).filter(([k, v]) => v > 0 && this.pickDef(k)); },
   unreadNews() { const s = this.seen(); return NEWS.filter(n => !s[n.id]).length; },
@@ -33,7 +33,7 @@ const Inbox = {
   newsBadge() { return this.badge(this.unreadNews()); },
   mailBadge() { return Account.data ? this.badge(this.unclaimed()) : ""; },
   giftText(m) {
-    return [m.gold ? `${m.gold}G` : "", m.stones ? `魔石${m.stones}` : "", m.tickets ? `パック券${m.tickets}枚` : "",
+    return [m.gold ? `${m.gold}G` : "", m.stones ? `魔石${m.stones}` : "", m.tickets ? `パック券${m.tickets}枚` : "", m.senTickets ? `選定戦の無料挑戦チケット${m.senTickets}枚` : "",
       ...Object.entries(m.cards || {}).map(([id, n]) => `${DEF[id] ? DEF[id].name : "？"}×${n}`),
       ...Object.entries(m.picks || {}).map(([id, n]) => `${this.pickDef(id) ? this.pickDef(id).name : "選択券"}${n > 1 ? `×${n}` : ""}`)].filter(Boolean).join("・");
   },
@@ -77,7 +77,7 @@ const Inbox = {
     if (!ok.length) return this.showMail();
     const cards = [];
     ok.forEach(m => {
-      d.gold = (d.gold || 0) + m.gold; d.stones = (d.stones || 0) + m.stones; d.tickets = (d.tickets || 0) + m.tickets;
+      d.gold = (d.gold || 0) + m.gold; d.stones = (d.stones || 0) + m.stones; d.tickets = (d.tickets || 0) + m.tickets; if (m.senTickets) d.senTickets = (d.senTickets || 0) + m.senTickets;
       Object.entries(m.cards).forEach(([id, n]) => { for (let i = 0; i < n; i++) cards.push(id); });
       Object.entries(m.picks || {}).forEach(([id, n]) => { if (!this.pickDef(id)) return; d.picks = d.picks || {}; d.picks[id] = (d.picks[id] || 0) + n; });
       d.mailGot[m.id] = Date.now();

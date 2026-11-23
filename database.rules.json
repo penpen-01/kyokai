@@ -124,6 +124,32 @@
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.child('at').isNumber() && newData.child('n').isString() && newData.child('n').val().length <= 10 && newData.child('w').isString() && newData.child('w').val().length <= 10"
       }
+    },
+    "tower": {
+      "$wk": {
+        ".read": "auth != null",
+        ".validate": "$wk.length <= 10",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.child('f').isNumber() && newData.child('f').val() >= 0 && newData.child('f').val() <= 30 && newData.child('at').isNumber() && newData.child('n').isString() && newData.child('n').val().length <= 10"
+        }
+      }
+    },
+    "ghost": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "!newData.exists() || (newData.child('at').isNumber() && newData.child('n').isString() && newData.child('n').val().length <= 10 && newData.child('dk').isString() && newData.child('dk').val().length <= 20 && newData.child('c').hasChildren())"
+      }
+    },
+    "ghostLog": {
+      ".read": "auth != null",
+      "$owner": {
+        "$id": {
+          ".write": "auth != null && !data.exists() && newData.child('by').val() === auth.uid && auth.uid !== $owner",
+          ".validate": "newData.child('at').isNumber() && newData.child('res').isString() && newData.child('res').val().length <= 5 && (!newData.child('n').exists() || (newData.child('n').isString() && newData.child('n').val().length <= 10))"
+        }
+      }
     }
   }
 }

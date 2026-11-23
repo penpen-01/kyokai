@@ -24,6 +24,7 @@ const Sentei = {
   /* β版（SEN_BETA=1）：入場料なし・報酬なし。仕組みを体験するだけ */
   beta() { return !!CONFIG.SEN_BETA; },
   fee() { return this.beta() ? 0 : Math.max(0, CONFIG.SEN_FEE ?? 500); },
+  tickets() { return Math.max(0, Math.floor(+(Account.data && Account.data.senTickets) || 0)); },   // 無料挑戦チケット（メールなどで配る）
   run() { return Account.data && Account.data.sen; },
   rewardOf(w) { if (this.beta()) return {}; const L = SEN.rewards || []; return L[Math.min(w, L.length - 1)] || {}; },
 
@@ -91,10 +92,11 @@ const Sentei = {
   start() {
     this.sel = null;
     if (!this.on() || this.run()) return this.show();
-    const fee = this.fee();
-    if (Account.gold < fee) { toast(`Gが足りません（あと${fee - Account.gold}G）`); return this.show(); }
+    const fee = this.fee(), tk = this.tickets() > 0 && fee > 0;
+    if (!tk && Account.gold < fee) { toast(`Gが足りません（あと${fee - Account.gold}G）`); return this.show(); }
     if (this.pool().length < 40) { toast("候補に出せるカードが足りません"); return this.show(); }
-    Account.data.gold -= fee;
+    // 無料挑戦チケットを持っていれば、必ず G より先にチケットを使う
+    if (tk) Account.data.senTickets = this.tickets() - 1; else Account.data.gold -= fee;
     Account.data.sen = { st: "pick", r: 0, deck: {}, offer: this.offer(0, {}), w: 0, l: 0 };
     Account.saveNow(); Sound.play("click");
     this.show();
@@ -200,8 +202,9 @@ const Sentei = {
           ${this.banOpen ? this.gridHTML(Object.fromEntries(L.map(id => [id, 1]))) : ""}` : ""; })()}
         ${this.beta() ? "" : `<span class="gl">報酬</span>${this.tableHTML(-1)}`}
         ${Account.data && Account.data.senBest ? `<p class="hint">これまでの最高：${Account.data.senBest}勝</p>` : ""}
-        <div class="sen-bot"><button type="button" class="btn primary sen-go" data-act="senStart" ${Account.gold >= fee ? "" : "disabled"}>${fee ? `${curIcon("gold")}${fee.toLocaleString()}G で始める` : "始める（β版・無料）"}</button>
-        ${Account.gold < fee ? `<p class="hint">Gが足りません（所持 ${Account.gold.toLocaleString()}G）</p>` : ""}</div>`;
+        ${(() => { const tk = this.tickets() > 0 && fee > 0;
+          return `<div class="sen-bot"><button type="button" class="btn primary sen-go" data-act="senStart" ${tk || Account.gold >= fee ? "" : "disabled"}>${tk ? `<span class="sen-tk" aria-hidden="true"></span>無料挑戦チケットで始める` : fee ? `${curIcon("gold")}${fee.toLocaleString()}G で始める` : "始める（無料）"}</button>
+          ${tk ? `<p class="hint">無料挑戦チケット：あと<b>${this.tickets()}</b>枚（Gより先に使います）</p>` : Account.gold < fee ? `<p class="hint">Gが足りません（所持 ${Account.gold.toLocaleString()}G）</p>` : ""}</div>`; })()}`;
     } else if (R.st === "pick") {
       const n = this.count(R.deck), floor = senFloor(R.r);
       body = `${this.banner(`${R.r + 1} / ${SEN_ROUNDS} 回目`)}
