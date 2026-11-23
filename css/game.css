@@ -3834,3 +3834,6 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .overlay.gnav-on .solo-main .lvl.m-tower .lvl-head b{white-space:nowrap;font-size:20px;letter-spacing:0}
 .overlay.gnav-on .solo-main .lvl.m-tower .lvl-head b .beta-tag{font-size:10px;padding:1px 6px;margin-left:2px}
 .lvl .beta-tag,.hub-hero .beta-tag{background:rgba(20,14,4,.8);text-shadow:none}
+/* オンラインで遊ぶ：上から 友達と対戦 → 分身戦 → アリーナ（オーナー 11-24） */
+.panel.hub > .hub-friends:first-of-type{margin-top:4px}
+.hub-arena{margin-top:12px}

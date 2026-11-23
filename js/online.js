@@ -49,7 +49,6 @@ const Online = {
     const deck = Decks.selected(), key = deck ? Decks.keyCard(deck) : null;
     openOverlay(`<div class="panel hub nv-on nv-fab nv-t-play nv-ret-online">
       ${Decks.topbar("オンラインで遊ぶ", "onlBack")}
-      ${typeof Arena !== "undefined" ? Arena.lobbyHTML() : ""}
       <div class="hub-friends"><i class="hf-art" aria-hidden="true"></i><b class="hf-t">友達と対戦</b>
       <div class="hub-grid">
         <button type="button" class="hub-btn" data-act="onlCreateOpen"><span class="hub-ic" aria-hidden="true">${HUB_IC.create}</span><b>部屋を作る</b><small>合言葉を友達に伝える</small></button>
@@ -57,6 +56,7 @@ const Online = {
       </div></div>
       ${typeof Ghost !== "undefined" ? `<button type="button" class="lvl lvl-mode m-ghost" data-act="ghost"><span class="lvl-art" style="background-image:url('${esc((DEF["y2-kensei"] && DEF["y2-kensei"].art) || "")}')"></span>
         <span class="lvl-body"><span class="lvl-head"><b>分身戦 <i class="beta-tag">β</i></b></span><span class="lvl-desc">友達のデッキの分身と、いつでも戦える</span></span><span class="lvl-go" aria-hidden="true">›</span></button>` : ""}
+      ${typeof Arena !== "undefined" ? `<div class="hub-arena">${Arena.lobbyHTML()}</div>` : ""}
       <p class="onl-msg" id="onl-msg" role="status">${msg ? esc(msg) : ""}</p>
     </div>`, "lobby", true);
   },
