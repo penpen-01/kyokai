@@ -1,6 +1,7 @@
 # Gemini に貼るイラスト依頼文のページを作る（2026-11-10 にうまくいったやり方）。
 # 使い方: python3 tools/art/requests.py カード指定.py 出力.html
 #   カード指定.py には C（カードごとの指定）・EN（レア度ごとの演出）・GROUPS（会話ごとの並び）を書く。見本は tools/art/example_cards.py
+#   GROUPS の各要素は (会話名, [ID...]) か (会話名, [ID...], 世界の雰囲気)。世界ごとに雰囲気を変えたいときは3つ目を書く
 #   同じカードを2回描くときは ID に "#2" を付ける（例 'f2-moonwitch#2'）
 #   並び.json も一緒に書き出すので、できた絵は put.py --order で入れられる
 # やり方の要点は tools/art/README.md
@@ -10,7 +11,7 @@ C, EN, GROUPS = m.C, m.EN, m.GROUPS
 OUT = sys.argv[2]
 TITLE = getattr(m, "TITLE", "イラスト依頼文")
 WORLD = getattr(m, "WORLD", "おとぎ話と東洋の妖怪がまざった不思議な世界。色は深い緑・紫・銀・青白い狐火")
-RULES='''【共通ルール】（この会話のあいだ、ずっと守ってください）
+def rules(world): return '''【共通ルール】（この会話のあいだ、ずっと守ってください）
 ・縦長、縦横比 5:7
 ・添付画像は「画風（線・塗り・色調）」の見本としてだけ使う。添付画像の人物・構図・背景はまねしない
 ・この会話で前に描いた絵の背景・構図・人物・手前の草や木の根も使わない。毎回ゼロから描く
@@ -19,18 +20,19 @@ RULES='''【共通ルール】（この会話のあいだ、ずっと守って�
 ・画面の下2割と、左上・右上の角には、名前や数字を重ねるので大事なものを置かない（ただの地面や影でよい。毎回同じ草や根を描かない）
 ・文字・ロゴ・サイン・数字・枠は一切入れない（この依頼文の文字も絵に入れない）
 ・実在の作品やキャラクターに似せない
-・世界の雰囲気：'''+WORLD+'''。場所と時間帯は各カードの指定に従う（同じ場所・時間帯ばかりにしない）'''
+・世界の雰囲気：'''+world+'''。場所と時間帯は各カードの指定に従う（同じ場所・時間帯ばかりにしない）'''
 RN={'common':'コモン','rare':'レア','sr':'スーパーレア','ur':'ウルトラレア','legend':'レジェンド'}
 def card(i):
     n,t,r,place,desc=C[i]
     return f"【カード】{n}（{t}・{RN[r]}）\n場所：{place}\n内容：{desc}\n{EN[r]}"
-FIRST="カードゲーム用のイラストを1枚描いてください。添付した画像は画風の見本です。\n\n"+RULES+"\n\n"
+FIRST=lambda w: "カードゲーム用のイラストを1枚描いてください。添付した画像は画風の見本です。\n\n"+rules(w)+"\n\n"
 NEXT="最初に添付した画像の画風で、次のカードのイラストを1枚描いてください。最初に送った共通ルールを守ってください。この会話で前に描いた絵の背景・構図・人物は使わないでください。\n\n"
 B = {}; body = ""; n = 0; order = {}
-for gname, ids in GROUPS:
+for g in GROUPS:
+    gname, ids = g[0], g[1]; gw = g[2] if len(g) > 2 else WORLD   # 3つ目に世界の雰囲気を書けば、その会話だけ差し替え
     order[gname] = [x.split("#")[0] for x in ids]; items = ""
     for j, i in enumerate(ids):
-        n += 1; k = f"c{n}"; B[k] = (FIRST if j == 0 else NEXT) + card(i)
+        n += 1; k = f"c{n}"; B[k] = (FIRST(gw) if j == 0 else NEXT) + card(i)
         nm, t = C[i][0], C[i][1]
         how = "1枚目：画風の見本（art-style-ref.png）を添付して貼る" if j == 0 else "貼るだけ（画像の添付はいらない）"
         items += f'<li><span class="n">{n}</span><span class="nm">{html.escape(nm)}</span><span class="tag">{"キャラ" if t=="キャラクター" else "魔法"}・{how}</span><button type="button" class="cp sm" data-b="{k}">コピー</button><p class="d">{html.escape(C[i][4])}</p></li>'
