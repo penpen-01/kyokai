@@ -1,5 +1,5 @@
 {
- "version": 215,
+ "version": 216,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10391,7 +10391,8 @@
      "cnt": 1
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-touro-7f74419ea3.webp"
   },
   {
    "id": "m3-eiji",
@@ -10471,7 +10472,8 @@
      "when": "allyDeath"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-charon-af5d408b2d.webp"
   },
   {
    "id": "m3-harpoon",
@@ -10587,7 +10589,8 @@
     }
    ],
    "set": "3",
-   "tribe": "beast"
+   "tribe": "beast",
+   "art": "art/m3-hippo-a815d6eec3.webp"
   },
   {
    "id": "m3-scylla",
@@ -10611,7 +10614,8 @@
     }
    ],
    "set": "3",
-   "tribe": "beast"
+   "tribe": "beast",
+   "art": "art/m3-scylla-4de39adbc7.webp"
   },
   {
    "id": "m3-shoukan",
@@ -10634,7 +10638,8 @@
    "pay": {
     "kind": "life",
     "n": 5
-   }
+   },
+   "art": "art/m3-shoukan-f0d11bb6fb.webp"
   },
   {
    "id": "m3-scarlet",
