@@ -183,6 +183,7 @@ const EFFECTS = {
   graveHand:   { group: "墓地", label: "自分の墓地の亡霊のキャラを手札に戻す", text: n => `自分の墓地の【亡霊】のキャラをランダムに${n}体、手札に戻す。` },
   ward:        { group: "プレイヤー", label: "自分に結界を張る", text: () => "自分に【結界】を張る（次に自分が受けるダメージを1回だけ0にする。重ねて張れない）。", noN: true },
   jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（「痺れ針」「泡の揺りかご」「青い閃光」のどれか）。` },
+  tideUp:      { group: "トークン", label: "満ち潮の夜で数えるクラゲ魔法の数を増やす", text: n => `「満ち潮の夜」で数える、使ったクラゲ魔法の数を${n}増やす。` },
   tide:        { group: "ダメージ", label: "満ち潮の夜（使ったクラゲ魔法の数×N）", text: n => `この対戦で自分が先に使ったクラゲ魔法1枚につき${n}、相手プレイヤーにダメージ（最大12）。` },
   cutOne:      { group: "エナジー", label: "手札の（種族の）カード1枚のコストを下げる", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}を1枚選んで、そのコストを${n}下げる。` },
   handSteal:   { group: "妨害", label: "相手の手札をランダムに1枚奪う（コストを下げる）", text: n => `相手の手札からランダムに1枚を奪って手札に加え、そのカードのコストを${n}下げる。` },
@@ -364,6 +365,7 @@ const CONDS = {
   milledGhost: { label: "（直前に）墓地へ送ったカードに亡霊のキャラがいた", text: () => "その中に【亡霊】のキャラがいれば", noN: true },
   killedNow:   { label: "（直前の効果で）キャラを倒した", text: () => "それで倒したら", noN: true },
   tribeGE:     { label: "自分の場に（種族の）キャラがN体以上", text: (e, isChar) => `自分の場に【${TRIBES[e.ctribe] || "？"}】のキャラが${e.cn}体以上いれば${isChar ? "（このキャラも数える）" : ""}` },
+  gyGhostGE:   { label: "自分の墓地に亡霊のキャラがN体以上", text: e => `自分の墓地に【亡霊】のキャラが${e.cn}体以上いれば` },
   ghostArmy:   { label: "自分の場のキャラがすべて亡霊で、墓地にキャラがN体以上", text: e => `自分の場のキャラがすべて【亡霊】で、自分の墓地にキャラが${e.cn}体以上いれば` }
 };
 /* 歯車：手札で重なるカード（何枚あっても手札1枠。枚数は p.gears）。これだけでは使えず、「歯車を使う」カードの材料になる */
@@ -374,6 +376,8 @@ const reqText = r => r.tribe === "jelly" && r.n === 1 && !r.world ? "クラゲ�
    kind：stat（ほかの味方を強くする。world／tribe で絞る・atk／hp）、self（墓地の亡霊の数だけ自分の攻撃力が上がる）、cost（クラゲ魔法のコストを下げる） */
 function auraText(a) {
   if (a.kind === "self") return `場にいる間、自分の墓地の【亡霊】のキャラ1体につき、このキャラの攻撃力+1（最大+${a.max || 4}）。`;
+  if (a.kind === "cost" && a.tribe) return `場にいる間、自分の手札の【${TRIBES[a.tribe]}】のキャラのコストが${a.n}下がる。`;
+  if (a.kind === "cost" && a.spell) return `場にいる間、自分の魔法のコストが${a.n}下がる（0まで）。`;
   if (a.kind === "cost") return `場にいる間、自分のクラゲ魔法（満ち潮の夜も）のコストが${a.n}下がる（0まで）。`;
   const who = `${a.world ? WORLDS[a.world] + "の" : ""}${a.tribe && TRIBES[a.tribe] ? `【${TRIBES[a.tribe]}】の` : ""}`;
   return `場にいる間、自分のほかの${who}キャラ全体の${a.atk && a.hp ? `攻撃力と体力を+${a.atk}` : a.atk ? `攻撃力を+${a.atk}` : `体力を+${a.hp}`}する。`;
@@ -543,6 +547,7 @@ function effectsText(card, list, auto) {
     } else t = EFFECTS[e.kind].text(e.n, e);
     if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
     if (e.per === "milledGhost") t = `その中の【亡霊】のキャラ1体につき、${t}`;
+    if (e.per === "tribe") t = `自分の場のほかの【${TRIBES[e.ctribe] || "？"}】のキャラ1体につき、${t.replace(/。$/, "")}（${e.perMax || 3}体まで数える）。`;
     if (e.plus) t = t.replace(/。$/, `。自分の場の【${TRIBES[e.plus] || ""}】のキャラ1体につき、さらに1ダメージ（最大+${e.plusMax || 2}）。`);
     if (e.cap) t = t.replace(/。$/, `（1ターンに${e.cap}回まで）。`);
     if (e.per === "played") t = e.split ? `このターン、このカードより先に使ったカードの枚数だけ、${t.replace(/。$/, "")}（1回ずつ対象を選び直す）。` : `このターン、このカードより先に使ったカード1枚につき、${t}`;
@@ -944,6 +949,7 @@ function normEffect(e, type) {
   if (e.amt) out.amt = true;
   if (TRIBES[e.plus]) { out.plus = e.plus; out.plusMax = Math.max(1, Math.min(9, Math.round(+e.plusMax || 2))); }
   if (e.per === "milledGhost") out.per = e.per;
+  if (e.per === "tribe" && TRIBES[e.ctribe]) { out.per = "tribe"; out.ctribe = e.ctribe; out.perMax = Math.max(1, Math.min(9, Math.round(+e.perMax || 3))); }
   if (e.kind === "reviveSel") { out.cnt = Math.max(1, Math.min(4, Math.round(+e.cnt || 1))); if (+e.total > 0) out.total = Math.min(40, Math.round(+e.total)); if (e.mod === "rusty" || e.mod === "rush") out.mod = e.mod; }
   if (e.kind === "dig" && e.rest === "grave") out.rest = "grave";
   if (e.kind === "cutOne" && TYPES[e.ctype]) out.ctype = e.ctype;
@@ -977,7 +983,7 @@ function normalizeData(data) {
     ...(c.req && +c.req.n > 0 ? { req: { n: Math.min(5, Math.round(+c.req.n)), ...(WORLDS[c.req.world] ? { world: c.req.world } : {}), ...(TRIBES[c.req.tribe] ? { tribe: c.req.tribe } : {}), ...(c.req.orEmpty ? { orEmpty: true } : {}) } } : {}),
     // 第3弾：種族・場にいる間の力・揺らぎ（中身のトークン）
     ...(TRIBES[c.tribe] ? { tribe: c.tribe } : {}),
-    ...(c.aura && ["stat", "self", "cost"].includes(c.aura.kind) ? { aura: { kind: c.aura.kind, ...(WORLDS[c.aura.world] ? { world: c.aura.world } : {}), ...(TRIBES[c.aura.tribe] ? { tribe: c.aura.tribe } : {}),
+    ...(c.aura && ["stat", "self", "cost"].includes(c.aura.kind) ? { aura: { kind: c.aura.kind, ...(WORLDS[c.aura.world] ? { world: c.aura.world } : {}), ...(TRIBES[c.aura.tribe] ? { tribe: c.aura.tribe } : {}), ...(c.aura.spell ? { spell: true } : {}),
       ...["atk", "hp", "n", "max"].reduce((o, k) => (+c.aura[k] > 0 ? { ...o, [k]: Math.min(9, Math.round(+c.aura[k])) } : o), {}) } } : {}),
     ...(Array.isArray(c.sway) && c.sway.length ? { sway: c.sway.filter(x => typeof x === "string" && x).slice(0, 5) } : {}),
     ...(c.grow ? { grow: { n: 1, ...(WORLDS[c.grow.world] ? { world: c.grow.world } : {}), ...(["char", "spell"].includes(c.grow.ctype) ? { ctype: c.grow.ctype } : {}),

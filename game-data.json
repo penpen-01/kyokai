@@ -1,5 +1,5 @@
 {
- "version": 231,
+ "version": 232,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10339,6 +10339,11 @@
    ],
    "effects": [
     {
+     "kind": "reviveSel",
+     "n": 2,
+     "cnt": 1
+    },
+    {
      "kind": "tokenField",
      "n": 2,
      "card": "tk-funa",
@@ -10388,7 +10393,8 @@
     {
      "kind": "reviveSel",
      "n": 6,
-     "cnt": 1
+     "cnt": 2,
+     "total": 6
     }
    ],
    "set": "3",
@@ -10409,6 +10415,10 @@
     "ghost"
    ],
    "effects": [
+    {
+     "kind": "mill",
+     "n": 3
+    },
     {
      "kind": "unit",
      "n": 3,
@@ -10505,22 +10515,20 @@
    "type": "char",
    "cost": 5,
    "atk": 3,
-   "hp": 6,
+   "hp": 7,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
    "keywords": [],
-   "effects": [
-    {
-     "kind": "unit",
-     "n": 1,
-     "act": "hp",
-     "to": "ownAll"
-    }
-   ],
+   "effects": [],
    "set": "3",
    "tribe": "beast",
-   "art": "art/m3-aspido-07affe761c.webp"
+   "art": "art/m3-aspido-07affe761c.webp",
+   "aura": {
+    "kind": "cost",
+    "n": 1,
+    "tribe": "beast"
+   }
   },
   {
    "id": "m3-fue",
@@ -10572,7 +10580,7 @@
    "name": "ヒッポカムポス",
    "world": "myth",
    "type": "char",
-   "cost": 6,
+   "cost": 5,
    "atk": 5,
    "hp": 5,
    "glyph": "神",
@@ -10582,9 +10590,19 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
-     "act": "atk",
+     "n": 1,
+     "act": "both",
      "to": "self",
+     "per": "tribe",
+     "ctribe": "beast",
+     "perMax": 3
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "rush",
      "cond": "tribeGE",
      "ctribe": "beast",
      "cn": 2
@@ -11169,6 +11187,10 @@
    ],
    "effects": [
     {
+     "kind": "mill",
+     "n": 2
+    },
+    {
      "kind": "unit",
      "n": 1,
      "act": "atk",
@@ -11200,8 +11222,9 @@
    "effects": [
     {
      "kind": "reviveSel",
-     "n": 2,
-     "cnt": 3
+     "n": 3,
+     "cnt": 3,
+     "total": 7
     }
    ],
    "set": "3",
@@ -11221,7 +11244,13 @@
    "keywords": [
     "ghost"
    ],
-   "effects": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 3,
+     "cnt": 1
+    }
+   ],
    "set": "3",
    "aura": {
     "kind": "self",
@@ -11266,8 +11295,8 @@
      "to": "ownAll",
      "kw": "pierce",
      "turn": true,
-     "cond": "ghostArmy",
-     "cn": 6
+     "cond": "gyGhostGE",
+     "cn": 5
     },
     {
      "kind": "unit",
@@ -11275,8 +11304,8 @@
      "act": "atk",
      "to": "ownAll",
      "turn": true,
-     "cond": "ghostArmy",
-     "cn": 6
+     "cond": "gyGhostGE",
+     "cn": 5
     }
    ],
    "set": "3",
@@ -11939,6 +11968,12 @@
    "effects": [
     {
      "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemy1"
+    },
+    {
+     "kind": "unit",
      "n": 1,
      "act": "dmg",
      "to": "enemyAll",
@@ -12034,6 +12069,12 @@
     "ghost"
    ],
    "effects": [
+    {
+     "kind": "unit",
+     "n": 4,
+     "act": "dmg",
+     "to": "enemy1"
+    },
     {
      "kind": "unit",
      "n": 2,
@@ -12212,7 +12253,7 @@
    "name": "機巧クラゲのヒカリ",
    "world": "mech",
    "type": "char",
-   "cost": 4,
+   "cost": 3,
    "atk": 2,
    "hp": 4,
    "glyph": "機",
@@ -12220,6 +12261,10 @@
    "rarity": "ur",
    "keywords": [],
    "effects": [
+    {
+     "kind": "jellyHand",
+     "n": 1
+    },
     {
      "kind": "player",
      "n": 1,
@@ -12674,8 +12719,16 @@
    "glyph": "幻",
    "limit": 0,
    "rarity": "common",
-   "keywords": [],
-   "effects": [],
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "tideUp",
+     "n": 1,
+     "when": "death"
+    }
+   ],
    "set": "3",
    "tribe": "jelly",
    "token": true,
@@ -12733,7 +12786,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
      "act": "dmg",
      "to": "enemy1"
     }
@@ -12788,6 +12841,12 @@
      "kind": "unit",
      "n": 1,
      "act": "dmg",
+     "to": "enemyAll"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "freeze",
      "to": "enemyAll"
     }
    ],

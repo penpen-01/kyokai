@@ -162,6 +162,9 @@ def check():
   assert sum(GATE_DECK.values()) == 30 and all(k in ids for k in GATE_DECK), "開放戦のデッキ"
 
 if __name__ == "__main__":
+  # 11-25 から絵と調整は game-data.json に直接入れている。これを流すと絵と調整が消えるので、もう使わない
+  if "--force" not in sys.argv: sys.exit("set3-cards.py はもう使わない（game-data.json が正。流すと絵と 11-25 以降の調整が消える）")
+  sys.argv.remove("--force")
   check()
   path = sys.argv[1] if len(sys.argv) > 1 else "game-data.json"
   d = json.load(open(path))

@@ -566,10 +566,14 @@ function effCost(pi, d, idx) {
   const p = S.players[pi];
   return Math.max(0, d.cost - (p.discount || 0) - handCutAt(p, idx) - auraCut(pi, d));
 }
-/* オクタ：場にいる間、クラゲ魔法のコストが下がる */
+/* 場にいる間コストを下げる力（card.aura.kind="cost"）：tribe＝手札のその種族のキャラ（アスピドケロン）、spell＝魔法すべて、どちらもなし＝クラゲ魔法（オクタ） */
 function auraCut(pi, d) {
-  if (!isJellySpell(d) || !S || !S.players[pi]) return 0;
-  return S.players[pi].field.reduce((a, u) => { const A = !u.silenced && DEF[u.id] && DEF[u.id].aura; return a + (A && A.kind === "cost" ? A.n || 0 : 0); }, 0);
+  if (!d || !S || !S.players[pi]) return 0;
+  return S.players[pi].field.reduce((a, u) => {
+    const A = !u.silenced && u.hp > 0 && DEF[u.id] && DEF[u.id].aura; if (!A || A.kind !== "cost") return a;
+    const hit = A.tribe ? d.type === "char" && d.tribe === A.tribe : A.spell ? d.type === "spell" : isJellySpell(d);
+    return a + (hit ? A.n || 0 : 0);
+  }, 0);
 }
 /* 手札から idx のカードを抜く（コスト低下の並びも一緒に） */
 function handTake(p, idx) {
@@ -613,7 +617,7 @@ function canPlay(pi, idx) {
   if (d.effects.some(e => e.kind === "cheat") && fieldFull(p)) return { ok: false, reason: "場がいっぱいです" };
   if (d.type === "spell" && d.effects.some(e => e.kind === "pact") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
   { const t = d.effects.find(e => e.kind === "toss"); if (t && !p.hand.some((id, i) => i !== idx && id !== GEAR_ID && DEF[id] && (!t.ctype || DEF[id].type === t.ctype))) return { ok: false, reason: `捨てる${t.ctype === "char" ? "キャラ" : "カード"}が手札にありません` }; }
-  if (d.type === "spell" && d.effects.length && d.effects.every(e => e.cond === "ghostArmy") && !condOK(pi, d.effects[0], null)) return { ok: false, reason: condText(d.effects[0], false).replace(/ば$/, "ば使えます") };
+  if (d.type === "spell" && d.effects.length && d.effects.every(e => e.cond === "ghostArmy" || e.cond === "gyGhostGE") && d.effects.every(e => e.cond === d.effects[0].cond) && !condOK(pi, d.effects[0], null)) return { ok: false, reason: condText(d.effects[0], false).replace(/ば$/, "ば使えます") };
   if (d.type === "spell" && !d.pay && d.effects.length && d.effects.every(e => e.kind === "reviveSel") && !reviveCands(pi, d.effects[0]).length) return { ok: false, reason: "墓地に出せる亡霊がいません" };
   if (d.type === "spell" && d.effects.length && d.effects.every(e => e.kind === "merge") && !d.effects.some(e => p.field.filter(u => u.id === e.card).length >= e.n)) return { ok: false, reason: "合体に必要なキャラがそろっていません" };
   // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
@@ -751,6 +755,7 @@ function condOK(pi, e, self) {
     case "milledGhost": return (S.milled || []).some(isGhostCard);
     case "killedNow": return (S.killNow || 0) > 0;
     case "tribeGE": return p.field.filter(u => u.hp > 0 && DEF[u.id] && DEF[u.id].tribe === e.ctribe).length >= e.cn;
+    case "gyGhostGE": return (p.gy || p.grave || []).filter(id => DEF[id] && DEF[id].type === "char" && !DEF[id].token && isGhostCard(id)).length >= e.cn;
     case "ghostArmy": return p.field.length > 0 && p.field.every(u => kw(u, "ghost")) && gyChars(p).length >= e.cn;
   }
   return true;
@@ -937,6 +942,7 @@ function effect(pi, e, targets, self) {
     e = { ...e, n: e.n * k };
   }
   if (e.per === "milledGhost") { const k = (S.milled || []).filter(isGhostCard).length; if (!k) return; e = { ...e, n: e.n * k }; }
+  if (e.per === "tribe") { const k = Math.min(e.perMax || 3, S.players[pi].field.filter(u => u !== self && u.hp > 0 && DEF[u.id] && DEF[u.id].tribe === e.ctribe).length); if (!k) return; e = { ...e, n: e.n * k }; }
   if (e.plus) { const k = Math.min(e.plusMax || 2, S.players[pi].field.filter(u => u.hp > 0 && DEF[u.id] && DEF[u.id].tribe === e.plus).length); e = { ...e, n: e.n + k }; }
   if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気（ダメージ）
   else if (S.numBonus && e.n > 0 && e.act !== "dmg" && !["costDown", "winTimer", "merge", "tutor"].includes(e.kind)) e = { ...e, n: e.n + S.numBonus };   // 妖気（そのほかの数）
@@ -1199,6 +1205,7 @@ function effect(pi, e, targets, self) {
       else log(`${pname(pi)}の手札がいっぱいで、クラゲ魔法を加えられなかった。`);
       break;
     }
+    case "tideUp": { me.jellyN = (me.jellyN || 0) + n; log(`満ち潮の夜で数えるクラゲ魔法が${n}つ増えた（いま${me.jellyN}）。`); break; }
     case "tide": {
       const k = Math.min(12, n * (me.jellyN || 0));
       if (!k) { log("まだクラゲ魔法を使っていないので、満ち潮は起きなかった。"); break; }
@@ -1606,6 +1613,7 @@ function effValue(e) {
   if (k === "ward") return 2.5;
   if (k === "jellyHand") return 1.1 * n;
   if (k === "cutOne") return 0.8 * n;
+  if (k === "tideUp") return 0.5 * n;
   if (k === "handSteal") return 3;
   if (k === "handTax") return 0.6;
   if (k === "cheat") return 5;
