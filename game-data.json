@@ -1,5 +1,5 @@
 {
- "version": 220,
+ "version": 221,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11087,7 +11087,8 @@
      "cond": "milledGhost"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-temaneki-74661646b3.webp"
   },
   {
    "id": "f3-utsubo",
@@ -11221,7 +11222,8 @@
    "aura": {
     "kind": "self",
     "max": 4
-   }
+   },
+   "art": "art/f3-suifucho-68c7a390de.webp"
   },
   {
    "id": "f3-michizure",
@@ -11451,7 +11453,8 @@
    "aura": {
     "kind": "cost",
     "n": 2
-   }
+   },
+   "art": "art/f3-octa-671c1bee1f.webp"
   },
   {
    "id": "f3-nocto",
@@ -11703,7 +11706,8 @@
      "kw": "shield"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-shabon-9a1d2cb6bf.webp"
   },
   {
    "id": "f3-marina",
@@ -12644,7 +12648,8 @@
    "effects": [],
    "set": "3",
    "tribe": "jelly",
-   "token": true
+   "token": true,
+   "art": "art/tk-chibi-45f7ba903e.webp"
   },
   {
    "id": "tk-awa",
