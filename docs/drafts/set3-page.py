@@ -1,13 +1,13 @@
 import json, html
-D=json.load(open('/tmp/claude-0/-home-claude/588c81f0-9786-5c71-81af-976b59eb0ac3/scratchpad/s3/list2.json'))
+D=json.load(open('/tmp/claude-0/-home-claude/588c81f0-9786-5c71-81af-976b59eb0ac3/scratchpad/s3/list3.json'))
 RO=["C","R","SR","UR","L"]
 PFX={"神話":"神","幻想":"幻","機械":"機"}
 cards=[]
 for w,L in D["worlds"].items():
   for i,x in enumerate(sorted(L,key=lambda x:(x[1],RO.index(x[0]),x[3])),1):
-    r,cost,typ,nm,a,h,kw,cat,ab,note,art=x
-    cards.append(dict(no=f"{PFX[w]}{i:02d}",world=w,rar=r,cost=cost,type=typ,name=nm,atk=a,hp=h,kw=kw,cat={"昼":"昼の海","夜":"夜の海","亡霊":"亡霊船","通常":"通常"}.get(cat,cat),ab=ab,note=note,art=art))
-toks=[dict(no=f"T{i}",world=t[1],name=t[2],atk=t[3],hp=t[4],kw=t[5],ab=t[6],art=t[7]) for i,t in enumerate(D["tokens"],1)]
+    r,cost,typ,nm,a,h,kw,cat,ab,note,art,tags=x
+    cards.append(dict(no=f"{PFX[w]}{i:02d}",world=w,rar=r,cost=cost,type=typ,name=nm,atk=a,hp=h,kw=kw,tags=tags,cat={"昼":"昼の海","夜":"夜の海","亡霊":"亡霊船","通常":"通常"}.get(cat,cat),ab=ab,note=note,art=art))
+toks=[dict(no=f"T{i}",kind=t[0],world=t[1],name=t[2],type=t[3],atk=t[4],hp=t[5],tags=t[6],ab=t[7],art=t[8]) for i,t in enumerate(D["tokens"],1)]
 json.dump({"cards":cards,"tokens":toks},open('/home/claude/kyokai/docs/set3-list.json','w'),ensure_ascii=False,indent=1)
 data=json.dumps({"cards":cards,"tokens":toks},ensure_ascii=False)
 page = r'''<title>碧海と深淵の唄 カードリスト</title>
@@ -61,6 +61,7 @@ button:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
 .meta{font-size:12px;color:var(--muted)}
 .tag{font-size:11.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
 .tag.cat-亡霊船{border-color:var(--ghost);color:var(--ghost)}
+.tag.tribe{border-color:var(--sea);color:var(--sea)}
 .kw{font-size:12px;padding:1px 8px;border-radius:4px;background:var(--gold-soft);color:var(--gold);font-weight:700}
 .kw.new{background:transparent;border:1px dashed var(--gold)}
 .ab{min-width:0}
@@ -80,7 +81,7 @@ section.doc dd{margin:2px 0 0 0}
 <div class="wrap">
   <header>
     <h1>碧海と深淵の唄</h1>
-    <p><span class="ver">第2版</span>第3弾カードリスト（仮）。各世界33枚・コスト順。直してほしいカードは番号（例：神07）で指定してください。</p>
+    <p><span class="ver">第3版</span>第3弾カードリスト（仮）。各世界33枚・コスト順。直してほしいカードは番号（例：神07）で指定してください。</p>
   </header>
   <nav class="tabs" id="tabs" aria-label="表示するもの"></nav>
   <div class="chips" id="chips" aria-label="枠で絞り込み"></div>
@@ -91,37 +92,39 @@ section.doc dd{margin:2px 0 0 0}
 const DATA = __DATA__;
 const NEWKW = new Set(["亡霊","不屈","不壊"]);
 const TABS = [["神話","神話"],["幻想","幻想"],["機械","機械"],["tokens","トークン"],["rules","新しい能力"],["changes","この版で直したこと"]];
-const CATS = ["すべて","昼の海","夜の海","亡霊船","通常"];
+const CATS = ["すべて","亡霊船","クラゲ","海獣","昼の海","夜の海","通常"];
 let tab = "神話", cat = "すべて";
 try { const h = location.hash.slice(1); if (["shinwa","gensou","kikai","tokens","rules","changes"].includes(h)) tab = {shinwa:"神話",gensou:"幻想",kikai:"機械"}[h] || h; } catch(e){}
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const abHTML = s => esc(s).replace(/【(偽装・保留|保留)】/g,'<span class="hold">【$1】</span>').replace(/【([^】]+)】/g,(m,k)=>k.includes("保留")?m:`<b class="k">【${k}】</b>`);
 const RULES = `
 <section class="doc"><h2>新しい能力（仮の名前）</h2><dl>
-<dt>【亡霊】</dt><dd>攻撃したあと破壊される。蘇生のカードは【亡霊】のキャラだけを戻せる（死の宣告の代わり。試作兵器ゼロが蘇生で強くなりすぎないように）。守護を持つ亡霊は作らない（攻撃しないと残り続けるため）。</dd>
-<dt>【不屈】</dt><dd>攻撃・体力を下げる効果、凍結、沈黙、「攻撃できない」を受けない（EMPパルスなどで固めて効果ダメージで勝つ戦い方への対策）。</dd>
+<dt>【亡霊】</dt><dd>攻撃したあと破壊される。蘇生のカードは【亡霊】のキャラだけを戻せる（試作兵器ゼロのような死の宣告のキャラは戻らない）。守護を持つ亡霊は作らない。</dd>
+<dt>【不屈】</dt><dd>攻撃・体力を下げる効果と、凍結（攻撃できなくする効果）を受けない。沈黙は受ける。</dd>
 <dt>【不壊】</dt><dd>効果で破壊されない（ダメージでは倒れる）。</dd>
-<dt>【結界】</dt><dd>自分（プレイヤー）に付く。次に受けるダメージを1回だけ0にする。</dd>
-<dt>【凪】</dt><dd>場にいる間、相手のキャラは出たターンに攻撃できない（速攻・突進対策。倒されやすい体にする）。</dd>
-<dt>【霧】</dt><dd>相手の次のターン、自分の場のキャラの攻撃・体力と自分の体力が「？」に見える。</dd>
-<dt>【揺らぎ】</dt><dd>手札にある間は3つの候補のどれか。出したときに決まる。</dd>
-<dt>【偽装】（保留）</dt><dd>手札のキャラに付き、場に出たとき相手には「1/1」に見える。守護などとのからみが未定。案：偽装中は守護・隠密が働かない。</dd>
+<dt>【結界】</dt><dd>自分（プレイヤー）に付く。次に受けるダメージを1回だけ0にする。灯台守の娘ミナトと、トークン「泡の妖精」だけ。</dd>
+<dt>【凪】</dt><dd>場にいる間、相手のキャラは出たターンに攻撃できない。凪の巫女ナギサの1枚だけ。</dd>
+<dt>【霧】</dt><dd>相手の次のターン、自分の場のキャラの攻撃・体力と自分の体力が「？」に見える。夜霧の帳・霧の亡霊の2枚だけ。</dd>
+<dt>【揺らぎ】</dt><dd>手札にある間は3つの候補のどれか。出したときに決まる。海賊の宝箱・引き上げた積み荷の2枚。</dd>
+<dt>【偽装】（保留）</dt><dd>手札のキャラに付き、場に出たとき相手には「1/1」に見える。案：偽装している間は守護と隠密が働かない。ホログラム迷彩・擬態機ミミックの2枚だけ。</dd>
+<dt>種族：クラゲ（幻想と機械）</dt><dd>「クラゲ魔法」は、自分の場にクラゲがいるときだけ使えるトークンの呪文（痺れ針・泡の揺りかご・青い閃光）。深海の灯姫ノクトは、クラゲ魔法を3回使うたび必殺「満ち潮の夜」を手札に持ってくる。</dd>
+<dt>種族：海獣（神話）</dt><dd>伝説の海の生き物（リヴァイアサン・クラーケン・カリブディス・スキュラ・セイレーン・ヒッポカムポス・アスピドケロン）。神話は1体ずつが強いので、つなぎは3枚だけ（銛打ち・呼び笛・ヒッポカムポス）。</dd>
+<dt>種族：剣士（神話）</dt><dd>波斬りのハヤテ。剣聖の型は「2回攻撃を持っているキャラ」だけを強くする（2回攻撃を新しく付ける効果は作らない）。</dd>
 </dl></section>`;
 const CHANGES = `
-<section class="doc"><h2>第1版から直したこと（オーナー 11-24 15:31）</h2><ul>
-<li>死の宣告の代わりに新しい能力【亡霊】（攻撃したあと破壊される）。蘇生は【亡霊】のキャラだけ。試作兵器ゼロはそのまま</li>
-<li>亡霊の数値は相場どおりか、相場より低め。そのぶん「墓地から出たとき強くなる」効果を付けた（骨の甲板員の形）</li>
-<li>オーナーの案：出たとき山札から墓地へ送る低コスト（神02・幻04・機04）、自分のキャラを好きな数破壊して同じ数だけ相手をランダムに破壊（幻・道連れの宴）、1コストの亡霊（神01・幻01・機01）</li>
-<li>亡霊船を一番大きいテーマに（各世界10〜11枚）</li>
-<li>クラゲの魔女の呪文テーマ（幻想）：L 夜光クラゲの魔女 ノクト・SR 泡うみの見習い魔女 プカ・UR オクタ・新しいトークン「ちびクラゲ」・必殺の「千のクラゲの大潮」</li>
-<li>テーマの強化：剣聖（神・波を斬る剣士 ハヤテ、秘剣・渦潮斬り）、歯車（機・錆びたネジ虫、スクラップ漁り、ガラクタ丸、港の自動クレーン、合体潜水機 ギアシャーク）</li>
-<li>耐性：【不屈】【不壊】を少しだけ（アルバ・アズーリア・サンゴ礁の巨人・翡翠の若竜・ブルーバスティオン）</li>
-<li>除去のダメージを既存に合わせた（大渦・魚雷 3コスト5ダメージ、分解光線 コスト4以下を破壊）</li>
-<li>ソーラーセイル展開・落書きの設計図（次の機械のコスト-1）を外した</li>
-<li>バニラの1コストをやめ、1コストを各世界1〜2枚に。既存と数値もキーワードも同じキャラはなし（照らし合わせ済み）</li>
-<li>新しいトークン：ちびクラゲ・泡の妖精・プルルの分身</li>
-<li>かわいい女の子・かっこいい男・かわいいキャラを各世界に入れた（絵の欄に書いてある）</li>
-<li>保留のまま：偽装（機の4枚）・亜空間ブレイク</li>
+<section class="doc"><h2>第2版から直したこと（オーナー 11-24 16:56）</h2><ul>
+<li>名前を全部付け直した（既存のカードに合わせて短く。説明しなくてもわかることは名前に入れない）</li>
+<li>機械の亡霊から歯車を外した。歯車はゴッドギアの強化（港湾クレーン・合体潜水機ギアシャーク・引き上げた積み荷）だけ</li>
+<li>ノクトは魔女をやめて「深海の灯姫ノクト」（深海に住む、かっこかわいい少女）</li>
+<li>【不屈】は沈黙を受ける。凍結と攻撃不可は同じなのでまとめた</li>
+<li>同じカードは世界が違っても作らない：除去は 海神の三叉槍（5ダメージ）・深海の墨（3ダメージ＋1枚）・魚雷（キャラに3＋プレイヤーに2）で別々に。結界・凪・引く効果・墓地肥やしもそれぞれ1種類ずつ</li>
+<li>分解光線 → 分解砲（4コスト：コスト3以下のキャラを2体まで破壊）</li>
+<li>偽装は2枚、霧は2枚だけに減らした。海賊AIキャプテン・カメレオンは削除（機械のレジェンドは深潜艦ノーチラス）</li>
+<li>クラゲを幻想と機械のテーマにした。クラゲ魔法（トークンの呪文3種類）、全体除去の深海大放電、必殺の満ち潮の夜（ノクトが持ってくる）</li>
+<li>神08（2回攻撃を付ける呪文）を削除。代わりに剣聖の型（2回攻撃を持っているキャラだけを強化）</li>
+<li>亡霊の必殺魔法：亡者の大行進（場が全員亡霊・墓地にキャラ6体以上なら、全員に直撃と攻撃+2）</li>
+<li>神話のサブテーマ「海獣」：リヴァイアサン・クラーケン・カリブディス・スキュラ・セイレーン・ヒッポカムポス・アスピドケロン。つなぎは少しだけ</li>
+<li>レア度の数を合わせるため、浜辺の薬師・港守の神使・星詠みのステラ・白鯨の騎士アルバを外した</li>
 </ul></section>`;
 function render(){
   const tabs = document.getElementById("tabs");
@@ -133,19 +136,20 @@ function render(){
   if (tab === "rules") { list.innerHTML = RULES; sum.textContent = ""; return; }
   if (tab === "changes") { list.innerHTML = CHANGES; sum.textContent = ""; return; }
   if (tab === "tokens") {
-    sum.textContent = `${DATA.tokens.length}種類（今回からのトークン）`;
-    list.innerHTML = DATA.tokens.map(t => `<article class="card" data-r="C"><div class="side"><span class="no">${t.no}</span><span class="cost">–</span><span class="rar">トークン</span></div>
-      <div class="head"><span class="name">${esc(t.name)}</span><span class="stat">${t.atk}/${t.hp}</span><span class="tag">${esc(t.world)}</span></div>
+    sum.textContent = `${DATA.tokens.length}種類（今回からのトークン・クラゲ魔法・必殺）`;
+    list.innerHTML = DATA.tokens.map(t => `<article class="card" data-r="${t.kind==="必殺"?"L":t.kind==="クラゲ魔法"?"R":"C"}"><div class="side"><span class="no">${t.no}</span><span class="cost">–</span><span class="rar">${esc(t.kind)}</span></div>
+      <div class="head"><span class="name">${esc(t.name)}</span>${t.atk!=null?`<span class="stat">${t.atk}/${t.hp}</span>`:""}<span class="meta">${esc(t.type)}</span><span class="tag">${esc(t.world)}</span>${(t.tags||[]).map(x=>`<span class="tag tribe">${esc(x)}</span>`).join("")}</div>
       <div class="ab">${abHTML(t.ab)}</div><div class="more"><span class="art">${esc(t.art)}</span></div></article>`).join("");
     return;
   }
-  const L = DATA.cards.filter(c => c.world === tab && (cat === "すべて" || c.cat === cat));
+  const hit = c => cat === "すべて" || c.cat === cat || (c.tags||[]).includes(cat) || (cat === "クラゲ" && /クラゲ/.test(c.ab)) || (cat === "海獣" && /海獣/.test(c.ab));
+  const L = DATA.cards.filter(c => c.world === tab && hit(c));
   const all = DATA.cards.filter(c => c.world === tab);
   const cnt = k => all.filter(c => c.rar === k).length;
   sum.textContent = `${L.length}枚表示（${tab}：コモン${cnt("C")}・レア${cnt("R")}・SR${cnt("SR")}・UR${cnt("UR")}・レジェンド${cnt("L")}）`;
   list.innerHTML = L.map(c => `<article class="card" data-r="${c.rar}" id="${c.no}">
     <div class="side"><span class="no">${c.no}</span><span class="cost">${c.cost}</span><span class="rar">${c.rar}</span></div>
-    <div class="head"><span class="name">${esc(c.name)}</span>${c.atk!=null?`<span class="stat">${c.atk}/${c.hp}</span>`:""}<span class="meta">${c.type}</span><span class="tag cat-${c.cat}">${c.cat}</span>${c.kw.map(k=>`<span class="kw ${NEWKW.has(k)?"new":""}">${esc(k)}</span>`).join("")}</div>
+    <div class="head"><span class="name">${esc(c.name)}</span>${c.atk!=null?`<span class="stat">${c.atk}/${c.hp}</span>`:""}<span class="meta">${c.type}</span><span class="tag cat-${c.cat}">${c.cat}</span>${(c.tags||[]).map(t=>`<span class="tag tribe">${esc(t)}</span>`).join("")}${c.kw.map(k=>`<span class="kw ${NEWKW.has(k)?"new":""}">${esc(k)}</span>`).join("")}</div>
     <div class="ab">${abHTML(c.ab)}</div>
     <div class="more">${c.note?`<span class="note">${esc(c.note)}</span>`:""}<span class="art">${esc(c.art)}</span></div>
   </article>`).join("");
