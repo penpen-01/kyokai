@@ -1,5 +1,5 @@
 {
- "version": 230,
+ "version": 231,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11945,7 +11945,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-shinsui-b9dd8a75e4.webp"
   },
   {
    "id": "x3-kirai",
@@ -12231,7 +12232,8 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly"
+   "tribe": "jelly",
+   "art": "art/x3-hikari-8286dbb54e.webp"
   },
   {
    "id": "x3-iruka",
@@ -12340,7 +12342,8 @@
      "card": "tk-gear"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-crane-9662947f40.webp"
   },
   {
    "id": "x3-lux",
@@ -12542,7 +12545,8 @@
      "when": "attack"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-nikyaku-9728254b07.webp"
   },
   {
    "id": "x3-bousou",
@@ -12947,7 +12951,8 @@
     }
    ],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-s-dud-b1b6f967a2.webp"
   }
  ],
  "arena": {
