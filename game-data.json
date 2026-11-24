@@ -1,5 +1,5 @@
 {
- "version": 211,
+ "version": 212,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10269,7 +10269,8 @@
      "n": 3
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-hakamori-989212edd6.webp"
   },
   {
    "id": "m3-funauta",
@@ -10319,7 +10320,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-suihei-10aa540e0f.webp"
   },
   {
    "id": "m3-centurion",
@@ -10722,7 +10724,8 @@
     }
    ],
    "set": "3",
-   "tribe": "beast"
+   "tribe": "beast",
+   "art": "art/m3-leviathan-c99ea9f03a.webp"
   },
   {
    "id": "m3-yadokari",
@@ -10796,7 +10799,8 @@
      "n": 1
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-minato-23d73aae70.webp"
   },
   {
    "id": "m3-azuria",
@@ -10955,7 +10959,8 @@
      "n": 1
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-tenbin-deba1492e9.webp"
   },
   {
    "id": "m3-hayate",
