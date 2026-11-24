@@ -295,8 +295,9 @@ function reviveCands(pi, e) {
 /* 選んだ番号（sel）が決まりを守っているか */
 function pickOK(P, sel) {
   if (!Array.isArray(sel)) return false;
-  const u = [...new Set(sel.map(Number))].filter(i => i >= 0 && i < (P.kind === "revive" ? P.ids.length : P.uids.length));
+  const u = [...new Set(sel.map(Number))].filter(i => i >= 0 && i < (P.kind === "revive" ? P.ids.length : P.kind === "hand" ? P.hand.length : P.uids.length));
   if (u.length !== sel.length || u.length > P.max) return false;
+  if (P.kind === "hand" && u.length !== 1) return false;   // 手札から選ぶときは、必ず1枚
   if (P.kind === "revive" && P.total && u.reduce((a, i) => a + DEF[P.ids[i]].cost, 0) > P.total) return false;
   return true;
 }
@@ -309,6 +310,10 @@ function pickBest(pi) {
     order.forEach(i => { if (out.length >= P.max) return; const c = DEF[P.ids[i]].cost; if (P.total && sum + c > P.total) return; out.push(i); sum += c; });
     return out;
   }
+  if (P.kind === "hand") {   // 捨てる：亡霊か一番安いキャラ／出す・下げる：一番重いキャラ
+    const sc = x => { const c = DEF[x.id]; return P.act === "toss" ? (isGhostCard(x.id) ? 100 : 0) - c.cost - RARITY_ORDER.indexOf(c.rarity) : c.cost * 10 + RARITY_ORDER.indexOf(c.rarity); };
+    return P.hand.length ? [P.hand.reduce((b, x, i) => sc(x) > sc(P.hand[b]) ? i : b, 0)] : [];
+  }
   // 道連れ：相手キャラの平均より安い自分のキャラ（亡霊は墓地から戻せるので安く見る）を、相手の数まで
   const me = S.players[pi], en = S.players[opp(pi)].field.filter(u => u.hp > 0);
   if (!en.length) return [];
@@ -318,9 +323,23 @@ function pickBest(pi) {
 }
 function resolvePick(pi, sel, inline) {
   const P = S.pick; if (!P || P.pi !== pi) return false;
-  if (!pickOK(P, sel)) { if (!inline) return false; sel = []; }
+  if (!pickOK(P, sel)) { if (!inline) return false; sel = P.kind === "hand" ? pickBest(pi) : []; }
   S.pick = null;
   const me = S.players[pi];
+  if (P.kind === "hand") {
+    const x = P.hand[sel[0]], i = x ? me.hand.indexOf(x.id, x.i) === x.i ? x.i : me.hand.indexOf(x.id) : -1;
+    if (i >= 0) {
+      if (P.act === "toss") { const id = handTake(me, i); gyAdd(me, id); log(`${pname(pi)}は${cname(id)}を捨てた。`); if (!SIM) fx("reveal", id, `reveal:${pi}:捨てたカード`); }
+      else if (P.act === "cutOne") { (me.handCut || (me.handCut = []))[i] = (me.handCut[i] || 0) + (P.n || 1); log(`${pname(pi)}の手札のカード1枚のコストが${P.n || 1}下がった。`, { pi, msg: `${cname(me.hand[i])}のコストが${P.n || 1}下がった。` }); }
+      else if (P.act === "cheat" && !fieldFull(me)) {
+        const id = handTake(me, i), u = addUnit(pi, id);
+        u.frozen = true; u.ready = false;   // 次の自分のターンも攻撃できない
+        log(`${cname(id)}がコストを払わずに現れた！（次の自分のターンの終わりまで攻撃できない）`);
+        if (!SIM) { fx("cutin", id, "cutin" + pi); fx(unitSel(u.uid), id, "land"); }
+        runEffects(pi, DEF[id], autoTargets(pi, u), u);
+      }
+    }
+  }
   if (P.kind === "revive") {
     if (!sel.length) log(`${pname(pi)}は墓地から何も出さなかった。`);
     sel.forEach(i => {
@@ -343,6 +362,7 @@ function resolvePick(pi, sel, inline) {
     en.field.forEach(u => delete u.pactHit);
     log(k ? `${pname(pi)}は自分のキャラ${k}体を道連れにした。` : `${pname(pi)}は何も破壊しなかった。`);
   }
+  if (P.rest && !S.over) runRest(pi, P.rest);
   if (!inline) { cleanup(); if (!checkWin() && !SIM) render(); }
   return true;
 }
@@ -351,7 +371,7 @@ const Pick = {
   after() {
     const P = S && S.pick, mine = P && P.pi === ME && !S.over;
     if (!mine) { if (this.el) { this.el.remove(); this.el = null; } this.sel = []; return; }
-    const key = `${S.gid}|${P.kind}|${(P.ids || P.uids).join(",")}`;
+    const key = `${S.gid}|${P.kind}|${(P.ids || P.uids || P.hand.map(x => x.id)).join(",")}`;
     if (!this.el || this.el.dataset.key !== key) { this.sel = []; }
     if (!this.el) { this.el = document.createElement("div"); this.el.className = "mullp digp pickp in"; document.body.appendChild(this.el); }
     this.el.dataset.key = key;
@@ -360,21 +380,22 @@ const Pick = {
   paint() {
     const P = S.pick; if (!P || !this.el) return;
     const me = S.players[ME];
-    const items = P.kind === "revive" ? P.ids.map(id => ({ id })) : P.uids.map(uid => { const u = me.field.find(x => x.uid === uid); return { id: u ? u.id : "", u }; });
+    const items = P.kind === "revive" ? P.ids.map(id => ({ id })) : P.kind === "hand" ? P.hand.map(x => ({ id: x.id })) : P.uids.map(uid => { const u = me.field.find(x => x.uid === uid); return { id: u ? u.id : "", u }; });
     const sum = P.kind === "revive" ? this.sel.reduce((a, i) => a + DEF[P.ids[i]].cost, 0) : 0;
-    const head = P.kind === "revive" ? `亡霊を${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ` : "道連れにするキャラを選ぶ";
-    const sub = P.kind === "revive" ? `墓地から場に出します（${P.total ? `合計コスト ${sum} / ${P.total}` : `${this.sel.length} / ${P.max}体`}）` : `${this.sel.length}体を選択中。同じ数の相手キャラがランダムに破壊されます`;
+    const head = P.kind === "hand" ? ({ toss: "捨てるカードを選ぶ", cutOne: "コストを下げるカードを選ぶ", cheat: "出すキャラを選ぶ" }[P.act] || "手札から選ぶ") : P.kind === "revive" ? `亡霊を${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ` : "道連れにするキャラを選ぶ";
+    const sub = P.kind === "hand" ? "手札から1枚" : P.kind === "revive" ? `墓地から場に出します（${P.total ? `合計コスト ${sum} / ${P.total}` : `${this.sel.length} / ${P.max}体`}）` : `${this.sel.length}体を選択中。同じ数の相手キャラがランダムに破壊されます`;
     this.el.innerHTML = `<div class="mullp-in">
       <div class="pg-title sm"><b>${esc(head)}</b></div>
       <p class="pick-sub">${esc(sub)}</p>
       <div class="dig-row pick-row">${items.map((x, i) => `<div class="dig-c ${this.sel.includes(i) ? "on" : ""}"><button type="button" class="dig-card" data-act="pickT" data-i="${i}" aria-pressed="${this.sel.includes(i)}" aria-label="${esc(DEF[x.id] ? DEF[x.id].name : "")}">${DEF[x.id] ? cardHTML(DEF[x.id], { static: true }) : ""}${x.u ? `<span class="pick-st">${x.u.atk}/${x.u.hp}</span>` : ""}</button>
         <button type="button" class="cdlink pick-info" data-tk="${esc(x.id)}">効果を見る</button></div>`).join("")}</div>
-      <div class="pick-go"><button type="button" class="btn primary" data-act="pickGo">${this.sel.length ? "これで決定" : P.kind === "revive" ? "出さない" : "破壊しない"}</button></div></div>`;
+      <div class="pick-go"><button type="button" class="btn primary" data-act="pickGo" ${P.kind === "hand" && !this.sel.length ? "disabled" : ""}>${this.sel.length ? "これで決定" : P.kind === "revive" ? "出さない" : P.kind === "hand" ? "1枚選んでください" : "破壊しない"}</button></div></div>`;
   },
   toggle(i) {
     const P = S && S.pick; if (!P) return;
     const k = this.sel.indexOf(i);
     if (k >= 0) this.sel.splice(k, 1);
+    else if (P.kind === "hand") this.sel = [i];   // 1枚だけ：選び直し
     else {
       const next = [...this.sel, i];
       if (!pickOK(P, next)) { toast(P.kind === "revive" && next.length <= P.max ? "合計コストが上限をこえます" : `${P.max}体までです`); return; }
@@ -688,9 +709,23 @@ function addUnit(pi, id) {
   return u;
 }
 
-function runEffects(pi, d, targets, self) {
+function runEffects(pi, d, targets, self, list) {
   const prev = S.randUsed; S.randUsed = new Set();
-  try { playEffects(d).forEach(e => effect(pi, e, targets, self)); } finally { S.randUsed = prev; }
+  const L = list || playEffects(d);
+  try {
+    for (let i = 0; i < L.length; i++) {
+      const had = !!S.pick;
+      effect(pi, L[i], targets, self);
+      // 人が選ぶ画面を開いたら、残りの効果は選び終わってから（舟唄：捨ててから引く）
+      if (!had && S.pick && S.pick.pi === pi) { if (i + 1 < L.length) S.pick.rest = { card: d.id, i: i + 1, targets: targets || {}, self: self ? self.uid : null }; break; }
+    }
+  } finally { S.randUsed = prev; }
+}
+/* 選ぶ画面のあとに、残っていた効果を続ける */
+function runRest(pi, R) {
+  const d = DEF[R.card]; if (!d) return;
+  const self = R.self != null ? findUnit(R.self) : null;
+  runEffects(pi, d, R.targets || {}, self, playEffects(d).slice(R.i));
 }
 
 /* 効果の条件を満たしているか */
@@ -1099,13 +1134,15 @@ function effect(pi, e, targets, self) {
     }
     case "discount": me.discount = (me.discount || 0) + n; log(`${pname(pi)}の次のカードのコストが${n}下がる。`); break;
     /* ---------- 第3弾 ---------- */
-    case "toss": {   // 自分の手札の（種類の）カードをランダムに捨てる
-      for (let i = 0; i < (n || 1); i++) {
-        const L = me.hand.map((id, j) => j).filter(j => me.hand[j] !== GEAR_ID && DEF[me.hand[j]] && (!e.ctype || DEF[me.hand[j]].type === e.ctype));
-        if (!L.length) break;
-        const id = handTake(me, L[Math.floor(Math.random() * L.length)]); gyAdd(me, id);
-        log(`${pname(pi)}は${cname(id)}を捨てた。`); if (!SIM) fx("reveal", id, `reveal:${pi}:捨てたカード`);
-      }
+    case "toss": case "cutOne": case "cheat": {   // 自分の手札から1枚選ぶ（捨てる・コストを下げる・無料で出す）
+      if (e.kind === "cheat" && fieldFull(me)) { log("場に空いている場所がなかった。"); break; }
+      const ok = id => id !== GEAR_ID && DEF[id] && (!e.ctype || DEF[id].type === e.ctype) && (!e.tribe || DEF[id].tribe === e.tribe) && (e.kind !== "cheat" || DEF[id].type === "char");
+      const hand = me.hand.map((id, i) => ({ i, id })).filter(x => ok(x.id));
+      if (!hand.length) { log(e.kind === "toss" ? "捨てるカードが手札になかった。" : e.kind === "cheat" ? "手札に出せるキャラがいなかった。" : "コストが下がるカードが手札になかった。"); break; }
+      if (S.pick) break;
+      S.pick = { pi, kind: "hand", act: e.kind, hand, max: 1, n };
+      if (SIM || digAuto(pi)) resolvePick(pi, pickBest(pi), true);
+      else log(`${pname(pi)}は手札からカードを選んでいる。`);
       break;
     }
     case "mill": {
@@ -1167,14 +1204,6 @@ function effect(pi, e, targets, self) {
       log(`満ち潮！${pname(opp(pi))}に${k}ダメージ。`); hitPlayer(opp(pi), k);
       break;
     }
-    case "cutOne": {
-      const L = me.hand.map((id, i) => i).filter(i => me.hand[i] !== GEAR_ID && DEF[me.hand[i]] && (!e.tribe || DEF[me.hand[i]].tribe === e.tribe) && (!e.ctype || DEF[me.hand[i]].type === e.ctype));
-      if (!L.length) { log("コストが下がるカードが手札になかった。"); break; }
-      const i = L[Math.floor(Math.random() * L.length)];
-      (me.handCut || (me.handCut = []))[i] = (me.handCut[i] || 0) + n;
-      log(`${pname(pi)}の手札のカード1枚のコストが${n}下がった。`, { pi, msg: `${cname(me.hand[i])}のコストが${n}下がった。` });
-      break;
-    }
     case "handSteal": {
       const L = en.hand.map((id, i) => i).filter(i => en.hand[i] !== GEAR_ID && DEF[en.hand[i]]);
       if (!L.length) { log(`${pname(opp(pi))}の手札に奪えるカードがなかった。`); break; }
@@ -1192,19 +1221,6 @@ function effect(pi, e, targets, self) {
       (en.handCut || (en.handCut = []))[i] = (en.handCut[i] || 0) - n;
       log(`${pname(pi)}は${pname(opp(pi))}の手札を1枚見て、コストを${n}上げた。`, { pi, msg: `${pname(opp(pi))}の手札の${cname(en.hand[i])}のコストを${n}上げた。` });
       if (!SIM) fx("peek", en.hand[i], `peek:${pi}`);
-      break;
-    }
-    case "cheat": {
-      if (fieldFull(me)) { log("場に空いている場所がなかった。"); break; }
-      const L = me.hand.map((id, i) => i).filter(i => DEF[me.hand[i]] && DEF[me.hand[i]].type === "char" && (!e.tribe || DEF[me.hand[i]].tribe === e.tribe));
-      if (!L.length) { log("手札に出せるキャラがいなかった。"); break; }
-      const top = Math.max(...L.map(i => DEF[me.hand[i]].cost)), c = L.filter(i => DEF[me.hand[i]].cost === top);
-      const id = handTake(me, c[Math.floor(Math.random() * c.length)]);
-      const u = addUnit(pi, id);
-      u.frozen = true; u.ready = false;   // 次の自分のターンも攻撃できない
-      log(`${cname(id)}がコストを払わずに現れた！（次の自分のターンの終わりまで攻撃できない）`);
-      if (!SIM) { fx("cutin", id, "cutin" + pi); fx(unitSel(u.uid), id, "land"); }
-      runEffects(pi, DEF[id], autoTargets(pi, u), u);
       break;
     }
     case "scales": {

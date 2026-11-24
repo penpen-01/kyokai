@@ -1,5 +1,5 @@
 {
- "version": 208,
+ "version": 209,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10313,7 +10313,7 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-eirei",
+     "card": "tk-hero",
      "when": "revived"
     }
    ],
@@ -10337,7 +10337,7 @@
     {
      "kind": "tokenField",
      "n": 2,
-     "card": "tk-eirei",
+     "card": "tk-hero",
      "when": "revived"
     }
    ],
@@ -12556,24 +12556,6 @@
     }
    ],
    "set": "3"
-  },
-  {
-   "id": "tk-eirei",
-   "name": "英霊",
-   "world": "myth",
-   "type": "char",
-   "cost": 1,
-   "atk": 1,
-   "hp": 1,
-   "glyph": "神",
-   "limit": 0,
-   "rarity": "common",
-   "keywords": [
-    "ghost"
-   ],
-   "effects": [],
-   "set": "3",
-   "token": true
   },
   {
    "id": "tk-chibi",

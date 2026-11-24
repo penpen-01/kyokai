@@ -11,7 +11,7 @@ def W(when, e): return {**e, "when": when}
 KW = {"守護": "guard", "不動": "noattack", "2回攻撃": "twice", "突進": "rush", "亡霊": "ghost", "不屈": "steadfast", "不壊": "unbreakable", "岩殻": "reef", "凪": "calm", "潜航": "dive"}
 RAR = {"C": "common", "R": "rare", "SR": "sr", "UR": "ur", "L": "legend"}
 GLY = {"myth": "神", "fan": "幻", "mech": "機"}
-CHIBI, AWA, EIREI, PURU, TIDE = "tk-chibi", "tk-awa", "tk-eirei", "tk-pururu", "tk-j-tide"
+CHIBI, AWA, EIREI, PURU, TIDE = "tk-chibi", "tk-awa", "tk-hero", "tk-pururu", "tk-j-tide"   # 英霊は既存のトークン（不死の英雄王と同じ。オーナー 11-24）
 REQ_J = {"n": 1, "tribe": "jelly"}
 
 def C(id, world, r, cost, name, atk, hp, kws=(), effects=(), **x):
@@ -131,7 +131,6 @@ CARDS = [
   C("x3-pururu", X, "SR", 6, "スライム博士プルル", 4, 5, [], [W("death", K("tokenField", 2, card=PURU))]),
 ]
 TOKENS = [
-  T(C(EIREI, M, "C", 1, "英霊", 1, 1, ["亡霊"])),
   T(C(CHIBI, F, "C", 1, "ちびクラゲ", 1, 1, [], tribe="jelly")),
   T(C(AWA, F, "C", 1, "泡の妖精", 1, 1, [], [W("death", K("ward"))])),
   T(C(PURU, X, "C", 2, "プルルの分身", 2, 2)),
@@ -165,7 +164,7 @@ if __name__ == "__main__":
   check()
   path = sys.argv[1] if len(sys.argv) > 1 else "game-data.json"
   d = json.load(open(path))
-  new = {c["id"] for c in CARDS + TOKENS}
+  new = {c["id"] for c in CARDS + TOKENS} | {"tk-eirei"}   # tk-eirei は前に作って、既存の英霊に置き換えたもの
   old = {c["name"] for c in d["cards"] if c["id"] not in new and not c.get("token")}
   dup = [c["name"] for c in CARDS if c["name"] in old]
   assert not dup, ("既存のカードと同じ名前", dup)

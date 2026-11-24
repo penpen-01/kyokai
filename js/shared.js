@@ -76,11 +76,13 @@ const KEYWORDS = {
   ghost:   { label: "亡霊", short: "霊", text: "攻撃したあと、破壊される。墓地の亡霊は「墓地から選んで出す」効果で呼び戻せる。" },
   steadfast:{ label: "不屈", short: "屈", text: "攻撃力・体力を下げる効果と、行動不能（攻撃できなくする効果）を受けない（沈黙は受ける）。" },
   unbreakable:{ label: "不壊", short: "壊", text: "効果で破壊されない（ダメージで体力が0になると倒れる）。" },
-  reef:    { label: "岩殻", short: "岩", text: "魔法や効果のダメージを受けない（攻撃と反撃のダメージは受ける）。" },
-  calm:    { label: "凪", short: "凪", text: "このキャラが場にいる間、相手は場に出したターンのキャラで攻撃できない（速攻・突進も）。" },
-  dive:    { label: "潜航", short: "潜", text: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる）。潜っている間は、攻撃も効果も受けない。" },
-  surf:    { label: "波乗り", short: "波", text: "攻撃したあと、持ち主の手札に戻る（トークンは消える）。" }
+  // 1枚だけの能力は「名前のついた能力」にしない（オーナー 11-24）。仕組みは能力と同じで、カードには plain の文だけを出す
+  reef:    { label: "効果ダメージ無効", short: "", plain: "魔法や効果のダメージを受けない（攻撃と反撃のダメージは受ける）。", text: "魔法や効果のダメージを受けない（攻撃と反撃のダメージは受ける）。" },
+  calm:    { label: "出たターンの攻撃を封じる", short: "", plain: "このキャラが場にいる間、相手は場に出したターンのキャラで攻撃できない（速攻・突進も）。", text: "このキャラが場にいる間、相手は場に出したターンのキャラで攻撃できない（速攻・突進も）。" },
+  dive:    { label: "亜空間に潜る", short: "", plain: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる）。潜っている間は、攻撃も効果も受けない。", text: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる）。" },
+  surf:    { label: "攻撃したあと手札に戻る", short: "", plain: "攻撃したあと、持ち主の手札に戻る（トークンは消える）。", text: "攻撃したあと、持ち主の手札に戻る（トークンは消える）。" }
 };
+const kwPlain = k => !!(KEYWORDS[k] && KEYWORDS[k].plain);
 /* 種族（第3弾）：card.tribe。効果の絞り込み（e.tribe）や数える条件で使う */
 const TRIBES = { jelly: "クラゲ", beast: "海獣" };
 const tribeOf = c => (c && c.tribe) || "";
@@ -174,7 +176,7 @@ const EFFECTS = {
   revive:      { group: "召喚",   label: "自分の墓地のキャラを復活させる", text: (n, e) => `自分の墓地の${costRange(n, e, true)}キャラをランダムに1体、場に出す（登場時効果は発動しない）。`, opts: ["cmin"] },
   banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true },
   // ---- 第3弾（2026-11-24）。工房ではまだ細かい設定（種族・亡霊など）を変えられない。数値とトークンだけ ----
-  toss:        { group: "墓地", label: "自分の手札の（種類の）カードをランダムに捨てる", text: (n, e) => `自分の手札の${ctypeName(e)}をランダムに${n || 1}枚捨てる。`, opts: ["ctype"] },
+  toss:        { group: "墓地", label: "自分の手札の（種類の）カードを1枚選んで捨てる", text: (n, e) => `自分の手札の${ctypeName(e)}を1枚選んで捨てる。`, opts: ["ctype"] },
   mill:        { group: "墓地", label: "自分の山札の上からN枚を墓地へ送る", text: n => `自分の山札の上から${n}枚を墓地へ送る。` },
   peekMill:    { group: "墓地", label: "山札の上1枚を見て、亡霊のキャラなら墓地へ送る", text: () => "自分の山札の上1枚を見る。それが【亡霊】のキャラなら墓地へ送る（ちがえば、そのまま山札の上に残す）。", noN: true },
   reviveSel:   { group: "召喚", label: "自分の墓地の亡霊を選んで出す", text: (n, e) => reviveSelText(e) },
@@ -182,10 +184,10 @@ const EFFECTS = {
   ward:        { group: "プレイヤー", label: "自分に結界を張る", text: () => "自分に【結界】を張る（次に自分が受けるダメージを1回だけ0にする。重ねて張れない）。", noN: true },
   jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（痺れ針・泡の揺りかご・青い閃光のどれか）。` },
   tide:        { group: "ダメージ", label: "満ち潮の夜（使ったクラゲ魔法の数×N）", text: n => `この対戦で自分が先に使ったクラゲ魔法1枚につき${n}、相手プレイヤーにダメージ（最大12）。` },
-  cutOne:      { group: "エナジー", label: "手札の（種族の）カード1枚のコストを下げる", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}1枚（ランダム）のコストを${n}下げる。` },
+  cutOne:      { group: "エナジー", label: "手札の（種族の）カード1枚のコストを下げる", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}を1枚選んで、そのコストを${n}下げる。` },
   handSteal:   { group: "妨害", label: "相手の手札をランダムに1枚奪う（コストを下げる）", text: n => `相手の手札からランダムに1枚を奪って手札に加え、そのカードのコストを${n}下げる。` },
   handTax:     { group: "妨害", label: "相手の手札を1枚見て、コストを上げる", text: n => `相手の手札をランダムに1枚見て、そのカードのコストを${n}上げる。` },
-  cheat:       { group: "召喚", label: "手札の（種族の）キャラを無料で出す（次の自分のターンも攻撃できない）", text: (n, e) => `自分の手札で一番コストの高い${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}キャラ1体を、コストを払わずに出す（登場時の効果も発動する。対象はランダム）。そのキャラは次の自分のターンの終わりまで攻撃できない。`, noN: true },
+  cheat:       { group: "召喚", label: "手札の（種族の）キャラを無料で出す（次の自分のターンも攻撃できない）", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}キャラを1体選んで、コストを払わずに出す（登場時の効果も発動する。対象はランダム）。そのキャラは次の自分のターンの終わりまで攻撃できない。`, noN: true },
   pact:        { group: "除去", label: "自分のキャラを好きな数破壊し、同じ数の相手キャラを破壊", text: () => "自分のキャラを好きな数選んで破壊する。同じ数だけ、相手キャラをランダムに破壊する。", noN: true },
   scales:      { group: "除去", label: "おたがいの、元のコストが一番高いキャラを破壊", text: () => "おたがいの場で、元のコストが一番高いキャラを1体ずつ破壊する（同じなら、その中からランダム）。", noN: true }
 };
@@ -560,8 +562,9 @@ function allyDeathHead(e) { const f = e && e.af; return f === "ghost" ? "自分�
 function cardTextLines(card, o = {}) {
   const lines = [];
   if (card.type === "char" && card.tribe && TRIBES[card.tribe]) lines.push(`種族：${TRIBES[card.tribe]}`);
+  if (card.type === "char" && o.noKw) (card.keywords || []).forEach(k => kwPlain(k) && lines.push(KEYWORDS[k].plain));
   if (card.type === "char" && !o.noKw) {
-    (card.keywords || []).forEach(k => KEYWORDS[k] && lines.push(`${KEYWORDS[k].label}：${KEYWORDS[k].text}`));
+    (card.keywords || []).forEach(k => KEYWORDS[k] && lines.push(kwPlain(k) ? KEYWORDS[k].plain : `${KEYWORDS[k].label}：${KEYWORDS[k].text}`));
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
@@ -611,7 +614,7 @@ const useWhatOf = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "
 function kwItems(card) {
   const out = [];
   if (card.type === "char") {
-    (card.keywords || []).forEach(k => KEYWORDS[k] && out.push({ label: KEYWORDS[k].label, text: KEYWORDS[k].text }));
+    (card.keywords || []).forEach(k => KEYWORDS[k] && !kwPlain(k) && out.push({ label: KEYWORDS[k].label, text: KEYWORDS[k].text }));
     if (card.armor) out.push({ label: `装甲${card.armor}`, text: ARMOR_TEXT(card.armor).replace(/^[^：]*：/, "") });
   }
   const full = cardTextLines({ ...card, keywords: [], armor: 0, effects: [], note: "", req: null, pay: null, gear: 0 });   // 化かし・妖気の文だけを作る
@@ -735,7 +738,7 @@ function cardHTML(card, o = {}) {
     .filter(k => !(u && ((k === "stealth" && u.revealed) || (k === "shield" && u.shieldUsed))));   // 解けた隠密・使った聖盾は消す
   const arm = u ? (u.silenced ? 0 : (card.armor || 0) + (u.armorPlus || 0)) : card.armor;
   const marks = card.type === "char"
-    ? kwl.filter(k => KEYWORDS[k]).map(k => `<i class="mk mk-${k}">${KEYWORDS[k].short}</i>`).join("")
+    ? kwl.filter(k => KEYWORDS[k] && !kwPlain(k)).map(k => `<i class="mk mk-${k}">${KEYWORDS[k].short}</i>`).join("")
       + (arm ? `<i class="mk mk-armor">甲${arm}</i>` : "")
       + ((card.effects || []).some(e => whenOf(e) !== "play") && !(u && u.silenced) ? `<i class="mk mk-trig" title="登場時以外にも働く効果があります">効</i>` : "")
     : "";

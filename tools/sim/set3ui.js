@@ -58,6 +58,13 @@ const OUT = process.argv[2] || '.';
   await p.waitForTimeout(800);
   await shot('6-ward');
   await p.evaluate(() => { const id = 'f3-takarabako'; if (typeof peekAt === 'function') { const el = document.querySelector(`.hand [data-id="${id}"]`); } handleAct('cardInfo', { dataset: { id } }); });
+  // 手札から選ぶ（舟唄：捨ててから2枚引く）
+  await p.evaluate(() => { const me = S.players[ME]; ui = { sel: null, mode: null }; me.e = 10; me.hand = ['m3-funauta', 'squire', 'm3-eirei', 'm3-trident']; me.deck.push('pegasus', 'archer'); render(); beginPlay(0); });
+  await shot('7-hand-pick');
+  const before = await p.evaluate(() => ({ hand: S.players[ME].hand.length, deck: S.players[ME].deck.length }));
+  await p.click('.pickp [data-act="pickT"][data-i="1"]'); await p.click('.pickp [data-act="pickGo"]'); await p.waitForTimeout(600);
+  const tossed = await p.evaluate(() => ({ gyLast: S.players[ME].gy.slice(-2), hand: S.players[ME].hand.length, deck: S.players[ME].deck.length, pick: !!S.pick }));
+  console.log(JSON.stringify({ before, tossed }));
   console.log(JSON.stringify({ afterHotaru: f1, enemyAfterBunkai: en, ward: await p.evaluate(() => S.players[ME].ward), errs }));
   await b.close();
 })();

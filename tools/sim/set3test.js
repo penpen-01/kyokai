@@ -31,8 +31,8 @@ const { chromium } = require('playwright');
       fresh(); S.players[0].gy = ['m3-eirei', 'm3-suihei', 'm3-centurion', 'f3-gaikotsu']; S.players[0].grave = [...S.players[0].gy];
       play(0, 'm3-hotaru');
       const f0 = S.players[0].field.map(u => u.id);
-      ok('ホタルで亡霊2体（コスト3以下）', f0.length >= 3 && !f0.includes('m3-centurion') && f0.filter(x => x !== 'm3-hotaru' && x !== 'tk-eirei').length === 2, f0);
-      ok('墓地から出たとき（骸骨甲板員+2 か 水兵の英霊）', S.players[0].field.some(u => u.id === 'f3-gaikotsu' && u.atk === 4) || f0.includes('tk-eirei'), S.players[0].field.map(u => [u.id, u.atk]));
+      ok('ホタルで亡霊2体（コスト3以下）', f0.length >= 3 && !f0.includes('m3-centurion') && f0.filter(x => x !== 'm3-hotaru' && x !== 'tk-hero').length === 2, f0);
+      ok('墓地から出たとき（骸骨甲板員+2 か 水兵の英霊）', S.players[0].field.some(u => u.id === 'f3-gaikotsu' && u.atk === 4) || f0.includes('tk-hero'), S.players[0].field.map(u => [u.id, u.atk]));
       // 2b. 人が選ぶ流れ（pick を直接）
       fresh(); S.players[0].gy = ['m3-eirei', 'x3-sabineji', 'f3-nakimushi']; S.pick = { pi: 0, kind: 'revive', ids: ['m3-eirei', 'x3-sabineji', 'f3-nakimushi'], max: 2, total: 5, mod: '' };
       ok('pick：上限を超える選び方は通らない', resolvePick(0, [0, 1, 2]) === false && !!S.pick);
@@ -126,6 +126,11 @@ const { chromium } = require('playwright');
       ok('大行進：墓地5体では使えない', !canPlay(0, i).ok); S.players[0].gy.push('pegasus'); ok('大行進：6体で使える', canPlay(0, i).ok);
       // 25. 舟唄：捨てるキャラがないと使えない
       fresh(); i = hand(0, 'm3-funauta'); ok('舟唄：手札にキャラがないと不可', !canPlay(0, i).ok); hand(0, 'squire'); ok('舟唄：キャラがあれば可', canPlay(0, i).ok);
+      // 25b. 舟唄（CPU）：捨ててから2枚引く・銛打ち
+      fresh(); S.players[0].hand = ['squire', 'm3-eirei', 'garm']; S.players[0].deck = ['pegasus', 'archer', 'dragon']; play(0, 'm3-funauta');
+      ok('舟唄：亡霊を選んで捨て、2枚引く', S.players[0].gy.includes('m3-eirei') && S.players[0].hand.length === 4, S.players[0].hand);
+      fresh(); S.players[0].hand = ['m3-siren', 'm3-leviathan']; play(0, 'm3-harpoon');
+      ok('銛打ち：重い海獣のコスト-1', effCost(0, DEF['m3-leviathan'], 1) === 8);
       // 26. 亡霊に「攻撃されたとき」がない普通の攻撃で、反撃で倒れた亡霊も墓地へ
       fresh(); const gg = put(0, 'm3-centurion'); const big = put(1, 'x-gigas'); attack(0, gg.uid, big.uid);
       ok('亡霊：反撃で倒れても墓地へ（1枚だけ）', S.players[0].gy.filter(x => x === 'm3-centurion').length === 1);
