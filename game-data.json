@@ -1,5 +1,5 @@
 {
- "version": 222,
+ "version": 223,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11062,7 +11062,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-nakimushi-acb05dbbec.webp"
   },
   {
    "id": "f3-temaneki",
@@ -11344,7 +11345,8 @@
      "n": 1
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-komoriuta-320fa6744f.webp"
   },
   {
    "id": "f3-tomoshibi",
@@ -11549,7 +11551,8 @@
      "card": "f3-takarabako"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-barba-abd3229f40.webp"
   },
   {
    "id": "f3-borg",
@@ -11821,7 +11824,8 @@
     "unbreakable"
    ],
    "effects": [],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-suiryu-23df61113d.webp"
   },
   {
    "id": "x3-sabineji",
@@ -12769,7 +12773,8 @@
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true
+   "token": true,
+   "art": "art/tk-j-flash-a056227958.webp"
   },
   {
    "id": "tk-j-tide",
