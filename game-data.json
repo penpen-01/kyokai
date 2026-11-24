@@ -1,5 +1,5 @@
 {
- "version": 223,
+ "version": 224,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11116,7 +11116,8 @@
      "per": "milledGhost"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-utsubo-554989a57c.webp"
   },
   {
    "id": "f3-gaikotsu",
@@ -11242,7 +11243,8 @@
      "n": 1
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-michizure-bb529f0cb8.webp"
   },
   {
    "id": "f3-daikoushin",
@@ -11364,7 +11366,8 @@
      "n": 2
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-tomoshibi-4ab55f857a.webp"
   },
   {
    "id": "f3-yurameki",
@@ -11572,7 +11575,8 @@
      "n": 1
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-borg-380d18786f.webp"
   },
   {
    "id": "f3-kodako",
@@ -12679,7 +12683,8 @@
     }
    ],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-awa-f138d9ef2c.webp"
   },
   {
    "id": "tk-pururu",
