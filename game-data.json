@@ -1,5 +1,5 @@
 {
- "version": 225,
+ "version": 226,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -12807,7 +12807,7 @@
     "tribe": "jelly"
    },
    "token": true,
-   "art": "art/tk-j-tide-0bbdd48a5e.webp"
+   "art": "art/tk-j-tide-d62facd4a0.webp"
   },
   {
    "id": "tk-s-gold",
