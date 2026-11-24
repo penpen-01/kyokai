@@ -482,6 +482,8 @@ const Online = {
         done = attack(1, a.uid, a.target);
       } else if (a.t === "dig") {
         done = resolveDig(1, +a.i);
+      } else if (a.t === "pick") {
+        done = resolvePick(1, Array.isArray(a.sel) ? a.sel.map(Number) : Object.values(a.sel || {}).map(Number));
       } else if (a.t === "end") {
         endTurn(1); done = true;
       }

@@ -223,6 +223,7 @@ function startTurn(pi, skipDraw) {
   p.e = p.maxE;
   returnFromVoid(pi);   // 亜空間のキャラは、元から場にいた扱いで戻る
   // 行動不能のキャラは、このターンだけ攻撃できない
+  p.field.forEach(u => { if (u.mineKws) { u.kws = (u.kws || []).filter(k => !u.mineKws.includes(k)); delete u.mineKws; } });   // 「次の自分のターンの始めまで」の能力
   p.field.forEach(u => { u.swings = 0; u.thawed = false; if (u.frozen) { u.ready = false; u.frozen = false; u.thawed = true; } else u.ready = !kw(u, "noattack"); });
   // 特殊勝利：場にいるまま、自分のターンの始めを決めた回数むかえると勝ち
   for (const u of p.field) {
@@ -252,7 +253,9 @@ function resolveDig(pi, i) {
   const D = S.dig; if (!D || D.pi !== pi) return false;
   const me = S.players[pi], k = Math.max(0, Math.min(D.ids.length - 1, +i || 0)), id = D.ids[k];
   S.dig = null;
-  me.deck.unshift(...D.ids.filter((_, j) => j !== k));   // 残りは山札の下へ
+  const rest = D.ids.filter((_, j) => j !== k);
+  if (D.rest === "grave") { rest.forEach(x => gyAdd(me, x)); if (rest.length) log(`残りの${rest.map(cname).join("・")}は墓地へ。`); }
+  else me.deck.unshift(...rest);   // 残りは山札の下へ
   if (me.hand.length >= CONFIG.HAND_MAX) { gyAdd(me, id); log(`手札がいっぱいで、${cname(id)}は墓地へ。`); fx("reveal", id, `reveal:${pi}:手札があふれて墓地へ行ったカード`); }
   else { me.hand.push(id); log(`${pname(pi)}は山札から1枚を選んで手札に加えた。`, { pi, msg: `${pname(pi)}は${cname(id)}を選んで手札に加えた。` }); if (!SIM && S.phase === "play") fx("draw", String(pi), "draw"); }
   if (!SIM) render();
@@ -272,7 +275,7 @@ const Dig = {
       <div class="pg-title sm"><b>1枚を選んで手札に加える</b></div>
       <div class="dig-row">${D.ids.map((id, i) => `<div class="dig-c"><button type="button" class="dig-card cdlink" data-tk="${esc(id)}" aria-label="${esc(DEF[id] ? DEF[id].name : id)}（押すと効果）">${cardHTML(DEF[id], { static: true })}</button>
         <button type="button" class="btn sm primary" data-act="dig" data-i="${i}">これにする</button></div>`).join("")}</div>
-      <p class="pg-hint">残りは山札の下に戻ります。カードを押すと効果を見られます。</p></div>`;
+      <p class="pg-hint">残りは${D.rest === "grave" ? "墓地へ送られます" : "山札の下に戻ります"}。カードを押すと効果を見られます。</p></div>`;
   }
 };
 function doDig(i) {
@@ -280,9 +283,142 @@ function doDig(i) {
   if (MODE === "online" && Online.role === "guest") return Online.send({ t: "dig", i });
   resolveDig(ME, i);
 }
+
+/* ---------- 第3弾：選んで出す・選んで破壊する（S.pick） ----------
+   revive：墓地の亡霊を選んで場に出す { ids：候補（墓地のカード）, max：体数, total：合計コストの上限, mod }
+   pact：自分のキャラを好きな数選んで破壊し、同じ数の相手キャラをランダムに破壊する { uids, max }
+   選ぶまで、その人は何もできない（Dig と同じ） */
+function reviveCands(pi, e) {
+  const p = S.players[pi], each = e && e.n > 0 && e.n < 10 ? e.n : 99, tot = (e && e.total) || 99;
+  return gyChars(p).filter(id => isGhostCard(id) && DEF[id].cost <= each && DEF[id].cost <= tot);
+}
+/* 選んだ番号（sel）が決まりを守っているか */
+function pickOK(P, sel) {
+  if (!Array.isArray(sel)) return false;
+  const u = [...new Set(sel.map(Number))].filter(i => i >= 0 && i < (P.kind === "revive" ? P.ids.length : P.uids.length));
+  if (u.length !== sel.length || u.length > P.max) return false;
+  if (P.kind === "revive" && P.total && u.reduce((a, i) => a + DEF[P.ids[i]].cost, 0) > P.total) return false;
+  return true;
+}
+/* CPU（と時間切れ）の選び方 */
+function pickBest(pi) {
+  const P = S.pick; if (!P) return [];
+  if (P.kind === "revive") {
+    const order = P.ids.map((id, i) => i).sort((a, b) => DEF[P.ids[b]].cost - DEF[P.ids[a]].cost || unitValue({ id: P.ids[b], atk: DEF[P.ids[b]].atk, hp: DEF[P.ids[b]].hp, maxHp: DEF[P.ids[b]].hp }) - unitValue({ id: P.ids[a], atk: DEF[P.ids[a]].atk, hp: DEF[P.ids[a]].hp, maxHp: DEF[P.ids[a]].hp }));
+    const out = []; let sum = 0;
+    order.forEach(i => { if (out.length >= P.max) return; const c = DEF[P.ids[i]].cost; if (P.total && sum + c > P.total) return; out.push(i); sum += c; });
+    return out;
+  }
+  // 道連れ：相手キャラの平均より安い自分のキャラ（亡霊は墓地から戻せるので安く見る）を、相手の数まで
+  const me = S.players[pi], en = S.players[opp(pi)].field.filter(u => u.hp > 0);
+  if (!en.length) return [];
+  const avg = en.reduce((a, u) => a + unitValue(u), 0) / en.length;
+  return P.uids.map((uid, i) => ({ i, u: me.field.find(x => x.uid === uid) })).filter(x => x.u && !kw(x.u, "unbreakable"))
+    .map(x => ({ i: x.i, v: unitValue(x.u) - (kw(x.u, "ghost") ? 2 : 0) })).filter(x => x.v < avg).sort((a, b) => a.v - b.v).slice(0, en.length).map(x => x.i);
+}
+function resolvePick(pi, sel, inline) {
+  const P = S.pick; if (!P || P.pi !== pi) return false;
+  if (!pickOK(P, sel)) { if (!inline) return false; sel = []; }
+  S.pick = null;
+  const me = S.players[pi];
+  if (P.kind === "revive") {
+    if (!sel.length) log(`${pname(pi)}は墓地から何も出さなかった。`);
+    sel.forEach(i => {
+      const id = P.ids[i]; if (fieldFull(me)) return;
+      gyTake(me, id);
+      const u = addUnit(pi, id);
+      if (P.mod === "rusty") { u.lostKws = ["ghost"]; u.armorPlus = (u.armorPlus || 0) + 1; }
+      log(`${cname(id)}が墓地から現れた！${P.mod === "rusty" ? "（亡霊を失い、装甲1を得た）" : ""}`);
+      if (!SIM) fx(unitSel(u.uid), "墓地から", "voidback");
+      queueTrig(pi, "revived", u);
+    });
+  } else if (P.kind === "pact") {
+    let k = 0;
+    sel.forEach(i => { const u = me.field.find(x => x.uid === P.uids[i]); if (u && u.hp > 0 && fxDestroy(u)) k++; });
+    const en = S.players[opp(pi)];
+    for (let j = 0; j < k; j++) {
+      const L = en.field.filter(u => u.hp > 0 && !u.pactHit); if (!L.length) break;
+      const t = L[Math.floor(Math.random() * L.length)]; t.pactHit = true; fxDestroy(t);
+    }
+    en.field.forEach(u => delete u.pactHit);
+    log(k ? `${pname(pi)}は自分のキャラ${k}体を道連れにした。` : `${pname(pi)}は何も破壊しなかった。`);
+  }
+  if (!inline) { cleanup(); if (!checkWin() && !SIM) render(); }
+  return true;
+}
+const Pick = {
+  el: null, sel: [],
+  after() {
+    const P = S && S.pick, mine = P && P.pi === ME && !S.over;
+    if (!mine) { if (this.el) { this.el.remove(); this.el = null; } this.sel = []; return; }
+    const key = `${S.gid}|${P.kind}|${(P.ids || P.uids).join(",")}`;
+    if (!this.el || this.el.dataset.key !== key) { this.sel = []; }
+    if (!this.el) { this.el = document.createElement("div"); this.el.className = "mullp digp pickp in"; document.body.appendChild(this.el); }
+    this.el.dataset.key = key;
+    this.paint();
+  },
+  paint() {
+    const P = S.pick; if (!P || !this.el) return;
+    const me = S.players[ME];
+    const items = P.kind === "revive" ? P.ids.map(id => ({ id })) : P.uids.map(uid => { const u = me.field.find(x => x.uid === uid); return { id: u ? u.id : "", u }; });
+    const sum = P.kind === "revive" ? this.sel.reduce((a, i) => a + DEF[P.ids[i]].cost, 0) : 0;
+    const head = P.kind === "revive" ? `亡霊を${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ` : "道連れにするキャラを選ぶ";
+    const sub = P.kind === "revive" ? `墓地から場に出します（${P.total ? `合計コスト ${sum} / ${P.total}` : `${this.sel.length} / ${P.max}体`}）` : `${this.sel.length}体を選択中。同じ数の相手キャラがランダムに破壊されます`;
+    this.el.innerHTML = `<div class="mullp-in">
+      <div class="pg-title sm"><b>${esc(head)}</b></div>
+      <p class="pick-sub">${esc(sub)}</p>
+      <div class="dig-row pick-row">${items.map((x, i) => `<div class="dig-c ${this.sel.includes(i) ? "on" : ""}"><button type="button" class="dig-card" data-act="pickT" data-i="${i}" aria-pressed="${this.sel.includes(i)}" aria-label="${esc(DEF[x.id] ? DEF[x.id].name : "")}">${DEF[x.id] ? cardHTML(DEF[x.id], { static: true }) : ""}${x.u ? `<span class="pick-st">${x.u.atk}/${x.u.hp}</span>` : ""}</button>
+        <button type="button" class="cdlink pick-info" data-tk="${esc(x.id)}">効果を見る</button></div>`).join("")}</div>
+      <div class="pick-go"><button type="button" class="btn primary" data-act="pickGo">${this.sel.length ? "これで決定" : P.kind === "revive" ? "出さない" : "破壊しない"}</button></div></div>`;
+  },
+  toggle(i) {
+    const P = S && S.pick; if (!P) return;
+    const k = this.sel.indexOf(i);
+    if (k >= 0) this.sel.splice(k, 1);
+    else {
+      const next = [...this.sel, i];
+      if (!pickOK(P, next)) { toast(P.kind === "revive" && next.length <= P.max ? "合計コストが上限をこえます" : `${P.max}体までです`); return; }
+      this.sel = next;
+    }
+    Sound.play("tap"); this.paint();
+  }
+};
+function doPick() {
+  if (!S || !S.pick || S.pick.pi !== ME) return;
+  const sel = [...Pick.sel];
+  if (MODE === "online" && Online.role === "guest") return Online.send({ t: "pick", sel });
+  resolvePick(ME, sel);
+}
+/* 場にいる間ずっと働く力（card.aura）。cleanup のたびに、今あるべき強化との差だけ直す */
+function auraWant(pi, u) {
+  const p = S.players[pi], c = DEF[u.id]; let a = 0, h = 0;
+  if (!c) return [0, 0];
+  p.field.forEach(x => {
+    if (x === u || x.silenced || x.hp <= 0) return;
+    const A = DEF[x.id] && DEF[x.id].aura; if (!A || A.kind !== "stat") return;
+    if (A.world && c.world !== A.world) return; if (A.tribe && c.tribe !== A.tribe) return;
+    a += A.atk || 0; h += A.hp || 0;
+  });
+  const A = !u.silenced && c.aura; if (A && A.kind === "self") a += Math.min(A.max || 4, gyChars(p).filter(isGhostCard).length);
+  return [a, h];
+}
+function applyAuras() {
+  S.players.forEach((p, pi) => p.field.forEach(u => {
+    if (u.hp <= 0) return;
+    const [a, h] = auraWant(pi, u), da = a - (u.auraA || 0), dh = h - (u.auraH || 0);
+    if (da) { u.atk = Math.max(0, u.atk + da); u.auraA = a; }
+    if (dh) { u.maxHp += dh; u.hp = dh > 0 ? u.hp + dh : Math.max(1, Math.min(u.hp, u.maxHp)); u.auraH = h; }
+  }));
+}
+function stripAura(u) {
+  if (u.auraA) u.atk = Math.max(0, u.atk - u.auraA);
+  if (u.auraH) { u.maxHp -= u.auraH; u.hp = Math.max(1, Math.min(u.hp, u.maxHp)); }
+  u.auraA = 0; u.auraH = 0;
+}
 function endTurn(pi) {
   if (S.over || S.phase !== "play" || S.turn !== pi) return;
   if (S.dig && S.dig.pi === pi) resolveDig(pi, digBest(pi, S.dig.ids));   // 時間切れなど：選ばずに終わったら、自動で選ぶ
+  if (S.pick && S.pick.pi === pi) resolvePick(pi, S.pick.kind === "revive" ? pickBest(pi) : [], true);
   if (pi === ME) ui = { sel: null, mode: null };
   S.players[pi].field.forEach(u => {
     if (kw(u, "regen") && u.hp > 0 && u.hp < u.maxHp) { fx(unitSel(u.uid), "+" + (u.maxHp - u.hp), "heal"); u.hp = u.maxHp; log(`${cname(u.id)}は再生した。`); }
@@ -292,6 +428,8 @@ function endTurn(pi) {
   trigUnits(opp(pi), "oppTurnEnd");   // 相手のターンの終わりに発動する効果
   cleanup();
   if (checkWin()) return;
+  // 潜航：自分のターンの終わりに亜空間へ（次の自分のターンの始めに戻る）
+  S.players[pi].field.filter(u => u.hp > 0 && kw(u, "dive")).forEach(u => banishUnit(pi, u));
   // 「このターンだけ」の能力・装甲・コスト低下を消す
   S.players.forEach(p => {
     p.handCutT = [];
@@ -347,11 +485,18 @@ function returnFromVoid(pi) {
   log(`${pname(pi)}のキャラが亜空間から戻った。`);
   back.forEach(u => fx(unitSel(u.uid), "帰還", "voidback"));
   back.forEach(u => queueTrig(pi, "voidBack", u));
+  back.forEach(u => trigUnits(opp(pi), "foeBack", null, { foe: u.uid }));
 }
 
 /* ---------- カードを使う ---------- */
 /* キャラの能力：カードの能力＋効果で与えられた能力（u.kws）。沈黙したキャラは何も持たない */
-const kw = (u, k) => !!(u && !u.silenced && DEF[u.id] && (DEF[u.id].keywords.includes(k) || (u.kws || []).includes(k)));
+const kw = (u, k) => !!(u && !u.silenced && DEF[u.id] && (DEF[u.id].keywords.includes(k) || (u.kws || []).includes(k)) && !(u.lostKws && u.lostKws.includes(k)));
+/* 第3弾：カード・キャラの絞り込み（世界・種族・元のコスト・能力） */
+const cardMatch = (c, e) => !!c && (!e || ((!e.world || c.world === e.world) && (!e.tribe || c.tribe === e.tribe) && (e.cmax == null || c.cost <= e.cmax)));
+const unitMatch = (u, e) => !!u && !!DEF[u.id] && cardMatch(DEF[u.id], e) && (!e || !e.kwf || kw(u, e.kwf));
+const isGhostCard = id => !!(DEF[id] && DEF[id].type === "char" && (DEF[id].keywords || []).includes("ghost"));
+/* 凪：相手の場に凪を持つキャラがいると、出たターンのキャラは攻撃できない */
+const calmOn = pi => !!(S && S.players[opp(pi)] && S.players[opp(pi)].field.some(x => kw(x, "calm")));
 const armorOf = u => (u.silenced ? 0 : ((DEF[u.id] && DEF[u.id].armor) || 0) + (u.armorPlus || 0));
 /* 隠密（攻撃するまで）・聖盾（1回使うまで） */
 const hidden = u => kw(u, "stealth") && !u.revealed;
@@ -366,12 +511,17 @@ function roleWorld(d, role) {
   const e = d && (d.effects || []).find(e => e.kind === "unit" && e.world && UTOS[e.to] && UTOS[e.to].role === role && whenOf(e) === "play");
   return e ? e.world : null;
 }
+/* その役割の対象の絞り込み（世界・種族・コストの上限）をまとめて見る */
+function roleEff(d, role) { return d && (d.effects || []).find(e => e.kind === "unit" && UTOS[e.to] && UTOS[e.to].role === role && whenOf(e) === "play" && (e.world || e.tribe || e.cmax != null || e.kwf)) || null; }
+const roleOK = (u, d, role) => { const e = roleEff(d, role); return !e || unitMatch(u, e); };
 const worldOK = (u, w) => !w || (DEF[u.id] && DEF[u.id].world === w);
+/* 対象の絞り込みに合わないキャラを押したときの説明 */
+const roleNg = (d, role) => { const e = roleEff(d, role); return e ? `${filtNo(e).replace(/の$/, "")}のキャラを選んでください` : ""; };
+const isEnemyRole = r => r === "enemy" || r === "enemyF" || r === "enemy2";
 function targetables(pi, role, d) {
-  const w = roleWorld(d, role);
-  if (role === "any") return [...S.players[pi].field, ...S.players[opp(pi)].field.filter(canTarget)].filter(u => worldOK(u, w));
-  const f = S.players[roleSide(pi, role)].field.filter(u => worldOK(u, w));
-  return role === "enemy" || role === "enemyF" ? f.filter(canTarget) : f;
+  if (role === "any") return [...S.players[pi].field, ...S.players[opp(pi)].field.filter(canTarget)].filter(u => roleOK(u, d, role));
+  const f = S.players[roleSide(pi, role)].field.filter(u => roleOK(u, d, role));
+  return isEnemyRole(role) ? f.filter(canTarget) : f;
 }
 /* その役割で選べるもの（uid の並び。「相手（キャラかプレイヤー）」は "face" も選べる） */
 function targetOpts(pi, role, d) {
@@ -380,10 +530,10 @@ function targetOpts(pi, role, d) {
 }
 /* 役割ごとに、そのキャラ（またはプレイヤー）を選べるか */
 function roleAllows(pi, role, owner, u, d) {
-  if (!worldOK(u, roleWorld(d, role))) return false;
+  if (!roleOK(u, d, role)) return false;
   if (role === "any") return owner === pi || canTarget(u);
   if (owner !== roleSide(pi, role)) return false;
-  return role === "enemy" || role === "enemyF" ? canTarget(u) : true;
+  return isEnemyRole(role) ? canTarget(u) : true;
 }
 /* コスト：次の1枚だけ下げる（discount）＋「コストを下げる」効果。
    コストを下げる効果は、そのとき手札にあるカード1枚ずつに付く（p.handCut＝ずっと、p.handCutT＝このターンだけ。手札と同じ並び）。
@@ -391,7 +541,12 @@ function roleAllows(pi, role, owner, u, d) {
 function handCutAt(p, idx) { return idx == null ? 0 : ((p.handCut || [])[idx] || 0) + ((p.handCutT || [])[idx] || 0); }
 function effCost(pi, d, idx) {
   const p = S.players[pi];
-  return Math.max(0, d.cost - (p.discount || 0) - handCutAt(p, idx));
+  return Math.max(0, d.cost - (p.discount || 0) - handCutAt(p, idx) - auraCut(pi, d));
+}
+/* オクタ：場にいる間、クラゲ魔法のコストが下がる */
+function auraCut(pi, d) {
+  if (!isJellySpell(d) || !S || !S.players[pi]) return 0;
+  return S.players[pi].field.reduce((a, u) => { const A = !u.silenced && DEF[u.id] && DEF[u.id].aura; return a + (A && A.kind === "cost" ? A.n || 0 : 0); }, 0);
 }
 /* 手札から idx のカードを抜く（コスト低下の並びも一緒に） */
 function handTake(p, idx) {
@@ -406,16 +561,16 @@ function handReset(p) { p.handCut = []; p.handCutT = []; p.handGrow = []; }
 const handGrowAt = (p, idx) => (p.handGrow || [])[idx] || 0;
 
 /* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか（any は両方） */
-function roleSide(pi, role) { return role === "enemy" || role === "enemyF" ? opp(pi) : pi; }
+function roleSide(pi, role) { return isEnemyRole(role) ? opp(pi) : pi; }
 /* 実際に選ぶ必要がある対象（キャラで、その側にキャラがいない効果は選ばずに空振り） */
 function neededRoles(pi, d) {
-  return cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > 0);
+  return cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > (r === "enemy2" ? 1 : 0));   // 2体目は、2体以上いるときだけ選ぶ
 }
 
 /* 使える条件（card.req）：自分の場に（世界の）キャラが N 体以上、または（orEmpty）自分の場が空 */
 function reqOK(pi, r) {
   const f = S.players[pi].field;
-  const n = f.filter(u => !r.world || (DEF[u.id] && DEF[u.id].world === r.world)).length;
+  const n = f.filter(u => (!r.world || (DEF[u.id] && DEF[u.id].world === r.world)) && (!r.tribe || (DEF[u.id] && DEF[u.id].tribe === r.tribe))).length;
   return n >= (r.n || 0) || (r.orEmpty && f.length === 0);
 }
 function canPlay(pi, idx) {
@@ -430,6 +585,13 @@ function canPlay(pi, idx) {
   if (d.pay && d.pay.kind === "life" && p.hp <= d.pay.n) return { ok: false, reason: "代償の体力が足りません" };
   if (d.type === "char" && fieldFull(p) && !sac) return { ok: false, reason: voidOf(p).length ? "空いている場所がありません（亜空間のキャラが戻る場所です）" : "場がいっぱいです" };
   if (d.type === "spell" && d.effects.some(e => e.kind === "banishOwn") && d.effects.every(e => e.kind === "banishOwn") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
+  // 第3弾
+  if (d.effects.some(e => e.kind === "cheat") && !p.hand.some((id, i) => i !== idx && DEF[id] && DEF[id].type === "char" && (!d.effects.find(e => e.kind === "cheat").tribe || DEF[id].tribe === d.effects.find(e => e.kind === "cheat").tribe))) return { ok: false, reason: "手札に出せる海獣がいません" };
+  if (d.effects.some(e => e.kind === "cheat") && fieldFull(p)) return { ok: false, reason: "場がいっぱいです" };
+  if (d.type === "spell" && d.effects.some(e => e.kind === "pact") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
+  { const t = d.effects.find(e => e.kind === "toss"); if (t && !p.hand.some((id, i) => i !== idx && id !== GEAR_ID && DEF[id] && (!t.ctype || DEF[id].type === t.ctype))) return { ok: false, reason: `捨てる${t.ctype === "char" ? "キャラ" : "カード"}が手札にありません` }; }
+  if (d.type === "spell" && d.effects.length && d.effects.every(e => e.cond === "ghostArmy") && !condOK(pi, d.effects[0], null)) return { ok: false, reason: condText(d.effects[0], false).replace(/ば$/, "ば使えます") };
+  if (d.type === "spell" && !d.pay && d.effects.length && d.effects.every(e => e.kind === "reviveSel") && !reviveCands(pi, d.effects[0]).length) return { ok: false, reason: "墓地に出せる亡霊がいません" };
   if (d.type === "spell" && d.effects.length && d.effects.every(e => e.kind === "merge") && !d.effects.some(e => p.field.filter(u => u.id === e.card).length >= e.n)) return { ok: false, reason: "合体に必要なキャラがそろっていません" };
   // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
   const enemyOnly = e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0);
@@ -438,6 +600,7 @@ function canPlay(pi, idx) {
   // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
   if (d.type === "spell") {
     for (const r of cardTargetRoles(d)) {
+      if (r === "enemy2") continue;   // 2体目は「まで」
       if (!targetOpts(pi, r, d).length) return { ok: false, reason: roleWorld(d, r) ? `対象にできる${WORLDS[roleWorld(d, r)]}のキャラがいません` : r === "enemy" ? (S.players[opp(pi)].field.length ? "対象に選べる相手キャラがいません（隠密・呪文耐性）" : "対象の相手キャラがいません") : "対象の自分のキャラがいません" };
     }
   }
@@ -464,6 +627,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   for (const r of roles) {
     if (!targetOpts(pi, r, d).includes(targets[r])) return false;
   }
+  if (targets.enemy2 != null && targets.enemy2 === targets.enemy) return false;   // 2体目は1体目とちがうキャラ
   const cost = effCost(pi, d, idx);
   const grow = handGrowAt(p, idx);
   const spend = d.gear === "all" ? gearsOf(p) : useGear && gearChoice(pi, idx) ? d.gear : 0;
@@ -492,10 +656,17 @@ function playCard(pi, idx, targetsIn, useGear) {
     if (playEffects(d).length) fx(unitSel(self.uid), id, "land");
     if (kw(self, "guard")) fx(unitSel(self.uid), "守護", "guard");
   }
-  S.gearSpent = spend; S.bouncedNow = 0; S.hitNow = 0; S.castWorld = d.world;
+  S.gearSpent = spend; S.bouncedNow = 0; S.hitNow = 0; S.castWorld = d.world; S.milled = null; S.killNow = 0;
   S.dmgBonus = grow && d.grow.dmg ? grow : 0;
   S.numBonus = grow && d.grow.num ? grow : 0;
-  try { runEffects(pi, d, targets, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; }
+  // 揺らぎ：使ったときに中身が決まる（ランダム）
+  let runD = d;
+  if (Array.isArray(d.sway) && d.sway.length) {
+    const opt = d.sway[Math.floor(Math.random() * d.sway.length)];
+    if (DEF[opt]) { runD = DEF[opt]; log(`揺らぎ：${cname(id)}の中身は「${cname(opt)}」だった！`); fx("reveal", opt, `reveal:${pi}:揺らぎで決まった中身`); }
+  }
+  try { runEffects(pi, runD, runD === d ? targets : {}, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; S.milled = null; }
+  if (isJellySpell(d)) p.jellyN = (p.jellyN || 0) + 1;   // この対戦で使ったクラゲ魔法の数（満ち潮の夜）
   stat(pi, d.type === "spell" ? "spell" : "char");
   if (d.type === "spell") { trigUnits(pi, "spell"); (p.used || (p.used = [])).push(id); gyAdd(p, id); }   // 使った魔法（墓地の画面で見せる）
   trigUnits(pi, "cardPlay", self, { card: id });
@@ -511,7 +682,7 @@ function playCard(pi, idx, targetsIn, useGear) {
 
 function addUnit(pi, id) {
   const d = DEF[id];
-  const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, born: S.turnNo, ready: (d.keywords.includes("haste") || d.keywords.includes("rush")) && !d.keywords.includes("noattack") };
+  const u = { uid: ++S.uidN, id, atk: d.atk, hp: d.hp, maxHp: d.hp, born: S.turnNo, ready: (d.keywords.includes("haste") || d.keywords.includes("rush")) && !d.keywords.includes("noattack") && !calmOn(pi) };
   S.players[pi].field.push(u);
   trigUnits(pi, "allyEnter", u);
   return u;
@@ -540,6 +711,10 @@ function condOK(pi, e, self) {
     case "gearNone": return !(S.gearSpent > 0);
     case "hurtLT": return !!self && (self.hurt || 0) < e.cn;    // マモル：ダメージを受けて生き残った回数（survive のたびに1増える）
     case "hurtEQ": return !!self && (self.hurt || 0) === e.cn;
+    case "milledGhost": return (S.milled || []).some(isGhostCard);
+    case "killedNow": return (S.killNow || 0) > 0;
+    case "tribeGE": return p.field.filter(u => u.hp > 0 && DEF[u.id] && DEF[u.id].tribe === e.ctribe).length >= e.cn;
+    case "ghostArmy": return p.field.length > 0 && p.field.every(u => kw(u, "ghost")) && gyChars(p).length >= e.cn;
   }
   return true;
 }
@@ -549,11 +724,13 @@ function sideOf(u) { return S.players.findIndex(p => p.field.includes(u)); }
 /* 汎用「キャラに効果」の対象を集める */
 function unitTargets(pi, e, targets, self) {
   const me = S.players[pi], en = S.players[opp(pi)];
-  const wf = u => !e.world || (DEF[u.id] && DEF[u.id].world === e.world);
+  const wf = u => unitMatch(u, e);
   const rnd = a => a.length ? [a[Math.floor(Math.random() * a.length)]] : [];
   switch (e.to) {
     // 同じカードに「相手キャラか相手プレイヤー」の効果もあると、選んだ対象は enemyF に入る（歯車式カタパルトなど）
     case "enemy1": { const t = targets.enemy != null ? targets.enemy : targets.enemyF; const u = en.field.find(x => x.uid === t && wf(x)); return u ? [u] : []; }
+    case "enemy2": { const u = en.field.find(x => x.uid === targets.enemy2 && x.uid !== targets.enemy && wf(x)); return u ? [u] : []; }
+    case "enemyLow": { const L = en.field.filter(x => x.hp > 0 && wf(x)); if (!L.length) return []; const lo = Math.min(...L.map(x => DEF[x.id].cost)); return rnd(L.filter(x => DEF[x.id].cost === lo)); }
     case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self && wf(x)); return u ? [u] : []; }
     case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }
     case "enemyF": { if (targets.enemyF === "face") return ["face"]; const u = en.field.find(x => x.uid === targets.enemyF); return u ? [u] : []; }
@@ -595,8 +772,9 @@ function unitEach(pi, e, list, self, me, n) {
     }
     const side = sideOf(u); if (side < 0) return;
     switch (e.act) {
-      case "dmg": if (e.to === "enemyRand" || e.to === "enemyRandF") log(`${cname(u.id)}に${n}ダメージ。`); hitUnit(u, n); break;
-      case "destroy": destroyUnit(u); break;
+      case "dmg": if (e.to === "enemyRand" || e.to === "enemyRandF") log(`${cname(u.id)}に${n}ダメージ。`); { const was = u.hp; hitUnit(u, n); if (was > 0 && u.hp <= 0) S.killNow = (S.killNow || 0) + 1; } break;
+      case "destroy": fxDestroy(u); break;
+      case "bottom": bounce(side, u, "bottom"); break;
       case "freeze": freezeUnit(u); break;
       case "unfreeze": {
         if (!u.frozen && !u.thawed) break;   // 行動不能でないキャラには何もしない
@@ -619,6 +797,7 @@ function unitEach(pi, e, list, self, me, n) {
       case "swap": swapStats(u); break;
       case "reset": {   // カードの元の攻撃力・体力に戻す（受けたダメージで元より低い体力は、そのまま）
         const d = DEF[u.id]; if (!d || d.type !== "char") break;
+        stripAura(u);
         if (u.atk === d.atk && u.maxHp === d.hp) break;
         delete u.tmpAtk;
         u.atk = d.atk; u.maxHp = d.hp; u.hp = Math.min(u.hp, u.maxHp);
@@ -629,7 +808,7 @@ function unitEach(pi, e, list, self, me, n) {
         const t = DEF[e.card], before = cname(u.id);
         if (t && t.type === "char") { u.id = t.id; u.atk = t.atk; u.hp = t.hp; u.maxHp = t.hp; u.silenced = false; }
         else { u.atk = 1; u.hp = 1; u.maxHp = 1; u.silenced = true; }
-        u.kws = []; u.armorPlus = 0; u.frozen = false; u.winIn = null;
+        u.kws = []; u.armorPlus = 0; u.frozen = false; u.winIn = null; u.auraA = 0; u.auraH = 0; delete u.lostKws;
         log(`${before}は${t ? cname(t.id) : "1/1"}に変身した。`); fx(unitSel(u.uid), "変身", "poof");
         break;
       }
@@ -637,7 +816,7 @@ function unitEach(pi, e, list, self, me, n) {
         if (fieldFull(me)) { log("場に空いている場所がなく、複製できなかった。"); break; }
         const c = addUnit(pi, u.id);
         // 受けたダメージ・強化・与えられた能力・沈黙も写す（行動不能と、特殊勝利の数は写さない）
-        Object.assign(c, { atk: u.atk, hp: u.hp, maxHp: u.maxHp, kws: [...(u.kws || [])], armorPlus: u.armorPlus || 0, silenced: !!u.silenced, shieldUsed: !!u.shieldUsed,
+        Object.assign(c, { atk: u.atk - (u.auraA || 0), hp: Math.max(1, u.hp - (u.auraH || 0)), maxHp: u.maxHp - (u.auraH || 0), ...(u.lostKws ? { lostKws: [...u.lostKws] } : {}), kws: [...(u.kws || [])], armorPlus: u.armorPlus || 0, silenced: !!u.silenced, shieldUsed: !!u.shieldUsed,
           ...(u.tmpKws ? { tmpKws: [...u.tmpKws] } : {}), ...(u.tmpArmor ? { tmpArmor: u.tmpArmor } : {}) });
         c.ready = false;
         log(`${cname(u.id)}の複製が現れた。`); fx(unitSel(c.uid), "複製", "heal");
@@ -664,7 +843,7 @@ function boltFx(pi, self, sels) {
   sels.forEach((t, i) => fx(src, t, `bolt:${w}${i < sels.length - 1 ? ":m" : ""}`));
 }
 /* 体力を下げる（最大値も下がる。0以下になったら倒れる） */
-function shrinkHp(u, n) { u.maxHp = Math.max(0, u.maxHp - n); u.hp = Math.min(u.hp, u.maxHp); fx(unitSel(u.uid), `体力-${n}`, "dmg"); if (u.hp <= 0) u.destroyed = true; }
+function shrinkHp(u, n) { if (unbowed(u)) return; u.maxHp = Math.max(0, u.maxHp - n); u.hp = Math.min(u.hp, u.maxHp); fx(unitSel(u.uid), `体力-${n}`, "dmg"); if (u.hp <= 0) u.destroyed = true; }
 function playerEffect(pi, e, self) {
   const who = e.who === "self" ? [pi] : e.who === "both" ? [pi, opp(pi)] : [opp(pi)], n = e.n;
   if (e.act === "dmg") boltFx(pi, self, who.map(playerSel));
@@ -672,7 +851,7 @@ function playerEffect(pi, e, self) {
     const p = S.players[q];
     switch (e.act) {
       case "dmg": log(`${pname(q)}に${n}ダメージ。`); hitPlayer(q, n); break;
-      case "heal": p.hp += n; log(`${pname(q)}の体力が${n}回復。`); fx(playerSel(q), "+" + n, "heal"); trigUnits(q, "healed"); break;
+      case "heal": p.hp += n; log(`${pname(q)}の体力が${n}回復。`); fx(playerSel(q), "+" + n, "heal"); trigUnits(q, "healed", null, { amt: n }); break;
       case "draw": for (let i = 0; i < n; i++) draw(q); break;
       case "discard":
         for (let i = 0; i < n && p.hand.length; i++) discardRandom(q, pi);
@@ -720,6 +899,8 @@ function effect(pi, e, targets, self) {
     if (e.split) { const one = { ...e, per: null, split: false }; for (let i = 0; i < k && !S.over; i++) { effect(pi, one, targets, self); } return; }   // 1回ずつ、ランダムな対象を選び直す
     e = { ...e, n: e.n * k };
   }
+  if (e.per === "milledGhost") { const k = (S.milled || []).filter(isGhostCard).length; if (!k) return; e = { ...e, n: e.n * k }; }
+  if (e.plus) { const k = Math.min(e.plusMax || 2, S.players[pi].field.filter(u => u.hp > 0 && DEF[u.id] && DEF[u.id].tribe === e.plus).length); e = { ...e, n: e.n + k }; }
   if (S.dmgBonus && e.act === "dmg" && (e.kind === "unit" || e.kind === "player")) e = { ...e, n: e.n + S.dmgBonus };   // 妖気（ダメージ）
   else if (S.numBonus && e.n > 0 && e.act !== "dmg" && !["costDown", "winTimer", "merge", "tutor"].includes(e.kind)) e = { ...e, n: e.n + S.numBonus };   // 妖気（そのほかの数）
   if (e.kind === "unit") return unitEffect(pi, e, targets, self);
@@ -733,7 +914,7 @@ function effect(pi, e, targets, self) {
       const k = Math.min(n || 3, me.deck.length); if (!k) { log("山札にカードがなかった。"); break; }
       const ids = me.deck.splice(me.deck.length - k, k).reverse();   // 山札の上（末尾）から順に
       if (S.dig) { me.deck.unshift(...ids); break; }   // 選んでいる途中にもう1回は起きない（念のため）
-      S.dig = { pi, ids };
+      S.dig = { pi, ids, ...(e.rest === "grave" ? { rest: "grave" } : {}) };
       if (SIM || digAuto(pi)) resolveDig(pi, digBest(pi, ids));
       else log(`${pname(pi)}は山札の上から${k}枚を見ている。`);
       break;
@@ -780,8 +961,8 @@ function effect(pi, e, targets, self) {
     case "dmgAll": if (en.field.length) { log(`相手キャラ全体に${n}ダメージ。`); en.field.forEach(u => hitUnit(u, n)); } break;
     case "dmgAllBoth": log(`すべてのキャラに${n}ダメージ。`); [...en.field, ...me.field].forEach(u => hitUnit(u, n)); break;
     case "dmgFace": log(`${pname(opp(pi))}に${n}ダメージ。`); hitPlayer(opp(pi), n); break;
-    case "destroyTarget": { const u = enemyT(); if (u) destroyUnit(u); break; }
-    case "destroyAll": log("すべてのキャラが破壊された。"); [...en.field, ...me.field].forEach(destroyUnit); break;
+    case "destroyTarget": { const u = enemyT(); if (u) fxDestroy(u); break; }
+    case "destroyAll": log("すべてのキャラが破壊された。"); [...en.field, ...me.field].forEach(fxDestroy); break;
     case "freezeTarget": { const u = enemyT(); if (u) freezeUnit(u); break; }
     case "freezeAll": en.field.forEach(freezeUnit); break;
     case "debuffTarget": { const u = enemyT(); if (u) debuff(u, n); break; }
@@ -791,7 +972,7 @@ function effect(pi, e, targets, self) {
     case "buffBoth": { const u = ownT(); if (u) buff(u, n, n); break; }
     case "buffAllAtk": me.field.forEach(u => buff(u, n, 0)); break;
     case "buffAllBoth": me.field.forEach(u => buff(u, n, n)); break;
-    case "heal": me.hp += n; log(`${pname(pi)}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); trigUnits(pi, "healed"); break;
+    case "heal": me.hp += n; log(`${pname(pi)}の体力が${n}回復。`); fx(playerSel(pi), "+" + n, "heal"); trigUnits(pi, "healed", null, { amt: n }); break;
     case "buffSelfAtk": if (self && self.hp > 0) buff(self, n, 0); break;
     case "buffSelfBoth": if (self && self.hp > 0) buff(self, n, n); break;
     case "readySelf": if (self && self.hp > 0 && me.field.includes(self)) {
@@ -870,7 +1051,7 @@ function effect(pi, e, targets, self) {
       break;
     }
     case "tutor": {
-      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => { const c = DEF[x.id]; return c && inCost(c, n, e) && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype); });
+      const cands = me.deck.map((id, i) => ({ id, i })).filter(x => { const c = DEF[x.id]; return c && inCost(c, n, e) && (!e.world || c.world === e.world) && (!e.ctype || c.type === e.ctype) && (!e.tribe || c.tribe === e.tribe); });
       if (!cands.length) { log("条件に合うカードが山札になかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
       me.deck.splice(pick.i, 1);
@@ -912,11 +1093,128 @@ function effect(pi, e, targets, self) {
       if (!cands.length) { log("復活できるキャラがいなかった。"); break; }
       const pick = cands[Math.floor(Math.random() * cands.length)];
       gyTake(me, pick.id);
-      addUnit(pi, pick.id);
+      queueTrig(pi, "revived", addUnit(pi, pick.id));
       log(`${cname(pick.id)}が復活した！`);
       break;
     }
     case "discount": me.discount = (me.discount || 0) + n; log(`${pname(pi)}の次のカードのコストが${n}下がる。`); break;
+    /* ---------- 第3弾 ---------- */
+    case "toss": {   // 自分の手札の（種類の）カードをランダムに捨てる
+      for (let i = 0; i < (n || 1); i++) {
+        const L = me.hand.map((id, j) => j).filter(j => me.hand[j] !== GEAR_ID && DEF[me.hand[j]] && (!e.ctype || DEF[me.hand[j]].type === e.ctype));
+        if (!L.length) break;
+        const id = handTake(me, L[Math.floor(Math.random() * L.length)]); gyAdd(me, id);
+        log(`${pname(pi)}は${cname(id)}を捨てた。`); if (!SIM) fx("reveal", id, `reveal:${pi}:捨てたカード`);
+      }
+      break;
+    }
+    case "mill": {
+      const k = Math.min(n, me.deck.length); if (!k) { log("山札にカードがなかった。"); S.milled = []; break; }
+      const ids = me.deck.splice(me.deck.length - k, k).reverse();
+      ids.forEach(id => gyAdd(me, id));
+      S.milled = ids;
+      log(`${pname(pi)}の山札の上から墓地へ：${ids.map(cname).join("・")}`);
+      if (!SIM) fx(playerSel(pi), `墓地へ${k}枚`, "trig");
+      break;
+    }
+    case "peekMill": {
+      const id = me.deck[me.deck.length - 1]; if (!id) break;
+      if (isGhostCard(id)) { me.deck.pop(); gyAdd(me, id); S.milled = [id]; log(`${pname(pi)}は山札の上の${cname(id)}を墓地へ送った。`); }
+      else log(`${pname(pi)}は山札の上を見て、そのまま戻した。`, { pi, msg: `${pname(pi)}は山札の上の${cname(id)}を見て、そのまま戻した。` });
+      break;
+    }
+    case "reviveSel": {
+      const ids = reviveCands(pi, e), free = CONFIG.FIELD_MAX - me.field.length - voidOf(me).length;
+      if (!ids.length) { log("墓地に出せる亡霊がいなかった。"); break; }
+      if (free <= 0) { log("場に空いている場所がなく、出せなかった。"); break; }
+      if (S.pick) break;
+      S.pick = { pi, kind: "revive", ids, max: Math.min(e.cnt || 1, free), total: e.total || 0, mod: e.mod || "" };
+      if (SIM || digAuto(pi)) resolvePick(pi, pickBest(pi), true);
+      else log(`${pname(pi)}は墓地から出すキャラを選んでいる。`);
+      break;
+    }
+    case "pact": {
+      const L = me.field.filter(u => u.hp > 0);
+      if (!L.length || S.pick) break;
+      S.pick = { pi, kind: "pact", uids: L.map(u => u.uid), max: L.length };
+      if (SIM || digAuto(pi)) resolvePick(pi, pickBest(pi), true);
+      else log(`${pname(pi)}は破壊する自分のキャラを選んでいる。`);
+      break;
+    }
+    case "graveHand": {
+      for (let i = 0; i < n; i++) {
+        const L = gyChars(me).filter(isGhostCard); if (!L.length) { if (!i) log("墓地に亡霊のキャラがいなかった。"); break; }
+        const id = L[Math.floor(Math.random() * L.length)];
+        if (me.hand.length >= CONFIG.HAND_MAX) { log("手札がいっぱいで、戻せなかった。"); break; }
+        gyTake(me, id); me.hand.push(id); log(`${pname(pi)}は墓地の${cname(id)}を手札に戻した。`);
+      }
+      break;
+    }
+    case "ward":
+      if (me.ward) { log(`${pname(pi)}にはもう結界がある。`); break; }
+      me.ward = 1; log(`${pname(pi)}は結界を張った（次のダメージを1回だけ防ぐ）。`); fx(playerSel(pi), "結界", "heal"); break;
+    case "jellyHand": {
+      let k = 0;
+      for (let i = 0; i < n && me.hand.length < CONFIG.HAND_MAX; i++) { const id = JELLY_POOL[Math.floor(Math.random() * JELLY_POOL.length)]; if (!DEF[id]) break; me.hand.push(id); k++; }
+      if (k) log(`${pname(pi)}はクラゲ魔法を${k}枚手札に加えた。`);
+      else log(`${pname(pi)}の手札がいっぱいで、クラゲ魔法を加えられなかった。`);
+      break;
+    }
+    case "tide": {
+      const k = Math.min(12, n * (me.jellyN || 0));
+      if (!k) { log("まだクラゲ魔法を使っていないので、満ち潮は起きなかった。"); break; }
+      boltFx(pi, self, [playerSel(opp(pi))]);
+      log(`満ち潮！${pname(opp(pi))}に${k}ダメージ。`); hitPlayer(opp(pi), k);
+      break;
+    }
+    case "cutOne": {
+      const L = me.hand.map((id, i) => i).filter(i => me.hand[i] !== GEAR_ID && DEF[me.hand[i]] && (!e.tribe || DEF[me.hand[i]].tribe === e.tribe) && (!e.ctype || DEF[me.hand[i]].type === e.ctype));
+      if (!L.length) { log("コストが下がるカードが手札になかった。"); break; }
+      const i = L[Math.floor(Math.random() * L.length)];
+      (me.handCut || (me.handCut = []))[i] = (me.handCut[i] || 0) + n;
+      log(`${pname(pi)}の手札のカード1枚のコストが${n}下がった。`, { pi, msg: `${cname(me.hand[i])}のコストが${n}下がった。` });
+      break;
+    }
+    case "handSteal": {
+      const L = en.hand.map((id, i) => i).filter(i => en.hand[i] !== GEAR_ID && DEF[en.hand[i]]);
+      if (!L.length) { log(`${pname(opp(pi))}の手札に奪えるカードがなかった。`); break; }
+      const id = handTake(en, L[Math.floor(Math.random() * L.length)]);
+      if (me.hand.length >= CONFIG.HAND_MAX) { gyAdd(me, id); log(`${cname(id)}を奪ったが、手札がいっぱいで墓地へ。`); break; }
+      me.hand.push(id); (me.handCut || (me.handCut = []))[me.hand.length - 1] = n;
+      log(`${pname(pi)}は${pname(opp(pi))}の手札から${cname(id)}を奪った！（コスト-${n}）`);
+      fx("reveal", id, `reveal:${opp(pi)}:奪われたカード`);
+      break;
+    }
+    case "handTax": {
+      const L = en.hand.map((id, i) => i).filter(i => en.hand[i] !== GEAR_ID && DEF[en.hand[i]]);
+      if (!L.length) { log(`${pname(opp(pi))}の手札は0枚だった。`); break; }
+      const i = L[Math.floor(Math.random() * L.length)];
+      (en.handCut || (en.handCut = []))[i] = (en.handCut[i] || 0) - n;
+      log(`${pname(pi)}は${pname(opp(pi))}の手札を1枚見て、コストを${n}上げた。`, { pi, msg: `${pname(opp(pi))}の手札の${cname(en.hand[i])}のコストを${n}上げた。` });
+      if (!SIM) fx("peek", en.hand[i], `peek:${pi}`);
+      break;
+    }
+    case "cheat": {
+      if (fieldFull(me)) { log("場に空いている場所がなかった。"); break; }
+      const L = me.hand.map((id, i) => i).filter(i => DEF[me.hand[i]] && DEF[me.hand[i]].type === "char" && (!e.tribe || DEF[me.hand[i]].tribe === e.tribe));
+      if (!L.length) { log("手札に出せるキャラがいなかった。"); break; }
+      const top = Math.max(...L.map(i => DEF[me.hand[i]].cost)), c = L.filter(i => DEF[me.hand[i]].cost === top);
+      const id = handTake(me, c[Math.floor(Math.random() * c.length)]);
+      const u = addUnit(pi, id);
+      u.frozen = true; u.ready = false;   // 次の自分のターンも攻撃できない
+      log(`${cname(id)}がコストを払わずに現れた！（次の自分のターンの終わりまで攻撃できない）`);
+      if (!SIM) { fx("cutin", id, "cutin" + pi); fx(unitSel(u.uid), id, "land"); }
+      runEffects(pi, DEF[id], autoTargets(pi, u), u);
+      break;
+    }
+    case "scales": {
+      S.players.forEach(q => {
+        const L = q.field.filter(u => u.hp > 0); if (!L.length) return;
+        const top = Math.max(...L.map(u => DEF[u.id].cost)), c = L.filter(u => DEF[u.id].cost === top);
+        fxDestroy(c[Math.floor(Math.random() * c.length)]);
+      });
+      break;
+    }
     case "summon": {
       if (fieldFull(me)) { log("場に空いている場所がなく、キャラを出せなかった。"); break; }
       const cands = me.deck.map((id, i) => ({ id, i })).filter(x => DEF[x.id] && DEF[x.id].type === "char" && inCost(DEF[x.id], n, e));
@@ -942,9 +1240,10 @@ function grant(u, e) {
   if (e.kw === "armor") { u.armorPlus = (u.armorPlus || 0) + e.n; if (e.turn) u.tmpArmor = (u.tmpArmor || 0) + e.n; log(`${cname(u.id)}は装甲${e.n}を得た${e.turn ? "（このターンだけ）" : ""}。`); fx(unitSel(u.uid), `装甲+${e.n}`, "heal"); return; }
   if (!KEYWORDS[e.kw]) return;
   if (e.turn && !(u.kws || []).includes(e.kw)) u.tmpKws = [...new Set([...(u.tmpKws || []), e.kw])];   // このターンだけ：ターンの終わりに消す
+  if (e.mine && !(u.kws || []).includes(e.kw)) u.mineKws = [...new Set([...(u.mineKws || []), e.kw])];   // 次の自分のターンの始めに消す
   log(`${cname(u.id)}は${KEYWORDS[e.kw].label}を得た。`);
   u.kws = [...new Set([...(u.kws || []), e.kw])];
-  if ((e.kw === "haste" || e.kw === "rush") && !u.frozen && !kw(u, "noattack") && !u.swings) u.ready = true;
+  if ((e.kw === "haste" || e.kw === "rush") && !u.frozen && !kw(u, "noattack") && !u.swings && !(u.born === S.turnNo && calmOn(sideOf(u)))) u.ready = true;
   if (e.kw === "shield") u.shieldUsed = false;
   if (e.kw === "stealth") u.revealed = false;
   // 効果で与えた死の宣告：相手のキャラなら、その持ち主の次のターンの終わりに破壊（自分のキャラなら次の自分のターンの終わり）
@@ -960,6 +1259,7 @@ function bounce(pi, u, to) {
   const p = S.players[pi];
   fx(unitSel(u.uid), to === "hand" ? "手札へ" : "山札へ", `${to === "hand" ? "tohand" : "todeck"}:${pi}`);
   if (DEF[u.id] && DEF[u.id].token) { log(`${cname(u.id)}（トークン）は消えた。`); return; }
+  if (to === "bottom") { p.deck.unshift(u.id); log(`${cname(u.id)}は${pname(pi)}の山札の一番下に戻った。`); return; }
   if (to === "deck") { p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, u.id); log(`${cname(u.id)}は${pname(pi)}の山札に混ざった。`); return; }
   if (p.hand.length >= CONFIG.HAND_MAX) { gyAdd(p, u.id); log(`${pname(pi)}の手札がいっぱいで、${cname(u.id)}は墓地へ。`); fx("reveal", u.id, `reveal:${pi}:手札があふれて墓地へ行ったカード`); return; }
   p.hand.push(u.id); log(`${cname(u.id)}は${pname(pi)}の手札に戻った。`);
@@ -982,11 +1282,13 @@ function silenceUnit(u) {
   log(`${cname(u.id)}は沈黙した。`); fx(unitSel(u.uid), "沈黙", "silence");
 }
 function swapStats(u) {
+  stripAura(u);
   const a = u.atk; u.atk = Math.max(0, u.hp); u.hp = a; u.maxHp = Math.max(u.maxHp, a);
   log(`${cname(u.id)}の攻撃力と体力が入れ替わった（${u.atk}/${u.hp}）。`); fx(unitSel(u.uid), "入れ替え", "heal");
 }
 
 function hitUnit(u, n) {
+  if (n > 0 && !S.combat && kw(u, "reef")) { fx(unitSel(u.uid), "岩殻", "heal"); log(`${cname(u.id)}の岩殻が効果のダメージを防いだ。`); return 0; }
   if (n > 0 && shielded(u)) { u.shieldUsed = true; fx(unitSel(u.uid), "聖盾", "heal"); log(`${cname(u.id)}の聖盾がダメージを防いだ。`); return 0; }
   const dmg = Math.max(0, n - armorOf(u));
   u.hp -= dmg;
@@ -995,15 +1297,21 @@ function hitUnit(u, n) {
   if (dmg > 0 && u.hp > 0) { const pi = S.players.findIndex(p => p.field.includes(u)); if (pi >= 0) queueTrig(pi, "survive", u); }
   return dmg;
 }
-function hitPlayer(pi, n) { S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); if (n > 0) { stat(opp(pi), "face", n); statMax(opp(pi), "maxHit", n); } }
+function hitPlayer(pi, n) {
+  if (n > 0 && S.players[pi].ward) { S.players[pi].ward = 0; fx(playerSel(pi), "結界", "heal"); log(`${pname(pi)}の結界がダメージを防いだ。`); return; }
+  S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); if (n > 0) { stat(opp(pi), "face", n); statMax(opp(pi), "maxHit", n); } }
 /* 一番大きかった値を残す（称号の「一度に大きなダメージ」） */
 function statMax(pi, k, n) { if (!S || pi == null || pi < 0) return; const st = S.stats || (S.stats = [{}, {}]); if (n > (st[pi][k] || 0)) st[pi][k] = n; }
 /* クエスト用の数（この対戦で何をしたか）。S の中に持つので、CPU の読みの中の数は捨てられ、対人戦でも両方に届く */
 function stat(pi, k, n = 1) { if (!S || pi == null) return; const st = S.stats || (S.stats = [{}, {}]); st[pi][k] = (st[pi][k] || 0) + n; }
 const ownerOf = u => S.players.findIndex(p => p.field.includes(u));
 function destroyUnit(u) { u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); }
-function freezeUnit(u) { u.frozen = true; u.ready = false; fx(unitSel(u.uid), "凍結", "freeze"); const o = ownerOf(u); if (o >= 0) stat(opp(o), "freeze"); }
-function debuff(u, n) { const b = u.atk; u.atk = Math.max(0, u.atk - n); fx(unitSel(u.uid), `攻撃-${b - u.atk}`, "dmg"); }
+/* 効果で破壊する（不壊は壊れない） */
+function fxDestroy(u) { if (kw(u, "unbreakable")) { fx(unitSel(u.uid), "不壊", "heal"); log(`${cname(u.id)}は不壊で破壊されなかった。`); return false; } destroyUnit(u); return true; }
+/* 不屈：弱体・行動不能を受けない */
+function unbowed(u) { if (!kw(u, "steadfast")) return false; fx(unitSel(u.uid), "不屈", "heal"); log(`${cname(u.id)}は不屈で効かなかった。`); return true; }
+function freezeUnit(u) { if (unbowed(u)) return; u.frozen = true; u.ready = false; fx(unitSel(u.uid), "凍結", "freeze"); const o = ownerOf(u); if (o >= 0) stat(opp(o), "freeze"); }
+function debuff(u, n) { if (unbowed(u)) return; const b = u.atk; u.atk = Math.max(0, u.atk - n); fx(unitSel(u.uid), `攻撃-${b - u.atk}`, "dmg"); }
 function buff(u, a, h) {
   u.atk += a; u.hp += h; u.maxHp += h;
   fx(unitSel(u.uid), a && h ? `+${a}/+${h}` : a ? `攻撃+${a}` : `体力+${h}`, "heal");
@@ -1016,7 +1324,7 @@ const hasTrig = (u, when) => !!(u && !u.silenced && DEF[u.id] && DEF[u.id].effec
 function queueTrig(pi, when, u, extra) {
   if (!hasTrig(u, when)) return;
   // 倒されたとき・攻撃したとき（反撃で相打ちになっても発動する）は、その時の姿を写しておく
-  const keep = when === "death" || when === "attack" || when === "kill" || when === "face";
+  const keep = when === "death" || when === "attack" || when === "kill" || when === "face" || when === "attacked";
   (S.q || (S.q = [])).push({ pi, when, uid: u.uid, snap: keep ? JSON.parse(JSON.stringify(u)) : null, ...(extra || {}) });
 }
 /* pi の場のキャラ全員（except 以外）に、そのタイミングの発動を積む */
@@ -1038,14 +1346,20 @@ function fireTrig(t) {
   if (!u || u.silenced || !DEF[u.id]) return;
   if (t.when === "survive" && u.hp <= 0) return;
   const cd = t.card && DEF[t.card];
-  const list = DEF[u.id].effects.filter(e => whenOf(e) === t.when && (t.when !== "cardPlay" || (cd && (!e.pw || cd.world === e.pw) && (!e.pt || cd.type === e.pt))));
+  const capOK = e => { if (!e.cap) return true; const k = `${t.when}|${e.cap}`, c = (live && live.capN) || {}; return !(c.t === S.turnNo && (c[k] || 0) >= e.cap); };
+  const list = DEF[u.id].effects.filter(e => whenOf(e) === t.when && (t.when !== "cardPlay" || (cd && (!e.pw || cd.world === e.pw) && (!e.pt || cd.type === e.pt) && (!e.ptr || cd.tribe === e.ptr)))
+    && (t.when !== "allyDeath" || !e.af || (e.af === "ghost" ? t.dGhost : t.dTribe === e.af)) && capOK(e));
   if (!list.length) return;
+  // 1ターンに N 回まで（e.cap）：数える
+  if (live && list.some(e => e.cap)) { if (!live.capN || live.capN.t !== S.turnNo) live.capN = { t: S.turnNo }; [...new Set(list.filter(e => e.cap).map(e => `${t.when}|${e.cap}`))].forEach(k => { live.capN[k] = (live.capN[k] || 0) + 1; }); }
   if (t.when === "survive" && live) live.hurt = (live.hurt || 0) + 1;   // 生き残った回数を数える（「N回目」の条件用）
   log(`${cname(u.id)}の効果（${t.when === "cardPlay" ? cardPlayHead(list[0]) : WHENS[t.when].label}）。`);
   fx(unitSel(u.uid), WHENS[t.when].label, "trig");
   const auto = autoTargets(t.pi, u);
+  if (t.foe != null) auto.foe = t.foe;   // 攻撃してきたキャラ・亜空間から戻ったキャラ
   const prev = S.randUsed; S.randUsed = new Set();
-  try { list.forEach(e => effect(t.pi, e, auto, u)); } finally { S.randUsed = prev; }
+  const pm = S.milled, pk = S.killNow; S.milled = null; S.killNow = 0;
+  try { list.forEach(e => effect(t.pi, e.amt && t.amt != null ? { ...e, n: t.amt } : e, auto, u)); } finally { S.randUsed = prev; S.milled = pm; S.killNow = pk; }
 }
 /* キャラが場から消えたとき（倒れた・代償で破壊された） */
 function onDeath(pi, u) {
@@ -1053,7 +1367,7 @@ function onDeath(pi, u) {
   const p = S.players[u.owner != null ? u.owner : pi];   // 奪われたキャラは元の持ち主の墓地へ
   (p.grave || (p.grave = [])).push(u.id); gyAdd(p, u.id);   // この対戦で破壊された自分のキャラ（復活の効果で使う）
   queueTrig(pi, "death", u);
-  trigUnits(pi, "allyDeath", u);
+  trigUnits(pi, "allyDeath", u, { dGhost: kw(u, "ghost"), dTribe: (DEF[u.id] && DEF[u.id].tribe) || "" });
 }
 function reap() {
   let any = false;
@@ -1078,6 +1392,7 @@ function cleanup() {
   }
   if (S.q && S.q.length) log("効果の連鎖が長すぎるため、ここで打ち切った。");
   S.q = [];
+  applyAuras();
 }
 
 /* ---------- 攻撃 ---------- */
@@ -1106,6 +1421,7 @@ function attack(pi, uid, target) {
   const me = S.players[pi], en = S.players[opp(pi)];
   const a = me.field.find(u => u.uid === uid);
   if (!a || !a.ready || kw(a, "noattack")) return false;
+  if (a.born === S.turnNo && calmOn(pi)) return false;   // 凪
   if (target === "player") {
     if (!canAttackPlayer(pi, a)) return false;
   } else {
@@ -1116,7 +1432,7 @@ function attack(pi, uid, target) {
   a.swings = (a.swings || 0) + 1;
   a.ready = kw(a, "twice") && a.swings < 2;
   if (hidden(a)) { a.revealed = true; log(`${cname(a.id)}の隠密が解けた。`); }
-  const steal = (u, pIdx, n) => { if (n > 0 && kw(u, "lifesteal")) { S.players[pIdx].hp += n; log(`吸収！${pname(pIdx)}の体力が${n}回復。`); fx(playerSel(pIdx), "+" + n, "heal"); trigUnits(pIdx, "healed"); } };
+  const steal = (u, pIdx, n) => { if (n > 0 && kw(u, "lifesteal")) { S.players[pIdx].hp += n; log(`吸収！${pname(pIdx)}の体力が${n}回復。`); fx(playerSel(pIdx), "+" + n, "heal"); trigUnits(pIdx, "healed", null, { amt: n }); } };
   if (target === "player") {
     fx(unitSel(a.uid), playerSel(opp(pi)), "lunge");
     log(`${cname(a.id)}が${pname(opp(pi))}に${a.atk}ダメージ！`);
@@ -1130,6 +1446,7 @@ function attack(pi, uid, target) {
     fx(unitSel(a.uid), unitSel(d.uid), "lunge");
     log(`${cname(a.id)}（${a.atk}）が${cname(d.id)}（${d.atk}）を攻撃。`);
     const before = d.hp;
+    S.combat = true;
     const dealt = hitUnit(d, a.atk);
     const dRealHit = Math.min(dealt, Math.max(0, before));   // 吸収は相手の残りの体力まで
     if (kw(a, "trample") && dealt > before && before > 0) {
@@ -1141,12 +1458,17 @@ function attack(pi, uid, target) {
     if (dealt > 0 && kw(a, "poison") && d.hp > 0) { log(`毒！${cname(d.id)}は破壊される。`); fx(unitSel(d.uid), "毒", "poison"); destroyUnit(d); stat(pi, "poison"); }
     steal(a, pi, dRealHit);
     const back = hitUnit(a, d.atk);
+    S.combat = false;
     if (back > 0 && kw(d, "poison") && a.hp > 0) { log(`毒！${cname(a.id)}は破壊される。`); fx(unitSel(a.uid), "毒", "poison"); destroyUnit(a); stat(opp(pi), "poison"); }
     // 吸収は自分から攻撃したときだけ（反撃では回復しない。オーナー 11-10）
     queueTrig(pi, "attack", a);
     if (before > 0 && d.hp <= 0) queueTrig(pi, "kill", a);
     if (kw(a, "trample") && dealt > before && before > 0) queueTrig(pi, "face", a);
+    queueTrig(opp(pi), "attacked", d, { foe: a.uid });
   }
+  // 亡霊：攻撃したあと破壊される。波乗り：攻撃したあと手札に戻る
+  if (a.hp > 0 && me.field.includes(a) && kw(a, "ghost")) { log(`${cname(a.id)}は攻撃を終えて消えた（亡霊）。`); destroyUnit(a); }
+  else if (a.hp > 0 && me.field.includes(a) && kw(a, "surf")) bounce(pi, a, "hand");
   cleanup();
   if (!checkWin()) render();
   return true;
@@ -1258,18 +1580,31 @@ function effValue(e) {
   if (k === "readySelf") return 1.5;
   if (/^(destroyTarget|transform|steal|bounceEnemy|shuffleEnemy|silence)$/.test(k)) return 3;
   if (k === "revive") return 3;
+  // 第3弾
+  if (k === "reviveSel") return 3 * (e.cnt || 1);
+  if (k === "toss") return -0.8;
+  if (k === "mill" || k === "peekMill") return 0.2 * n;
+  if (k === "graveHand") return 1.2 * n;
+  if (k === "ward") return 2.5;
+  if (k === "jellyHand") return 1.1 * n;
+  if (k === "cutOne") return 0.8 * n;
+  if (k === "handSteal") return 3;
+  if (k === "handTax") return 0.6;
+  if (k === "cheat") return 5;
+  if (k === "pact" || k === "scales") return 2;
   if (/^(grant|freeze|debuff)/.test(k)) return 1.2;
   if (k === "ramp" || k === "energyNow") return n * 0.8;
   return 0.8;
 }
 /* 登場時以外の効果の価値。何度も働くタイミングは高く、倒されたときは1回分 */
-const TRIG_WEIGHT = { death: 0.8, voidBack: 0.3, allyDeath: 0.6, kill: 0.6, survive: 0.7 };
+const TRIG_WEIGHT = { death: 0.8, voidBack: 0.3, allyDeath: 0.6, kill: 0.6, survive: 0.7, revived: 0, attacked: 0.7, foeBack: 0.4 };
 function trigValue(d) {
   return d.effects.filter(e => whenOf(e) !== "play").reduce((a, e) => a + effValue(e) * (TRIG_WEIGHT[whenOf(e)] ?? 1) * (e.cond ? 0.6 : 1), 0);
 }
 function unitValue(u) {
   const d = DEF[u.id]; if (!d) return 0;
-  let v = u.atk * 1.2 + Math.max(0, u.hp) * 0.9 + 1;
+  // 亡霊は1回攻撃すると消える「使い切り」。場に置いておく価値は低く見て、攻撃に使わせる（墓地に戻れば、また呼び戻せる）
+  let v = kw(u, "ghost") ? u.atk * 0.8 + Math.max(0, u.hp) * 0.3 : u.atk * 1.2 + Math.max(0, u.hp) * 0.9 + 1;
   if (kw(u, "guard")) v += 1.5 + u.hp * 0.2;
   if (kw(u, "pierce")) v += u.atk * 0.4;
   if (kw(u, "trample")) v += 0.5;
@@ -1282,6 +1617,12 @@ function unitValue(u) {
   if (kw(u, "noattack")) v -= u.atk * 1.0;
   if (kw(u, "regen")) v += 1 + u.maxHp * 0.15;
   if (kw(u, "doom")) v -= (u.atk + u.hp) * (u.doomArmed ? 0.6 : 0.3);
+  if (kw(u, "steadfast")) v += 0.8;
+  if (kw(u, "unbreakable")) v += 1.5;
+  if (kw(u, "reef")) v += 1;
+  if (kw(u, "calm")) v += 1.5;
+  if (kw(u, "dive")) v += 2 + u.atk * 0.3;
+  if (d.aura && !u.silenced) v += d.aura.kind === "cost" ? 2 : 1.5;
   v += armorOf(u) * 1.5;
   if (!u.silenced) v += trigValue(d);   // 場に残ると働く効果（倒されたとき・ターンの終わりなど）
   if (u.frozen) v -= u.atk * 0.6;
@@ -1298,6 +1639,9 @@ function evaluate(st, pi) {
   s += voidOf(me).reduce((a, v) => a + unitValue(v.u) * 0.9, 0) - voidOf(en).reduce((a, v) => a + unitValue(v.u), 0) * 1.0;
   s += Math.min(me.hand.length, 7) * 0.7 - en.hand.length * 0.35;
   s += gearsOf(me) * 0.3 - gearsOf(en) * 0.15;   // 手札の歯車（重なっている分）
+  s += (me.ward ? 2.5 : 0) - (en.ward ? 2.5 : 0);   // 結界
+  s += Math.min(8, gyChars(me).filter(isGhostCard).length) * 0.6;   // 墓地の亡霊（呼び戻す元手）
+  s += Math.min(12, (me.jellyN || 0) * 2) * 0.25;   // 使ったクラゲ魔法（満ち潮の夜の元手）
   s += me.maxE * 0.9;
   // 相手の次の攻撃で負けそうなら大きく減点
   // 相手の次のターンに本体へ届きそうなダメージ（守護がいれば防げる）
@@ -1329,6 +1673,7 @@ function legalActions(pi) {
       combos = combos.flatMap(c => opts.map(o => ({ ...c, [r]: o })));
     });
     const gearOpts = gearChoice(pi, idx) ? [true, false] : [false];
+    combos = combos.filter(c => c.enemy2 == null || c.enemy2 !== c.enemy);
     combos.slice(0, 24).forEach(t => gearOpts.forEach(g => acts.push({ t: "play", idx, id, targets: t, ...(g ? { gear: true } : {}) })));
   });
   me.field.forEach(u => {
@@ -1435,7 +1780,7 @@ async function cpuTurn() {
 
 /* ---------- 自分の操作（CPU戦・ホストはその場で処理、ゲストはホストに送る） ---------- */
 function canAct() {
-  return S && !S.over && S.phase === "play" && S.turn === ME && !busy && !S.dig && !(typeof Online !== "undefined" && Online.blocked());
+  return S && !S.over && S.phase === "play" && S.turn === ME && !busy && !S.dig && !S.pick && !(typeof Online !== "undefined" && Online.blocked());
 }
 function doPlay(idx, targets, gear) {
   if (!canAct()) return;
@@ -1484,7 +1829,7 @@ function pbarHTML(pi) {
   const status = typeof Online !== "undefined" && MODE === "online" && pi === OP ? Online.oppStatusHTML() : "";
   // 歯車の枚数（相手のも見える）と、このターンに使ったカードの枚数（詠唱・タマモなどの目安）
   const gearN = gearsOf(p), usedN = S.phase === "play" && S.turn === pi && !S.over ? (p.played || 0) : 0;
-  const extra = `${gearN ? `<i class="cnt-gear">歯車 ${gearN}</i>` : ""}${usedN ? `<i class="cnt-used">使用 ${usedN}枚</i>` : ""}`;
+  const extra = `${p.ward ? `<i class="cnt-ward">結界</i>` : ""}${gearN ? `<i class="cnt-gear">歯車 ${gearN}</i>` : ""}${usedN ? `<i class="cnt-used">使用 ${usedN}枚</i>` : ""}`;
   const left = pi === OP
     ? `<button type="button" class="menubtn" data-act="menu" aria-label="メニュー">${MENU_ICON}</button><span class="counts"><i><span class="mback" aria-hidden="true"></span>手札 ${p.hand.length}</i><i><span class="mback" aria-hidden="true"></span>山札 ${p.deck.length}</i>${extra}</span>`
     : `${DATA_INFO.draft ? '<span class="draftbadge">試遊中</span>' : ""}${typeof Stamps !== "undefined" ? Stamps.btnHTML() : ""}<span class="counts"><i>手札 ${p.hand.length}/${CONFIG.HAND_MAX}</i>${extra}</span>`;
@@ -1497,7 +1842,7 @@ function pbarHTML(pi) {
     <button type="button" class="avatar ${tgt ? "tgt" : ""} ${S.over && resultShown && S.winner !== "draw" && S.winner !== pi ? "fin-broken" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
       ${p.frame ? `<img class="frame-skin" src="${esc(p.frame)}" alt="" aria-hidden="true">` : `<span class="halo" aria-hidden="true"></span>`}
       <span class="face">${art ? iconImgHTML(icon) : `<span class="glyph">召</span>`}</span>
-      ${hp <= 5 ? `<span class="hpglow" aria-hidden="true"></span>` : ""}<span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
+      ${p.ward ? `<span class="ward-ring" aria-hidden="true"></span>` : ""}${hp <= 5 ? `<span class="hpglow" aria-hidden="true"></span>` : ""}<span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
     <div class="pl-right">
       <div class="pname"><b>${esc(p.name)}</b>${p.title && pi !== ME ? `<small class="ptitle">${esc(p.title)}</small>` : ""}${S.phase === "play" && S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
@@ -1510,6 +1855,7 @@ function curRole() { return ui.mode === "target" ? ui.roles[Object.keys(ui.picke
 function isTargetable(pi, u) {
   if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u, selectedUnit());
   const r = curRole();
+  if (r === "enemy2" && ui.picked.enemy === u.uid) return false;
   return !!r && roleAllows(ME, r, pi, u, DEF[S.players[ME].hand[ui.sel.idx]]);
 }
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
@@ -1671,7 +2017,7 @@ function render() {
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   // 前と同じ画面なら作り直さない（作り直しはスマホでは重い）
-  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); Mull.after(); Dig.after(); return; }
+  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); Mull.after(); Dig.after(); Pick.after(); return; }
   lastBoardHTML = html;
   app.innerHTML = html;
   if (oldImgs.size) app.querySelectorAll("img").forEach(im => { const l = oldImgs.get(im.getAttribute("src")); if (l && l.length) { const o = l.pop(); o.className = im.className; im.replaceWith(o); } });
@@ -1680,6 +2026,7 @@ function render() {
   Motion.afterRender();
   Mull.after();
   Dig.after();
+  Pick.after();
 }
 
 /* ---------- 対戦前の画面（じゃんけん・先攻後攻・マリガン） ---------- */
@@ -1902,6 +2249,7 @@ function renderSheet() {
       msg = r === "sacrifice" ? `${esc(d.name)}：代償として破壊する自分のキャラをタップしてください`
         : r === "enemyF" ? `${esc(d.name)}の対象にする相手キャラか、上の相手の顔をタップしてください`
         : r === "any" ? `${esc(d.name)}の対象にするキャラ（自分か相手）をタップしてください`
+        : r === "enemy2" ? `${esc(d.name)}：2体目の相手キャラをタップしてください`
         : `${esc(d.name)}の対象にする${r === "enemy" ? "相手" : "自分"}のキャラをタップしてください`;
     } else {
       const u = selectedUnit();
@@ -2164,7 +2512,7 @@ function dropAction(x, y) {
       if (!chk.ok) return () => toast(chk.reason);
       const uid = +unitEl.dataset.uid, tu = S.players[z.units].field.find(x => x.uid === uid);
       if (z.role === "enemy" && tu && !canTarget(tu)) return () => toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません");
-      if (tu && !worldOK(tu, roleWorld(d, z.role))) return () => toast(`${WORLDS[roleWorld(d, z.role)]}のキャラを選んでください`);
+      if (tu && !roleOK(tu, d, z.role)) return () => toast(roleNg(d, z.role));
       return () => gearChoice(ME, idx) ? beginPlay(idx) : doPlay(idx, { [z.role]: uid });
     }
     if (!fieldEl || +fieldEl.dataset.zone !== ME) return null;
@@ -3287,6 +3635,8 @@ function handleAct(act, el) {
     case "choose": if (S && el) doChoose(el.dataset.v === "1"); break;
     case "mull": if (S && el) doMull(el.dataset.v === "1"); break;
     case "dig": doDig(+el.dataset.i); break;
+    case "pickT": Pick.toggle(+el.dataset.i); break;
+    case "pickGo": doPick(); break;
     case "play": case "playGear": {
       if (!ui.sel || ui.sel.kind !== "hand" || !canAct()) return;
       const idx = ui.sel.idx;
@@ -3396,7 +3746,8 @@ document.addEventListener("click", e => {
       const r = curRole();
       const tu = S.players[owner].field.find(x => x.uid === uid);
       if (r && tu && (r === "any" || owner === roleSide(ME, r))) {
-        if (!roleAllows(ME, r, owner, tu, DEF[S.players[ME].hand[ui.sel.idx]])) { if (tu && !worldOK(tu, roleWorld(DEF[S.players[ME].hand[ui.sel.idx]], r))) { toast(`${WORLDS[roleWorld(DEF[S.players[ME].hand[ui.sel.idx]], r)]}のキャラを選んでください`); return; } toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません"); return; }
+        if (r === "enemy2" && ui.picked.enemy === uid) { toast("1体目とちがうキャラを選んでください"); return; }
+        if (!roleAllows(ME, r, owner, tu, DEF[S.players[ME].hand[ui.sel.idx]])) { if (tu && !roleOK(tu, DEF[S.players[ME].hand[ui.sel.idx]], r)) { toast(roleNg(DEF[S.players[ME].hand[ui.sel.idx]], r)); return; } toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません"); return; }
         pickTarget(uid); return;
       }
       return;

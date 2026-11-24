@@ -88,3 +88,24 @@
 ## Claude の案（11-24 に返答したもの。採用は未定）
 - コンセプト「歪む境界」：世界が混ざり、境界が歪む → 世界をまたぐ効果と、スマホならではの「歪み」効果の理由づけ
 - 詳細はチャットの返答を参照（推奨枚数・値段・開放戦・効果の案・キャラ案）
+
+## 確定版（11-24 18:08 オーナー「霧と偽装と亜空間ブレイクは減らしていい…それでは初めて」）と実装（11-24 夜）
+- 霧・偽装・亜空間ブレイクは削除。空いた枠はクラゲの支援（ゆらめきクラゲ・発光信号・蓄電クラゲ・クラゲ培養槽）
+- 交換所には開放戦に勝ったら最初から並ぶ（魔石の値段は今のまま）。そのかわり、パラレルイラストを低い確率で出す（絵ができてから）
+- 確定版のリスト：Artifact（同じURL・Version 6）。作り方 docs/drafts/set3-list4.py・set3-page.py
+- ゲームのデータ：docs/drafts/set3-cards.py が game-data.json に入れる（99枚＋トークン14枚、pack3 は閉じたまま、開放戦の相手 gate-sea）
+### 新しい仕組み（js/shared.js・js/game.js）
+- 能力：亡霊 ghost／不屈 steadfast／不壊 unbreakable／岩殻 reef（ガンテツ）／凪 calm／潜航 dive／波乗り surf（波乗りの唄で付く）
+- 種族 card.tribe（jelly クラゲ・beast 海獣）。効果の絞り込み e.tribe・e.cmax（元のコストの上限）・e.kwf（能力）
+- 場にいる間の力 card.aura（stat：ほかの味方を強化、self：墓地の亡霊の数、cost：クラゲ魔法のコスト）。cleanup のたびに差だけ直す
+- 揺らぎ card.sway（中身のトークン3つ。使ったときにランダム）
+- 結界 p.ward（次のダメージを1回0に。重ねない）
+- タイミング：revived（墓地から出たとき）・attacked（攻撃されたとき）・foeBack（相手が亜空間から戻ったとき）。allyDeath の絞り込み e.af、cardPlay の種族 e.ptr、1ターンにN回まで e.cap、回復した分 e.amt
+- 効果：mill／peekMill／reviveSel（選んで出す。人は選ぶ画面、CPUは重い順）／pact（道連れ。選ぶ画面）／graveHand／ward／jellyHand／tide／cutOne／handSteal／handTax／cheat／scales／toss、unit の bottom、対象 enemy2（2体目）・enemyLow
+- 条件：milledGhost／killedNow／tribeGE／ghostArmy
+- 開放戦のルール set2cap（第2弾まで・L1/UR2/SR6。pack.gateCap で変えられる）
+- 確認用：tools/sim/set3test.js（仕組み48項目）・set3sim.js（第3弾デッキ同士）・gate3_eval.js（開放戦）・set3ui.js（画面）
+### 決めきれていないこと・オーナーに聞くこと
+- 亡霊デッキが弱い（CPU同士で勝率1割前後）。亡霊の数値はオーナーの基準（相場どおりか+1）より低い
+- ノーチラスは相手のターンに場にいないので、触れる手段が次元干渉ブイしかない
+- パラレルイラスト・パックの絵・カードの絵（まだない）

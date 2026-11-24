@@ -1,6 +1,6 @@
 {
- "version": 207,
- "updated": "2026-11-19",
+ "version": 208,
+ "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -449,6 +449,134 @@
    "gateDeck": "gate-fan",
    "gateLevel": "hard",
    "art": "ui/pack2-3.webp"
+  },
+  {
+   "id": "pack3",
+   "name": "第3弾 碧海と深淵の唄",
+   "price": 150,
+   "size": 5,
+   "cards": [
+    "m3-eirei",
+    "m3-hakamori",
+    "m3-funauta",
+    "m3-suihei",
+    "m3-centurion",
+    "m3-hatamochi",
+    "m3-touro",
+    "m3-eiji",
+    "m3-hotaru",
+    "m3-charon",
+    "m3-harpoon",
+    "m3-aspido",
+    "m3-fue",
+    "m3-siren",
+    "m3-hippo",
+    "m3-scylla",
+    "m3-shoukan",
+    "m3-scarlet",
+    "m3-charybdis",
+    "m3-kraken",
+    "m3-leviathan",
+    "m3-yadokari",
+    "m3-oikaze",
+    "m3-minato",
+    "m3-azuria",
+    "m3-uni",
+    "m3-trident",
+    "m3-nagisa",
+    "m3-gantetsu",
+    "m3-shioyomi",
+    "m3-tenbin",
+    "m3-hayate",
+    "m3-ikari",
+    "f3-nakimushi",
+    "f3-temaneki",
+    "f3-utsubo",
+    "f3-gaikotsu",
+    "f3-ikarihiki",
+    "f3-tamagae",
+    "f3-suifucho",
+    "f3-michizure",
+    "f3-daikoushin",
+    "f3-veil",
+    "f3-grave",
+    "f3-komoriuta",
+    "f3-tomoshibi",
+    "f3-yurameki",
+    "f3-uzumaki",
+    "f3-puka",
+    "f3-octa",
+    "f3-nocto",
+    "f3-sumi",
+    "f3-takarabako",
+    "f3-barba",
+    "f3-borg",
+    "f3-kodako",
+    "f3-tobiuo",
+    "f3-naminori",
+    "f3-tobinori",
+    "f3-sango",
+    "f3-shabon",
+    "f3-marina",
+    "f3-tayori",
+    "f3-tsunousagi",
+    "f3-hugh",
+    "f3-suiryu",
+    "x3-sabineji",
+    "x3-haizai",
+    "x3-saikidou",
+    "x3-shinsui",
+    "x3-kirai",
+    "x3-garakuta",
+    "x3-kinkyu",
+    "x3-senkan",
+    "x3-rusty",
+    "x3-shingou",
+    "x3-chikuden",
+    "x3-baiyou",
+    "x3-houden",
+    "x3-buoy",
+    "x3-daihouden",
+    "x3-hikari",
+    "x3-iruka",
+    "x3-hamasouji",
+    "x3-shouha",
+    "x3-kyunan",
+    "x3-crane",
+    "x3-lux",
+    "x3-orca",
+    "x3-yoduri",
+    "x3-gyorai",
+    "x3-tsumini",
+    "x3-gearshark",
+    "x3-nautilus",
+    "x3-nikyaku",
+    "x3-bousou",
+    "x3-kanshou",
+    "x3-bunkai",
+    "x3-pururu"
+   ],
+   "odds": {
+    "normal": {
+     "common": 60,
+     "rare": 28,
+     "sr": 9,
+     "ur": 2.7,
+     "legend": 0.3
+    },
+    "last": {
+     "common": 0,
+     "rare": 55,
+     "sr": 33,
+     "ur": 10,
+     "legend": 2
+    }
+   },
+   "open": false,
+   "set": "3",
+   "gateRule": "set2cap",
+   "gateDeck": "gate-sea",
+   "gateLevel": "hard"
   }
  ],
  "decks": [
@@ -1293,6 +1421,32 @@
     "k-weiss": 2
    },
    "level": "test"
+  },
+  {
+   "id": "gate-sea",
+   "name": "深淵の海獣団",
+   "level": "gate",
+   "key": "m3-leviathan",
+   "cards": {
+    "m3-yadokari": 2,
+    "m3-uni": 1,
+    "m3-siren": 2,
+    "m3-harpoon": 2,
+    "m3-fue": 2,
+    "m3-trident": 3,
+    "x3-gyorai": 2,
+    "m3-minato": 2,
+    "m3-aspido": 2,
+    "m3-scylla": 2,
+    "x3-orca": 1,
+    "m3-shoukan": 2,
+    "m3-hippo": 1,
+    "m3-kraken": 1,
+    "m3-charybdis": 1,
+    "m3-leviathan": 1,
+    "m3-ikari": 1,
+    "x3-bunkai": 2
+   }
   }
  ],
  "serials": [
@@ -10070,6 +10224,2636 @@
    "shop": true,
    "shopPrice": 6000,
    "art": "art/k-mamoru-c3c166f55e.webp"
+  },
+  {
+   "id": "m3-eirei",
+   "name": "英霊の残り火",
+   "world": "myth",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "both",
+     "to": "ownRand",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-hakamori",
+   "name": "墓守の翁",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "mill",
+     "n": 3
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-funauta",
+   "name": "黄泉の舟唄",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "toss",
+     "n": 1,
+     "ctype": "char"
+    },
+    {
+     "kind": "player",
+     "n": 2,
+     "act": "draw",
+     "who": "self"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-suihei",
+   "name": "亡霊水兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-eirei",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-centurion",
+   "name": "冥海の百人隊長",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-eirei",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-hatamochi",
+   "name": "亡国の旗手",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "ownAll",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-touro",
+   "name": "還魂の灯籠",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 6,
+     "cnt": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-eiji",
+   "name": "神殿の亡霊衛士",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "hp",
+     "to": "self",
+     "when": "revived"
+    },
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-hotaru",
+   "name": "送り火の巫女ホタル",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 3,
+     "cnt": 2
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-charon",
+   "name": "渡し守カロン",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 1,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self",
+     "af": "ghost",
+     "cap": 2,
+     "when": "allyDeath"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-harpoon",
+   "name": "海獣狩りの銛打ち",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "cutOne",
+     "n": 1,
+     "tribe": "beast",
+     "ctype": "char"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-aspido",
+   "name": "アスピドケロン",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 6,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "hp",
+     "to": "ownAll"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast"
+  },
+  {
+   "id": "m3-fue",
+   "name": "深海の呼び笛",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 10,
+     "ctype": "char",
+     "tribe": "beast"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-siren",
+   "name": "セイレーン",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": -2,
+     "act": "atk",
+     "to": "enemy1"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast"
+  },
+  {
+   "id": "m3-hippo",
+   "name": "ヒッポカムポス",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 5,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "atk",
+     "to": "self",
+     "cond": "tribeGE",
+     "ctribe": "beast",
+     "cn": 2
+    }
+   ],
+   "set": "3",
+   "tribe": "beast"
+  },
+  {
+   "id": "m3-scylla",
+   "name": "六首の魔スキュラ",
+   "world": "myth",
+   "type": "char",
+   "cost": 5,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand",
+     "when": "attack"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast"
+  },
+  {
+   "id": "m3-shoukan",
+   "name": "深淵の召喚歌",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "cheat",
+     "n": 1,
+     "tribe": "beast"
+    }
+   ],
+   "set": "3",
+   "pay": {
+    "kind": "life",
+    "n": 5
+   }
+  },
+  {
+   "id": "m3-scarlet",
+   "name": "真紅の女王スカーレット",
+   "world": "myth",
+   "type": "char",
+   "cost": 7,
+   "atk": 6,
+   "hp": 6,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "handSteal",
+     "n": 5
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-charybdis",
+   "name": "大渦カリブディス",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 0,
+   "hp": 8,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [
+    "guard",
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "enemyLow",
+     "when": "turnEnd"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast"
+  },
+  {
+   "id": "m3-kraken",
+   "name": "大海魔クラーケン",
+   "world": "myth",
+   "type": "char",
+   "cost": 7,
+   "atk": 6,
+   "hp": 7,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "bottom",
+     "to": "enemyRand",
+     "when": "attack"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast"
+  },
+  {
+   "id": "m3-leviathan",
+   "name": "海の覇王リヴァイアサン",
+   "world": "myth",
+   "type": "char",
+   "cost": 9,
+   "atk": 8,
+   "hp": 8,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemyAll"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast"
+  },
+  {
+   "id": "m3-yadokari",
+   "name": "宿借りの闘士",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "foe",
+     "when": "attacked"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-oikaze",
+   "name": "追い風の祝詞",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "both",
+     "to": "own1"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "own1",
+     "kw": "elusive",
+     "mine": true
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-minato",
+   "name": "灯台守の娘ミナト",
+   "world": "myth",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "ward",
+     "n": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-azuria",
+   "name": "碧海の女神アズーリア",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 7,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "unbreakable"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 5,
+     "act": "heal",
+     "who": "self"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyRand",
+     "amt": true,
+     "cap": 3,
+     "when": "healed"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-uni",
+   "name": "棘甲の海兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": -1,
+     "act": "atk",
+     "to": "foe",
+     "when": "attacked"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-trident",
+   "name": "海神の三叉槍",
+   "world": "myth",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 5,
+     "act": "dmg",
+     "to": "enemy1"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-nagisa",
+   "name": "凪の巫女ナギサ",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "calm"
+   ],
+   "effects": [],
+   "set": "3"
+  },
+  {
+   "id": "m3-gantetsu",
+   "name": "巌蟹王ガンテツ",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 7,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "guard",
+    "reef"
+   ],
+   "effects": [],
+   "set": "3"
+  },
+  {
+   "id": "m3-shioyomi",
+   "name": "潮読み",
+   "world": "myth",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
+    },
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self",
+     "cond": "hpLE",
+     "cn": 10
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-tenbin",
+   "name": "天秤の裁き",
+   "world": "myth",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "scales",
+     "n": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-hayate",
+   "name": "波斬りのハヤテ",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "twice"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "self",
+     "when": "kill"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "m3-ikari",
+   "name": "海神の怒り",
+   "world": "myth",
+   "type": "spell",
+   "cost": 7,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 5,
+     "act": "dmg",
+     "to": "enemyAll"
+    },
+    {
+     "kind": "player",
+     "n": 3,
+     "act": "dmg",
+     "who": "opp",
+     "cond": "tribeGE",
+     "ctribe": "beast",
+     "cn": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-nakimushi",
+   "name": "泣き虫ゴースト",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-temaneki",
+   "name": "亡者の手招き",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "mill",
+     "n": 3
+    },
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self",
+     "cond": "milledGhost"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-utsubo",
+   "name": "沈船のウツボ",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "mill",
+     "n": 2
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "self",
+     "per": "milledGhost"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-gaikotsu",
+   "name": "骸骨甲板員",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "atk",
+     "to": "self",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-ikarihiki",
+   "name": "錨引きの亡者",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "self",
+     "when": "revived"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "rush",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-tamagae",
+   "name": "魂替えの儀",
+   "world": "fan",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 6,
+     "cnt": 1
+    }
+   ],
+   "set": "3",
+   "pay": {
+    "kind": "sacrifice"
+   }
+  },
+  {
+   "id": "f3-suifucho",
+   "name": "亡者の水夫長",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [],
+   "set": "3",
+   "aura": {
+    "kind": "self",
+    "max": 4
+   }
+  },
+  {
+   "id": "f3-michizure",
+   "name": "道連れの宴",
+   "world": "fan",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "pact",
+     "n": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-daikoushin",
+   "name": "亡者の大行進",
+   "world": "fan",
+   "type": "spell",
+   "cost": 6,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "ownAll",
+     "kw": "pierce",
+     "turn": true,
+     "cond": "ghostArmy",
+     "cn": 6
+    },
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "atk",
+     "to": "ownAll",
+     "turn": true,
+     "cond": "ghostArmy",
+     "cn": 6
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-veil",
+   "name": "沈める花嫁ヴェール",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 10,
+     "cnt": 2,
+     "total": 5
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-grave",
+   "name": "幽霊船長グレイヴ",
+   "world": "fan",
+   "type": "char",
+   "cost": 8,
+   "atk": 6,
+   "hp": 7,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 10,
+     "cnt": 3,
+     "total": 8
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-komoriuta",
+   "name": "月夜の子守唄",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-chibi"
+    },
+    {
+     "kind": "jellyHand",
+     "n": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-tomoshibi",
+   "name": "クラゲの灯火",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "jellyHand",
+     "n": 2
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-yurameki",
+   "name": "ゆらめきクラゲ",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "both",
+     "to": "self",
+     "pt": "spell",
+     "ptr": "jelly",
+     "when": "cardPlay"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "f3-uzumaki",
+   "name": "渦巻きクラゲ",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyRand",
+     "when": "spell"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "f3-puka",
+   "name": "泡クラゲのプカ",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "jellyHand",
+     "n": 1
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "f3-octa",
+   "name": "八腕の錬金術師オクタ",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [],
+   "set": "3",
+   "aura": {
+    "kind": "cost",
+    "n": 2
+   }
+  },
+  {
+   "id": "f3-nocto",
+   "name": "深海の灯姫ノクト",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 2,
+   "hp": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-j-tide"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly",
+   "aura": {
+    "kind": "stat",
+    "tribe": "jelly",
+    "atk": 1
+   }
+  },
+  {
+   "id": "f3-sumi",
+   "name": "深海の墨",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemy1"
+    },
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-chibi",
+     "cond": "killedNow"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-takarabako",
+   "name": "海賊の宝箱",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [],
+   "set": "3",
+   "sway": [
+    "tk-s-gold",
+    "tk-s-doll",
+    "tk-s-map"
+   ]
+  },
+  {
+   "id": "f3-barba",
+   "name": "髑髏旗の船長バルバ",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 5,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "f3-takarabako"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-borg",
+   "name": "甲板長ボルグ",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "handTax",
+     "n": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-kodako",
+   "name": "墨吐き小ダコ",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "freeze",
+     "to": "enemy1"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-tobiuo",
+   "name": "飛魚の行商人",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-naminori",
+   "name": "波乗りの唄",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "atk",
+     "to": "own1",
+     "turn": true
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "own1",
+     "kw": "surf",
+     "turn": true
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-tobinori",
+   "name": "飛魚騎りの少年",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-awa"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-sango",
+   "name": "珊瑚の巨人",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 2,
+   "hp": 9,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard",
+    "steadfast"
+   ],
+   "effects": [],
+   "set": "3"
+  },
+  {
+   "id": "f3-shabon",
+   "name": "泡沫の歌い手シャボン",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 1,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "own1",
+     "kw": "shield"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-marina",
+   "name": "人魚の歌姫マリーナ",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 6,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "hp",
+     "to": "ownAll",
+     "when": "turnEnd"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-tayori",
+   "name": "妖精の便り",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "dig",
+     "n": 3,
+     "rest": "grave"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-tsunousagi",
+   "name": "角兎の用心棒",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "self",
+     "when": "attacked"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-hugh",
+   "name": "つむじ風のヒュー",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "bounce",
+     "to": "enemy1",
+     "cmax": 2
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-suiryu",
+   "name": "翠竜",
+   "world": "fan",
+   "type": "char",
+   "cost": 7,
+   "atk": 6,
+   "hp": 7,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "steadfast",
+    "unbreakable"
+   ],
+   "effects": [],
+   "set": "3"
+  },
+  {
+   "id": "x3-sabineji",
+   "name": "錆びネジ",
+   "world": "mech",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyRand",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-haizai",
+   "name": "廃材あさり",
+   "world": "mech",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "mill",
+     "n": 2
+    },
+    {
+     "kind": "graveHand",
+     "n": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-saikidou",
+   "name": "再起動兵",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "armor",
+     "when": "revived"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "self",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-shinsui",
+   "name": "浸水警備機",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyAll",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-kirai",
+   "name": "浮遊機雷",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand",
+     "when": "death"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-garakuta",
+   "name": "解体屋ガラクタ",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "self",
+     "af": "ghost",
+     "when": "allyDeath"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-kinkyu",
+   "name": "緊急再起動",
+   "world": "mech",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 10,
+     "cnt": 2,
+     "total": 5
+    }
+   ],
+   "set": "3",
+   "pay": {
+    "kind": "sacrifice"
+   }
+  },
+  {
+   "id": "x3-senkan",
+   "name": "幽霊戦艦",
+   "world": "mech",
+   "type": "char",
+   "cost": 7,
+   "atk": 6,
+   "hp": 7,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyAll",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-rusty",
+   "name": "廃艦提督ラスティ",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "reviveSel",
+     "n": 5,
+     "cnt": 1,
+     "mod": "rusty"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-shingou",
+   "name": "発光信号",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 10,
+     "ctype": "char",
+     "tribe": "jelly"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-chikuden",
+   "name": "蓄電クラゲ",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemyRand",
+     "af": "jelly",
+     "when": "allyDeath"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "x3-baiyou",
+   "name": "クラゲ培養槽",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 0,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [
+    "noattack"
+   ],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-chibi",
+     "when": "turnStart"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "x3-houden",
+   "name": "放電クラゲ",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "jellyHand",
+     "n": 1,
+     "when": "death"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "x3-buoy",
+   "name": "クラゲ観測ブイ",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 1,
+     "card": "tk-chibi",
+     "pt": "spell",
+     "ptr": "jelly",
+     "when": "cardPlay"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "x3-daihouden",
+   "name": "深海大放電",
+   "world": "mech",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemyAll",
+     "plus": "jelly",
+     "plusMax": 2
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-hikari",
+   "name": "機巧クラゲのヒカリ",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self",
+     "pt": "spell",
+     "ptr": "jelly",
+     "cap": 1,
+     "when": "cardPlay"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly"
+  },
+  {
+   "id": "x3-iruka",
+   "name": "郵便イルカ号",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-part"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-hamasouji",
+   "name": "浜掃除ロボ",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "hp",
+     "to": "own1",
+     "world": "mech"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-shouha",
+   "name": "消波防壁",
+   "world": "mech",
+   "type": "char",
+   "cost": 5,
+   "atk": 2,
+   "hp": 7,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [],
+   "set": "3",
+   "armor": 1
+  },
+  {
+   "id": "x3-kyunan",
+   "name": "救難ロボ",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 1,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 2,
+     "act": "heal",
+     "who": "self",
+     "cap": 1,
+     "when": "allyDeath"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-crane",
+   "name": "港湾クレーン",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 3,
+     "card": "tk-gear"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-lux",
+   "name": "灯台ロボのルクス",
+   "world": "mech",
+   "type": "char",
+   "cost": 3,
+   "atk": 1,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "heal",
+     "who": "self",
+     "when": "turnEnd"
+    }
+   ],
+   "set": "3",
+   "aura": {
+    "kind": "stat",
+    "world": "mech",
+    "hp": 1
+   }
+  },
+  {
+   "id": "x3-orca",
+   "name": "蒼鋼の鯱オルカ",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "enemy1",
+     "cmax": 4
+    }
+   ],
+   "set": "3",
+   "aura": {
+    "kind": "stat",
+    "world": "mech",
+    "atk": 1
+   }
+  },
+  {
+   "id": "x3-yoduri",
+   "name": "夜釣りロボ",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "peekMill",
+     "n": 1
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-gyorai",
+   "name": "魚雷",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemy1"
+    },
+    {
+     "kind": "player",
+     "n": 2,
+     "act": "dmg",
+     "who": "opp"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-tsumini",
+   "name": "引き上げた積み荷",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [],
+   "set": "3",
+   "sway": [
+    "tk-s-kit",
+    "tk-s-parts",
+    "tk-s-dud"
+   ]
+  },
+  {
+   "id": "x3-gearshark",
+   "name": "合体潜水機ギアシャーク",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "ur",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "both",
+     "to": "self",
+     "cond": "gearPaid"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "rush",
+     "cond": "gearPaid"
+    }
+   ],
+   "set": "3",
+   "gear": 3
+  },
+  {
+   "id": "x3-nautilus",
+   "name": "深潜艦ノーチラス",
+   "world": "mech",
+   "type": "char",
+   "cost": 8,
+   "atk": 7,
+   "hp": 7,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "dive"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "dmg",
+     "to": "enemyAll"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-nikyaku",
+   "name": "試作二脚機",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 4,
+   "hp": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "armor",
+     "when": "attack"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-bousou",
+   "name": "暴走重機",
+   "world": "mech",
+   "type": "char",
+   "cost": 7,
+   "atk": 7,
+   "hp": 6,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "ownRand"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-kanshou",
+   "name": "次元干渉ブイ",
+   "world": "mech",
+   "type": "char",
+   "cost": 4,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 4,
+     "act": "dmg",
+     "to": "foe",
+     "when": "foeBack"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-bunkai",
+   "name": "分解砲",
+   "world": "mech",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "enemy1",
+     "cmax": 3
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "enemy2",
+     "cmax": 3
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "x3-pururu",
+   "name": "スライム博士プルル",
+   "world": "mech",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-pururu",
+     "when": "death"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "tk-eirei",
+   "name": "英霊",
+   "world": "myth",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "神",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-chibi",
+   "name": "ちびクラゲ",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "set": "3",
+   "tribe": "jelly",
+   "token": true
+  },
+  {
+   "id": "tk-awa",
+   "name": "泡の妖精",
+   "world": "fan",
+   "type": "char",
+   "cost": 1,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "ward",
+     "n": 1,
+     "when": "death"
+    }
+   ],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-pururu",
+   "name": "プルルの分身",
+   "world": "mech",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "機",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-j-needle",
+   "name": "痺れ針",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "dmg",
+     "to": "enemy1"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly",
+   "req": {
+    "n": 1,
+    "tribe": "jelly"
+   },
+   "token": true
+  },
+  {
+   "id": "tk-j-cradle",
+   "name": "泡の揺りかご",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenField",
+     "n": 2,
+     "card": "tk-chibi"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly",
+   "req": {
+    "n": 1,
+    "tribe": "jelly"
+   },
+   "token": true
+  },
+  {
+   "id": "tk-j-flash",
+   "name": "青い閃光",
+   "world": "fan",
+   "type": "spell",
+   "cost": 2,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "dmg",
+     "to": "enemyAll"
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly",
+   "req": {
+    "n": 1,
+    "tribe": "jelly"
+   },
+   "token": true
+  },
+  {
+   "id": "tk-j-tide",
+   "name": "満ち潮の夜",
+   "world": "fan",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tide",
+     "n": 2
+    }
+   ],
+   "set": "3",
+   "tribe": "jelly",
+   "req": {
+    "n": 1,
+    "tribe": "jelly"
+   },
+   "token": true
+  },
+  {
+   "id": "tk-s-gold",
+   "name": "金貨の山",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 2,
+     "act": "draw",
+     "who": "self"
+    }
+   ],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-s-doll",
+   "name": "呪いの人形",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 4,
+     "act": "dmg",
+     "to": "enemyRandF"
+    }
+   ],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-s-map",
+   "name": "宝の地図",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "幻",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 10,
+     "ctype": "char"
+    }
+   ],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-s-kit",
+   "name": "修理キット",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "act": "hp",
+     "to": "ownRand"
+    }
+   ],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-s-parts",
+   "name": "謎の部品",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 2,
+     "card": "tk-gear"
+    }
+   ],
+   "set": "3",
+   "token": true
+  },
+  {
+   "id": "tk-s-dud",
+   "name": "不発弾",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 5,
+     "act": "dmg",
+     "to": "anyRand"
+    }
+   ],
+   "set": "3",
+   "token": true
   }
  ],
  "arena": {

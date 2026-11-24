@@ -47,8 +47,14 @@ const cardShown = c => !!c && !(BOSS_EX_CARDS.includes(c.id) && !bossExOn()) && 
 /* パック開放戦のルール（パックごとに決める）。今は「世界限定」と「制限なし」。あとでレア度の制限・相手の特殊ルールなどを足す */
 const GATE_RULES = {
   world: { label: "世界限定", text: p => `使えるのは、30枚すべて${WORLDS[p.gateWorld] || "決めた世界"}のカードで組んだデッキだけ。`, deckOK: (p, d) => deckWorld(d) === p.gateWorld },
-  free:  { label: "制限なし", text: () => "自分のデッキなら、どれでも使える。", deckOK: () => true }
+  free:  { label: "制限なし", text: () => "自分のデッキなら、どれでも使える。", deckOK: () => true },
+  // 第3弾（2026-11-24）：第2弾までのカードだけ・レア度ごとに枚数の上限（p.gateCap で変えられる）
+  set2cap: { label: "第2弾まで・レア度制限", text: p => { const c = gateCapOf(p); return `使えるのは、第1弾と第2弾のカードだけで組んだデッキ。さらに、レジェンドは${c.legend}枚・URは${c.ur}枚・SRは${c.sr}枚まで。`; },
+    deckOK: (p, d) => { const c = gateCapOf(p), n = { legend: 0, ur: 0, sr: 0 }; let ok = true;
+      Object.entries((d && d.cards) || {}).forEach(([id, k]) => { const x = cardRef(id); if (!x || !(+k > 0)) return; if (!["1", "2-1", "2-2", "2-3"].includes(x.set || "1")) ok = false; if (n[x.rarity] != null) n[x.rarity] += +k; });
+      return ok && n.legend <= c.legend && n.ur <= c.ur && n.sr <= c.sr; } }
 };
+const gateCapOf = p => ({ legend: 1, ur: 2, sr: 6, ...((p && p.gateCap) || {}) });
 
 /* キャラクターの能力（キーワード） */
 const KEYWORDS = {
@@ -65,8 +71,22 @@ const KEYWORDS = {
   elusive: { label: "呪文耐性", short: "耐", text: "相手の魔法や効果で対象に選ばれない（ランダムな1体や全体への効果は受ける）。" },
   noattack:{ label: "不動", short: "不", text: "攻撃できない。" },
   regen:   { label: "再生", short: "再", text: "自分のターンの終わりに、体力が最大まで回復する。" },
-  doom:    { label: "死の宣告", short: "死", text: "場に出した次の自分のターンの終わりに破壊される。" }
+  doom:    { label: "死の宣告", short: "死", text: "場に出した次の自分のターンの終わりに破壊される。" },
+  // 第3弾（2026-11-24）
+  ghost:   { label: "亡霊", short: "霊", text: "攻撃したあと、破壊される。墓地の亡霊は「墓地から選んで出す」効果で呼び戻せる。" },
+  steadfast:{ label: "不屈", short: "屈", text: "攻撃力・体力を下げる効果と、行動不能（攻撃できなくする効果）を受けない（沈黙は受ける）。" },
+  unbreakable:{ label: "不壊", short: "壊", text: "効果で破壊されない（ダメージで体力が0になると倒れる）。" },
+  reef:    { label: "岩殻", short: "岩", text: "魔法や効果のダメージを受けない（攻撃と反撃のダメージは受ける）。" },
+  calm:    { label: "凪", short: "凪", text: "このキャラが場にいる間、相手は場に出したターンのキャラで攻撃できない（速攻・突進も）。" },
+  dive:    { label: "潜航", short: "潜", text: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる）。潜っている間は、攻撃も効果も受けない。" },
+  surf:    { label: "波乗り", short: "波", text: "攻撃したあと、持ち主の手札に戻る（トークンは消える）。" }
 };
+/* 種族（第3弾）：card.tribe。効果の絞り込み（e.tribe）や数える条件で使う */
+const TRIBES = { jelly: "クラゲ", beast: "海獣" };
+const tribeOf = c => (c && c.tribe) || "";
+/* クラゲ魔法：tribe が jelly の魔法。ランダムに手に入るのは pool の3種類（満ち潮の夜は入らない） */
+const JELLY_POOL = ["tk-j-needle", "tk-j-cradle", "tk-j-flash"];
+const isJellySpell = c => !!c && c.type === "spell" && c.tribe === "jelly";
 /* 装甲は数値つきの能力（card.armor） */
 const ARMOR_TEXT = n => `装甲${n}：受けるダメージを${n}減らす。`;
 
@@ -136,11 +156,11 @@ const EFFECTS = {
   grantAll:    { legacy: true, group: "能力",   label: "自分のキャラ全体に能力を与える", text: (n, e) => `自分の${worldNo(e)}キャラ全体に「${kwName(e)}」を与える。`, opts: ["kw", "world"], noN: e => !e || e.kw !== "armor" },
   tokenField:  { group: "トークン", label: "トークンを場に出す",         text: (n, e) => `${tokDesc(e)}を${n}体出す。`, opts: ["token"], tokenType: "char" },
   tokenHand:   { group: "トークン", label: "トークンを手札に加える",     text: (n, e) => `${tokDesc(e)}を${n}枚手札に加える。`, opts: ["token"] },
-  dig:         { group: "ドロー", label: "山札の上からN枚見て、1枚を選んで手札に加える", text: n => `山札の上から${n}枚を見て、1枚を選んで手札に加える（残りは山札の下へ）。`, min: 2 },
+  dig:         { group: "ドロー", label: "山札の上からN枚見て、1枚を選んで手札に加える", text: (n, e) => `山札の上から${n}枚を見て、1枚を選んで手札に加える（残りは${e && e.rest === "grave" ? "墓地" : "山札の下"}へ）。`, min: 2 },
   buffCard:    { group: "トークン", label: "決めたカード（トークン）を強化する", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}を+${n}/+${n}する。`, opts: ["token"], tokenType: "char" },
   mendCard:    { group: "トークン", label: "決めたカード（トークン）を全回復して強化する（いなければ出す）", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}の体力を全回復させ、+${n}/+${n}する。場にいなければ、${tokDesc(e)}を1体出す。`, opts: ["token"], tokenType: "char" },
   callCard:    { group: "トークン", label: "決めたカード（トークン）が場にいなければ出す", text: (n, e) => `自分の場に${tokDesc(e).replace(/（[^）]*）$/, "")}がいなければ、${tokDesc(e)}を1体出す。`, opts: ["token"], tokenType: "char" },
-  tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札から${costRange(n, e)}${worldNo(e)}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype", "cmin"], min: 0 },
+  tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札から${costRange(n, e)}${worldNo(e)}${e && e.tribe && TRIBES[e.tribe] ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype", "cmin"], min: 0 },
   bounceEnemy: { legacy: true, group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
   shuffleEnemy:{ legacy: true, group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
   transform:   { legacy: true, group: "除去",   label: "相手キャラを変身させる",       text: (n, e) => e && e.card ? `相手キャラ1体を${tokDesc(e)}に変身させる。` : "相手キャラ1体を、効果も能力もない1/1に変身させる。", target: "enemyUnit", noN: true, opts: ["token"], tokenType: "char", tokenOptional: true },
@@ -152,8 +172,31 @@ const EFFECTS = {
   swapOwn:     { legacy: true, group: "強化",   label: "自分のキャラの攻撃力と体力を入れ替える", text: () => "自分のキャラ1体の攻撃力と体力を入れ替える。", target: "ownUnit", noN: true },
   bounceOwn:   { legacy: true, group: "強化",   label: "自分のキャラを手札に戻す",     text: () => "自分のキャラ1体を手札に戻す（トークンは消える）。", target: "ownUnit", noN: true },
   revive:      { group: "召喚",   label: "自分の墓地のキャラを復活させる", text: (n, e) => `自分の墓地の${costRange(n, e, true)}キャラをランダムに1体、場に出す（登場時効果は発動しない）。`, opts: ["cmin"] },
-  banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true }
+  banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true },
+  // ---- 第3弾（2026-11-24）。工房ではまだ細かい設定（種族・亡霊など）を変えられない。数値とトークンだけ ----
+  toss:        { group: "墓地", label: "自分の手札の（種類の）カードをランダムに捨てる", text: (n, e) => `自分の手札の${ctypeName(e)}をランダムに${n || 1}枚捨てる。`, opts: ["ctype"] },
+  mill:        { group: "墓地", label: "自分の山札の上からN枚を墓地へ送る", text: n => `自分の山札の上から${n}枚を墓地へ送る。` },
+  peekMill:    { group: "墓地", label: "山札の上1枚を見て、亡霊のキャラなら墓地へ送る", text: () => "自分の山札の上1枚を見る。それが【亡霊】のキャラなら墓地へ送る（ちがえば、そのまま山札の上に残す）。", noN: true },
+  reviveSel:   { group: "召喚", label: "自分の墓地の亡霊を選んで出す", text: (n, e) => reviveSelText(e) },
+  graveHand:   { group: "墓地", label: "自分の墓地の亡霊のキャラを手札に戻す", text: n => `自分の墓地の【亡霊】のキャラをランダムに${n}体、手札に戻す。` },
+  ward:        { group: "プレイヤー", label: "自分に結界を張る", text: () => "自分に【結界】を張る（次に自分が受けるダメージを1回だけ0にする。重ねて張れない）。", noN: true },
+  jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（痺れ針・泡の揺りかご・青い閃光のどれか）。` },
+  tide:        { group: "ダメージ", label: "満ち潮の夜（使ったクラゲ魔法の数×N）", text: n => `この対戦で自分が先に使ったクラゲ魔法1枚につき${n}、相手プレイヤーにダメージ（最大12）。` },
+  cutOne:      { group: "エナジー", label: "手札の（種族の）カード1枚のコストを下げる", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}1枚（ランダム）のコストを${n}下げる。` },
+  handSteal:   { group: "妨害", label: "相手の手札をランダムに1枚奪う（コストを下げる）", text: n => `相手の手札からランダムに1枚を奪って手札に加え、そのカードのコストを${n}下げる。` },
+  handTax:     { group: "妨害", label: "相手の手札を1枚見て、コストを上げる", text: n => `相手の手札をランダムに1枚見て、そのカードのコストを${n}上げる。` },
+  cheat:       { group: "召喚", label: "手札の（種族の）キャラを無料で出す（次の自分のターンも攻撃できない）", text: (n, e) => `自分の手札で一番コストの高い${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}キャラ1体を、コストを払わずに出す（登場時の効果も発動する。対象はランダム）。そのキャラは次の自分のターンの終わりまで攻撃できない。`, noN: true },
+  pact:        { group: "除去", label: "自分のキャラを好きな数破壊し、同じ数の相手キャラを破壊", text: () => "自分のキャラを好きな数選んで破壊する。同じ数だけ、相手キャラをランダムに破壊する。", noN: true },
+  scales:      { group: "除去", label: "おたがいの、元のコストが一番高いキャラを破壊", text: () => "おたがいの場で、元のコストが一番高いキャラを1体ずつ破壊する（同じなら、その中からランダム）。", noN: true }
 };
+/* 墓地から選んで出す効果の文（cnt：体数、n：1体ごとのコストの上限、total：合計コストの上限） */
+function reviveSelText(e) {
+  e = e || {};
+  const cnt = e.cnt || 1, each = e.n && e.n < 10 ? `コスト${e.n}以下の` : "", tot = e.total ? `（合計コスト${e.total}以下）` : "";
+  const what = `自分の墓地の${each}【亡霊】のキャラ`;
+  const mod = e.mod === "rusty" ? "そのキャラは【亡霊】を失い、装甲1を得る。" : "";
+  return `${what}を${cnt > 1 ? `${cnt}体まで` : "1体"}選んで、場に出す（${tot ? tot.slice(1, -1) + "。" : ""}登場時の効果は発動しない）。${mod}`;
+}
 
 /* 汎用「キャラに効果」の、何をするか（act）。n：数値を使う、signed：マイナスも使える、faceOK：「リーダーかキャラ」を選べる */
 const UACTS = {
@@ -174,7 +217,8 @@ const UACTS = {
   swap:      { label: "攻撃力と体力を入れ替える" },
   reset:     { label: "攻撃力と体力を元の数値に戻す（強化・弱化が消える。受けたダメージは残る）" },
   copy:      { label: "複製を自分の場に出す（今の状態ごと）" },
-  steal:     { label: "奪う（相手キャラだけ）", enemyOnly: true }
+  steal:     { label: "奪う（相手キャラだけ）", enemyOnly: true },
+  bottom:    { label: "持ち主の山札の一番下に戻す" }
 };
 /* だれに（to）。role：使うときに選ぶ対象の役割（enemy / own / any / enemyF） */
 const UTOS = {
@@ -190,22 +234,27 @@ const UTOS = {
   ownAll:    { label: "自分のキャラ全体", side: "own", world: true },
   all:       { label: "すべてのキャラ（自分のキャラも）", world: true },
   self:      { label: "このキャラ", side: "own", charOnly: true },
-  foe:       { label: "攻撃する相手キャラ（「キャラを攻撃するとき」だけ）", side: "enemy", charOnly: true }
+  foe:       { label: "攻撃する相手キャラ（「キャラを攻撃するとき」だけ）", side: "enemy", charOnly: true },
+  enemy2:    { label: "選んだ2体目の相手キャラ（1体目とちがうキャラ。「2体まで」）", role: "enemy2", side: "enemy" },
+  enemyLow:  { label: "元のコストが一番低い相手キャラ（同じならランダム）", side: "enemy" }
 };
+/* 効果の対象の絞り込み（第3弾）：e.cmax＝元のコストの上限、e.tribe＝種族、e.kwf＝能力（亡霊など） */
+const filtNo = e => `${e && e.cmax != null ? `コスト${e.cmax}以下の` : ""}${worldNo(e)}${e && e.tribe && TRIBES[e.tribe] ? `【${TRIBES[e.tribe]}】の` : ""}${e && e.kwf && KEYWORDS[e.kwf] ? `【${KEYWORDS[e.kwf].label}】の` : ""}`;
 /* 汎用「プレイヤーに効果」 */
 const PACTS = { dmg: "ダメージを与える", heal: "体力を回復する", draw: "カードを引かせる", discard: "手札をランダムに捨てさせる" };
 const PWHO = { opp: "相手", self: "自分", both: "おたがい" };
 const intoDesc = e => { const c = e && e.into && cardRef(e.into); return c ? `「${c.name}」${c.type === "char" ? `（${c.atk}/${c.hp}）` : ""}` : "（合体先未設定）"; };
 /* 対象の言い方。own は、キャラの効果ならそのキャラ自身は選べない */
 function toPhrase(e, isChar, auto) {
-  const w = worldNo(e), to = e.to;
+  const w = filtNo(e), to = e.to;
   if (auto && to === "enemy1") return "ランダムな相手キャラ1体";
   if (auto && to === "own1") return isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体";
   if (auto && to === "any1") return "ランダムなキャラ1体";
   if (auto && to === "enemyF") return "ランダムな相手キャラ1体か相手プレイヤー";
   return {
     enemy1: w ? `相手の${w}キャラ1体` : "相手キャラ1体", own1: isChar ? `このキャラ以外の自分の${w}キャラ1体` : `自分の${w}キャラ1体`, any1: isChar ? `このキャラ以外の${w}キャラ1体（自分か相手）` : `${w}キャラ1体（自分か相手）`,
-    foe: "攻撃する相手キャラ", enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
+    enemy2: w ? `もう1体の相手の${w}キャラ` : "もう1体の相手キャラ", enemyLow: `元のコストが一番低い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"),
+    foe: e.when === "attacked" ? "攻撃してきたキャラ" : e.when === "foeBack" ? "戻ってきたキャラ" : "攻撃する相手キャラ", enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
     enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
   }[to] || "（対象未設定）";
 }
@@ -223,7 +272,7 @@ function unitText(e, T) {
     case "hp": return `${T}の体力を${sg(n)}する。`;
     case "both": return `${T}を${sg(n)}/${sg(n)}する。`;
     case "heal": return `${T}の体力を${n}回復する。`;
-    case "grant": return `${T}に「${kwName(e)}」を与える${e.turn ? "（このターンだけ）" : e.kw === "doom" ? "（持ち主の次のターンの終わりに破壊される）" : ""}。`;
+    case "grant": return `${T}に「${kwName(e)}」を与える${e.turn ? "（このターンだけ）" : e.mine ? "（次の自分のターンの始めまで）" : e.kw === "doom" ? "（持ち主の次のターンの終わりに破壊される）" : ""}。`;
     case "silence": return side === "own" ? `${T}を沈黙させる（効果と能力をすべて失う。不動や死の宣告も消える）。` : `${T}を沈黙させる（効果と能力をすべて失う）。`;
     case "bounce": return side === "own" ? `${T}を手札に戻す（トークンは消える）。` : `${T}を持ち主の手札に戻す（トークンは消える）。`;
     case "shuffle": return side === "enemy" ? `${T}を相手の山札に混ぜる（トークンは消える）。` : `${T}を持ち主の山札に混ぜる（トークンは消える）。`;
@@ -233,6 +282,7 @@ function unitText(e, T) {
     case "banish": return side === "own" ? `${T}を亜空間に送る（次の自分のターンの始めに、同じ場所に戻る）。` : side === "enemy" ? `${T}を亜空間に送る（相手の次のターンの始めに戻る）。` : `${T}を亜空間に送る（持ち主の次のターンの始めに戻る）。`;
     case "copy": return `${T}の複製を、自分の場に1体出す（受けたダメージ・強化・与えられた能力もそのまま写す。登場時の効果は発動しない）。`;
     case "steal": return `${T}を奪う（自分の場に空きがあるときだけ。奪ったターンは攻撃できない）。`;
+    case "bottom": return `${T}を持ち主の山札の一番下に戻す（トークンは消える）。`;
   }
   return "（効果未設定）";
 }
@@ -286,7 +336,11 @@ const WHENS = {
   healed:    { label: "自分の体力が回復したとき",     head: "自分の体力が回復したとき" },
   voidBack:  { label: "亜空間から戻ったとき",         head: "亜空間から戻ったとき" },
   back:      { label: "場から手札に戻ったとき",       head: "場から手札に戻ったとき" },
-  wake:      { label: "目覚めたとき（目覚めを持つキャラ）", head: "目覚めたとき" }
+  wake:      { label: "目覚めたとき（目覚めを持つキャラ）", head: "目覚めたとき" },
+  // 第3弾
+  revived:   { label: "墓地から出たとき", head: "墓地から出たとき" },
+  attacked:  { label: "攻撃されたとき（対象は「攻撃してきたキャラ」）", head: "攻撃されたとき" },
+  foeBack:   { label: "相手のキャラが亜空間から戻ったとき（対象は「戻ったキャラ」）", head: "相手のキャラが亜空間から戻ったとき" }
 };
 /* 効果ごとの条件（effect.cond）。満たしていないとその効果は発動しない。cn＝数値、cworld＝世界 */
 const CONDS = {
@@ -303,12 +357,25 @@ const CONDS = {
   hitEnemy:{ label: "（直前までの効果が）相手キャラに当たった", text: () => "相手キャラに効果を与えたら", noN: true },
   recycled:{ label: "山札に戻せた", text: () => "1枚でも戻せたら", noN: true },
   gearPaid:{ label: "出すときに歯車を使った",     text: () => "歯車を使ったなら", noN: true },
-  gearNone:{ label: "出すときに歯車を使わなかった", text: () => "歯車を使わなかったなら", noN: true }
+  gearNone:{ label: "出すときに歯車を使わなかった", text: () => "歯車を使わなかったなら", noN: true },
+  // 第3弾
+  milledGhost: { label: "（直前に）墓地へ送ったカードに亡霊のキャラがいた", text: () => "その中に【亡霊】のキャラがいれば", noN: true },
+  killedNow:   { label: "（直前の効果で）キャラを倒した", text: () => "それで倒したら", noN: true },
+  tribeGE:     { label: "自分の場に（種族の）キャラがN体以上", text: (e, isChar) => `自分の場に【${TRIBES[e.ctribe] || "？"}】のキャラが${e.cn}体以上いれば${isChar ? "（このキャラも数える）" : ""}` },
+  ghostArmy:   { label: "自分の場のキャラがすべて亡霊で、墓地にキャラがN体以上", text: e => `自分の場のキャラがすべて【亡霊】で、自分の墓地にキャラが${e.cn}体以上いれば` }
 };
 /* 歯車：手札で重なるカード（何枚あっても手札1枠。枚数は p.gears）。これだけでは使えず、「歯車を使う」カードの材料になる */
 const GEAR_ID = "tk-gear";
 /* 使える条件の文 */
-const reqText = r => `使える条件：自分の場に${r.world ? WORLDS[r.world] + "の" : ""}キャラが${r.n}体以上いる${r.orEmpty ? "か、自分の場にキャラが1体もいない" : ""}とき`;
+const reqText = r => r.tribe === "jelly" && r.n === 1 && !r.world ? "クラゲ魔法：自分の場に【クラゲ】のキャラがいるときだけ使える" : `使える条件：自分の場に${r.world ? WORLDS[r.world] + "の" : ""}${r.tribe && TRIBES[r.tribe] ? `【${TRIBES[r.tribe]}】の` : ""}キャラが${r.n}体以上いる${r.orEmpty ? "か、自分の場にキャラが1体もいない" : ""}とき`;
+/* 場にいる間ずっと働く力（第3弾。card.aura）。
+   kind：stat（ほかの味方を強くする。world／tribe で絞る・atk／hp）、self（墓地の亡霊の数だけ自分の攻撃力が上がる）、cost（クラゲ魔法のコストを下げる） */
+function auraText(a) {
+  if (a.kind === "self") return `場にいる間、自分の墓地の【亡霊】のキャラ1体につき、このキャラの攻撃力+1（最大+${a.max || 4}）。`;
+  if (a.kind === "cost") return `場にいる間、自分のクラゲ魔法（満ち潮の夜も）のコストが${a.n}下がる（0まで）。`;
+  const who = `${a.world ? WORLDS[a.world] + "の" : ""}${a.tribe && TRIBES[a.tribe] ? `【${TRIBES[a.tribe]}】の` : ""}`;
+  return `場にいる間、自分のほかの${who}キャラ全体の${a.atk && a.hp ? `攻撃力と体力を+${a.atk}` : a.atk ? `攻撃力を+${a.atk}` : `体力を+${a.hp}`}する。`;
+}
 const condText = (e, isChar = true) => (e && CONDS[e.cond] ? CONDS[e.cond].text(e, isChar) : "");
 const whenOf = e => (e && WHENS[e.when] ? e.when : "play");
 /* 使ったとき（登場時）の効果だけ */
@@ -436,6 +503,7 @@ function cardTargetRoles(card) {
   const rs = playEffects(card).map(effRole).filter(Boolean);
   if (rs.includes("enemyF")) roles.push("enemyF");
   else if (rs.includes("enemy")) roles.push("enemy");
+  if (rs.includes("enemy2")) roles.push("enemy2");
   if (rs.includes("own") && !sac) roles.push("own");
   if (rs.includes("any")) roles.push("any");
   return roles;
@@ -459,14 +527,22 @@ function effectsText(card, list, auto) {
     let k = 1;
     while (i + k < list.length && JSON.stringify(list[i + k]) === JSON.stringify(e)) k++;
     let t;
+    const nx = list[i + 1];
+    if (e.kind === "unit" && e.to === "enemy1" && nx && nx.kind === "unit" && nx.to === "enemy2" && nx.act === e.act) {   // 2体まで選ぶ（分解砲）
+      t = unitText(e, `選んだ相手の${filtNo(e)}キャラ2体まで`.replace("相手のキャラ", "相手キャラ"));
+      out.push(t); i += 1; seen.enemy = true; continue;
+    }
     if (e.kind === "unit") {
       const role = UTOS[e.to] && UTOS[e.to].role;
       let T = toPhrase(e, isChar, auto);
       if (!auto && role && seen[role]) T = role === "enemyF" ? "その相手" : "そのキャラ";
       if (role) seen[role] = true;
-      t = unitText(e, T);
+      t = unitText(e.amt ? { ...e, n: "回復した分の" } : e, T);
     } else t = EFFECTS[e.kind].text(e.n, e);
     if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
+    if (e.per === "milledGhost") t = `その中の【亡霊】のキャラ1体につき、${t}`;
+    if (e.plus) t = t.replace(/。$/, `。自分の場の【${TRIBES[e.plus] || ""}】のキャラ1体につき、さらに1ダメージ（最大+${e.plusMax || 2}）。`);
+    if (e.cap) t = t.replace(/。$/, `（1ターンに${e.cap}回まで）。`);
     if (e.per === "played") t = e.split ? `このターン、このカードより先に使ったカードの枚数だけ、${t.replace(/。$/, "")}（1回ずつ対象を選び直す）。` : `このターン、このカードより先に使ったカード1枚につき、${t}`;
     // 前の効果と同じ条件なら、条件は2回書かずに「さらに」でつなぐ
     const pe = i > 0 ? list[i - 1] : null, sameCond = pe && e.cond && pe.cond === e.cond && pe.cn === e.cn && pe.cworld === e.cworld;
@@ -478,9 +554,12 @@ function effectsText(card, list, auto) {
   return out.join("");
 }
 /* 「自分がカードを使ったとき」の見出し（世界・種類で絞っていればそれも書く） */
-function cardPlayHead(e) { return `自分が${worldNo(e && { world: e.pw })}${e && e.pt === "char" ? "キャラ" : e && e.pt === "spell" ? "魔法" : "カード"}を使ったとき`; }
+function cardPlayHead(e) { if (e && e.ptr === "jelly" && e.pt === "spell") return "自分がクラゲ魔法を使ったとき"; return `自分が${worldNo(e && { world: e.pw })}${e && e.ptr && TRIBES[e.ptr] ? `【${TRIBES[e.ptr]}】の` : ""}${e && e.pt === "char" ? "キャラ" : e && e.pt === "spell" ? "魔法" : "カード"}を使ったとき`; }
+/* 「ほかの味方が倒されたとき」の見出し（e.af：亡霊・種族で絞る） */
+function allyDeathHead(e) { const f = e && e.af; return f === "ghost" ? "自分の【亡霊】のキャラが倒されたとき" : f && TRIBES[f] ? `ほかの自分の【${TRIBES[f]}】のキャラが倒されたとき` : WHENS.allyDeath.head; }
 function cardTextLines(card, o = {}) {
   const lines = [];
+  if (card.type === "char" && card.tribe && TRIBES[card.tribe]) lines.push(`種族：${TRIBES[card.tribe]}`);
   if (card.type === "char" && !o.noKw) {
     (card.keywords || []).forEach(k => KEYWORDS[k] && lines.push(`${KEYWORDS[k].label}：${KEYWORDS[k].text}`));
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
@@ -488,6 +567,8 @@ function cardTextLines(card, o = {}) {
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
   const useWhat = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
   if (card.req) lines.unshift(reqText(card.req) + "。");
+  if (card.sway && !o.noKw) lines.push(`揺らぎ：使うまで中身が決まらない。使ったとき、次のどれかになる（ランダム）：${card.sway.map(id => { const c = cardRef(id); return c ? `「${c.name}」${effectsText(c, null, true)}` : "？"; }).join("／")}`);
+  if (card.aura) lines.push(auraText(card.aura));
   if (card.shrink && !o.noKw) lines.push(`化かし：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが1下がる。`);
   if (card.grow && !o.noKw) { const g = card.grow, w = [];
     if (g.stat && card.type === "char") w.push("攻撃力と体力");
@@ -500,8 +581,13 @@ function cardTextLines(card, o = {}) {
     Object.keys(WHENS).forEach(w => {
       const all = (card.effects || []).filter(e => whenOf(e) === w);
       if (w === "cardPlay") {
-        const keys = [...new Set(all.map(e => `${e.pw || ""}|${e.pt || ""}`))];
-        keys.forEach(key => { const g = all.filter(e => `${e.pw || ""}|${e.pt || ""}` === key); const t = effectsText(card, g, true); if (t) lines.push(`${cardPlayHead(g[0])}：${t}`); });
+        const keys = [...new Set(all.map(e => `${e.pw || ""}|${e.pt || ""}|${e.ptr || ""}`))];
+        keys.forEach(key => { const g = all.filter(e => `${e.pw || ""}|${e.pt || ""}|${e.ptr || ""}` === key); const t = effectsText(card, g, true); if (t) lines.push(`${cardPlayHead(g[0])}：${t}`); });
+        return;
+      }
+      if (w === "allyDeath") {
+        const keys = [...new Set(all.map(e => e.af || ""))];
+        keys.forEach(key => { const g = all.filter(e => (e.af || "") === key); const t = effectsText(card, g, true); if (t) lines.push(`${allyDeathHead(g[0])}：${t}`); });
         return;
       }
       const t = effectsText(card, all, w !== "play");
@@ -840,7 +926,22 @@ function normEffect(e, type) {
     out.cond = e.cond;
     if (!CONDS[e.cond].noN) out.cn = Math.max(0, Math.min(30, Math.round(+e.cn || 0)));
     if (CONDS[e.cond].world && WORLDS[e.cworld]) out.cworld = e.cworld;
+    if (e.cond === "tribeGE" && TRIBES[e.ctribe]) out.ctribe = e.ctribe;
   }
+  // 第3弾の設定（工房ではまだ変えられないが、消さずに残す）
+  if (out.when === "cardPlay" && TRIBES[e.ptr]) out.ptr = e.ptr;
+  if (out.when === "allyDeath" && (e.af === "ghost" || TRIBES[e.af])) out.af = e.af;
+  if (TRIBES[e.tribe]) out.tribe = e.tribe;
+  if (e.cmax != null && e.cmax !== "" && +e.cmax >= 0) out.cmax = Math.min(20, Math.round(+e.cmax));
+  if (KEYWORDS[e.kwf]) out.kwf = e.kwf;
+  if (e.kind === "unit" && out.kw && e.mine) out.mine = true;
+  if (+e.cap > 0) out.cap = Math.min(9, Math.round(+e.cap));
+  if (e.amt) out.amt = true;
+  if (TRIBES[e.plus]) { out.plus = e.plus; out.plusMax = Math.max(1, Math.min(9, Math.round(+e.plusMax || 2))); }
+  if (e.per === "milledGhost") out.per = e.per;
+  if (e.kind === "reviveSel") { out.cnt = Math.max(1, Math.min(4, Math.round(+e.cnt || 1))); if (+e.total > 0) out.total = Math.min(40, Math.round(+e.total)); if (e.mod === "rusty") out.mod = "rusty"; }
+  if (e.kind === "dig" && e.rest === "grave") out.rest = "grave";
+  if (e.kind === "cutOne" && TYPES[e.ctype]) out.ctype = e.ctype;
   return out;
 }
 /* 読み込んだデータの欠けを補う */
@@ -868,7 +969,12 @@ function normalizeData(data) {
     ...(normSet(c.set) ? { set: normSet(c.set) } : {}),   // 弾（なし＝第1弾）
     // 手札で小さくなる：手札にある間、自分が（世界・種類の）カードを使うたびにコストが n 下がる
     // 妖気：このターン、（世界・種類の）カードを使うたびに、手札のこのカードが1ずつ強くなる。stat＝攻撃力と体力、dmg＝効果のダメージ、num＝そのほかの効果の数
-    ...(c.req && +c.req.n > 0 ? { req: { n: Math.min(5, Math.round(+c.req.n)), ...(WORLDS[c.req.world] ? { world: c.req.world } : {}), ...(c.req.orEmpty ? { orEmpty: true } : {}) } } : {}),
+    ...(c.req && +c.req.n > 0 ? { req: { n: Math.min(5, Math.round(+c.req.n)), ...(WORLDS[c.req.world] ? { world: c.req.world } : {}), ...(TRIBES[c.req.tribe] ? { tribe: c.req.tribe } : {}), ...(c.req.orEmpty ? { orEmpty: true } : {}) } } : {}),
+    // 第3弾：種族・場にいる間の力・揺らぎ（中身のトークン）
+    ...(TRIBES[c.tribe] ? { tribe: c.tribe } : {}),
+    ...(c.aura && ["stat", "self", "cost"].includes(c.aura.kind) ? { aura: { kind: c.aura.kind, ...(WORLDS[c.aura.world] ? { world: c.aura.world } : {}), ...(TRIBES[c.aura.tribe] ? { tribe: c.aura.tribe } : {}),
+      ...["atk", "hp", "n", "max"].reduce((o, k) => (+c.aura[k] > 0 ? { ...o, [k]: Math.min(9, Math.round(+c.aura[k])) } : o), {}) } } : {}),
+    ...(Array.isArray(c.sway) && c.sway.length ? { sway: c.sway.filter(x => typeof x === "string" && x).slice(0, 5) } : {}),
     ...(c.grow ? { grow: { n: 1, ...(WORLDS[c.grow.world] ? { world: c.grow.world } : {}), ...(["char", "spell"].includes(c.grow.ctype) ? { ctype: c.grow.ctype } : {}),
       ...(c.grow.stat || c.grow.dmg || c.grow.num ? { stat: !!c.grow.stat, dmg: !!c.grow.dmg, num: !!c.grow.num } : c.type === "spell" ? { stat: false, dmg: true, num: false } : { stat: true, dmg: false, num: false }) } } : {}),
     ...(c.shrink ? { shrink: { n: 1, ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}) } } : {}),
