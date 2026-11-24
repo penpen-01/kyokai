@@ -4,8 +4,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const [,, nStr, level, withOld] = process.argv;
 const D3 = {
-  ghost: { name: "幽霊船団", cards: { "m3-eirei": 3, "f3-nakimushi": 3, "x3-sabineji": 2, "f3-temaneki": 3, "m3-hakamori": 2, "f3-gaikotsu": 3, "m3-suihei": 2, "f3-ikarihiki": 2, "x3-kirai": 2, "m3-charon": 2, "f3-veil": 2, "m3-touro": 2, "f3-grave": 1, "m3-centurion": 1 } },
-  ghost2: { name: "亡霊（重め）", cards: { "m3-eirei": 2, "x3-kirai": 2, "m3-hakamori": 3, "x3-yoduri": 2, "x3-saikidou": 3, "m3-hatamochi": 2, "m3-charon": 2, "x3-garakuta": 2, "m3-eiji": 2, "x3-shinsui": 2, "m3-hotaru": 2, "x3-rusty": 2, "f3-veil": 2, "x3-senkan": 1, "f3-grave": 1 } },
+  ghost: { name: "幽霊船団", cards: { "m3-eirei": 3, "f3-nakimushi": 3, "x3-sabineji": 3, "x3-renketsu": 3, "m3-hakamori": 2, "f3-gaikotsu": 3, "m3-suihei": 2, "x3-dock": 2, "f3-tamayobi": 2, "m3-charon": 2, "f3-veil": 2, "m3-hatamochi": 2, "f3-grave": 1 } },
+  ghost2: { name: "亡霊（重め）", cards: { "m3-eirei": 2, "x3-kirai": 2, "m3-hakamori": 3, "x3-yoduri": 2, "x3-renketsu": 3, "m3-hatamochi": 2, "m3-charon": 2, "x3-dock": 2, "m3-eiji": 2, "x3-shinsui": 2, "m3-hotaru": 2, "x3-rusty": 2, "f3-veil": 2, "x3-senkan": 1, "f3-grave": 1 } },
   jelly: { name: "クラゲ", cards: { "f3-komoriuta": 3, "x3-shingou": 3, "f3-puka": 3, "f3-yurameki": 3, "x3-houden": 2, "x3-chikuden": 2, "f3-tomoshibi": 3, "x3-baiyou": 2, "x3-buoy": 2, "x3-hikari": 2, "f3-nocto": 1, "f3-octa": 1, "x3-daihouden": 2, "f3-uzumaki": 1 } },
   beast: { name: "海獣", cards: { "m3-harpoon": 3, "m3-fue": 3, "m3-siren": 3, "m3-yadokari": 3, "m3-uni": 2, "m3-trident": 3, "m3-aspido": 2, "m3-shoukan": 2, "m3-scylla": 2, "m3-hippo": 2, "m3-kraken": 1, "m3-charybdis": 1, "m3-leviathan": 1, "m3-ikari": 2 } },
   mechsea: { name: "機械の海", cards: { "x3-iruka": 3, "x3-yoduri": 2, "x3-hamasouji": 3, "x3-kyunan": 2, "x3-gyorai": 3, "x3-crane": 2, "x3-gearshark": 2, "x3-lux": 2, "x3-orca": 1, "x3-shouha": 2, "x3-bunkai": 2, "x3-nikyaku": 2, "x3-kanshou": 1, "x3-nautilus": 1, "x3-pururu": 2 } },

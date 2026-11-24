@@ -26,13 +26,13 @@ const { chromium } = require('playwright');
       // 1. 亡霊：攻撃したあと破壊される
       fresh(); let g = put(0, 'm3-suihei');
       attack(0, g.uid, 'player');
-      ok('亡霊は攻撃後に破壊', !S.players[0].field.includes(g) && S.players[0].gy.includes('m3-suihei') && S.players[1].hp === 18);
+      ok('亡霊は攻撃後に破壊', !S.players[0].field.includes(g) && S.players[0].gy.includes('m3-suihei') && S.players[1].hp === 17);
       // 2. ホタル：コスト3以下の亡霊を2体まで（CPUは自動）。墓地から出たときの効果
       fresh(); S.players[0].gy = ['m3-eirei', 'm3-suihei', 'm3-centurion', 'f3-gaikotsu']; S.players[0].grave = [...S.players[0].gy];
       play(0, 'm3-hotaru');
       const f0 = S.players[0].field.map(u => u.id);
-      ok('ホタルで亡霊2体（コスト3以下）', f0.length >= 3 && !f0.includes('m3-centurion') && f0.filter(x => x !== 'm3-hotaru' && x !== 'tk-hero').length === 2, f0);
-      ok('墓地から出たとき（骸骨甲板員+2 か 水兵の英霊）', S.players[0].field.some(u => u.id === 'f3-gaikotsu' && u.atk === 4) || f0.includes('tk-hero'), S.players[0].field.map(u => [u.id, u.atk]));
+      ok('ホタルで亡霊2体（コスト3以下）', f0.length >= 3 && !f0.includes('m3-centurion') && f0.filter(x => x !== 'm3-hotaru' && x !== 'tk-funa').length === 2, f0);
+      ok('墓地から出たとき（骸骨甲板員+2 か 水兵の英霊）', S.players[0].field.some(u => u.id === 'f3-gaikotsu' && u.atk === 5) || f0.includes('tk-funa'), S.players[0].field.map(u => [u.id, u.atk]));
       // 2b. 人が選ぶ流れ（pick を直接）
       fresh(); S.players[0].gy = ['m3-eirei', 'x3-sabineji', 'f3-nakimushi']; S.pick = { pi: 0, kind: 'revive', ids: ['m3-eirei', 'x3-sabineji', 'f3-nakimushi'], max: 2, total: 5, mod: '' };
       ok('pick：上限を超える選び方は通らない', resolvePick(0, [0, 1, 2]) === false && !!S.pick);
@@ -73,7 +73,7 @@ const { chromium } = require('playwright');
       ok('ノクト：満ち潮を手札に', S.players[0].hand.includes('tk-j-tide'));
       // 11. 水夫長（墓地の亡霊の数）
       fresh(); S.players[0].gy = ['m3-eirei', 'm3-suihei', 'f3-nakimushi', 'x3-kirai', 'x3-sabineji', 'squire']; play(0, 'f3-suifucho');
-      ok('水夫長：墓地の亡霊で攻撃+4（最大）', S.players[0].field[0].atk === 8, S.players[0].field[0].atk);
+      ok('水夫長：墓地の亡霊で攻撃+4（最大）', S.players[0].field[0].atk === 9, S.players[0].field[0].atk);
       // 12. 揺らぎ
       fresh(); put(1, 'st-golem'); const hp0 = S.players[0].hand.length; play(0, 'f3-takarabako');
       ok('揺らぎ：どれかが起きる', /揺らぎ/.test(S.log.map(l => l.msg).join()), lastLog());
@@ -81,6 +81,14 @@ const { chromium } = require('playwright');
       fresh(); const nt = put(0, 'x3-nautilus'); put(1, 'x3-kanshou'); endTurn(0);
       ok('潜航：ターンの終わりに亜空間へ', !S.players[0].field.includes(nt) && voidOf(S.players[0]).length === 1);
       endTurn(1); ok('戻ってきて、ブイの4ダメージ', S.players[0].field.includes(nt) && nt.hp === 3, nt.hp); ok('戻ったターンも攻撃できる', nt.ready);
+      S.players[1].field = []; endTurn(0); endTurn(1); endTurn(0); ok('潜航：3回目は潜らない', S.players[0].field.includes(nt) && nt.dives === 2, nt.dives);
+      // 13b. 幽霊ドック：ターンの始めに亡霊を出して突進
+      fresh(); put(0, 'x3-dock'); S.players[0].gy = ['m3-eirei', 'm3-centurion']; endTurn(0); endTurn(1);
+      const dk = S.players[0].field.find(u => u.id === 'm3-eirei');
+      ok('ドック：コスト2以下の亡霊を出して突進', dk && kw(dk, 'rush') && !S.players[0].field.some(u => u.id === 'm3-centurion'));
+      // 13c. 魂呼び：コスト2以下を3体まで
+      fresh(); S.players[0].gy = ['m3-eirei', 'f3-nakimushi', 'x3-sabineji', 'x3-renketsu', 'm3-suihei']; play(0, 'f3-tamayobi');
+      ok('魂呼び：3体', S.players[0].field.filter(u => !DEF[u.id].token).length === 3 && !S.players[0].field.some(u => u.id === 'm3-suihei'), S.players[0].field.map(u => u.id));
       // 14. 道連れ
       fresh(); const a1 = put(0, 'm3-eirei'), a2 = put(0, 'squire'); put(1, 'x-gigas'); put(1, 'garm'); put(1, 'dragon');
       S.pick = { pi: 0, kind: 'pact', uids: [a1.uid, a2.uid], max: 2 }; resolvePick(0, [0, 1]);

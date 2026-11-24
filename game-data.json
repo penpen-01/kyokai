@@ -1,5 +1,5 @@
 {
- "version": 209,
+ "version": 210,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -494,7 +494,7 @@
     "f3-utsubo",
     "f3-gaikotsu",
     "f3-ikarihiki",
-    "f3-tamagae",
+    "f3-tamayobi",
     "f3-suifucho",
     "f3-michizure",
     "f3-daikoushin",
@@ -524,10 +524,10 @@
     "f3-suiryu",
     "x3-sabineji",
     "x3-haizai",
-    "x3-saikidou",
+    "x3-renketsu",
     "x3-shinsui",
     "x3-kirai",
-    "x3-garakuta",
+    "x3-dock",
     "x3-kinkyu",
     "x3-senkan",
     "x3-rusty",
@@ -10231,7 +10231,7 @@
    "world": "myth",
    "type": "char",
    "cost": 1,
-   "atk": 1,
+   "atk": 2,
    "hp": 1,
    "glyph": "神",
    "limit": 3,
@@ -10301,8 +10301,8 @@
    "world": "myth",
    "type": "char",
    "cost": 3,
-   "atk": 2,
-   "hp": 2,
+   "atk": 3,
+   "hp": 4,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
@@ -10313,7 +10313,7 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-hero",
+     "card": "tk-funa",
      "when": "revived"
     }
    ],
@@ -10325,8 +10325,8 @@
    "world": "myth",
    "type": "char",
    "cost": 5,
-   "atk": 4,
-   "hp": 4,
+   "atk": 5,
+   "hp": 6,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
@@ -10337,7 +10337,7 @@
     {
      "kind": "tokenField",
      "n": 2,
-     "card": "tk-hero",
+     "card": "tk-funa",
      "when": "revived"
     }
    ],
@@ -10349,8 +10349,8 @@
    "world": "myth",
    "type": "char",
    "cost": 3,
-   "atk": 2,
-   "hp": 3,
+   "atk": 3,
+   "hp": 4,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -10393,8 +10393,8 @@
    "world": "myth",
    "type": "char",
    "cost": 5,
-   "atk": 4,
-   "hp": 5,
+   "atk": 5,
+   "hp": 6,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -11012,7 +11012,7 @@
    "world": "fan",
    "type": "char",
    "cost": 1,
-   "atk": 1,
+   "atk": 2,
    "hp": 1,
    "glyph": "幻",
    "limit": 3,
@@ -11089,32 +11089,7 @@
    "world": "fan",
    "type": "char",
    "cost": 3,
-   "atk": 2,
-   "hp": 2,
-   "glyph": "幻",
-   "limit": 3,
-   "rarity": "common",
-   "keywords": [
-    "ghost"
-   ],
-   "effects": [
-    {
-     "kind": "unit",
-     "n": 2,
-     "act": "atk",
-     "to": "self",
-     "when": "revived"
-    }
-   ],
-   "set": "3"
-  },
-  {
-   "id": "f3-ikarihiki",
-   "name": "錨引きの亡者",
-   "world": "fan",
-   "type": "char",
-   "cost": 4,
-   "atk": 3,
+   "atk": 4,
    "hp": 3,
    "glyph": "幻",
    "limit": 3,
@@ -11142,8 +11117,41 @@
    "set": "3"
   },
   {
-   "id": "f3-tamagae",
-   "name": "魂替えの儀",
+   "id": "f3-ikarihiki",
+   "name": "錨引きの亡者",
+   "world": "fan",
+   "type": "char",
+   "cost": 4,
+   "atk": 4,
+   "hp": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "atk",
+     "to": "self",
+     "when": "revived"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "rush",
+     "when": "revived"
+    }
+   ],
+   "set": "3"
+  },
+  {
+   "id": "f3-tamayobi",
+   "name": "魂呼び",
    "world": "fan",
    "type": "spell",
    "cost": 4,
@@ -11154,14 +11162,11 @@
    "effects": [
     {
      "kind": "reviveSel",
-     "n": 6,
-     "cnt": 1
+     "n": 2,
+     "cnt": 3
     }
    ],
-   "set": "3",
-   "pay": {
-    "kind": "sacrifice"
-   }
+   "set": "3"
   },
   {
    "id": "f3-suifucho",
@@ -11169,8 +11174,8 @@
    "world": "fan",
    "type": "char",
    "cost": 6,
-   "atk": 4,
-   "hp": 5,
+   "atk": 5,
+   "hp": 6,
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
@@ -11771,7 +11776,7 @@
    "world": "mech",
    "type": "char",
    "cost": 1,
-   "atk": 1,
+   "atk": 2,
    "hp": 1,
    "glyph": "機",
    "limit": 3,
@@ -11785,6 +11790,14 @@
      "n": 1,
      "act": "dmg",
      "to": "enemyRand",
+     "when": "revived"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "haste",
      "when": "revived"
     }
    ],
@@ -11813,12 +11826,12 @@
    "set": "3"
   },
   {
-   "id": "x3-saikidou",
-   "name": "再起動兵",
+   "id": "x3-renketsu",
+   "name": "連結ボット",
    "world": "mech",
    "type": "char",
-   "cost": 3,
-   "atk": 2,
+   "cost": 2,
+   "atk": 1,
    "hp": 2,
    "glyph": "機",
    "limit": 3,
@@ -11828,18 +11841,14 @@
    ],
    "effects": [
     {
-     "kind": "unit",
+     "kind": "tokenField",
      "n": 1,
-     "act": "grant",
-     "to": "self",
-     "kw": "armor",
-     "when": "revived"
+     "card": "tk-funa"
     },
     {
-     "kind": "unit",
+     "kind": "tokenField",
      "n": 1,
-     "act": "atk",
-     "to": "self",
+     "card": "tk-funa",
      "when": "revived"
     }
    ],
@@ -11851,8 +11860,8 @@
    "world": "mech",
    "type": "char",
    "cost": 5,
-   "atk": 3,
-   "hp": 5,
+   "atk": 4,
+   "hp": 7,
    "glyph": "機",
    "limit": 3,
    "rarity": "common",
@@ -11876,8 +11885,8 @@
    "world": "mech",
    "type": "char",
    "cost": 2,
-   "atk": 1,
-   "hp": 2,
+   "atk": 2,
+   "hp": 3,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
@@ -11896,25 +11905,24 @@
    "set": "3"
   },
   {
-   "id": "x3-garakuta",
-   "name": "解体屋ガラクタ",
+   "id": "x3-dock",
+   "name": "幽霊ドック",
    "world": "mech",
    "type": "char",
-   "cost": 3,
-   "atk": 2,
-   "hp": 3,
+   "cost": 4,
+   "atk": 1,
+   "hp": 5,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
    "keywords": [],
    "effects": [
     {
-     "kind": "unit",
-     "n": 1,
-     "act": "atk",
-     "to": "self",
-     "af": "ghost",
-     "when": "allyDeath"
+     "kind": "reviveSel",
+     "n": 2,
+     "cnt": 1,
+     "mod": "rush",
+     "when": "turnStart"
     }
    ],
    "set": "3"
@@ -11948,7 +11956,7 @@
    "world": "mech",
    "type": "char",
    "cost": 7,
-   "atk": 6,
+   "atk": 7,
    "hp": 7,
    "glyph": "機",
    "limit": 3,
@@ -12556,6 +12564,24 @@
     }
    ],
    "set": "3"
+  },
+  {
+   "id": "tk-funa",
+   "name": "船幽霊",
+   "world": "myth",
+   "type": "char",
+   "cost": 1,
+   "atk": 2,
+   "hp": 1,
+   "glyph": "神",
+   "limit": 0,
+   "rarity": "common",
+   "keywords": [
+    "ghost"
+   ],
+   "effects": [],
+   "set": "3",
+   "token": true
   },
   {
    "id": "tk-chibi",

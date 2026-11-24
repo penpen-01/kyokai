@@ -11,7 +11,7 @@ def W(when, e): return {**e, "when": when}
 KW = {"守護": "guard", "不動": "noattack", "2回攻撃": "twice", "突進": "rush", "亡霊": "ghost", "不屈": "steadfast", "不壊": "unbreakable", "岩殻": "reef", "凪": "calm", "潜航": "dive"}
 RAR = {"C": "common", "R": "rare", "SR": "sr", "UR": "ur", "L": "legend"}
 GLY = {"myth": "神", "fan": "幻", "mech": "機"}
-CHIBI, AWA, EIREI, PURU, TIDE = "tk-chibi", "tk-awa", "tk-hero", "tk-pururu", "tk-j-tide"   # 英霊は既存のトークン（不死の英雄王と同じ。オーナー 11-24）
+CHIBI, AWA, EIREI, PURU, TIDE = "tk-chibi", "tk-awa", "tk-funa", "tk-pururu", "tk-j-tide"   # 船幽霊（英霊3/2は強すぎるので別のトークン。オーナー 11-24 20:05）
 REQ_J = {"n": 1, "tribe": "jelly"}
 
 def C(id, world, r, cost, name, atk, hp, kws=(), effects=(), **x):
@@ -28,14 +28,14 @@ M = "myth"; F = "fan"; X = "mech"
 REV = "revived"
 CARDS = [
   # ===== 神話 =====
-  C("m3-eirei", M, "C", 1, "英霊の残り火", 1, 1, ["亡霊"], [W(REV, U("both", "ownRand", 1))]),
+  C("m3-eirei", M, "C", 1, "英霊の残り火", 2, 1, ["亡霊"], [W(REV, U("both", "ownRand", 1))]),
   C("m3-hakamori", M, "C", 2, "墓守の翁", 1, 2, [], [K("mill", 3)]),
   S("m3-funauta", M, "C", 2, "黄泉の舟唄", [K("toss", 1, ctype="char"), P("draw", "self", 2)]),
-  C("m3-suihei", M, "C", 3, "亡霊水兵", 2, 2, ["亡霊"], [W(REV, K("tokenField", 1, card=EIREI))]),
-  C("m3-centurion", M, "C", 5, "冥海の百人隊長", 4, 4, ["亡霊"], [W(REV, K("tokenField", 2, card=EIREI))]),
-  C("m3-hatamochi", M, "R", 3, "亡国の旗手", 2, 3, ["亡霊"], [W(REV, U("atk", "ownAll", 1))]),
+  C("m3-suihei", M, "C", 3, "亡霊水兵", 3, 4, ["亡霊"], [W(REV, K("tokenField", 1, card=EIREI))]),
+  C("m3-centurion", M, "C", 5, "冥海の百人隊長", 5, 6, ["亡霊"], [W(REV, K("tokenField", 2, card=EIREI))]),
+  C("m3-hatamochi", M, "R", 3, "亡国の旗手", 3, 4, ["亡霊"], [W(REV, U("atk", "ownAll", 1))]),
   S("m3-touro", M, "R", 4, "還魂の灯籠", [K("reviveSel", 6, cnt=1)]),
-  C("m3-eiji", M, "R", 5, "神殿の亡霊衛士", 4, 5, ["亡霊"], [W(REV, U("hp", "self", 3)), W(REV, U("dmg", "enemyRand", 2))]),
+  C("m3-eiji", M, "R", 5, "神殿の亡霊衛士", 5, 6, ["亡霊"], [W(REV, U("hp", "self", 3)), W(REV, U("dmg", "enemyRand", 2))]),
   C("m3-hotaru", M, "SR", 6, "送り火の巫女ホタル", 3, 5, [], [K("reviveSel", 3, cnt=2)]),
   C("m3-charon", M, "SR", 3, "渡し守カロン", 1, 4, [], [W("allyDeath", P("draw", "self", 1, af="ghost", cap=2))]),
   C("m3-harpoon", M, "C", 3, "海獣狩りの銛打ち", 2, 3, [], [K("cutOne", 1, tribe="beast", ctype="char")]),
@@ -62,13 +62,13 @@ CARDS = [
   C("m3-hayate", M, "R", 6, "波斬りのハヤテ", 4, 4, ["2回攻撃"], [W("kill", U("atk", "self", 1))]),
   S("m3-ikari", M, "SR", 7, "海神の怒り", [U("dmg", "enemyAll", 5), P("dmg", "opp", 3, cond="tribeGE", ctribe="beast", cn=1)]),
   # ===== 幻想 =====
-  C("f3-nakimushi", F, "C", 1, "泣き虫ゴースト", 1, 1, ["亡霊"], [W(REV, P("draw", "self", 1))]),
+  C("f3-nakimushi", F, "C", 1, "泣き虫ゴースト", 2, 1, ["亡霊"], [W(REV, P("draw", "self", 1))]),
   S("f3-temaneki", F, "C", 2, "亡者の手招き", [K("mill", 3), P("draw", "self", 1, cond="milledGhost")]),
   C("f3-utsubo", F, "C", 2, "沈船のウツボ", 1, 3, [], [K("mill", 2), U("atk", "self", 1, per="milledGhost")]),
-  C("f3-gaikotsu", F, "C", 3, "骸骨甲板員", 2, 2, ["亡霊"], [W(REV, U("atk", "self", 2))]),
-  C("f3-ikarihiki", F, "C", 4, "錨引きの亡者", 3, 3, ["亡霊"], [W(REV, U("atk", "self", 1)), W(REV, U("grant", "self", 1, kw="rush"))]),
-  S("f3-tamagae", F, "R", 4, "魂替えの儀", [K("reviveSel", 6, cnt=1)], pay={"kind": "sacrifice"}),
-  C("f3-suifucho", F, "R", 6, "亡者の水夫長", 4, 5, ["亡霊"], [], aura={"kind": "self", "max": 4}),
+  C("f3-gaikotsu", F, "C", 3, "骸骨甲板員", 4, 3, ["亡霊"], [W(REV, U("atk", "self", 1)), W(REV, U("grant", "self", 1, kw="rush"))]),
+  C("f3-ikarihiki", F, "C", 4, "錨引きの亡者", 4, 5, ["亡霊"], [W(REV, U("atk", "self", 1)), W(REV, U("grant", "self", 1, kw="rush"))]),
+  S("f3-tamayobi", F, "R", 4, "魂呼び", [K("reviveSel", 2, cnt=3)]),
+  C("f3-suifucho", F, "R", 6, "亡者の水夫長", 5, 6, ["亡霊"], [], aura={"kind": "self", "max": 4}),
   S("f3-michizure", F, "SR", 4, "道連れの宴", [K("pact")]),
   S("f3-daikoushin", F, "UR", 6, "亡者の大行進", [U("grant", "ownAll", 1, kw="pierce", turn=True, cond="ghostArmy", cn=6), U("atk", "ownAll", 2, turn=True, cond="ghostArmy", cn=6)]),
   C("f3-veil", F, "UR", 5, "沈める花嫁ヴェール", 3, 4, [], [K("reviveSel", 10, cnt=2, total=5)]),
@@ -96,14 +96,14 @@ CARDS = [
   C("f3-hugh", F, "R", 3, "つむじ風のヒュー", 2, 2, [], [U("bounce", "enemy1", 1, cmax=2)]),
   C("f3-suiryu", F, "SR", 7, "翠竜", 6, 7, ["不屈", "不壊"]),
   # ===== 機械 =====
-  C("x3-sabineji", X, "C", 1, "錆びネジ", 1, 1, ["亡霊"], [W(REV, U("dmg", "enemyRand", 1))]),
+  C("x3-sabineji", X, "C", 1, "錆びネジ", 2, 1, ["亡霊"], [W(REV, U("dmg", "enemyRand", 1)), W(REV, U("grant", "self", 1, kw="haste"))]),
   S("x3-haizai", X, "C", 2, "廃材あさり", [K("mill", 2), K("graveHand", 1)]),
-  C("x3-saikidou", X, "C", 3, "再起動兵", 2, 2, ["亡霊"], [W(REV, U("grant", "self", 1, kw="armor")), W(REV, U("atk", "self", 1))]),
-  C("x3-shinsui", X, "C", 5, "浸水警備機", 3, 5, ["亡霊"], [W(REV, U("dmg", "enemyAll", 1))]),
-  C("x3-kirai", X, "R", 2, "浮遊機雷", 1, 2, ["亡霊"], [W("death", U("dmg", "enemyRand", 2))]),
-  C("x3-garakuta", X, "R", 3, "解体屋ガラクタ", 2, 3, [], [W("allyDeath", U("atk", "self", 1, af="ghost"))]),
+  C("x3-renketsu", X, "C", 2, "連結ボット", 1, 2, ["亡霊"], [K("tokenField", 1, card=EIREI), W(REV, K("tokenField", 1, card=EIREI))]),
+  C("x3-shinsui", X, "C", 5, "浸水警備機", 4, 7, ["亡霊"], [W(REV, U("dmg", "enemyAll", 1))]),
+  C("x3-kirai", X, "R", 2, "浮遊機雷", 2, 3, ["亡霊"], [W("death", U("dmg", "enemyRand", 2))]),
+  C("x3-dock", X, "R", 4, "幽霊ドック", 1, 5, [], [W("turnStart", K("reviveSel", 2, cnt=1, mod="rush"))]),
   S("x3-kinkyu", X, "R", 5, "緊急再起動", [K("reviveSel", 10, cnt=2, total=5)], pay={"kind": "sacrifice"}),
-  C("x3-senkan", X, "SR", 7, "幽霊戦艦", 6, 7, ["亡霊"], [W(REV, U("dmg", "enemyAll", 2))]),
+  C("x3-senkan", X, "SR", 7, "幽霊戦艦", 7, 7, ["亡霊"], [W(REV, U("dmg", "enemyAll", 2))]),
   C("x3-rusty", X, "UR", 6, "廃艦提督ラスティ", 4, 5, [], [K("reviveSel", 5, cnt=1, mod="rusty")]),
   S("x3-shingou", X, "R", 1, "発光信号", [K("tutor", 10, ctype="char", tribe="jelly")]),
   C("x3-chikuden", X, "R", 2, "蓄電クラゲ", 2, 2, [], [W("allyDeath", U("dmg", "enemyRand", 2, af="jelly"))], tribe="jelly"),
@@ -131,6 +131,7 @@ CARDS = [
   C("x3-pururu", X, "SR", 6, "スライム博士プルル", 4, 5, [], [W("death", K("tokenField", 2, card=PURU))]),
 ]
 TOKENS = [
+  T(C(EIREI, M, "C", 1, "船幽霊", 2, 1, ["亡霊"])),
   T(C(CHIBI, F, "C", 1, "ちびクラゲ", 1, 1, [], tribe="jelly")),
   T(C(AWA, F, "C", 1, "泡の妖精", 1, 1, [], [W("death", K("ward"))])),
   T(C(PURU, X, "C", 2, "プルルの分身", 2, 2)),
@@ -164,7 +165,7 @@ if __name__ == "__main__":
   check()
   path = sys.argv[1] if len(sys.argv) > 1 else "game-data.json"
   d = json.load(open(path))
-  new = {c["id"] for c in CARDS + TOKENS} | {"tk-eirei"}   # tk-eirei は前に作って、既存の英霊に置き換えたもの
+  new = {c["id"] for c in CARDS + TOKENS} | {"tk-eirei", "f3-tamagae", "x3-saikidou", "x3-garakuta"}   # 前に作って、置き換えたもの   # tk-eirei は前に作って、既存の英霊に置き換えたもの
   old = {c["name"] for c in d["cards"] if c["id"] not in new and not c.get("token")}
   dup = [c["name"] for c in CARDS if c["name"] in old]
   assert not dup, ("既存のカードと同じ名前", dup)

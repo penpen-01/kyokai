@@ -79,7 +79,7 @@ const KEYWORDS = {
   // 1枚だけの能力は「名前のついた能力」にしない（オーナー 11-24）。仕組みは能力と同じで、カードには plain の文だけを出す
   reef:    { label: "効果ダメージ無効", short: "", plain: "魔法や効果のダメージを受けない（攻撃と反撃のダメージは受ける）。", text: "魔法や効果のダメージを受けない（攻撃と反撃のダメージは受ける）。" },
   calm:    { label: "出たターンの攻撃を封じる", short: "", plain: "このキャラが場にいる間、相手は場に出したターンのキャラで攻撃できない（速攻・突進も）。", text: "このキャラが場にいる間、相手は場に出したターンのキャラで攻撃できない（速攻・突進も）。" },
-  dive:    { label: "亜空間に潜る", short: "", plain: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる）。潜っている間は、攻撃も効果も受けない。", text: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる）。" },
+  dive:    { label: "亜空間に潜る", short: "", plain: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる。潜るのは2回まで）。潜っている間は、攻撃も効果も受けない。", text: "自分のターンの終わりに亜空間へ潜り、次の自分のターンの始めに同じ場所へ戻る（戻ったターンも攻撃できる）。" },
   surf:    { label: "攻撃したあと手札に戻る", short: "", plain: "攻撃したあと、持ち主の手札に戻る（トークンは消える）。", text: "攻撃したあと、持ち主の手札に戻る（トークンは消える）。" }
 };
 const kwPlain = k => !!(KEYWORDS[k] && KEYWORDS[k].plain);
@@ -196,7 +196,7 @@ function reviveSelText(e) {
   e = e || {};
   const cnt = e.cnt || 1, each = e.n && e.n < 10 ? `コスト${e.n}以下の` : "", tot = e.total ? `（合計コスト${e.total}以下）` : "";
   const what = `自分の墓地の${each}【亡霊】のキャラ`;
-  const mod = e.mod === "rusty" ? "そのキャラは【亡霊】を失い、装甲1を得る。" : "";
+  const mod = e.mod === "rusty" ? "そのキャラは【亡霊】を失い、装甲1を得る。" : e.mod === "rush" ? "出したキャラは「突進」を得る。" : "";
   return `${what}を${cnt > 1 ? `${cnt}体まで` : "1体"}選んで、場に出す（${tot ? tot.slice(1, -1) + "。" : ""}登場時の効果は発動しない）。${mod}`;
 }
 
@@ -942,7 +942,7 @@ function normEffect(e, type) {
   if (e.amt) out.amt = true;
   if (TRIBES[e.plus]) { out.plus = e.plus; out.plusMax = Math.max(1, Math.min(9, Math.round(+e.plusMax || 2))); }
   if (e.per === "milledGhost") out.per = e.per;
-  if (e.kind === "reviveSel") { out.cnt = Math.max(1, Math.min(4, Math.round(+e.cnt || 1))); if (+e.total > 0) out.total = Math.min(40, Math.round(+e.total)); if (e.mod === "rusty") out.mod = "rusty"; }
+  if (e.kind === "reviveSel") { out.cnt = Math.max(1, Math.min(4, Math.round(+e.cnt || 1))); if (+e.total > 0) out.total = Math.min(40, Math.round(+e.total)); if (e.mod === "rusty" || e.mod === "rush") out.mod = e.mod; }
   if (e.kind === "dig" && e.rest === "grave") out.rest = "grave";
   if (e.kind === "cutOne" && TYPES[e.ctype]) out.ctype = e.ctype;
   return out;

@@ -347,6 +347,7 @@ function resolvePick(pi, sel, inline) {
       gyTake(me, id);
       const u = addUnit(pi, id);
       if (P.mod === "rusty") { u.lostKws = ["ghost"]; u.armorPlus = (u.armorPlus || 0) + 1; }
+      if (P.mod === "rush") grant(u, { kw: "rush" });
       log(`${cname(id)}が墓地から現れた！${P.mod === "rusty" ? "（亡霊を失い、装甲1を得た）" : ""}`);
       if (!SIM) fx(unitSel(u.uid), "墓地から", "voidback");
       queueTrig(pi, "revived", u);
@@ -450,7 +451,7 @@ function endTurn(pi) {
   cleanup();
   if (checkWin()) return;
   // 潜航：自分のターンの終わりに亜空間へ（次の自分のターンの始めに戻る）
-  S.players[pi].field.filter(u => u.hp > 0 && kw(u, "dive")).forEach(u => banishUnit(pi, u));
+  S.players[pi].field.filter(u => u.hp > 0 && kw(u, "dive") && (u.dives || 0) < DIVE_MAX).forEach(u => { u.dives = (u.dives || 0) + 1; banishUnit(pi, u); });
   // 「このターンだけ」の能力・装甲・コスト低下を消す
   S.players.forEach(p => {
     p.handCutT = [];
@@ -516,6 +517,7 @@ const kw = (u, k) => !!(u && !u.silenced && DEF[u.id] && (DEF[u.id].keywords.inc
 const cardMatch = (c, e) => !!c && (!e || ((!e.world || c.world === e.world) && (!e.tribe || c.tribe === e.tribe) && (e.cmax == null || c.cost <= e.cmax)));
 const unitMatch = (u, e) => !!u && !!DEF[u.id] && cardMatch(DEF[u.id], e) && (!e || !e.kwf || kw(u, e.kwf));
 const isGhostCard = id => !!(DEF[id] && DEF[id].type === "char" && (DEF[id].keywords || []).includes("ghost"));
+const DIVE_MAX = 2;   // 潜航（ノーチラス）は2回まで（オーナー 11-24 20:05。強ければ1回に）
 /* 凪：相手の場に凪を持つキャラがいると、出たターンのキャラは攻撃できない */
 const calmOn = pi => !!(S && S.players[opp(pi)] && S.players[opp(pi)].field.some(x => kw(x, "calm")));
 const armorOf = u => (u.silenced ? 0 : ((DEF[u.id] && DEF[u.id].armor) || 0) + (u.armorPlus || 0));
@@ -1637,7 +1639,7 @@ function unitValue(u) {
   if (kw(u, "unbreakable")) v += 1.5;
   if (kw(u, "reef")) v += 1;
   if (kw(u, "calm")) v += 1.5;
-  if (kw(u, "dive")) v += 2 + u.atk * 0.3;
+  if (kw(u, "dive") && (u.dives || 0) < DIVE_MAX) v += 2 + u.atk * 0.3;
   if (d.aura && !u.silenced) v += d.aura.kind === "cost" ? 2 : 1.5;
   v += armorOf(u) * 1.5;
   if (!u.silenced) v += trigValue(d);   // 場に残ると働く効果（倒されたとき・ターンの終わりなど）
