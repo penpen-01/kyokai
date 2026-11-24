@@ -1,5 +1,5 @@
 {
- "version": 216,
+ "version": 217,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10519,7 +10519,8 @@
     }
    ],
    "set": "3",
-   "tribe": "beast"
+   "tribe": "beast",
+   "art": "art/m3-aspido-07affe761c.webp"
   },
   {
    "id": "m3-fue",
@@ -10563,7 +10564,8 @@
     }
    ],
    "set": "3",
-   "tribe": "beast"
+   "tribe": "beast",
+   "art": "art/m3-siren-209bbb2c71.webp"
   },
   {
    "id": "m3-hippo",
@@ -11004,7 +11006,8 @@
      "when": "kill"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-hayate-539817ecd0.webp"
   },
   {
    "id": "m3-ikari",
@@ -12611,7 +12614,8 @@
    ],
    "effects": [],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-funa-1a74cf0b74.webp"
   },
   {
    "id": "tk-chibi",
