@@ -1,5 +1,5 @@
 {
- "version": 219,
+ "version": 220,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11294,7 +11294,8 @@
      "total": 5
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-veil-671c7aca73.webp"
   },
   {
    "id": "f3-grave",
@@ -11384,7 +11385,8 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly"
+   "tribe": "jelly",
+   "art": "art/f3-yurameki-47c2f35475.webp"
   },
   {
    "id": "f3-uzumaki",
@@ -11658,7 +11660,8 @@
      "card": "tk-awa"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-tobinori-ebb1a63de9.webp"
   },
   {
    "id": "f3-sango",
@@ -11768,7 +11771,8 @@
      "when": "attacked"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-tsunousagi-dd3fa0cd3f.webp"
   },
   {
    "id": "f3-hugh",
@@ -12843,7 +12847,8 @@
     }
    ],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-s-map-0656c4cdee.webp"
   },
   {
    "id": "tk-s-kit",
