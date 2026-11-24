@@ -1,5 +1,5 @@
 {
- "version": 232,
+ "version": 233,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11490,7 +11490,8 @@
    "set": "3",
    "aura": {
     "kind": "cost",
-    "n": 2
+    "n": 2,
+    "spell": true
    },
    "art": "art/f3-octa-671c1bee1f.webp"
   },

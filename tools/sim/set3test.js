@@ -134,6 +134,7 @@ const { chromium } = require('playwright');
       fresh(); put(0, 'f3-grave'); S.players[0].gy = ['squire', 'squire', 'squire', 'squire', 'm3-eirei', 'm3-suihei', 'f3-nakimushi', 'x3-sabineji']; i = hand(0, 'f3-daikoushin');
       ok('大行進：墓地の亡霊4体では使えない', !canPlay(0, i).ok); S.players[0].gy.push('x3-kirai'); ok('大行進：亡霊5体なら（亡霊でないキャラが場にいても）使える', canPlay(0, i).ok);
       // 24b. 11-25 の調整
+      fresh(); put(0, 'f3-octa'); ok('オクタ：魔法すべて-2（0まで）', effCost(0, DEF['bolt'], 0) === 0 && effCost(0, DEF['m3-trident'], 0) === 1 && effCost(0, DEF['tk-j-tide'], 0) === 2 && effCost(0, DEF['squire'], 0) === DEF['squire'].cost);
       fresh(); put(0, 'm3-aspido'); ok('アスピドケロン：手札の海獣-1', effCost(0, DEF['m3-leviathan'], 0) === 8 && effCost(0, DEF['m3-trident'], 0) === 3);
       fresh(); put(0, 'm3-kraken'); put(0, 'm3-scylla'); play(0, 'm3-hippo'); const hp = S.players[0].field.find(u => u.id === 'm3-hippo');
       ok('ヒッポ：ほかの海獣2体で+2/+2・突進', hp && hp.atk === 7 && hp.hp === 7 && kw(hp, 'rush'), hp && [hp.atk, hp.hp]);
