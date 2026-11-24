@@ -1,5 +1,5 @@
 {
- "version": 221,
+ "version": 222,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11274,7 +11274,8 @@
      "cn": 6
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-daikoushin-0277dca6f4.webp"
   },
   {
    "id": "f3-veil",
@@ -11412,7 +11413,8 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly"
+   "tribe": "jelly",
+   "art": "art/f3-uzumaki-fde3e7e960.webp"
   },
   {
    "id": "f3-puka",
@@ -11732,7 +11734,8 @@
      "when": "turnEnd"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-marina-906b1b91b2.webp"
   },
   {
    "id": "f3-tayori",
@@ -11799,7 +11802,8 @@
      "cmax": 2
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-hugh-614d7d1665.webp"
   },
   {
    "id": "f3-suiryu",
@@ -12832,7 +12836,8 @@
     }
    ],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-s-doll-3910ee8bc9.webp"
   },
   {
    "id": "tk-s-map",
