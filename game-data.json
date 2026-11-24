@@ -1,5 +1,5 @@
 {
- "version": 212,
+ "version": 213,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10345,7 +10345,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-centurion-b590be00dd.webp"
   },
   {
    "id": "m3-hatamochi",
@@ -10699,7 +10700,8 @@
     }
    ],
    "set": "3",
-   "tribe": "beast"
+   "tribe": "beast",
+   "art": "art/m3-kraken-a466c9156c.webp"
   },
   {
    "id": "m3-leviathan",
@@ -10779,7 +10781,8 @@
      "mine": true
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-oikaze-8ba0bc6e3f.webp"
   },
   {
    "id": "m3-minato",
@@ -10857,7 +10860,8 @@
      "when": "attacked"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-uni-61bc7e54cf.webp"
   },
   {
    "id": "m3-trident",
@@ -10895,7 +10899,8 @@
     "calm"
    ],
    "effects": [],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-nagisa-c89d3ee7ad.webp"
   },
   {
    "id": "m3-gantetsu",
