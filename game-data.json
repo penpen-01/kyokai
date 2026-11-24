@@ -1,5 +1,5 @@
 {
- "version": 218,
+ "version": 219,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11316,7 +11316,8 @@
      "total": 8
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-grave-f987ecf06f.webp"
   },
   {
    "id": "f3-komoriuta",
@@ -11428,7 +11429,8 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly"
+   "tribe": "jelly",
+   "art": "art/f3-puka-dd6f533d9f.webp"
   },
   {
    "id": "f3-octa",
@@ -11582,7 +11584,8 @@
      "to": "enemy1"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-kodako-d5b05ea877.webp"
   },
   {
    "id": "f3-tobiuo",
@@ -11673,7 +11676,8 @@
     "steadfast"
    ],
    "effects": [],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-sango-4783268316.webp"
   },
   {
    "id": "f3-shabon",
@@ -12700,7 +12704,8 @@
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true
+   "token": true,
+   "art": "art/tk-j-needle-2cb8ac7bbc.webp"
   },
   {
    "id": "tk-j-cradle",
