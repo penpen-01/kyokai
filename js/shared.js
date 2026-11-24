@@ -570,7 +570,7 @@ function cardTextLines(card, o = {}) {
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
   const useWhat = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
   if (card.req) lines.unshift(reqText(card.req) + "。");
-  if (card.sway && !o.noKw) lines.push(`揺らぎ：使うまで中身が決まらない。使ったとき、次のどれかになる（ランダム）：${card.sway.map(id => { const c = cardRef(id); return c ? `「${c.name}」${effectsText(c, null, true)}` : "？"; }).join("／")}`);
+  if (card.sway) lines.push(`使ったとき、次のどれかになる（ランダム）：${card.sway.map(id => { const c = cardRef(id); return c ? `「${c.name}」${effectsText(c, null, true)}` : "？"; }).join("／")}`);
   if (card.aura) lines.push(auraText(card.aura));
   if (card.shrink && !o.noKw) lines.push(`化かし：手札にある間、自分が${useWhat(card.shrink)}を使うたびに、このカードのコストが1下がる。`);
   if (card.grow && !o.noKw) { const g = card.grow, w = [];
@@ -637,6 +637,7 @@ function cardTextHTML(card, o = {}) {
   if (items.length) h = kwChipsHTML(items, o.full) + (h ? "\n" + h : "");
   const ids = new Set();
   (card.effects || []).forEach(e => { const t = e && e.card && cardRef(e.card); if (t && t.token && t.id !== card.id) ids.add(t.id); });
+  (card.sway || []).forEach(id => { const t = cardRef(id); if (t && t.token) ids.add(t.id); });
   ids.forEach(id => { const n = esc(cardRef(id).name); h = h.split(`「${n}」`).join(`「<button type="button" class="tklink" data-tk="${esc(id)}">${n}</button>」`); });
   return h;
 }

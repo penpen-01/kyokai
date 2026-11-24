@@ -774,6 +774,9 @@ function exportJSON() {
     if (c.shrink) o.shrink = c.shrink;   // 化かし（手札で小さくなる）
     if (c.grow) o.grow = c.grow;         // 妖気（手札で強くなる）
     if (c.req) o.req = c.req;            // 使える条件
+    if (c.tribe) o.tribe = c.tribe;      // 種族（クラゲ・海獣など）
+    if (c.aura) o.aura = c.aura;         // 場にいる間ずっと効く効果
+    if (c.sway) o.sway = c.sway;         // 使ったときにランダムで中身が決まる魔法
     if (c.note) o.note = c.note;
     if (c.art) o.art = c.art;
     return o;

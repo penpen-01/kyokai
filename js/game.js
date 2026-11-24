@@ -686,7 +686,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   let runD = d;
   if (Array.isArray(d.sway) && d.sway.length) {
     const opt = d.sway[Math.floor(Math.random() * d.sway.length)];
-    if (DEF[opt]) { runD = DEF[opt]; log(`揺らぎ：${cname(id)}の中身は「${cname(opt)}」だった！`); fx("reveal", opt, `reveal:${pi}:揺らぎで決まった中身`); }
+    if (DEF[opt]) { runD = DEF[opt]; log(`${cname(id)}の中身は「${cname(opt)}」だった！`); fx("reveal", opt, `reveal:${pi}:中身が決まった`); }
   }
   try { runEffects(pi, runD, runD === d ? targets : {}, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; S.milled = null; }
   if (isJellySpell(d)) p.jellyN = (p.jellyN || 0) + 1;   // この対戦で使ったクラゲ魔法の数（満ち潮の夜）
