@@ -182,7 +182,7 @@ const EFFECTS = {
   reviveSel:   { group: "召喚", label: "自分の墓地の亡霊を選んで出す", text: (n, e) => reviveSelText(e) },
   graveHand:   { group: "墓地", label: "自分の墓地の亡霊のキャラを手札に戻す", text: n => `自分の墓地の【亡霊】のキャラをランダムに${n}体、手札に戻す。` },
   ward:        { group: "プレイヤー", label: "自分に結界を張る", text: () => "自分に【結界】を張る（次に自分が受けるダメージを1回だけ0にする。重ねて張れない）。", noN: true },
-  jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（痺れ針・泡の揺りかご・青い閃光のどれか）。` },
+  jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（「痺れ針」「泡の揺りかご」「青い閃光」のどれか）。` },
   tide:        { group: "ダメージ", label: "満ち潮の夜（使ったクラゲ魔法の数×N）", text: n => `この対戦で自分が先に使ったクラゲ魔法1枚につき${n}、相手プレイヤーにダメージ（最大12）。` },
   cutOne:      { group: "エナジー", label: "手札の（種族の）カード1枚のコストを下げる", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}を1枚選んで、そのコストを${n}下げる。` },
   handSteal:   { group: "妨害", label: "相手の手札をランダムに1枚奪う（コストを下げる）", text: n => `相手の手札からランダムに1枚を奪って手札に加え、そのカードのコストを${n}下げる。` },
@@ -638,6 +638,7 @@ function cardTextHTML(card, o = {}) {
   const ids = new Set();
   (card.effects || []).forEach(e => { const t = e && e.card && cardRef(e.card); if (t && t.token && t.id !== card.id) ids.add(t.id); });
   (card.sway || []).forEach(id => { const t = cardRef(id); if (t && t.token) ids.add(t.id); });
+  if ((card.effects || []).some(e => e && e.kind === "jellyHand")) JELLY_POOL.forEach(id => { const t = cardRef(id); if (t) ids.add(t.id); });
   ids.forEach(id => { const n = esc(cardRef(id).name); h = h.split(`「${n}」`).join(`「<button type="button" class="tklink" data-tk="${esc(id)}">${n}</button>」`); });
   return h;
 }

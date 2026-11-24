@@ -381,14 +381,14 @@ const Pick = {
   paint() {
     const P = S.pick; if (!P || !this.el) return;
     const me = S.players[ME];
-    const items = P.kind === "revive" ? P.ids.map(id => ({ id })) : P.kind === "hand" ? P.hand.map(x => ({ id: x.id })) : P.uids.map(uid => { const u = me.field.find(x => x.uid === uid); return { id: u ? u.id : "", u }; });
+    const items = P.kind === "revive" ? P.ids.map(id => ({ id })) : P.kind === "hand" ? P.hand.map(x => { const i = me.hand[x.i] === x.id ? x.i : me.hand.indexOf(x.id); return { id: x.id, cost: DEF[x.id] && i >= 0 ? effCost(ME, DEF[x.id], i) : undefined }; }) : P.uids.map(uid => { const u = me.field.find(x => x.uid === uid); return { id: u ? u.id : "", u }; });
     const sum = P.kind === "revive" ? this.sel.reduce((a, i) => a + DEF[P.ids[i]].cost, 0) : 0;
     const head = P.kind === "hand" ? ({ toss: "捨てるカードを選ぶ", cutOne: "コストを下げるカードを選ぶ", cheat: "出すキャラを選ぶ" }[P.act] || "手札から選ぶ") : P.kind === "revive" ? `亡霊を${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ` : "道連れにするキャラを選ぶ";
     const sub = P.kind === "hand" ? "手札から1枚" : P.kind === "revive" ? `墓地から場に出します（${P.total ? `合計コスト ${sum} / ${P.total}` : `${this.sel.length} / ${P.max}体`}）` : `${this.sel.length}体を選択中。同じ数の相手キャラがランダムに破壊されます`;
     this.el.innerHTML = `<div class="mullp-in">
       <div class="pg-title sm"><b>${esc(head)}</b></div>
       <p class="pick-sub">${esc(sub)}</p>
-      <div class="dig-row pick-row">${items.map((x, i) => `<div class="dig-c ${this.sel.includes(i) ? "on" : ""}"><button type="button" class="dig-card" data-act="pickT" data-i="${i}" aria-pressed="${this.sel.includes(i)}" aria-label="${esc(DEF[x.id] ? DEF[x.id].name : "")}">${DEF[x.id] ? cardHTML(DEF[x.id], { static: true }) : ""}${x.u ? `<span class="pick-st">${x.u.atk}/${x.u.hp}</span>` : ""}</button>
+      <div class="dig-row pick-row">${items.map((x, i) => `<div class="dig-c ${this.sel.includes(i) ? "on" : ""}"><button type="button" class="dig-card" data-act="pickT" data-i="${i}" aria-pressed="${this.sel.includes(i)}" aria-label="${esc(DEF[x.id] ? DEF[x.id].name : "")}">${DEF[x.id] ? cardHTML(DEF[x.id], { static: true, cost: x.cost }) : ""}${x.u ? `<span class="pick-st">${x.u.atk}/${x.u.hp}</span>` : ""}</button>
         <button type="button" class="cdlink pick-info" data-tk="${esc(x.id)}">効果を見る</button></div>`).join("")}</div>
       <div class="pick-go"><button type="button" class="btn primary" data-act="pickGo" ${P.kind === "hand" && !this.sel.length ? "disabled" : ""}>${this.sel.length ? "これで決定" : P.kind === "revive" ? "出さない" : P.kind === "hand" ? "1枚選んでください" : "破壊しない"}</button></div></div>`;
   },

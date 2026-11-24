@@ -74,9 +74,9 @@ const { chromium } = require('playwright');
       // 11. 水夫長（墓地の亡霊の数）
       fresh(); S.players[0].gy = ['m3-eirei', 'm3-suihei', 'f3-nakimushi', 'x3-kirai', 'x3-sabineji', 'squire']; play(0, 'f3-suifucho');
       ok('水夫長：墓地の亡霊で攻撃+4（最大）', S.players[0].field[0].atk === 9, S.players[0].field[0].atk);
-      // 12. 揺らぎ
+      // 12. 使ったときに中身が決まる魔法
       fresh(); put(1, 'st-golem'); const hp0 = S.players[0].hand.length; play(0, 'f3-takarabako');
-      ok('揺らぎ：どれかが起きる', /揺らぎ/.test(S.log.map(l => l.msg).join()), lastLog());
+      ok('ランダムな中身：どれかが起きる', /の中身は「/.test(S.log.map(l => l.msg).join()), lastLog());
       // 13. 潜航と次元干渉ブイ
       fresh(); const nt = put(0, 'x3-nautilus'); put(1, 'x3-kanshou'); endTurn(0);
       ok('潜航：ターンの終わりに亜空間へ', !S.players[0].field.includes(nt) && voidOf(S.players[0]).length === 1);
@@ -139,6 +139,8 @@ const { chromium } = require('playwright');
       ok('舟唄：亡霊を選んで捨て、2枚引く', S.players[0].gy.includes('m3-eirei') && S.players[0].hand.length === 4, S.players[0].hand);
       fresh(); S.players[0].hand = ['m3-siren', 'm3-leviathan']; play(0, 'm3-harpoon');
       ok('銛打ち：重い海獣のコスト-1', effCost(0, DEF['m3-leviathan'], 1) === 8);
+      play(0, 'm3-harpoon'); const li = S.players[0].hand.indexOf('m3-leviathan');
+      ok('銛打ち2回目：同じ海獣がさらに-1', li >= 0 && effCost(0, DEF['m3-leviathan'], li) === 7, { hand: S.players[0].hand, cut: S.players[0].handCut });
       // 26. 亡霊に「攻撃されたとき」がない普通の攻撃で、反撃で倒れた亡霊も墓地へ
       fresh(); const gg = put(0, 'm3-centurion'); const big = put(1, 'x-gigas'); attack(0, gg.uid, big.uid);
       ok('亡霊：反撃で倒れても墓地へ（1枚だけ）', S.players[0].gy.filter(x => x === 'm3-centurion').length === 1);
