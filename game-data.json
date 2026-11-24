@@ -1,5 +1,5 @@
 {
- "version": 213,
+ "version": 214,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10371,7 +10371,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-hatamochi-0bbe5fb063.webp"
   },
   {
    "id": "m3-touro",
@@ -10533,7 +10534,8 @@
      "tribe": "beast"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-fue-5c71b0ff04.webp"
   },
   {
    "id": "m3-siren",
@@ -10649,7 +10651,8 @@
      "n": 5
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-scarlet-7cdc58dcaf.webp"
   },
   {
    "id": "m3-charybdis",
@@ -10918,7 +10921,8 @@
     "reef"
    ],
    "effects": [],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-gantetsu-76ab9cb8e9.webp"
   },
   {
    "id": "m3-shioyomi",
@@ -10946,7 +10950,8 @@
      "cn": 10
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-shioyomi-ef17311988.webp"
   },
   {
    "id": "m3-tenbin",
