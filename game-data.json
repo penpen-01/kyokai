@@ -1,5 +1,5 @@
 {
- "version": 228,
+ "version": 229,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11867,7 +11867,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-sabineji-48eab5f9d1.webp"
   },
   {
    "id": "x3-haizai",
@@ -12106,7 +12107,8 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly"
+   "tribe": "jelly",
+   "art": "art/x3-chikuden-dd63c6ffab.webp"
   },
   {
    "id": "x3-baiyou",
@@ -12248,7 +12250,8 @@
      "card": "tk-part"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-iruka-8ca5fad61f.webp"
   },
   {
    "id": "x3-hamasouji",
@@ -12510,7 +12513,8 @@
      "to": "enemyAll"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-nautilus-fdd4352ab7.webp"
   },
   {
    "id": "x3-nikyaku",
@@ -12896,7 +12900,8 @@
     }
    ],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-s-kit-76c684c3d0.webp"
   },
   {
    "id": "tk-s-parts",
