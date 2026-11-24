@@ -1,5 +1,5 @@
 {
- "version": 210,
+ "version": 211,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10248,7 +10248,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-eirei-bac5de93f1.webp"
   },
   {
    "id": "m3-hakamori",
@@ -10293,7 +10294,8 @@
      "who": "self"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-funauta-2176a076f9.webp"
   },
   {
    "id": "m3-suihei",
@@ -10745,7 +10747,8 @@
      "when": "attacked"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-yadokari-8763ca67f6.webp"
   },
   {
    "id": "m3-oikaze",
@@ -10826,7 +10829,8 @@
      "when": "healed"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-azuria-20e9b1aa31.webp"
   },
   {
    "id": "m3-uni",
@@ -10869,7 +10873,8 @@
      "to": "enemy1"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/m3-trident-63c837273e.webp"
   },
   {
    "id": "m3-nagisa",
