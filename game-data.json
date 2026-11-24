@@ -1,5 +1,5 @@
 {
- "version": 217,
+ "version": 218,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11147,7 +11147,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-gaikotsu-e4043b4de7.webp"
   },
   {
    "id": "f3-ikarihiki",
@@ -11473,7 +11474,8 @@
     "kind": "stat",
     "tribe": "jelly",
     "atk": 1
-   }
+   },
+   "art": "art/f3-nocto-e6a2be97bf.webp"
   },
   {
    "id": "f3-sumi",
@@ -11602,7 +11604,8 @@
      "who": "self"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-tobiuo-886cbbf528.webp"
   },
   {
    "id": "f3-naminori",
@@ -11737,7 +11740,8 @@
      "rest": "grave"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-tayori-c81ae59081.webp"
   },
   {
    "id": "f3-tsunousagi",
@@ -12792,7 +12796,8 @@
     }
    ],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-s-gold-51536102f8.webp"
   },
   {
    "id": "tk-s-doll",
