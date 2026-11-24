@@ -1,5 +1,5 @@
 {
- "version": 227,
+ "version": 228,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11204,7 +11204,8 @@
      "cnt": 3
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-tamayobi-91b862796a.webp"
   },
   {
    "id": "f3-suifucho",
@@ -11516,7 +11517,8 @@
      "cond": "killedNow"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-sumi-b35ee47e28.webp"
   },
   {
    "id": "f3-takarabako",
@@ -12755,7 +12757,8 @@
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true
+   "token": true,
+   "art": "art/tk-j-cradle-11e782ba7e.webp"
   },
   {
    "id": "tk-j-flash",
