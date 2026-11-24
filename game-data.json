@@ -1,5 +1,5 @@
 {
- "version": 224,
+ "version": 225,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11184,7 +11184,8 @@
      "when": "revived"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-ikarihiki-120658432e.webp"
   },
   {
    "id": "f3-tamayobi",
@@ -11533,7 +11534,8 @@
     "tk-s-gold",
     "tk-s-doll",
     "tk-s-map"
-   ]
+   ],
+   "art": "art/f3-takarabako-29972d13c4.webp"
   },
   {
    "id": "f3-barba",
@@ -11651,7 +11653,8 @@
      "turn": true
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/f3-naminori-64321069b4.webp"
   },
   {
    "id": "f3-tobinori",
@@ -12803,7 +12806,8 @@
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true
+   "token": true,
+   "art": "art/tk-j-tide-0bbdd48a5e.webp"
   },
   {
    "id": "tk-s-gold",
