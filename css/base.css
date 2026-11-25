@@ -360,8 +360,7 @@ img{max-width:100%}
   animation:holo 4s ease-in-out infinite}
 @keyframes holo{0%,100%{background-position:0 0;-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.14}50%{background-position:6cqw -8cqw;-webkit-mask-position:0% 0%;mask-position:0% 0%;opacity:.26}}   /* 11-26：細かく描き込んだ絵がちらつくので半分に（前は .3〜.52） */
 @media (prefers-reduced-motion:reduce){.card.rar-legend .art::after{animation:none}}
-/* 別イラスト（パラレル）のレジェンドは、絵の上のホログラムを消す（細かい絵が見えなくなるため。虹の枠と光の帯は残す） */
-.card.rar-legend.alt-art .art::after{display:none}
+/* 別イラスト（パラレル）のレジェンドにも、通常と同じ（弱めた）ホログラムを重ねる。消したいときは .card.rar-legend.alt-art .art::after{display:none} */
 
 /* 特殊勝利の残り回数 */
 .card .wintag{position:absolute;left:50%;top:38%;transform:translateX(-50%);z-index:6;white-space:nowrap;font-size:9cqw;font-weight:900;padding:1cqw 3.5cqw;border-radius:99px;
