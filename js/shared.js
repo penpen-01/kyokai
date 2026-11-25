@@ -751,7 +751,7 @@ function cardHTML(card, o = {}) {
     : "";
   const cost = o.cost != null ? o.cost : card.cost;
   const guard = card.type === "char" && kwl.includes("guard");
-  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${mk ? "mako mk-" + mk : ""} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${u && u.silenced ? "silenced" : ""} ${o.cls || ""}" ${o.attrs || ""} ${o.hidden || !card.id ? "" : `data-cid="${esc(card.id)}"`} aria-label="${esc(card.name)}">
+  return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${mk ? "mako mk-" + mk : ""} ${lk && lk.a ? "alt-art" : ""} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${u && u.silenced ? "silenced" : ""} ${o.cls || ""}" ${o.attrs || ""} ${o.hidden || !card.id ? "" : `data-cid="${esc(card.id)}"`} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
     <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span><span class="gem" aria-hidden="true"></span>
     ${["ur", "legend"].includes(card.rarity) || mk ? `<span class="shine" aria-hidden="true"></span>` : ""}
