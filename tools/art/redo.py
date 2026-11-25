@@ -42,7 +42,7 @@ JS = src.split("JS = '", 1)[1].split("'\nout = ", 1)[0].encode().decode("unicode
 out = f'''<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(S.TITLE)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap">
 {STYLE}</head><body><div class="w"><h1>{html.escape(S.TITLE)}（{len(S.REDO)}枚）</h1>
-<p class="muted">1枚ずつ新しい Gemini の会話で描く。書いてある画像だけを添付して（添付は少ないほど引っぱられない）、「コピー」した文を貼る。できた絵は今の絵と見比べて、使う方を決める（今の絵は消さずに残してある）。「新しい海の怪物」はまだカードではない試し描き。</p>
+<p class="muted">1枚ずつ新しい Gemini の会話で描く。画風の見本（style-ref.png）だけを添付して（今の絵を添付すると、ほぼ同じ絵になる。魚人の兵だけは痺れ針の絵）、「コピー」した文を貼る。できた絵は今の絵と見比べて、使う方を決める（今の絵は消さずに残してある）。「新しい海の怪物」はまだカードではない試し描き。</p>
 <ol>{body}</ol></div>
 {JS.replace("__B__", json.dumps(B, ensure_ascii=False))}'''
 open(OUT, "w").write(out)
