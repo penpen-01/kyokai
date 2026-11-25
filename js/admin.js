@@ -294,6 +294,7 @@ const Admin = {
             : kind === "art" ? `<label class="fl">カードのID<input class="txt" data-skn="${i}:card" value="${esc(x.card || "")}" style="max-width:160px"></label><label class="fl">絵の場所<input class="txt" data-skn="${i}:art" value="${esc(x.art || "")}" placeholder="ui/alt/xxx.webp"></label>`
             : `<label class="fl">絵の場所<input class="txt" data-skn="${i}:art" value="${esc(x.art || "")}" placeholder="ui/xxx.webp"></label>`}
           <label class="ownchk"><input type="checkbox" data-skn="${i}:default" ${x.default ? "checked" : ""}> 最初から持っている</label>
+          <label class="ownchk"><input type="checkbox" data-skn="${i}:admin" ${x.admin ? "checked" : ""}> 運営のみ（試し置き）</label>
           <button type="button" class="btn sm danger" data-act="sknDel" data-i="${i}">消す</button></div>
           <label class="fl">説明<input class="txt" data-skn="${i}:desc" maxlength="80" value="${esc(x.desc || "")}"></label></div>`).join("")}
         <button type="button" class="btn sm" data-act="sknAdd" data-v="${kind}">＋ ${label}を足す</button></div>`).join("")}`;
@@ -836,7 +837,7 @@ document.addEventListener("change", e => {
 document.addEventListener("change", e => {
   const t = e.target, k = t && t.dataset && t.dataset.skn; if (!k || typeof DATA === "undefined" || !DATA.skins) return;
   const [i, f] = k.split(":"), x = DATA.skins[+i]; if (!x) return;
-  if (f === "default") { if (t.checked) x.default = true; else delete x.default; }
+  if (f === "default" || f === "admin") { if (t.checked) x[f] = true; else delete x[f]; }
   else if (f === "price") x.price = Math.max(0, Math.floor(+t.value || 0));
   else { const v = t.value.trim(); if (v || f === "name") x[f] = v; else delete x[f]; }
   Admin.touch(null);

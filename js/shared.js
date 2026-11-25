@@ -1077,7 +1077,7 @@ function normalizeData(data) {
   // スキン（見た目の品）
   const skins = (Array.isArray(d.skins) ? d.skins : []).filter(x => x && /^[\w-]{1,40}$/.test(x.id) && ["sleeve", "frame", "icon", "bg", "home", "keeper", "bgm", "art"].includes(x.kind)).slice(0, 300).map(x => ({
     id: x.id, kind: x.kind, name: String(x.name || "スキン").slice(0, 30), desc: String(x.desc || "").slice(0, 80), price: Math.max(0, Math.floor(+x.price || 0)),
-    ...(typeof x.art === "string" && x.art ? { art: x.art.slice(0, 300) } : {}), ...(x.default ? { default: true } : {}),
+    ...(typeof x.art === "string" && x.art ? { art: x.art.slice(0, 300) } : {}), ...(x.default ? { default: true } : {}), ...(x.admin ? { admin: true } : {}),
     ...(typeof x.ref === "string" && x.ref ? { ref: x.ref.slice(0, 40) } : {}), ...(typeof x.card === "string" && x.card ? { card: x.card.slice(0, 40) } : {}) }));
   // 選定戦：勝った数（0〜7）ごとの報酬と、候補に出さないカード
   const SEN_DEF = [[100, 0, 0, 0], [200, 0, 0, 0], [400, 0, 0, 0], [500, 0, 1, 0], [700, 100, 1, 0], [900, 200, 2, 0], [1200, 300, 2, 0], [1500, 500, 2, 1]];

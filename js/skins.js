@@ -16,7 +16,7 @@ const makoKinds = c => !c || c.token || c.boss || !(c.limit > 0) ? [] : ["common
 
 const Skins = {
   kind: "sleeve", ask: null,
-  list(k) { return SKINS.filter(s => s.kind === k); },
+  list(k) { return SKINS.filter(s => s.kind === k && (!s.admin || adminOn())); },   // admin の品は運営用アカウントにだけ並ぶ（試し置き）
   get(id) { return SKINS.find(s => s.id === id) || null; },
   /* 絵がまだない品は「準備中」（今の枠など、絵がなくても成り立つ最初の品は除く） */
   ready(s) {
@@ -67,7 +67,7 @@ const Skins = {
       const c = DEF[id]; if (!c || !v || typeof v !== "object") return;
       const o = {};
       if ((v.m === "u" || v.m === "l") && makoKinds(c).includes(v.m)) o.m = v.m;
-      if (typeof v.a === "string" && SKINS.some(s => s.kind === "art" && s.card === id && s.art === v.a)) o.a = v.a;
+      if (typeof v.a === "string" && SKINS.some(s => s.kind === "art" && !s.admin && s.card === id && s.art === v.a)) o.a = v.a;   // 運営のみの絵は相手には見せない
       if (o.m || o.a) out[id] = o;
     });
     return out;

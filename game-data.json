@@ -1,5 +1,5 @@
 {
- "version": 247,
+ "version": 248,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -3268,6 +3268,66 @@
    "price": 10000,
    "art": "ui/alt/alt-tamamo.webp",
    "card": "f2-tamamo"
+  },
+  {
+   "id": "p3-x3-hikari",
+   "kind": "art",
+   "name": "ひかりの海",
+   "desc": "機巧クラゲのヒカリのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-x3-hikari.webp",
+   "card": "x3-hikari",
+   "admin": true
+  },
+  {
+   "id": "p3-f3-grave",
+   "kind": "art",
+   "name": "亡霊王の大鎌",
+   "desc": "幽霊船長グレイヴのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-f3-grave.webp",
+   "card": "f3-grave",
+   "admin": true
+  },
+  {
+   "id": "p3-m3-scarlet",
+   "kind": "art",
+   "name": "真紅の財宝",
+   "desc": "真紅の女王スカーレットのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-m3-scarlet.webp",
+   "card": "m3-scarlet",
+   "admin": true
+  },
+  {
+   "id": "p3-m3-azuria",
+   "kind": "art",
+   "name": "夕凪の女神",
+   "desc": "碧海の女神アズーリアのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-m3-azuria.webp",
+   "card": "m3-azuria",
+   "admin": true
+  },
+  {
+   "id": "p3-f3-nocto",
+   "kind": "art",
+   "name": "灯姫の舞",
+   "desc": "深海の灯姫ノクトのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-f3-nocto.webp",
+   "card": "f3-nocto",
+   "admin": true
+  },
+  {
+   "id": "p3-m3-leviathan",
+   "kind": "art",
+   "name": "覇王の咆哮",
+   "desc": "海の覇王リヴァイアサンのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-m3-leviathan.webp",
+   "card": "m3-leviathan",
+   "admin": true
   }
  ],
  "sen": {
