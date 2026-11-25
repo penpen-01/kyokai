@@ -1,5 +1,5 @@
 {
- "version": 236,
+ "version": 237,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10402,7 +10402,7 @@
   },
   {
    "id": "m3-eiji",
-   "name": "神殿の亡霊衛士",
+   "name": "海底神殿の兵長",
    "world": "myth",
    "type": "char",
    "cost": 5,
@@ -12208,7 +12208,7 @@
   },
   {
    "id": "x3-buoy",
-   "name": "クラゲ観測ブイ",
+   "name": "クラゲ観測所",
    "world": "mech",
    "type": "char",
    "cost": 4,
@@ -12628,7 +12628,7 @@
   },
   {
    "id": "x3-kanshou",
-   "name": "次元干渉アンテナ",
+   "name": "次元干渉ブイ",
    "world": "mech",
    "type": "char",
    "cost": 4,
