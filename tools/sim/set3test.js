@@ -77,7 +77,7 @@ const { chromium } = require('playwright');
       // 12. 使ったときに中身が決まる魔法
       fresh(); put(1, 'st-golem'); const hp0 = S.players[0].hand.length; play(0, 'f3-takarabako');
       ok('ランダムな中身：どれかが起きる', /の中身は「/.test(S.log.map(l => l.msg).join()), lastLog());
-      // 13. 潜航と次元干渉ブイ
+      // 13. 潜航と次元干渉アンテナ
       fresh(); const nt = put(0, 'x3-nautilus'); put(1, 'x3-kanshou'); endTurn(0);
       ok('潜航：ターンの終わりに亜空間へ', !S.players[0].field.includes(nt) && voidOf(S.players[0]).length === 1);
       endTurn(1); ok('戻ってきて、ブイの4ダメージ', S.players[0].field.includes(nt) && nt.hp === 3, nt.hp); ok('戻ったターンも攻撃できる', nt.ready);

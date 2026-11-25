@@ -1,5 +1,5 @@
 {
- "version": 235,
+ "version": 236,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10227,7 +10227,7 @@
   },
   {
    "id": "m3-eirei",
-   "name": "英霊の残り火",
+   "name": "残り火の兵",
    "world": "myth",
    "type": "char",
    "cost": 1,
@@ -12628,7 +12628,7 @@
   },
   {
    "id": "x3-kanshou",
-   "name": "次元干渉ブイ",
+   "name": "次元干渉アンテナ",
    "world": "mech",
    "type": "char",
    "cost": 4,
@@ -12962,7 +12962,7 @@
   },
   {
    "id": "tk-s-kit",
-   "name": "修理キット",
+   "name": "工具箱",
    "world": "mech",
    "type": "spell",
    "cost": 3,
