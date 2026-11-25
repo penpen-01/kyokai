@@ -1,5 +1,5 @@
 {
- "version": 246,
+ "version": 247,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -12568,7 +12568,7 @@
   },
   {
    "id": "x3-nautilus",
-   "name": "深潜艦ノーチラス",
+   "name": "次元潜艦ノーチラス",
    "world": "mech",
    "type": "char",
    "cost": 8,
