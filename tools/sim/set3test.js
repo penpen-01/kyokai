@@ -66,6 +66,8 @@ const { chromium } = require('playwright');
       ok('使ったクラゲ魔法を数える', S.players[0].jellyN === 2);
       play(0, 'tk-j-tide'); ok('満ち潮：2×2=4', S.players[1].hp === 16, S.players[1].hp);
       // 10. オクタ（コスト-2）・ノクトの力
+      fresh(); put(0, 'm3-aspido'); play(0, 'm3-gyojin'); const gj = S.players[0].field.find(u => u.id === 'm3-gyojin'); ok('魚人の兵：ほかの海獣がいれば+1/+1', gj && gj.atk === 3 && gj.hp === 4);
+      fresh(); const ub = put(1, 'm3-umibouzu'); const ua = put(0, 'pegasus'); attack(0, ua.uid, ub.uid); ok('海坊主：攻撃してきたキャラを行動不能', ua.frozen || !S.players[0].field.includes(ua), { frozen: ua.frozen, hp: ua.hp });
       fresh(); put(0, 'f3-octa'); i = hand(0, 'tk-j-tide'); ok('オクタ：満ち潮が4→2', effCost(0, DEF['tk-j-tide'], i) === 2);
       i = hand(0, 'tk-j-needle'); ok('オクタ：0より下がらない', effCost(0, DEF['tk-j-needle'], i) === 0);
       fresh(); const ch = put(0, 'tk-chibi'); play(0, 'f3-nocto'); ok('ノクト：ほかのクラゲ+1', ch.atk === 2);

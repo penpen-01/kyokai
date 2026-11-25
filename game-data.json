@@ -1,5 +1,5 @@
 {
- "version": 242,
+ "version": 244,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -554,7 +554,12 @@
     "x3-bousou",
     "x3-kanshou",
     "x3-bunkai",
-    "x3-pururu"
+    "x3-pururu",
+    "m3-gyojin",
+    "f3-selkie",
+    "m3-serpent",
+    "m3-umibouzu",
+    "m3-ketos"
    ],
    "odds": {
     "normal": {
@@ -12709,6 +12714,137 @@
    ],
    "set": "3",
    "art": "art/x3-pururu-bd54df25d2.webp"
+  },
+  {
+   "id": "m3-gyojin",
+   "name": "魚人の兵",
+   "world": "myth",
+   "type": "char",
+   "cost": 2,
+   "atk": 2,
+   "hp": 3,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "both",
+     "to": "self",
+     "cond": "tribeGE",
+     "ctribe": "beast",
+     "cn": 2
+    }
+   ],
+   "set": "3",
+   "tribe": "beast",
+   "art": "art/m3-gyojin-0924cb76ef.webp"
+  },
+  {
+   "id": "f3-selkie",
+   "name": "セルキー",
+   "world": "fan",
+   "type": "char",
+   "cost": 3,
+   "atk": 2,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tutor",
+     "n": 10,
+     "ctype": "char",
+     "tribe": "beast"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast",
+   "art": "art/f3-selkie-1c1e934321.webp"
+  },
+  {
+   "id": "m3-serpent",
+   "name": "シーサーペント",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "both",
+     "to": "self",
+     "cond": "tribeGE",
+     "ctribe": "beast",
+     "cn": 2
+    }
+   ],
+   "set": "3",
+   "tribe": "beast",
+   "art": "art/m3-serpent-b304a358cd.webp"
+  },
+  {
+   "id": "m3-umibouzu",
+   "name": "海坊主",
+   "world": "myth",
+   "type": "char",
+   "cost": 4,
+   "atk": 3,
+   "hp": 6,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "guard"
+   ],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "freeze",
+     "to": "foe",
+     "when": "attacked"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast",
+   "art": "art/m3-umibouzu-3206185ae7.webp"
+  },
+  {
+   "id": "m3-ketos",
+   "name": "ケートス",
+   "world": "myth",
+   "type": "char",
+   "cost": 8,
+   "atk": 7,
+   "hp": 8,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "destroy",
+     "to": "enemy1"
+    }
+   ],
+   "set": "3",
+   "tribe": "beast",
+   "art": "art/m3-ketos-4c10821bb8.webp"
   },
   {
    "id": "tk-funa",
