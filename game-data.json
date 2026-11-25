@@ -1,5 +1,5 @@
 {
- "version": 239,
+ "version": 240,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -12056,7 +12056,8 @@
    "set": "3",
    "pay": {
     "kind": "sacrifice"
-   }
+   },
+   "art": "art/x3-kinkyu-83dd6bc2d4.webp"
   },
   {
    "id": "x3-senkan",
@@ -12630,7 +12631,8 @@
      "to": "ownRand"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-bousou-a8b0e985a4.webp"
   },
   {
    "id": "x3-kanshou",
