@@ -1,5 +1,5 @@
 {
- "version": 238,
+ "version": 239,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -12032,7 +12032,8 @@
      "when": "turnStart"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-dock-4a092b321a.webp"
   },
   {
    "id": "x3-kinkyu",
@@ -12254,7 +12255,8 @@
      "plusMax": 2
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-daihouden-b2a57b12f0.webp"
   },
   {
    "id": "x3-hikari",
@@ -12375,7 +12377,8 @@
      "when": "allyDeath"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-kyunan-209c4952b8.webp"
   },
   {
    "id": "x3-crane",
@@ -12702,7 +12705,8 @@
      "when": "death"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-pururu-bd54df25d2.webp"
   },
   {
    "id": "tk-funa",
@@ -12786,7 +12790,8 @@
    "keywords": [],
    "effects": [],
    "set": "3",
-   "token": true
+   "token": true,
+   "art": "art/tk-pururu-f5d265c3d6.webp"
   },
   {
    "id": "tk-j-needle",
