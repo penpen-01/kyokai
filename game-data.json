@@ -1,5 +1,5 @@
 {
- "version": 234,
+ "version": 235,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -12108,7 +12108,8 @@
      "mod": "rusty"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-rusty-d7b76de043.webp"
   },
   {
    "id": "x3-shingou",
@@ -12228,7 +12229,8 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly"
+   "tribe": "jelly",
+   "art": "art/x3-buoy-98a89c2b0f.webp"
   },
   {
    "id": "x3-daihouden",
@@ -12346,7 +12348,8 @@
    ],
    "effects": [],
    "set": "3",
-   "armor": 1
+   "armor": 1,
+   "art": "art/x3-shouha-806b0eab81.webp"
   },
   {
    "id": "x3-kyunan",
@@ -12496,7 +12499,8 @@
      "who": "opp"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-gyorai-c38f32e538.webp"
   },
   {
    "id": "x3-tsumini",
@@ -12514,7 +12518,8 @@
     "tk-s-kit",
     "tk-s-parts",
     "tk-s-dud"
-   ]
+   ],
+   "art": "art/x3-tsumini-7eafa3673e.webp"
   },
   {
    "id": "x3-gearshark",
