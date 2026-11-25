@@ -1,5 +1,5 @@
 {
- "version": 233,
+ "version": 234,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -11920,7 +11920,8 @@
      "n": 1
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-haizai-6692a297f1.webp"
   },
   {
    "id": "x3-renketsu",
@@ -12007,7 +12008,8 @@
      "when": "death"
     }
    ],
-   "set": "3"
+   "set": "3",
+   "art": "art/x3-kirai-859877c4cd.webp"
   },
   {
    "id": "x3-dock",
@@ -12200,7 +12202,8 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly"
+   "tribe": "jelly",
+   "art": "art/x3-houden-f079afc3fd.webp"
   },
   {
    "id": "x3-buoy",
@@ -12417,7 +12420,8 @@
     "kind": "stat",
     "world": "mech",
     "hp": 1
-   }
+   },
+   "art": "art/x3-lux-bfb24a5a69.webp"
   },
   {
    "id": "x3-orca",
@@ -12542,7 +12546,8 @@
     }
    ],
    "set": "3",
-   "gear": 3
+   "gear": 3,
+   "art": "art/x3-gearshark-9defa83701.webp"
   },
   {
    "id": "x3-nautilus",
