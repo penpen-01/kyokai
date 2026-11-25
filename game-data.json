@@ -1,5 +1,5 @@
 {
- "version": 245,
+ "version": 246,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10764,7 +10764,7 @@
    ],
    "set": "3",
    "tribe": "beast",
-   "art": "art/m3-leviathan-c99ea9f03a.webp"
+   "art": "art/m3-leviathan-f9554db1b4.webp"
   },
   {
    "id": "m3-yadokari",
@@ -11360,7 +11360,7 @@
     }
    ],
    "set": "3",
-   "art": "art/f3-grave-f987ecf06f.webp"
+   "art": "art/f3-grave-e44561349a.webp"
   },
   {
    "id": "f3-komoriuta",
