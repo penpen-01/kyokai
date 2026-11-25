@@ -19,18 +19,20 @@ def rules(world): return '''【共通ルール】
 ・キャラクターのカード：そのキャラクターを画面の中央に大きく、主役とひと目でわかるように描く。大きな怪物・機械は全身でもよいが、顔（頭部）は画面の上半分に
 ・魔法のカードは人物の立ち絵ではなく、その魔法が発動している瞬間の場面を描く
 ・デジタルイラスト、輪郭線あり、セル塗りと厚塗りの中間。やや暗めの画面にドラマチックな光
-・1枚目に添付した画像は「画風（線の太さ・塗り方・色調）」の見本としてだけ使う。その人物・構図はまねしない
-・2枚目以降に添付した画像（今の絵・参考の絵）は、カードの説明に書いた使い方だけに使う。「残すもの」以外は新しく描く
+・添付した画像は「添付」に書いた使い方だけに使う。「画風の見本」は線・塗り・色調だけを使い、人物や構図はまねしない。「今の絵」は説明の「残すもの」だけ残し、ほかは新しく描く。「参考」は説明に書いたところだけ参考にする
 ・文字、ロゴ、サイン、数字、枠、カードのデザインは一切入れない（イラストだけ）
 ・実在の作品やキャラクター、実在の宗教の神や人物に似せない
 ・世界の雰囲気：''' + world
-B = {}; body = ""; order = {}
+B = {}; body = ""; order = {}; FILES = {}
+REFS = {"参考：ゴッドギア": "godgear", "参考：痺れ針": "needle"}
 for n, (i, name, typ, r, w, att, place, desc) in enumerate(S.REDO, 1):
     k = f"r{n}"; order[name] = [i]
-    att_txt = "1枚目：画風の見本（art-style-ref2.png）" + "".join(f"、{j+2}枚目：{a}" for j, a in enumerate(att))
+    FN = lambda a: "style-ref.png" if a == "見本" else f"{i}-now.png" if a == "今の絵" else "ref-" + REFS[a] + ".png"
+    LB = lambda a: "画風の見本" if a == "見本" else "今の絵" if a == "今の絵" else a
+    att_txt = "、".join(f"{j+1}枚目：{LB(a)}" for j, a in enumerate(att))
+    files = " ＋ ".join(FN(a) for a in att); FILES.update({FN(a): (i, a) for a in att})
     B[k] = ("カードゲーム用のイラストを1枚描いてください（今あるカードの描き直しです）。\n添付：" + att_txt + "\n\n" + rules(S.W[w]) +
             f"\n\n【カード】{name}（{typ}・{RN[r]}の演出で）\n場所：{place}\n内容：{desc}\n{EN[r]}")
-    files = "art-style-ref2.png" + "".join(f" ＋ {a.replace('参考：', '')}.png" if a.startswith('参考') else f" ＋ {name}（今の絵）.png" for a in att)
     body += (f'<li><span class="n">{n}</span><span class="nm">{html.escape(name)}</span>'
              f'<span class="tag">新しい会話で・添付：{html.escape(files)}</span>'
              f'<button type="button" class="cp sm" data-b="{k}">コピー</button><p class="d">{html.escape(desc)}</p></li>')
@@ -40,9 +42,10 @@ JS = src.split("JS = '", 1)[1].split("'\nout = ", 1)[0].encode().decode("unicode
 out = f'''<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(S.TITLE)}</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap">
 {STYLE}</head><body><div class="w"><h1>{html.escape(S.TITLE)}（{len(S.REDO)}枚）</h1>
-<p class="muted">1枚ずつ新しい Gemini の会話で描く。画風の見本（art-style-ref2.png）と、書いてある画像（redo-refs.zip の中）を添付して、「コピー」した文を貼る。できた絵は今の絵と見比べて、使う方を決める（今の絵は消さずに残してある）。</p>
+<p class="muted">1枚ずつ新しい Gemini の会話で描く。書いてある画像だけを添付して（添付は少ないほど引っぱられない）、「コピー」した文を貼る。できた絵は今の絵と見比べて、使う方を決める（今の絵は消さずに残してある）。「新しい海の怪物」はまだカードではない試し描き。</p>
 <ol>{body}</ol></div>
 {JS.replace("__B__", json.dumps(B, ensure_ascii=False))}'''
 open(OUT, "w").write(out)
-json.dump(order, open(os.path.splitext(OUT)[0] + "-order.json", "w"), ensure_ascii=False)
+json.dump({k: v for k, v in order.items() if not v[0].startswith("new-")}, open(os.path.splitext(OUT)[0] + "-order.json", "w"), ensure_ascii=False)
+json.dump(FILES, open(os.path.splitext(OUT)[0] + "-files.json", "w"), ensure_ascii=False)
 print(len(S.REDO), "枚 →", OUT)
