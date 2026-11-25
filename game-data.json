@@ -1,5 +1,5 @@
 {
- "version": 241,
+ "version": 242,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10457,7 +10457,7 @@
     }
    ],
    "set": "3",
-   "art": "art/m3-hotaru-f18ef08d44.webp"
+   "art": "art/m3-hotaru-0e13077fdf.webp"
   },
   {
    "id": "m3-charon",
@@ -11521,7 +11521,7 @@
     "tribe": "jelly",
     "atk": 1
    },
-   "art": "art/f3-nocto-e6a2be97bf.webp"
+   "art": "art/f3-nocto-88a94a626e.webp"
   },
   {
    "id": "f3-sumi",
@@ -11751,7 +11751,7 @@
     }
    ],
    "set": "3",
-   "art": "art/f3-shabon-9a1d2cb6bf.webp"
+   "art": "art/f3-shabon-95f5d87d79.webp"
   },
   {
    "id": "f3-marina",
@@ -11777,7 +11777,7 @@
     }
    ],
    "set": "3",
-   "art": "art/f3-marina-19c15c2525.webp"
+   "art": "art/f3-marina-ae5215f757.webp"
   },
   {
    "id": "f3-tayori",
@@ -12559,7 +12559,7 @@
    ],
    "set": "3",
    "gear": 3,
-   "art": "art/x3-gearshark-9defa83701.webp"
+   "art": "art/x3-gearshark-97ca3b8c3e.webp"
   },
   {
    "id": "x3-nautilus",

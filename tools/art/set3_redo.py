@@ -114,4 +114,4 @@ REDO = [('m3-leviathan',
   ['見本'],
   '月夜の北の海の岩礁、冷たい青い光',
   '北の海の言い伝えの「アザラシの一族」セルキーが主役。若い女性が岩に腰かけ、脱いだばかりの銀灰色のアザラシの毛皮を肩にかけて抱いている。長い黒髪がぬれて肩に張りつき、大きな黒い瞳、少しさびしそうな表情。服は毛皮の下に、海藻色の長いワンピース（露出は少なく）。まわりの岩にアザラシたちがこちらを見ている')]
-# 合格して入れたもの（11-26）：m3-azuria・m3-eirei・f3-sango・tk-j-needle・x3-bousou・f3-suiryu・m3-ikari・f3-puka
+# 合格して入れたもの（11-26）：x3-gearshark・m3-hotaru・f3-nocto・f3-marina・f3-shabon・m3-azuria・m3-eirei・f3-sango・tk-j-needle・x3-bousou・f3-suiryu・m3-ikari・f3-puka
