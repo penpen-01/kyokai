@@ -1,5 +1,5 @@
 {
- "version": 240,
+ "version": 241,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -10249,7 +10249,7 @@
     }
    ],
    "set": "3",
-   "art": "art/m3-eirei-bac5de93f1.webp"
+   "art": "art/m3-eirei-632ace3379.webp"
   },
   {
    "id": "m3-hakamori",
@@ -10869,7 +10869,7 @@
     }
    ],
    "set": "3",
-   "art": "art/m3-azuria-20e9b1aa31.webp"
+   "art": "art/m3-azuria-b54f59cc30.webp"
   },
   {
    "id": "m3-uni",
@@ -11055,7 +11055,7 @@
     }
    ],
    "set": "3",
-   "art": "art/m3-ikari-59085e5a2d.webp"
+   "art": "art/m3-ikari-12c3be6309.webp"
   },
   {
    "id": "f3-nakimushi",
@@ -11472,7 +11472,7 @@
    ],
    "set": "3",
    "tribe": "jelly",
-   "art": "art/f3-puka-dd6f533d9f.webp"
+   "art": "art/f3-puka-48ff643e30.webp"
   },
   {
    "id": "f3-octa",
@@ -11727,7 +11727,7 @@
    ],
    "effects": [],
    "set": "3",
-   "art": "art/f3-sango-4783268316.webp"
+   "art": "art/f3-sango-a79eb8341f.webp"
   },
   {
    "id": "f3-shabon",
@@ -11777,7 +11777,7 @@
     }
    ],
    "set": "3",
-   "art": "art/f3-marina-906b1b91b2.webp"
+   "art": "art/f3-marina-19c15c2525.webp"
   },
   {
    "id": "f3-tayori",
@@ -11864,7 +11864,7 @@
    ],
    "effects": [],
    "set": "3",
-   "art": "art/f3-suiryu-23df61113d.webp"
+   "art": "art/f3-suiryu-2c1026169d.webp"
   },
   {
    "id": "x3-sabineji",
@@ -12632,7 +12632,7 @@
     }
    ],
    "set": "3",
-   "art": "art/x3-bousou-a8b0e985a4.webp"
+   "art": "art/x3-bousou-bbc4b37fda.webp"
   },
   {
    "id": "x3-kanshou",
@@ -12820,7 +12820,7 @@
     "tribe": "jelly"
    },
    "token": true,
-   "art": "art/tk-j-needle-2cb8ac7bbc.webp"
+   "art": "art/tk-j-needle-c6b955b67e.webp"
   },
   {
    "id": "tk-j-cradle",
