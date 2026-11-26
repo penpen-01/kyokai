@@ -1,5 +1,5 @@
 {
- "version": 255,
+ "version": 256,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -10780,29 +10780,27 @@
    "world": "myth",
    "type": "char",
    "cost": 5,
-   "atk": 4,
+   "atk": 3,
    "hp": 5,
    "glyph": "神",
    "limit": 3,
    "rarity": "sr",
-   "keywords": [],
+   "keywords": [
+    "rush"
+   ],
    "effects": [
     {
      "kind": "unit",
-     "n": 3,
+     "n": 1,
      "when": "attack",
      "act": "dmg",
-     "to": "enemyRand"
+     "to": "enemyRandF",
+     "rep": 6
     }
    ],
    "set": "3",
    "tribe": "beast",
-   "art": "art/m3-scylla-4de39adbc7.webp",
-   "aura": {
-    "kind": "stat",
-    "tribe": "beast",
-    "atk": 1
-   }
+   "art": "art/m3-scylla-4de39adbc7.webp"
   },
   {
    "id": "m3-shoukan",

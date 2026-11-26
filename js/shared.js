@@ -554,6 +554,7 @@ function effectsText(card, list, auto) {
     if (e.per === "tribe") t = `自分の場のほかの【${TRIBES[e.ctribe] || "？"}】のキャラ1体につき、${t.replace(/。$/, "")}（${e.perMax || 3}体まで数える）。`;
     if (e.plus) t = t.replace(/。$/, `。自分の場の【${TRIBES[e.plus] || ""}】のキャラ1体につき、さらに1ダメージ${(e.plusMax || 2) >= 9 ? "" : `（最大+${e.plusMax || 2}）`}。`);
     if (e.cap) t = t.replace(/。$/, `（1ターンに${e.cap}回まで）。`);
+    if (+e.rep > 1) t = /ダメージ。$/.test(t) ? t.replace(/ダメージ。$/, `ダメージを${e.rep}回（1回ずつ対象を選び直す）。`) : t.replace(/。$/, `。これを${e.rep}回くり返す（1回ずつ対象を選び直す）。`);
     if (e.per === "played") t = e.split ? `このターン、このカードより先に使ったカードの枚数だけ、${t.replace(/。$/, "")}（1回ずつ対象を選び直す）。` : `このターン、このカードより先に使ったカード1枚につき、${t}`;
     // 前の効果と同じ条件なら、条件は2回書かずに「さらに」でつなぐ
     const pe = i > 0 ? list[i - 1] : null, sameCond = pe && e.cond && pe.cond === e.cond && pe.cn === e.cn && pe.cworld === e.cworld;
@@ -959,6 +960,7 @@ function normEffect(e, type) {
   if (e.kind === "dig" && e.rest === "grave") out.rest = "grave";
   if ((e.kind === "tutor" || e.kind === "graveHand") && e.card) out.card = String(e.card);   // 名前を決めて山札から持ってくる（セイレーン）
   if (e.kind === "tokenHand" && e.free) out.free = true;          // コスト0にして加える（バルバ）
+  if (+e.rep > 1) out.rep = Math.min(9, Math.round(+e.rep));   // N回くり返す
   if (e.kind === "tide" && +e.max > 0) out.max = Math.min(40, Math.round(+e.max));
   if (e.kind === "cutOne" && TYPES[e.ctype]) out.ctype = e.ctype;
   return out;

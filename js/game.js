@@ -944,6 +944,7 @@ function discardRandom(q, pi) {
 }
 function effect(pi, e, targets, self) {
   if (e.cond && !condOK(pi, e, self)) return;
+  if (+e.rep > 1) { const one = { ...e, rep: 0, cond: null }; for (let i = 0; i < e.rep && !S.over; i++) effect(pi, one, targets, self); return; }   // N回くり返す（ランダムな対象を毎回選び直す。スキュラ）
   if (e.per === "gear") { const k = S.gearSpent || 0; if (!k) return; e = { ...e, n: e.n * k }; }
   if (e.per === "played") {
     const k = Math.max(0, (S.players[pi].played || 0) - 1); if (!k) return;

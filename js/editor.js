@@ -405,6 +405,7 @@ function effOptsHTML(e, i) {
   if (e.kind === "unit" && e.act === "dmg") { out.push(sel("plus", "場の（種族の）キャラ1体につき+1", trib, e.plus || "")); if (e.plus) out.push(num("plusMax", "+の上限（9＝なし）", e.plusMax || 2)); }
   if (whenOf(e) === "allyDeath") out.push(sel("af", "倒されたのが", [["", "どのキャラでも"], ["ghost", "亡霊のキャラ"], ...Object.entries(TRIBES).map(([k, v]) => [k, `【${v}】のキャラ`])], e.af || ""));
   if (whenOf(e) === "cardPlay") out.push(sel("ptr", "使ったカードの種族", trib, e.ptr || ""));
+  if (e.kind === "unit") out.push(num("rep", "くり返す回数（1＝1回）", e.rep || 1));
   if (whenOf(e) !== "play") out.push(sel("cap", "1ターンに", [["", "何回でも"], ["1", "1回まで"], ["2", "2回まで"], ["3", "3回まで"]], e.cap ? String(e.cap) : ""));
   return out.length ? `<div class="eff-opts">${out.join("")}</div>` : "";
 }
@@ -510,8 +511,8 @@ function setNum(name, value) {
     if (f === "atk" || f === "hp") { if (!v) delete c.aura[f]; }
   } else if (name.startsWith("efx-")) {
     const [, i, f] = name.split("-"), ef = c.effects[+i]; if (!ef) return;
-    const lim = { cnt: [1, 4], total: [0, 40], max: [1, 40], plusMax: [1, 9] }[f] || [0, 20];
-    v = clamp(value, lim[0], lim[1]); if ((f === "total" || f === "cmax") && !v) delete ef[f]; else ef[f] = v;
+    const lim = { cnt: [1, 4], total: [0, 40], max: [1, 40], plusMax: [1, 9], rep: [1, 9] }[f] || [0, 20];
+    v = clamp(value, lim[0], lim[1]); if (((f === "total" || f === "cmax") && !v) || (f === "rep" && v <= 1)) delete ef[f]; else ef[f] = v;
   } else if (name.startsWith("cnd-")) {
     v = c.effects[+name.slice(4)].cn = clamp(value, 0, 30);
   } else if (name.startsWith("eff-")) {
