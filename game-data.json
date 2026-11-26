@@ -1,5 +1,5 @@
 {
- "version": 254,
+ "version": 255,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -11176,18 +11176,21 @@
    "world": "myth",
    "type": "char",
    "cost": 6,
-   "atk": 7,
+   "atk": 5,
    "hp": 5,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "pierce"
+    "rush"
    ],
    "effects": [
     {
-     "kind": "scales",
-     "n": 1
+     "kind": "unit",
+     "n": 2,
+     "when": "attack",
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "set": "3",
