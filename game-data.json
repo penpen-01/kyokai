@@ -1,5 +1,5 @@
 {
- "version": 248,
+ "version": 249,
  "updated": "2026-11-24",
  "config": {
   "PLAYER_HP": 20,
@@ -3317,16 +3317,6 @@
    "price": 10000,
    "art": "ui/alt/p3-f3-nocto.webp",
    "card": "f3-nocto",
-   "admin": true
-  },
-  {
-   "id": "p3-m3-leviathan",
-   "kind": "art",
-   "name": "覇王の咆哮",
-   "desc": "海の覇王リヴァイアサンのパラレル（GPT）。",
-   "price": 10000,
-   "art": "ui/alt/p3-m3-leviathan.webp",
-   "card": "m3-leviathan",
    "admin": true
   }
  ],
