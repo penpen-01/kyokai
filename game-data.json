@@ -1,5 +1,5 @@
 {
- "version": 256,
+ "version": 257,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -3347,8 +3347,8 @@
    "desc": "泡沫の歌い手シャボンのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-f3-shabon.webp",
-   "card": "f3-shabon",
-   "admin": true
+   "admin": true,
+   "card": "f3-shabon"
   },
   {
    "id": "p3-m3-hotaru",
@@ -3357,8 +3357,8 @@
    "desc": "送り火の巫女ホタルのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-m3-hotaru.webp",
-   "card": "m3-hotaru",
-   "admin": true
+   "admin": true,
+   "card": "m3-hotaru"
   },
   {
    "id": "p3-x3-orca",
@@ -3367,8 +3367,8 @@
    "desc": "蒼鋼の鯱オルカのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-x3-orca.webp",
-   "card": "x3-orca",
-   "admin": true
+   "admin": true,
+   "card": "x3-orca"
   }
  ],
  "sen": {
@@ -10905,7 +10905,7 @@
    "name": "海の覇王リヴァイアサン",
    "world": "myth",
    "type": "char",
-   "cost": 10,
+   "cost": 9,
    "atk": 8,
    "hp": 9,
    "glyph": "神",
@@ -10917,7 +10917,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
      "act": "dmg",
      "to": "enemyAll"
     }
@@ -11214,10 +11214,10 @@
     {
      "kind": "unit",
      "n": 4,
-     "cond": "tribeGE",
-     "cn": 1,
      "act": "dmg",
      "to": "enemyAll",
+     "cond": "tribeGE",
+     "cn": 1,
      "ctribe": "beast"
     }
    ],
@@ -11263,7 +11263,7 @@
    "effects": [
     {
      "kind": "reviveSel",
-     "n": 2,
+     "n": 3,
      "cnt": 1
     }
    ],
@@ -11364,9 +11364,9 @@
     },
     {
      "kind": "player",
+     "n": 3,
      "act": "heal",
-     "who": "self",
-     "n": 3
+     "who": "self"
     }
    ],
    "set": "3",
@@ -11386,8 +11386,7 @@
     {
      "kind": "reviveSel",
      "n": 3,
-     "cnt": 3,
-     "total": 7
+     "cnt": 3
     }
    ],
    "set": "3",
@@ -11510,7 +11509,8 @@
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "ghost"
+    "ghost",
+    "guard"
    ],
    "effects": [
     {
@@ -12086,12 +12086,12 @@
      "n": 1
     }
    ],
-   "set": "3",
-   "art": "art/x3-haizai-6692a297f1.webp",
    "pay": {
     "kind": "life",
     "n": 2
-   }
+   },
+   "set": "3",
+   "art": "art/x3-haizai-6692a297f1.webp"
   },
   {
    "id": "x3-renketsu",
@@ -12221,9 +12221,9 @@
     {
      "kind": "reviveSel",
      "n": 5,
-     "cnt": 1,
      "any": true,
-     "world": "mech"
+     "world": "mech",
+     "cnt": 1
     }
    ],
    "pay": {
@@ -12324,11 +12324,11 @@
    "effects": [],
    "set": "3",
    "tribe": "jelly",
-   "art": "art/x3-chikuden-dd63c6ffab.webp",
    "aura": {
     "kind": "cost",
     "n": 1
-   }
+   },
+   "art": "art/x3-chikuden-dd63c6ffab.webp"
   },
   {
    "id": "x3-baiyou",
@@ -12576,8 +12576,7 @@
     {
      "kind": "dig",
      "n": 5,
-     "cond": "gearPaid",
-     "cn": 1
+     "cond": "gearPaid"
     }
    ],
    "set": "3",
@@ -12741,7 +12740,7 @@
     }
    ],
    "set": "3",
-   "gear": 10,
+   "gear": 7,
    "art": "art/x3-gearshark-97ca3b8c3e.webp"
   },
   {
@@ -12896,9 +12895,9 @@
     },
     {
      "kind": "player",
+     "n": 2,
      "act": "heal",
-     "who": "self",
-     "n": 2
+     "who": "self"
     }
    ],
    "set": "3",
@@ -12920,9 +12919,9 @@
     {
      "kind": "tutor",
      "n": 10,
+     "when": "death",
      "ctype": "char",
-     "tribe": "beast",
-     "when": "death"
+     "tribe": "beast"
     }
    ],
    "set": "3",
@@ -13105,10 +13104,10 @@
    "effects": [
     {
      "kind": "player",
-     "act": "heal",
-     "who": "self",
      "n": 1,
-     "when": "death"
+     "when": "death",
+     "act": "heal",
+     "who": "self"
     }
    ],
    "token": true,
@@ -13235,7 +13234,7 @@
    "cost": 3,
    "glyph": "幻",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "sr",
    "keywords": [],
    "effects": [
     {
@@ -13243,6 +13242,12 @@
      "n": 2,
      "act": "draw",
      "who": "self"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 3
     }
    ],
    "token": true,
@@ -13257,14 +13262,15 @@
    "cost": 3,
    "glyph": "幻",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "rare",
    "keywords": [],
    "effects": [
     {
      "kind": "unit",
-     "n": 4,
-     "act": "dmg",
-     "to": "enemyRandF"
+     "n": 1,
+     "act": "grant",
+     "to": "all",
+     "kw": "doom"
     }
    ],
    "token": true,
@@ -13322,12 +13328,12 @@
    "cost": 3,
    "glyph": "機",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "sr",
    "keywords": [],
    "effects": [
     {
      "kind": "tokenHand",
-     "n": 2,
+     "n": 5,
      "card": "tk-gear"
     }
    ],
