@@ -349,7 +349,7 @@ function effOptsHTML(e, i) {
   const isChar = curCard() && curCard().type === "char";
   const sel = (opt, label, items, val) => `<label class="eff-opt"><span>${label}</span><select data-eff-opt="${i}" data-opt="${opt}" id="ef-${opt}-${i}">${items.map(([k, v]) => `<option value="${esc(k)}" ${val === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></label>`;
   const tokSel = (opt, label, type, optional) => {
-    const toks = DATA.cards.filter(c => c.token && (!type || c.type === type));
+    const toks = DATA.cards.filter(c => (c.token || c.id === e[opt]) && (!type || c.type === type));   // トークンでないカード（バルバの宝箱など）が入っていても、そのまま見せる
     return toks.length || e[opt]
       ? sel(opt, label, [["", optional ? "（なし：1/1にする）" : "選んでください"], ...toks.map(c => [c.id, `${c.name}（${c.type === "char" ? `${c.atk}/${c.hp}` : "魔法"}）`])], e[opt] || "")
       : `<span class="hint small">トークンのカードがまだありません。新しいカードを作って「トークン」にチェックを入れてください${type === "char" ? "（キャラ）" : ""}。</span>`;
@@ -385,6 +385,25 @@ function effOptsHTML(e, i) {
     if (o.includes("cmin")) out.push(sel("cmin", "コストの下限（数値が上限。10以上で上限なし）", [["", "なし（上限だけ）"], ...Array.from({ length: 10 }, (_, k) => [String(k + 1), `${k + 1}以上`])], e.cmin ? String(e.cmin) : ""));
     if (o.includes("dur")) out.push(sel("dur", "期間", [["turn", "このターンだけ"], ["game", "この対戦中ずっと"]], e.dur || "turn"));
   }
+  // ---- 第3弾の細かい設定（11-27） ----
+  const trib = [["", "なし"], ...Object.entries(TRIBES)];
+  const num = (f, label, v) => `<label class="eff-opt"><span>${label}</span>${stepper(`efx-${i}-${f}`, v, label)}</label>`;
+  const chk = (f, on, label) => `<label class="eff-opt chk"><input type="checkbox" data-eff-flag="${i}" data-opt="${f}" ${on ? "checked" : ""}><span>${label}</span></label>`;
+  const allCards = (type) => DATA.cards.filter(c => !c.token && (!type || c.type === type)).map(c => [c.id, `${c.name}（${c.cost}）`]);
+  if (e.kind === "reviveSel") {
+    out.push(num("cnt", "出す体数（まで）", e.cnt || 1), num("total", "合計コストの上限（0＝なし）", e.total || 0));
+    out.push(sel("mod", "出したキャラに", [["", "何もしない"], ["rush", "突進を与える"], ["rusty", "亡霊を消して装甲1"]], e.mod || ""));
+  }
+  if (e.kind === "tutor") out.push(sel("card", "名前を決める（選ぶと、そのカードだけ）", [["", "決めない"], ...allCards()], e.card || ""));
+  if (e.kind === "graveHand") out.push(sel("card", "戻すカード（決めないと、墓地のキャラから選ぶ）", [["", "決めない（選ぶ）"], ...allCards()], e.card || ""));
+  if (e.kind === "tokenHand") out.push(chk("free", !!e.free, "コスト0にして加える"));
+  if (e.kind === "tide") out.push(num("max", "ダメージの上限", e.max || 15));
+  if (e.kind === "dig") out.push(sel("rest", "残りのカード", [["", "ランダムな順番で山札の下へ"], ["grave", "墓地へ"]], e.rest || ""));
+  if (e.kind === "unit" && /enemy|any|own/.test(e.to || "")) out.push(num("cmax", "対象のコストの上限（0＝なし）", e.cmax ?? 0));
+  if (e.kind === "unit" && e.act === "dmg") { out.push(sel("plus", "場の（種族の）キャラ1体につき+1", trib, e.plus || "")); if (e.plus) out.push(num("plusMax", "+の上限（9＝なし）", e.plusMax || 2)); }
+  if (whenOf(e) === "allyDeath") out.push(sel("af", "倒されたのが", [["", "どのキャラでも"], ["ghost", "亡霊のキャラ"], ...Object.entries(TRIBES).map(([k, v]) => [k, `【${v}】のキャラ`])], e.af || ""));
+  if (whenOf(e) === "cardPlay") out.push(sel("ptr", "使ったカードの種族", trib, e.ptr || ""));
+  if (whenOf(e) !== "play") out.push(sel("cap", "1ターンに", [["", "何回でも"], ["1", "1回まで"], ["2", "2回まで"], ["3", "3回まで"]], e.cap ? String(e.cap) : ""));
   return out.length ? `<div class="eff-opts">${out.join("")}</div>` : "";
 }
 /* 効果の条件（なし／体力N以下 など） */
@@ -429,8 +448,21 @@ function specialHTML(c, isChar) {
     <div class="eff-opts">${chk("shrink", !!c.shrink, "<b>化かし</b>")}${c.shrink ? wsel("shrinkWorld", c.shrink.world) : ""}</div>
     <div class="eff-opts">${chk("grow", !!c.grow, "<b>妖気</b>")}${c.grow ? wsel("growWorld", g.world) + (isChar ? chk("growStat", g.stat, "攻撃力と体力") : "") + chk("growDmg", g.dmg, "効果のダメージ") + chk("growNum", g.num, "そのほかの効果の数") : ""}</div>
     <div class="eff-opts">${chk("req", !!c.req, "<b>使える条件</b>")}${c.req ? `<span class="eff-opt">自分の場に</span>${wsel("reqWorld", r.world).replace("どの世界のカードでも", "どの世界でも").replace(/のカード</g, "の<")}<span class="eff-opt">キャラが</span>${stepper("reqn", r.n || 1, "条件の体数")}<span class="eff-opt">体以上</span>${chk("reqEmpty", r.orEmpty, "または自分の場にキャラがいないとき")}` : ""}</div>
+    <div class="eff-opts"><label class="eff-opt"><span><b>種族</b></span><select class="txt sm" data-sp="tribe"><option value="">なし</option>${Object.entries(TRIBES).map(([k, v]) => `<option value="${k}" ${c.tribe === k ? "selected" : ""}>${v}</option>`).join("")}</select></label></div>
+    ${auraEdHTML(c)}
     <div class="eff-opts"><label class="eff-opt"><span><b>歯車を使う</b></span><select class="txt sm" data-sp="gear"><option value="">使わない</option><option value="n" ${typeof c.gear === "number" ? "selected" : ""}>決めた枚数を使ってもよい</option><option value="all" ${c.gear === "all" ? "selected" : ""}>手札の歯車をすべて使う</option></select></label>${typeof c.gear === "number" ? stepper("gearn", c.gear, "使う歯車の枚数") : ""}</div>
   </div>`;
+}
+/* 場にいる間ずっと働く力（card.aura）の編集欄 */
+function auraEdHTML(c) {
+  const a = c.aura || null, ak = !a ? "" : a.kind === "cost" ? (a.tribe ? "costTribe" : a.spell ? "costSpell" : "costJelly") : a.kind;
+  const opts = [["", "なし"], ["stat", "ほかの味方を強くする"], ["costJelly", "クラゲ魔法のコストを下げる"], ["costSpell", "魔法すべてのコストを下げる"], ["costTribe", "手札の（種族の）キャラのコストを下げる"], ["self", "墓地の亡霊の数だけ自分の攻撃力+1"]];
+  const tsel = (key, val, none) => `<select class="txt sm" data-sp="${key}"><option value="">${none}</option>${Object.entries(TRIBES).map(([k, v]) => `<option value="${k}" ${val === k ? "selected" : ""}>${v}</option>`).join("")}</select>`;
+  let more = "";
+  if (a && a.kind === "stat") more = `<select class="txt sm" data-sp="auraWorld"><option value="">どの世界でも</option>${Object.entries(WORLDS).map(([k, v]) => `<option value="${k}" ${a.world === k ? "selected" : ""}>${v}</option>`).join("")}</select>${tsel("auraTribe", a.tribe, "どの種族でも")}<span class="eff-opt">攻撃力+</span>${stepper("aura-atk", a.atk || 0, "攻撃力")}<span class="eff-opt">体力+</span>${stepper("aura-hp", a.hp || 0, "体力")}`;
+  if (a && a.kind === "cost") more = `${ak === "costTribe" ? tsel("auraTribe", a.tribe, "種族を選ぶ") : ""}<span class="eff-opt">下げる数</span>${stepper("aura-n", a.n || 1, "下げる数")}`;
+  if (a && a.kind === "self") more = `<span class="eff-opt">上限+</span>${stepper("aura-max", a.max || 4, "上限")}`;
+  return `<div class="eff-opts"><label class="eff-opt"><span><b>場にいる間ずっと</b></span><select class="txt sm" data-sp="aura">${opts.map(([k, v]) => `<option value="${k}" ${ak === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>${more}</div>`;
 }
 function spChange(c, t) {
   const k = t.dataset.sp, on = t.checked, v = t.value;
@@ -445,6 +477,15 @@ function spChange(c, t) {
   else if (k === "reqWorld") { if (v) c.req.world = v; else delete c.req.world; }
   else if (k === "reqEmpty") { if (on) c.req.orEmpty = true; else delete c.req.orEmpty; }
   else if (k === "gear") { if (v === "all") c.gear = "all"; else if (v === "n") c.gear = 2; else delete c.gear; }
+  else if (k === "tribe") { if (v) c.tribe = v; else delete c.tribe; }
+  else if (k === "aura") {
+    if (!v) delete c.aura;
+    else if (v === "stat") c.aura = { kind: "stat", atk: 1 };
+    else if (v === "self") c.aura = { kind: "self", max: 4 };
+    else c.aura = { kind: "cost", n: (c.aura && c.aura.n) || 1, ...(v === "costSpell" ? { spell: true } : {}), ...(v === "costTribe" ? { tribe: Object.keys(TRIBES)[0] } : {}) };
+  }
+  else if (k === "auraWorld") { if (v) c.aura.world = v; else delete c.aura.world; }
+  else if (k === "auraTribe") { if (v) c.aura.tribe = v; else delete c.aura.tribe; }
   changed(); renderEditor();
 }
 function clamp(v, lo, hi) { v = Math.round(+v); if (!isFinite(v)) v = lo; return Math.min(hi, Math.max(lo, v)); }
@@ -462,7 +503,14 @@ function setNum(name, value) {
   const c = curCard();
   if (!c) return;
   let v;
-  if (name.startsWith("cnd-")) {
+  if (name.startsWith("aura-") && c.aura) {
+    const f = name.slice(5); v = c.aura[f] = clamp(value, f === "n" || f === "max" ? 1 : 0, 9);
+    if (f === "atk" || f === "hp") { if (!v) delete c.aura[f]; }
+  } else if (name.startsWith("efx-")) {
+    const [, i, f] = name.split("-"), ef = c.effects[+i]; if (!ef) return;
+    const lim = { cnt: [1, 4], total: [0, 40], max: [1, 40], plusMax: [1, 9] }[f] || [0, 20];
+    v = clamp(value, lim[0], lim[1]); if ((f === "total" || f === "cmax") && !v) delete ef[f]; else ef[f] = v;
+  } else if (name.startsWith("cnd-")) {
     v = c.effects[+name.slice(4)].cn = clamp(value, 0, 30);
   } else if (name.startsWith("eff-")) {
     const i = +name.slice(4);
@@ -633,7 +681,8 @@ document.addEventListener("change", e => {
   }
   if (t.dataset.effOpt != null) {
     const c = curCard(), e = c.effects[+t.dataset.effOpt];
-    if (t.value) e[t.dataset.opt] = t.value; else delete e[t.dataset.opt];
+    if (t.value) e[t.dataset.opt] = ["cap"].includes(t.dataset.opt) ? +t.value : t.value; else delete e[t.dataset.opt];
+    if (t.dataset.opt === "plus" && t.value && !e.plusMax) e.plusMax = 2;
     if (e.kind === "unit") {
       // 何をするか・対象を変えたら、組み合わせを整える（normEffect と同じきまり）
       const n = normEffect(e, c.type);
@@ -642,13 +691,14 @@ document.addEventListener("change", e => {
     changed(); renderEditor(); return;
   }
   if (t.dataset.sp != null) { spChange(curCard(), t); return; }
+  if (t.dataset.effFlag != null) { const e = curCard().effects[+t.dataset.effFlag]; if (t.checked) e[t.dataset.opt] = true; else delete e[t.dataset.opt]; changed(); renderEditor(); return; }
   if (t.dataset.effPer != null) { const e = curCard().effects[+t.dataset.effPer]; if (t.value) e.per = t.value; else delete e.per; changed(); renderEditor(); return; }
   if (t.dataset.effTurn != null) { const e = curCard().effects[+t.dataset.effTurn]; if (t.checked) e.turn = true; else delete e.turn; changed(); renderEditor(); return; }
   if (t.dataset.effCond != null) { const e = curCard().effects[+t.dataset.effCond]; if (t.value) { e.cond = t.value; if (e.cn == null) e.cn = 1; } else { delete e.cond; delete e.cn; delete e.cworld; } changed(); renderEditor(); return; }
   if (t.dataset.effWhen != null) { const e = curCard().effects[+t.dataset.effWhen]; if (t.value === "play") delete e.when; else e.when = t.value; changed(); renderEditor(); return; }
   if (t.dataset.effKind != null) {
     const c = curCard(), i = +t.dataset.effKind, old = c.effects[i];
-    const base = { kind: t.value, n: Math.max(1, Math.abs(old.n || 1)), ...(old.when ? { when: old.when } : {}), ...(old.pw ? { pw: old.pw } : {}), ...(old.pt ? { pt: old.pt } : {}), ...(old.cond ? { cond: old.cond, cn: old.cn, cworld: old.cworld } : {}) };
+    const base = { kind: t.value, n: Math.max(1, Math.abs(old.n || 1)), ...(old.when ? { when: old.when } : {}), ...(old.pw ? { pw: old.pw } : {}), ...(old.pt ? { pt: old.pt } : {}), ...(old.cond ? { cond: old.cond, cn: old.cn, cworld: old.cworld, ...(old.ctribe ? { ctribe: old.ctribe } : {}) } : {}), ...(old.cap ? { cap: old.cap } : {}), ...(old.af ? { af: old.af } : {}), ...(old.ptr ? { ptr: old.ptr } : {}) };
     if (t.value === "unit") Object.assign(base, { act: "dmg", to: "enemy1" });
     if (t.value === "player") Object.assign(base, { act: "draw", who: "self" });
     if (t.value === "merge") base.n = Math.max(2, base.n);

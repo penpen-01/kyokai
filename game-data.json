@@ -1,5 +1,5 @@
 {
- "version": 252,
+ "version": 253,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -10438,7 +10438,7 @@
    "effects": [
     {
      "kind": "toss",
-     "n": 1,
+     "n": 2,
      "ctype": "char"
     },
     {
@@ -10634,7 +10634,7 @@
      "act": "draw",
      "who": "self",
      "af": "ghost",
-     "cap": 2
+     "cap": 1
     }
    ],
    "pay": {
@@ -10687,7 +10687,7 @@
    "aura": {
     "kind": "cost",
     "tribe": "beast",
-    "n": 1
+    "n": 2
    },
    "art": "art/m3-aspido-07affe761c.webp"
   },
@@ -10726,10 +10726,9 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "unit",
-     "n": -2,
-     "act": "atk",
-     "to": "enemy1"
+     "kind": "tutor",
+     "n": 10,
+     "card": "m3-shoukan"
     }
    ],
    "set": "3",
@@ -11509,13 +11508,15 @@
    "glyph": "幻",
    "limit": 3,
    "rarity": "legend",
-   "keywords": [],
+   "keywords": [
+    "ghost"
+   ],
    "effects": [
     {
      "kind": "reviveSel",
      "n": 10,
      "cnt": 3,
-     "total": 8
+     "total": 10
     }
    ],
    "set": "3",
@@ -11750,7 +11751,8 @@
     {
      "kind": "tokenHand",
      "n": 1,
-     "card": "f3-takarabako"
+     "card": "f3-takarabako",
+     "free": true
     }
    ],
    "set": "3",
@@ -11960,8 +11962,7 @@
    "effects": [
     {
      "kind": "dig",
-     "n": 3,
-     "rest": "grave"
+     "n": 3
     }
    ],
    "set": "3",
@@ -12079,10 +12080,6 @@
    "rarity": "common",
    "keywords": [],
    "effects": [
-    {
-     "kind": "mill",
-     "n": 2
-    },
     {
      "kind": "graveHand",
      "n": 1
@@ -12360,7 +12357,6 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly",
    "art": "art/x3-baiyou-5e503525d2.webp"
   },
   {
@@ -12409,7 +12405,6 @@
     }
    ],
    "set": "3",
-   "tribe": "jelly",
    "art": "art/x3-buoy-98a89c2b0f.webp"
   },
   {
@@ -12429,7 +12424,7 @@
      "act": "dmg",
      "to": "enemyAll",
      "plus": "jelly",
-     "plusMax": 2
+     "plusMax": 9
     }
    ],
    "set": "3",
@@ -12949,10 +12944,9 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "tutor",
-     "n": 10,
-     "ctype": "char",
-     "tribe": "beast"
+     "kind": "graveHand",
+     "n": 1,
+     "card": "m3-shoukan"
     }
    ],
    "set": "3",
@@ -13066,13 +13060,7 @@
     "guard",
     "steadfast"
    ],
-   "effects": [
-    {
-     "kind": "tideUp",
-     "n": 1,
-     "when": "death"
-    }
-   ],
+   "effects": [],
    "token": true,
    "set": "3",
    "tribe": "jelly",
@@ -13227,7 +13215,8 @@
    "effects": [
     {
      "kind": "tide",
-     "n": 2
+     "n": 1,
+     "max": 15
     }
    ],
    "token": true,

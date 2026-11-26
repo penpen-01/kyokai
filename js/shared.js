@@ -88,6 +88,8 @@ const TRIBES = { jelly: "クラゲ", beast: "海獣" };
 const tribeOf = c => (c && c.tribe) || "";
 /* クラゲ魔法：tribe が jelly の魔法。ランダムに手に入るのは pool の3種類（満ち潮の夜は入らない） */
 const JELLY_POOL = ["tk-j-needle", "tk-j-cradle", "tk-j-flash"];
+const JELLY_W = { "tk-j-needle": 43, "tk-j-cradle": 33, "tk-j-flash": 24 };   // 出やすさ（%）。レア度の低いほど出やすい（オーナー 11-27）
+const jellyPick = () => { let x = Math.random() * 100; for (const id of JELLY_POOL) { if ((x -= JELLY_W[id] || 0) < 0) return id; } return JELLY_POOL[0]; };
 const isJellySpell = c => !!c && c.type === "spell" && c.tribe === "jelly";
 /* 装甲は数値つきの能力（card.armor） */
 const ARMOR_TEXT = n => `装甲${n}：受けるダメージを${n}減らす。`;
@@ -157,12 +159,12 @@ const EFFECTS = {
   grantOwn:    { legacy: true, group: "能力",   label: "自分のキャラ1体に能力を与える", text: (n, e) => `自分のキャラ1体に「${kwName(e)}」を与える。`, target: "ownUnit", opts: ["kw"], noN: e => !e || e.kw !== "armor" },
   grantAll:    { legacy: true, group: "能力",   label: "自分のキャラ全体に能力を与える", text: (n, e) => `自分の${worldNo(e)}キャラ全体に「${kwName(e)}」を与える。`, opts: ["kw", "world"], noN: e => !e || e.kw !== "armor" },
   tokenField:  { group: "トークン", label: "トークンを場に出す",         text: (n, e) => `${tokDesc(e)}を${n}体出す。`, opts: ["token"], tokenType: "char" },
-  tokenHand:   { group: "トークン", label: "トークンを手札に加える",     text: (n, e) => `${tokDesc(e)}を${n}枚手札に加える。`, opts: ["token"] },
-  dig:         { group: "ドロー", label: "山札の上からN枚見て、1枚を選んで手札に加える", text: (n, e) => `山札の上から${n}枚を見て、1枚を選んで手札に加える（残りは${e && e.rest === "grave" ? "墓地" : "山札の下"}へ）。`, min: 2 },
+  tokenHand:   { group: "トークン", label: "トークンを手札に加える",     text: (n, e) => `${tokDesc(e)}を${n}枚${e && e.free ? "、コスト0にして" : ""}手札に加える。`, opts: ["token"] },
+  dig:         { group: "ドロー", label: "山札の上からN枚見て、1枚を選んで手札に加える", text: (n, e) => `山札の上から${n}枚を見て、1枚を選んで手札に加える（残りは${e && e.rest === "grave" ? "墓地へ" : "ランダムな順番で山札の下へ"}）。`, min: 2 },
   buffCard:    { group: "トークン", label: "決めたカード（トークン）を強化する", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}を+${n}/+${n}する。`, opts: ["token"], tokenType: "char" },
   mendCard:    { group: "トークン", label: "決めたカード（トークン）を全回復して強化する（いなければ出す）", text: (n, e) => `自分の${tokDesc(e).replace(/（[^）]*）$/, "")}の体力を全回復させ、+${n}/+${n}する。場にいなければ、${tokDesc(e)}を1体出す。`, opts: ["token"], tokenType: "char" },
   callCard:    { group: "トークン", label: "決めたカード（トークン）が場にいなければ出す", text: (n, e) => `自分の場に${tokDesc(e).replace(/（[^）]*）$/, "")}がいなければ、${tokDesc(e)}を1体出す。`, opts: ["token"], tokenType: "char" },
-  tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => `山札から${costRange(n, e)}${worldNo(e)}${e && e.tribe && TRIBES[e.tribe] ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype", "cmin"], min: 0 },
+  tutor:       { group: "ドロー", label: "山札から種類を指定して手札に加える", text: (n, e) => e && e.card && cardRef(e.card) ? `山札から「${cardRef(e.card).name}」を1枚手札に加える。` : `山札から${costRange(n, e)}${worldNo(e)}${e && e.tribe && TRIBES[e.tribe] ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}をランダムに1枚手札に加える。`, opts: ["world", "ctype", "cmin"], min: 0 },
   bounceEnemy: { legacy: true, group: "除去",   label: "相手キャラを手札に戻す",       text: () => "相手キャラ1体を持ち主の手札に戻す（トークンは消える）。", target: "enemyUnit", noN: true },
   shuffleEnemy:{ legacy: true, group: "除去",   label: "相手キャラを相手の山札に混ぜる", text: () => "相手キャラ1体を相手の山札に混ぜる（トークンは消える）。", target: "enemyUnit", noN: true },
   transform:   { legacy: true, group: "除去",   label: "相手キャラを変身させる",       text: (n, e) => e && e.card ? `相手キャラ1体を${tokDesc(e)}に変身させる。` : "相手キャラ1体を、効果も能力もない1/1に変身させる。", target: "enemyUnit", noN: true, opts: ["token"], tokenType: "char", tokenOptional: true },
@@ -176,15 +178,15 @@ const EFFECTS = {
   revive:      { group: "召喚",   label: "自分の墓地のキャラを復活させる", text: (n, e) => `自分の墓地の${costRange(n, e, true)}キャラをランダムに1体、場に出す（登場時効果は発動しない）。`, opts: ["cmin"] },
   banishOwn:   { group: "亜空間", label: "自分のキャラをすべて亜空間に送る", text: () => "自分のキャラをすべて亜空間に送る。次の自分のターンの開始時に、元の場所に戻る（受けたダメージや強化はそのまま。登場時効果は発動しない）。戻るまで、その場所にはキャラを出せない。", noN: true },
   // ---- 第3弾（2026-11-24）。工房ではまだ細かい設定（種族・亡霊など）を変えられない。数値とトークンだけ ----
-  toss:        { group: "墓地", label: "自分の手札の（種類の）カードを1枚選んで捨てる", text: (n, e) => `自分の手札の${ctypeName(e)}を1枚選んで捨てる。`, opts: ["ctype"] },
+  toss:        { group: "墓地", label: "自分の手札の（種類の）カードをN枚選んで捨てる", text: (n, e) => `自分の手札の${ctypeName(e)}を${n || 1}枚選んで捨てる。`, opts: ["ctype"] },
   mill:        { group: "墓地", label: "自分の山札の上からN枚を墓地へ送る", text: n => `自分の山札の上から${n}枚を墓地へ送る。` },
   peekMill:    { group: "墓地", label: "山札の上1枚を見て、亡霊のキャラなら墓地へ送る", text: () => "自分の山札の上1枚を見る。それが【亡霊】のキャラなら墓地へ送る（ちがえば、そのまま山札の上に残す）。", noN: true },
   reviveSel:   { group: "召喚", label: "自分の墓地の亡霊を選んで出す", text: (n, e) => reviveSelText(e) },
-  graveHand:   { group: "墓地", label: "自分の墓地の亡霊のキャラを手札に戻す", text: n => `自分の墓地の【亡霊】のキャラをランダムに${n}体、手札に戻す。` },
+  graveHand:   { group: "墓地", label: "自分の墓地のキャラ（決めたカード）を選んで手札に戻す", text: (n, e) => e && e.card && cardRef(e.card) ? `自分の墓地の「${cardRef(e.card).name}」を1枚、手札に戻す。` : `自分の墓地のキャラを${n || 1}体選んで、手札に戻す。` },
   ward:        { group: "プレイヤー", label: "自分に結界を張る", text: () => "自分に【結界】を張る（次に自分が受けるダメージを1回だけ0にする。重ねて張れない）。", noN: true },
-  jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（「痺れ針」「泡の揺りかご」「青い閃光」のどれか）。` },
+  jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（${JELLY_POOL.map(id => `「${cardRef(id) ? cardRef(id).name : id}」${JELLY_W[id]}%`).join("・")}）。` },
   tideUp:      { group: "トークン", label: "満ち潮の夜で数えるクラゲ魔法の数を増やす", text: n => `「満ち潮の夜」で数える、使ったクラゲ魔法の数を${n}増やす。` },
-  tide:        { group: "ダメージ", label: "満ち潮の夜（使ったクラゲ魔法の数×N）", text: n => `この対戦で自分が先に使ったクラゲ魔法1枚につき${n}、相手プレイヤーにダメージ（最大12）。` },
+  tide:        { group: "ダメージ", label: "満ち潮の夜（墓地のクラゲの数×N）", text: (n, e) => `自分の墓地の【クラゲ】のカード1枚につき${n}、相手プレイヤーにダメージ（最大${(e && e.max) || 15}）。` },
   cutOne:      { group: "エナジー", label: "手札の（種族の）カード1枚のコストを下げる", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}を1枚選んで、そのコストを${n}下げる。` },
   handSteal:   { group: "妨害", label: "相手の手札をランダムに1枚奪う（コストを下げる）", text: n => `相手の手札からランダムに1枚を奪って手札に加え、そのカードのコストを${n}下げる。` },
   handTax:     { group: "妨害", label: "相手の手札を1枚見て、コストを上げる", text: n => `相手の手札をランダムに1枚見て、そのカードのコストを${n}上げる。` },
@@ -549,7 +551,7 @@ function effectsText(card, list, auto) {
     if (e.per === "gear") t = `使った歯車1枚につき、${t}`;
     if (e.per === "milledGhost") t = `その中の【亡霊】のキャラ1体につき、${t}`;
     if (e.per === "tribe") t = `自分の場のほかの【${TRIBES[e.ctribe] || "？"}】のキャラ1体につき、${t.replace(/。$/, "")}（${e.perMax || 3}体まで数える）。`;
-    if (e.plus) t = t.replace(/。$/, `。自分の場の【${TRIBES[e.plus] || ""}】のキャラ1体につき、さらに1ダメージ（最大+${e.plusMax || 2}）。`);
+    if (e.plus) t = t.replace(/。$/, `。自分の場の【${TRIBES[e.plus] || ""}】のキャラ1体につき、さらに1ダメージ${(e.plusMax || 2) >= 9 ? "" : `（最大+${e.plusMax || 2}）`}。`);
     if (e.cap) t = t.replace(/。$/, `（1ターンに${e.cap}回まで）。`);
     if (e.per === "played") t = e.split ? `このターン、このカードより先に使ったカードの枚数だけ、${t.replace(/。$/, "")}（1回ずつ対象を選び直す）。` : `このターン、このカードより先に使ったカード1枚につき、${t}`;
     // 前の効果と同じ条件なら、条件は2回書かずに「さらに」でつなぐ
@@ -948,11 +950,14 @@ function normEffect(e, type) {
   if (e.kind === "unit" && out.kw && e.mine) out.mine = true;
   if (+e.cap > 0) out.cap = Math.min(9, Math.round(+e.cap));
   if (e.amt) out.amt = true;
-  if (TRIBES[e.plus]) { out.plus = e.plus; out.plusMax = Math.max(1, Math.min(9, Math.round(+e.plusMax || 2))); }
+  if (TRIBES[e.plus]) { out.plus = e.plus; out.plusMax = Math.max(1, Math.min(9, Math.round(+e.plusMax || 2))); }   // 9＝上限なし
   if (e.per === "milledGhost") out.per = e.per;
   if (e.per === "tribe" && TRIBES[e.ctribe]) { out.per = "tribe"; out.ctribe = e.ctribe; out.perMax = Math.max(1, Math.min(9, Math.round(+e.perMax || 3))); }
   if (e.kind === "reviveSel") { out.cnt = Math.max(1, Math.min(4, Math.round(+e.cnt || 1))); if (+e.total > 0) out.total = Math.min(40, Math.round(+e.total)); if (e.mod === "rusty" || e.mod === "rush") out.mod = e.mod; }
   if (e.kind === "dig" && e.rest === "grave") out.rest = "grave";
+  if ((e.kind === "tutor" || e.kind === "graveHand") && e.card) out.card = String(e.card);   // 名前を決めて山札から持ってくる（セイレーン）
+  if (e.kind === "tokenHand" && e.free) out.free = true;          // コスト0にして加える（バルバ）
+  if (e.kind === "tide" && +e.max > 0) out.max = Math.min(40, Math.round(+e.max));
   if (e.kind === "cutOne" && TYPES[e.ctype]) out.ctype = e.ctype;
   return out;
 }
