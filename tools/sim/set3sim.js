@@ -4,13 +4,16 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const [,, nStr, level, withOld] = process.argv;
 const D3 = {
-  ghost: { name: "幽霊船団", cards: { "m3-eirei": 3, "f3-nakimushi": 3, "x3-sabineji": 3, "x3-renketsu": 3, "m3-hakamori": 2, "f3-gaikotsu": 3, "m3-suihei": 2, "x3-dock": 2, "f3-tamayobi": 2, "m3-charon": 2, "f3-veil": 2, "m3-hatamochi": 2, "f3-grave": 1 } },
+  ghost: { name: "幽霊船団", cards: { "m3-eirei": 3, "f3-nakimushi": 3, "x3-sabineji": 3, "x3-renketsu": 3, "m3-hakamori": 2, "f3-gaikotsu": 3, "m3-suihei": 2, "x3-dock": 2, "f3-tamayobi": 2, "f3-temaneki": 2, "f3-veil": 2, "m3-charon": 2, "f3-grave": 1 } },
   ghost2: { name: "亡霊（重め）", cards: { "m3-eirei": 2, "x3-kirai": 2, "m3-hakamori": 3, "x3-yoduri": 2, "x3-renketsu": 3, "m3-hatamochi": 2, "m3-charon": 2, "x3-dock": 2, "m3-eiji": 2, "x3-shinsui": 2, "m3-hotaru": 2, "x3-rusty": 2, "f3-veil": 2, "x3-senkan": 1, "f3-grave": 1 } },
-  jelly: { name: "クラゲ", cards: { "f3-komoriuta": 3, "x3-shingou": 3, "f3-puka": 3, "f3-yurameki": 3, "x3-houden": 2, "x3-chikuden": 2, "f3-tomoshibi": 3, "x3-baiyou": 2, "x3-buoy": 2, "x3-hikari": 2, "f3-nocto": 1, "f3-octa": 1, "x3-daihouden": 2, "f3-uzumaki": 1 } },
-  beast: { name: "海獣", cards: { "m3-harpoon": 3, "m3-fue": 3, "m3-siren": 3, "m3-yadokari": 3, "m3-uni": 2, "m3-trident": 3, "m3-aspido": 2, "m3-shoukan": 2, "m3-scylla": 2, "m3-hippo": 2, "m3-kraken": 1, "m3-charybdis": 1, "m3-leviathan": 1, "m3-ikari": 2 } },
+  jelly: { name: "クラゲ", cards: { "f3-puka": 3, "f3-komoriuta": 3, "x3-shingou": 3, "f3-yurameki": 2, "x3-houden": 2, "x3-chikuden": 2, "f3-tomoshibi": 3, "x3-hikari": 2, "f3-nocto": 1, "f3-octa": 1, "x3-daihouden": 2, "f3-uzumaki": 2, "x3-baiyou": 2, "x3-buoy": 2 } },
+  beast: { name: "海獣", cards: { "m3-harpoon": 3, "m3-gyojin": 3, "m3-siren": 3, "f3-selkie": 2, "m3-serpent": 2, "m3-umibouzu": 2, "m3-aspido": 2, "m3-scylla": 2, "m3-hippo": 2, "m3-shoukan": 2, "m3-kraken": 1, "m3-charybdis": 1, "m3-leviathan": 1, "m3-ketos": 1, "m3-trident": 3 } },
   mechsea: { name: "機械の海", cards: { "x3-iruka": 3, "x3-yoduri": 2, "x3-hamasouji": 3, "x3-kyunan": 2, "x3-gyorai": 3, "x3-crane": 2, "x3-gearshark": 2, "x3-lux": 2, "x3-orca": 1, "x3-shouha": 2, "x3-bunkai": 2, "x3-nikyaku": 2, "x3-kanshou": 1, "x3-nautilus": 1, "x3-pururu": 2 } },
   dayfan: { name: "昼の海", cards: { "f3-kodako": 3, "f3-tobiuo": 3, "f3-tobinori": 3, "f3-shabon": 2, "f3-sango": 2, "f3-marina": 2, "f3-tayori": 2, "f3-tsunousagi": 3, "f3-hugh": 3, "f3-naminori": 2, "f3-sumi": 3, "f3-suiryu": 1, "f3-borg": 1 } }
 };
+// ONLY=beast で、そのデッキの対戦だけ。MOD='{"beast":{"m3-scylla":0,"m3-hippo":4}}' でデッキの枚数を書き換え（試し用）
+if (process.env.MOD) Object.entries(JSON.parse(process.env.MOD)).forEach(([k, m]) => Object.entries(m).forEach(([id, n]) => { if (n) D3[k].cards[id] = n; else delete D3[k].cards[id]; }));
+const ONLY = process.env.ONLY;
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage();
@@ -44,7 +47,7 @@ const D3 = {
       }
     }
     return { ms: Math.round(performance.now() - t0), res, ex: ex.slice(0, 30), exN: ex.length, card: Object.fromEntries(Object.entries(card).filter(([id]) => DEF[id] && DEF[id].set === '3').map(([id, c]) => [DEF[id].name, Math.round(c.w / c.n * 100) + '% / ' + c.n])) };
-  }, [D3, +nStr || 10, level || 'normal', !!withOld]);
+  }, [ONLY ? Object.fromEntries(Object.entries(D3).filter(([k]) => k === ONLY)) : D3, +nStr || 10, level || 'normal', !!withOld]);
   if (out.bad) { console.log('BAD', out.bad); await b.close(); return; }
   console.log('ms', out.ms, 'exceptions', out.exN); out.ex.forEach(x => console.log('  ', x));
   Object.entries(out.res).sort((x, y) => y[1].w / y[1].g - x[1].w / x[1].g).forEach(([k, r]) => console.log((r.w / r.g * 100).toFixed(0).padStart(4) + '%', String(r.g).padStart(4), k, r.name));
