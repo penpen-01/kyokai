@@ -1,6 +1,6 @@
 {
  "version": 249,
- "updated": "2026-11-24",
+ "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
   "START_HAND": 5,
@@ -56,6 +56,7 @@
   "SEN_BETA": 0,
   "SEN_FEE": 3000,
   "SKIN_ON": 1,
+  "PARA_RATE": 10,
   "LIMITED_ON": 1,
   "INFO_HOURS": 24,
   "CHARM_HARD": 3000,
@@ -1430,8 +1431,6 @@
   {
    "id": "gate-sea",
    "name": "深淵の海獣団",
-   "level": "gate",
-   "key": "m3-leviathan",
    "cards": {
     "m3-yadokari": 2,
     "m3-uni": 1,
@@ -1451,7 +1450,9 @@
     "m3-leviathan": 1,
     "m3-ikari": 1,
     "x3-bunkai": 2
-   }
+   },
+   "key": "m3-leviathan",
+   "level": "gate"
   }
  ],
  "serials": [
@@ -1501,6 +1502,7 @@
    "gold": 0,
    "stones": 0,
    "tickets": 0,
+   "senTickets": 0,
    "cards": {},
    "picks": {
     "pickmwcjw3pa": 1
@@ -1516,6 +1518,7 @@
    "gold": 5000,
    "stones": 0,
    "tickets": 0,
+   "senTickets": 0,
    "cards": {},
    "picks": {}
   },
@@ -1529,6 +1532,7 @@
    "gold": 1000,
    "stones": 0,
    "tickets": 2,
+   "senTickets": 0,
    "cards": {},
    "picks": {}
   },
@@ -1874,7 +1878,9 @@
     "cheer": [
      "負けた日は、さっさと寝ろ。鉄も人も、冷やしてから打ち直すもんだ",
      "[happy]デッキは道具だ。手になじむまで使い込め"
-    ]
+    ],
+    "sing": [],
+    "singCaught": []
    }
   },
   {
@@ -1959,7 +1965,9 @@
     "cheer": [
      "負けた対戦こそ、記録する価値があります。次の一手が見えてきますよ",
      "デッキの調子が悪い時は、一度カードを全部並べてみることです"
-    ]
+    ],
+    "sing": [],
+    "singCaught": []
    }
   },
   {
@@ -2131,7 +2139,14 @@
     "alert3": [],
     "glitch": [],
     "short": [],
-    "reboot": []
+    "reboot": [],
+    "like": [],
+    "dislike": [],
+    "hobby": [],
+    "staff": [],
+    "cheer": [],
+    "sing": [],
+    "singCaught": []
    }
   },
   {
@@ -2140,14 +2155,14 @@
    "title": "警備担当",
    "price": 15000,
    "lines": {
-    "first": [
-     "ハジメマシテ。ワタシは、警備担当のマモルです。このお店の安全を、ワタシがお守りしています",
-     "ダブったカードは、魔石に交換できます。魔石では、好きなカードやパック券と交換できます。わからないことは、ワタシに聞いてくださいね"
-    ],
     "enter": [
      "イラッシャイマセ。本日も、お店は安全です",
      "ようこそ、いらっしゃいませ。ワタシ、お待ちしていました",
      "いらっしゃいませ。どうぞ、ゆっくり見ていってくださいね"
+    ],
+    "first": [
+     "ハジメマシテ。ワタシは、警備担当のマモルです。このお店の安全を、ワタシがお守りしています",
+     "ダブったカードは、魔石に交換できます。魔石では、好きなカードやパック券と交換できます。わからないことは、ワタシに聞いてくださいね"
     ],
     "morning": [
      "おはようございます。朝の見回り、ちゃんと終わっていますよ",
@@ -2157,17 +2172,9 @@
      "こんばんは。夜の見回り中です。…夜ふかしは、ほどほどに、ですよ",
      "夜のお店は、しずかで好きです。ワタシがいるので、安心してくださいね"
     ],
-    "rich": [
-     "魔石がたくさん。…すごいです。スキンのお店も、のぞいてみてはいかがですか",
-     "たくさん集めましたね。ワタシ、ちょっと感動しています"
-    ],
     "feature": [
      "今日のおすすめは、《{card}》です。{off}%引きですよ",
      "《{card}》が、今日だけ{off}%引きです。ワタシのおすすめです"
-    ],
-    "complete": [
-     "交換できるカード、ぜんぶ集まりました。…おめでとうございます！",
-     "ぜんぶそろいましたね。ワタシ、うれしくて回転灯が光りそうです"
     ],
     "buy": [
      "お買い上げ、ありがとうございます。大切にしてくださいね",
@@ -2188,6 +2195,18 @@
      "…見回り中です。異常は、ありません",
      "[trouble]あの…装甲に、指のあとがつきます…"
     ],
+    "rich": [
+     "魔石がたくさん。…すごいです。スキンのお店も、のぞいてみてはいかがですか",
+     "たくさん集めましたね。ワタシ、ちょっと感動しています"
+    ],
+    "complete": [
+     "交換できるカード、ぜんぶ集まりました。…おめでとうございます！",
+     "ぜんぶそろいましたね。ワタシ、うれしくて回転灯が光りそうです"
+    ],
+    "shy": [],
+    "angry": [],
+    "pet": [],
+    "wake": [],
     "alert1": [
      "…あれ？ たくさん押されています",
      "…!? ワタシに、なにか、ついていますか？"
@@ -2235,7 +2254,9 @@
     "cheer": [
      "負けても大丈夫です。ワタシが、お店でお待ちしています",
      "[happy]対戦、がんばってくださいね。ワタシ、応援しています"
-    ]
+    ],
+    "sing": [],
+    "singCaught": []
    }
   }
  ],
@@ -3276,8 +3297,8 @@
    "desc": "機巧クラゲのヒカリのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-x3-hikari.webp",
-   "card": "x3-hikari",
-   "admin": true
+   "admin": true,
+   "card": "x3-hikari"
   },
   {
    "id": "p3-f3-grave",
@@ -3286,8 +3307,8 @@
    "desc": "幽霊船長グレイヴのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-f3-grave.webp",
-   "card": "f3-grave",
-   "admin": true
+   "admin": true,
+   "card": "f3-grave"
   },
   {
    "id": "p3-m3-scarlet",
@@ -3296,8 +3317,8 @@
    "desc": "真紅の女王スカーレットのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-m3-scarlet.webp",
-   "card": "m3-scarlet",
-   "admin": true
+   "admin": true,
+   "card": "m3-scarlet"
   },
   {
    "id": "p3-m3-azuria",
@@ -3306,8 +3327,8 @@
    "desc": "碧海の女神アズーリアのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-m3-azuria.webp",
-   "card": "m3-azuria",
-   "admin": true
+   "admin": true,
+   "card": "m3-azuria"
   },
   {
    "id": "p3-f3-nocto",
@@ -3316,8 +3337,18 @@
    "desc": "深海の灯姫ノクトのパラレル（GPT）。",
    "price": 10000,
    "art": "ui/alt/p3-f3-nocto.webp",
-   "card": "f3-nocto",
-   "admin": true
+   "admin": true,
+   "card": "f3-nocto"
+  },
+  {
+   "id": "p3-m3-leviathan",
+   "kind": "art",
+   "name": "覇王の咆哮",
+   "desc": "海の覇王リヴァイアサンのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-m3-leviathan.webp",
+   "admin": true,
+   "card": "m3-leviathan"
   }
  ],
  "sen": {
@@ -3396,6 +3427,53 @@
    "2-2",
    "2-3"
   ]
+ },
+ "arena": {
+  "on": 1,
+  "start": "21:00",
+  "end": "21:30",
+  "days": [
+   "std",
+   "std",
+   "sen",
+   "set1",
+   "std",
+   "sen",
+   "set1"
+  ],
+  "extra": [
+   {
+    "date": "2026-11-19",
+    "start": "05:00",
+    "end": "06:05",
+    "rule": "std"
+   }
+  ],
+  "rewards": {
+   "since": "2026-11-20",
+   "part": {
+    "gold": 0,
+    "stones": 0,
+    "tickets": 1
+   },
+   "rank": [
+    {
+     "gold": 1000,
+     "stones": 0,
+     "tickets": 3
+    },
+    {
+     "gold": 500,
+     "stones": 0,
+     "tickets": 2
+    },
+    {
+     "gold": 0,
+     "stones": 0,
+     "tickets": 1
+    }
+   ]
+  }
  },
  "cards": [
   {
@@ -10246,36 +10324,36 @@
    "keywords": [
     "guard"
    ],
-   "armor": 1,
    "effects": [
     {
      "kind": "unit",
      "n": 2,
+     "when": "survive",
      "act": "atk",
      "to": "self",
-     "when": "survive",
      "cond": "hurtLT",
      "cn": 3
     },
     {
      "kind": "unit",
      "n": 3,
+     "when": "survive",
      "act": "dmg",
      "to": "enemyAll",
-     "when": "survive",
      "cond": "hurtEQ",
      "cn": 3
     },
     {
      "kind": "unit",
      "n": 1,
+     "when": "survive",
      "act": "silence",
      "to": "self",
-     "when": "survive",
      "cond": "hurtEQ",
      "cn": 3
     }
    ],
+   "armor": 1,
    "shop": true,
    "shopPrice": 6000,
    "art": "art/k-mamoru-c3c166f55e.webp"
@@ -10298,9 +10376,9 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "both",
-     "to": "ownRand",
-     "when": "revived"
+     "to": "ownRand"
     }
    ],
    "set": "3",
@@ -10312,8 +10390,8 @@
    "world": "myth",
    "type": "char",
    "cost": 2,
-   "atk": 1,
-   "hp": 2,
+   "atk": 2,
+   "hp": 1,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
@@ -10371,8 +10449,8 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-funa",
-     "when": "revived"
+     "when": "revived",
+     "card": "tk-funa"
     }
    ],
    "set": "3",
@@ -10401,8 +10479,8 @@
     {
      "kind": "tokenField",
      "n": 2,
-     "card": "tk-funa",
-     "when": "revived"
+     "when": "revived",
+     "card": "tk-funa"
     }
    ],
    "set": "3",
@@ -10426,9 +10504,9 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "atk",
-     "to": "ownAll",
-     "when": "revived"
+     "to": "ownAll"
     }
    ],
    "set": "3",
@@ -10461,8 +10539,8 @@
    "world": "myth",
    "type": "char",
    "cost": 5,
-   "atk": 5,
-   "hp": 6,
+   "atk": 6,
+   "hp": 3,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -10472,21 +10550,21 @@
    "effects": [
     {
      "kind": "mill",
-     "n": 3
+     "n": 2
     },
     {
-     "kind": "unit",
-     "n": 3,
-     "act": "hp",
-     "to": "self",
-     "when": "revived"
-    },
-    {
-     "kind": "unit",
+     "kind": "player",
      "n": 2,
+     "when": "revived",
+     "act": "heal",
+     "who": "self"
+    },
+    {
+     "kind": "unit",
+     "n": 4,
+     "when": "revived",
      "act": "dmg",
-     "to": "enemyRand",
-     "when": "revived"
+     "to": "enemyRand"
     }
    ],
    "set": "3",
@@ -10497,9 +10575,9 @@
    "name": "送り火の巫女ホタル",
    "world": "myth",
    "type": "char",
-   "cost": 6,
+   "cost": 4,
    "atk": 3,
-   "hp": 5,
+   "hp": 3,
    "glyph": "神",
    "limit": 3,
    "rarity": "sr",
@@ -10519,24 +10597,30 @@
    "name": "渡し守カロン",
    "world": "myth",
    "type": "char",
-   "cost": 3,
-   "atk": 1,
-   "hp": 4,
+   "cost": 2,
+   "atk": 2,
+   "hp": 5,
    "glyph": "神",
    "limit": 3,
    "rarity": "sr",
-   "keywords": [],
+   "keywords": [
+    "ghost"
+   ],
    "effects": [
     {
      "kind": "player",
      "n": 1,
+     "when": "allyDeath",
      "act": "draw",
      "who": "self",
      "af": "ghost",
-     "cap": 2,
-     "when": "allyDeath"
+     "cap": 2
     }
    ],
+   "pay": {
+    "kind": "life",
+    "n": 1
+   },
    "set": "3",
    "art": "art/m3-charon-af5d408b2d.webp"
   },
@@ -10545,9 +10629,9 @@
    "name": "海獣狩りの銛打ち",
    "world": "myth",
    "type": "char",
-   "cost": 3,
+   "cost": 2,
    "atk": 2,
-   "hp": 3,
+   "hp": 1,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
@@ -10568,29 +10652,31 @@
    "name": "アスピドケロン",
    "world": "myth",
    "type": "char",
-   "cost": 5,
+   "cost": 6,
    "atk": 3,
    "hp": 7,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
-   "keywords": [],
+   "keywords": [
+    "reef"
+   ],
    "effects": [],
    "set": "3",
    "tribe": "beast",
-   "art": "art/m3-aspido-07affe761c.webp",
    "aura": {
     "kind": "cost",
-    "n": 1,
-    "tribe": "beast"
-   }
+    "tribe": "beast",
+    "n": 1
+   },
+   "art": "art/m3-aspido-07affe761c.webp"
   },
   {
    "id": "m3-fue",
    "name": "深海の呼び笛",
    "world": "myth",
    "type": "spell",
-   "cost": 2,
+   "cost": 1,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -10612,7 +10698,7 @@
    "world": "myth",
    "type": "char",
    "cost": 3,
-   "atk": 2,
+   "atk": 1,
    "hp": 3,
    "glyph": "神",
    "limit": 3,
@@ -10641,7 +10727,9 @@
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
-   "keywords": [],
+   "keywords": [
+    "rush"
+   ],
    "effects": [
     {
      "kind": "unit",
@@ -10657,10 +10745,10 @@
      "n": 1,
      "act": "grant",
      "to": "self",
-     "kw": "rush",
+     "kw": "trample",
      "cond": "tribeGE",
-     "ctribe": "beast",
-     "cn": 2
+     "cn": 2,
+     "ctribe": "beast"
     }
    ],
    "set": "3",
@@ -10682,10 +10770,10 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
+     "when": "attack",
      "act": "dmg",
-     "to": "enemyRand",
-     "when": "attack"
+     "to": "enemyRand"
     }
    ],
    "set": "3",
@@ -10700,7 +10788,7 @@
    "cost": 4,
    "glyph": "神",
    "limit": 3,
-   "rarity": "rare",
+   "rarity": "ur",
    "keywords": [],
    "effects": [
     {
@@ -10709,11 +10797,11 @@
      "tribe": "beast"
     }
    ],
-   "set": "3",
    "pay": {
     "kind": "life",
     "n": 5
    },
+   "set": "3",
    "art": "art/m3-shoukan-f0d11bb6fb.webp"
   },
   {
@@ -10731,7 +10819,7 @@
    "effects": [
     {
      "kind": "handSteal",
-     "n": 5
+     "n": 6
     }
    ],
    "set": "3",
@@ -10756,9 +10844,9 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "turnEnd",
      "act": "destroy",
-     "to": "enemyLow",
-     "when": "turnEnd"
+     "to": "enemyLow"
     }
    ],
    "set": "3",
@@ -10781,9 +10869,9 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "attack",
      "act": "bottom",
-     "to": "enemyRand",
-     "when": "attack"
+     "to": "enemyRand"
     }
    ],
    "set": "3",
@@ -10795,9 +10883,9 @@
    "name": "海の覇王リヴァイアサン",
    "world": "myth",
    "type": "char",
-   "cost": 9,
+   "cost": 10,
    "atk": 8,
-   "hp": 8,
+   "hp": 9,
    "glyph": "神",
    "limit": 3,
    "rarity": "legend",
@@ -10807,7 +10895,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 3,
+     "n": 2,
      "act": "dmg",
      "to": "enemyAll"
     }
@@ -10834,9 +10922,9 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "attacked",
      "act": "dmg",
-     "to": "foe",
-     "when": "attacked"
+     "to": "foe"
     }
    ],
    "set": "3",
@@ -10916,11 +11004,11 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "healed",
      "act": "dmg",
      "to": "enemyRand",
-     "amt": true,
      "cap": 3,
-     "when": "healed"
+     "amt": true
     }
    ],
    "set": "3",
@@ -10942,9 +11030,9 @@
     {
      "kind": "unit",
      "n": -1,
+     "when": "attacked",
      "act": "atk",
-     "to": "foe",
-     "when": "attacked"
+     "to": "foe"
     }
    ],
    "set": "3",
@@ -10958,7 +11046,7 @@
    "cost": 3,
    "glyph": "神",
    "limit": 3,
-   "rarity": "common",
+   "rarity": "rare",
    "keywords": [],
    "effects": [
     {
@@ -10977,13 +11065,14 @@
    "world": "myth",
    "type": "char",
    "cost": 4,
-   "atk": 1,
-   "hp": 3,
+   "atk": 2,
+   "hp": 4,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "calm"
+    "calm",
+    "regen"
    ],
    "effects": [],
    "set": "3",
@@ -10995,14 +11084,15 @@
    "world": "myth",
    "type": "char",
    "cost": 6,
-   "atk": 4,
+   "atk": 2,
    "hp": 7,
    "glyph": "神",
    "limit": 3,
    "rarity": "sr",
    "keywords": [
     "guard",
-    "reef"
+    "reef",
+    "twice"
    ],
    "effects": [],
    "set": "3",
@@ -11027,7 +11117,7 @@
     },
     {
      "kind": "player",
-     "n": 1,
+     "n": 2,
      "act": "draw",
      "who": "self",
      "cond": "hpLE",
@@ -11042,7 +11132,7 @@
    "name": "天秤の裁き",
    "world": "myth",
    "type": "spell",
-   "cost": 4,
+   "cost": 3,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
@@ -11062,21 +11152,18 @@
    "world": "myth",
    "type": "char",
    "cost": 6,
-   "atk": 4,
-   "hp": 4,
+   "atk": 7,
+   "hp": 5,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "twice"
+    "pierce"
    ],
    "effects": [
     {
-     "kind": "unit",
-     "n": 1,
-     "act": "atk",
-     "to": "self",
-     "when": "kill"
+     "kind": "scales",
+     "n": 1
     }
    ],
    "set": "3",
@@ -11095,18 +11182,17 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 5,
+     "n": 4,
      "act": "dmg",
-     "to": "enemyAll"
+     "to": "all"
     },
     {
-     "kind": "player",
-     "n": 3,
-     "act": "dmg",
-     "who": "opp",
+     "kind": "unit",
+     "n": 4,
      "cond": "tribeGE",
-     "ctribe": "beast",
-     "cn": 1
+     "cn": 1,
+     "act": "dmg",
+     "to": "enemyAll"
     }
    ],
    "set": "3",
@@ -11130,9 +11216,9 @@
     {
      "kind": "player",
      "n": 1,
+     "when": "revived",
      "act": "draw",
-     "who": "self",
-     "when": "revived"
+     "who": "self"
     }
    ],
    "set": "3",
@@ -11210,17 +11296,17 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "atk",
-     "to": "self",
-     "when": "revived"
+     "to": "self"
     },
     {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "grant",
      "to": "self",
-     "kw": "rush",
-     "when": "revived"
+     "kw": "rush"
     }
    ],
    "set": "3",
@@ -11232,8 +11318,8 @@
    "world": "fan",
    "type": "char",
    "cost": 4,
-   "atk": 4,
-   "hp": 5,
+   "atk": 5,
+   "hp": 4,
    "glyph": "幻",
    "limit": 3,
    "rarity": "common",
@@ -11242,23 +11328,25 @@
    ],
    "effects": [
     {
-     "kind": "mill",
-     "n": 2
-    },
-    {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "atk",
-     "to": "self",
-     "when": "revived"
+     "to": "self"
     },
     {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "grant",
      "to": "self",
-     "kw": "rush",
-     "when": "revived"
+     "kw": "rush"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 3
     }
    ],
    "set": "3",
@@ -11318,7 +11406,7 @@
    "name": "道連れの宴",
    "world": "fan",
    "type": "spell",
-   "cost": 4,
+   "cost": 3,
    "glyph": "幻",
    "limit": 3,
    "rarity": "sr",
@@ -11337,7 +11425,7 @@
    "name": "亡者の大行進",
    "world": "fan",
    "type": "spell",
-   "cost": 6,
+   "cost": 5,
    "glyph": "幻",
    "limit": 3,
    "rarity": "ur",
@@ -11471,11 +11559,11 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "cardPlay",
+     "pt": "spell",
      "act": "both",
      "to": "self",
-     "pt": "spell",
-     "ptr": "jelly",
-     "when": "cardPlay"
+     "ptr": "jelly"
     }
    ],
    "set": "3",
@@ -11489,7 +11577,7 @@
    "type": "char",
    "cost": 5,
    "atk": 3,
-   "hp": 5,
+   "hp": 3,
    "glyph": "幻",
    "limit": 3,
    "rarity": "common",
@@ -11498,9 +11586,8 @@
     {
      "kind": "unit",
      "n": 1,
-     "act": "dmg",
-     "to": "enemyRand",
-     "when": "spell"
+     "act": "freeze",
+     "to": "enemyAll"
     }
    ],
    "set": "3",
@@ -11512,9 +11599,9 @@
    "name": "泡クラゲのプカ",
    "world": "fan",
    "type": "char",
-   "cost": 2,
+   "cost": 1,
    "atk": 1,
-   "hp": 2,
+   "hp": 1,
    "glyph": "幻",
    "limit": 3,
    "rarity": "sr",
@@ -11534,7 +11621,7 @@
    "name": "八腕の錬金術師オクタ",
    "world": "fan",
    "type": "char",
-   "cost": 6,
+   "cost": 5,
    "atk": 3,
    "hp": 5,
    "glyph": "幻",
@@ -11545,8 +11632,8 @@
    "set": "3",
    "aura": {
     "kind": "cost",
-    "n": 2,
-    "spell": true
+    "spell": true,
+    "n": 2
    },
    "art": "art/f3-octa-671c1bee1f.webp"
   },
@@ -11561,7 +11648,9 @@
    "glyph": "幻",
    "limit": 3,
    "rarity": "legend",
-   "keywords": [],
+   "keywords": [
+    "poison"
+   ],
    "effects": [
     {
      "kind": "tokenHand",
@@ -11653,15 +11742,17 @@
    "type": "char",
    "cost": 4,
    "atk": 3,
-   "hp": 4,
+   "hp": 3,
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
-   "keywords": [],
+   "keywords": [
+    "unbreakable"
+   ],
    "effects": [
     {
      "kind": "handTax",
-     "n": 1
+     "n": 2
     }
    ],
    "set": "3",
@@ -11673,7 +11764,7 @@
    "world": "fan",
    "type": "char",
    "cost": 2,
-   "atk": 1,
+   "atk": 2,
    "hp": 2,
    "glyph": "幻",
    "limit": 3,
@@ -11696,8 +11787,8 @@
    "world": "fan",
    "type": "char",
    "cost": 3,
-   "atk": 2,
-   "hp": 2,
+   "atk": 3,
+   "hp": 3,
    "glyph": "幻",
    "limit": 3,
    "rarity": "common",
@@ -11754,7 +11845,9 @@
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
-   "keywords": [],
+   "keywords": [
+    "rush"
+   ],
    "effects": [
     {
      "kind": "tokenField",
@@ -11789,20 +11882,19 @@
    "name": "泡沫の歌い手シャボン",
    "world": "fan",
    "type": "char",
-   "cost": 3,
+   "cost": 2,
    "atk": 1,
-   "hp": 4,
+   "hp": 1,
    "glyph": "幻",
    "limit": 3,
    "rarity": "sr",
-   "keywords": [],
+   "keywords": [
+    "shield"
+   ],
    "effects": [
     {
-     "kind": "unit",
-     "n": 1,
-     "act": "grant",
-     "to": "own1",
-     "kw": "shield"
+     "kind": "ward",
+     "n": 1
     }
    ],
    "set": "3",
@@ -11813,22 +11905,22 @@
    "name": "人魚の歌姫マリーナ",
    "world": "fan",
    "type": "char",
-   "cost": 6,
+   "cost": 5,
    "atk": 4,
    "hp": 6,
    "glyph": "幻",
    "limit": 3,
    "rarity": "sr",
    "keywords": [
-    "guard"
+    "pierce"
    ],
    "effects": [
     {
      "kind": "unit",
      "n": 1,
+     "when": "turnEnd",
      "act": "hp",
-     "to": "ownAll",
-     "when": "turnEnd"
+     "to": "ownAll"
     }
    ],
    "set": "3",
@@ -11860,7 +11952,7 @@
    "world": "fan",
    "type": "char",
    "cost": 4,
-   "atk": 3,
+   "atk": 4,
    "hp": 4,
    "glyph": "幻",
    "limit": 3,
@@ -11870,9 +11962,9 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "attacked",
      "act": "atk",
-     "to": "self",
-     "when": "attacked"
+     "to": "self"
     }
    ],
    "set": "3",
@@ -11908,7 +12000,7 @@
    "world": "fan",
    "type": "char",
    "cost": 7,
-   "atk": 6,
+   "atk": 7,
    "hp": 7,
    "glyph": "幻",
    "limit": 3,
@@ -11939,17 +12031,17 @@
     {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "dmg",
-     "to": "enemyRand",
-     "when": "revived"
+     "to": "enemyRand"
     },
     {
      "kind": "unit",
      "n": 1,
+     "when": "revived",
      "act": "grant",
      "to": "self",
-     "kw": "haste",
-     "when": "revived"
+     "kw": "haste"
     }
    ],
    "set": "3",
@@ -12001,8 +12093,8 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-funa",
-     "when": "revived"
+     "when": "revived",
+     "card": "tk-funa"
     }
    ],
    "set": "3",
@@ -12015,7 +12107,7 @@
    "type": "char",
    "cost": 5,
    "atk": 4,
-   "hp": 7,
+   "hp": 6,
    "glyph": "機",
    "limit": 3,
    "rarity": "common",
@@ -12025,16 +12117,16 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
      "act": "dmg",
      "to": "enemy1"
     },
     {
      "kind": "unit",
-     "n": 1,
+     "n": 2,
+     "when": "revived",
      "act": "dmg",
-     "to": "enemyAll",
-     "when": "revived"
+     "to": "enemyAll"
     }
    ],
    "set": "3",
@@ -12047,7 +12139,7 @@
    "type": "char",
    "cost": 2,
    "atk": 2,
-   "hp": 3,
+   "hp": 1,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
@@ -12057,10 +12149,10 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 3,
+     "when": "death",
      "act": "dmg",
-     "to": "enemyRand",
-     "when": "death"
+     "to": "enemyRand"
     }
    ],
    "set": "3",
@@ -12077,14 +12169,16 @@
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
-   "keywords": [],
+   "keywords": [
+    "unbreakable"
+   ],
    "effects": [
     {
      "kind": "reviveSel",
      "n": 2,
+     "when": "turnStart",
      "cnt": 1,
-     "mod": "rush",
-     "when": "turnStart"
+     "mod": "rush"
     }
    ],
    "set": "3",
@@ -12108,10 +12202,11 @@
      "total": 5
     }
    ],
-   "set": "3",
    "pay": {
-    "kind": "sacrifice"
+    "kind": "sacrifice",
+    "n": 1
    },
+   "set": "3",
    "art": "art/x3-kinkyu-83dd6bc2d4.webp"
   },
   {
@@ -12133,14 +12228,14 @@
      "kind": "unit",
      "n": 4,
      "act": "dmg",
-     "to": "enemy1"
+     "to": "enemyAll"
     },
     {
      "kind": "unit",
-     "n": 2,
-     "act": "dmg",
-     "to": "enemyAll",
-     "when": "revived"
+     "n": 1,
+     "when": "revived",
+     "act": "destroy",
+     "to": "enemy1"
     }
    ],
    "set": "3",
@@ -12206,10 +12301,10 @@
     {
      "kind": "unit",
      "n": 2,
+     "when": "allyDeath",
      "act": "dmg",
      "to": "enemyRand",
-     "af": "jelly",
-     "when": "allyDeath"
+     "af": "jelly"
     }
    ],
    "set": "3",
@@ -12234,8 +12329,13 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-chibi",
-     "when": "turnStart"
+     "when": "turnStart",
+     "card": "tk-chibi"
+    },
+    {
+     "kind": "tokenField",
+     "n": 3,
+     "card": "tk-chibi"
     }
    ],
    "set": "3",
@@ -12270,8 +12370,8 @@
    "name": "クラゲ観測所",
    "world": "mech",
    "type": "char",
-   "cost": 4,
-   "atk": 2,
+   "cost": 3,
+   "atk": 1,
    "hp": 4,
    "glyph": "機",
    "limit": 3,
@@ -12281,10 +12381,10 @@
     {
      "kind": "tokenField",
      "n": 1,
-     "card": "tk-chibi",
+     "when": "cardPlay",
      "pt": "spell",
-     "ptr": "jelly",
-     "when": "cardPlay"
+     "card": "tk-chibi",
+     "ptr": "jelly"
     }
    ],
    "set": "3",
@@ -12304,7 +12404,7 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 3,
+     "n": 4,
      "act": "dmg",
      "to": "enemyAll",
      "plus": "jelly",
@@ -12319,9 +12419,9 @@
    "name": "機巧クラゲのヒカリ",
    "world": "mech",
    "type": "char",
-   "cost": 3,
-   "atk": 2,
-   "hp": 4,
+   "cost": 2,
+   "atk": 1,
+   "hp": 3,
    "glyph": "機",
    "limit": 3,
    "rarity": "ur",
@@ -12334,12 +12434,12 @@
     {
      "kind": "player",
      "n": 1,
+     "when": "cardPlay",
+     "pt": "spell",
      "act": "draw",
      "who": "self",
-     "pt": "spell",
      "ptr": "jelly",
-     "cap": 1,
-     "when": "cardPlay"
+     "cap": 1
     }
    ],
    "set": "3",
@@ -12352,8 +12452,8 @@
    "world": "mech",
    "type": "char",
    "cost": 2,
-   "atk": 1,
-   "hp": 2,
+   "atk": 2,
+   "hp": 1,
    "glyph": "機",
    "limit": 3,
    "rarity": "common",
@@ -12407,8 +12507,8 @@
     "guard"
    ],
    "effects": [],
-   "set": "3",
    "armor": 1,
+   "set": "3",
    "art": "art/x3-shouha-806b0eab81.webp"
   },
   {
@@ -12417,7 +12517,7 @@
    "world": "mech",
    "type": "char",
    "cost": 3,
-   "atk": 1,
+   "atk": 2,
    "hp": 4,
    "glyph": "機",
    "limit": 3,
@@ -12427,10 +12527,10 @@
     {
      "kind": "player",
      "n": 2,
+     "when": "allyDeath",
      "act": "heal",
      "who": "self",
-     "cap": 1,
-     "when": "allyDeath"
+     "cap": 1
     }
    ],
    "set": "3",
@@ -12441,21 +12541,30 @@
    "name": "港湾クレーン",
    "world": "mech",
    "type": "char",
-   "cost": 4,
-   "atk": 2,
-   "hp": 4,
+   "cost": 6,
+   "atk": 6,
+   "hp": 5,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
-   "keywords": [],
+   "keywords": [
+    "guard"
+   ],
    "effects": [
     {
      "kind": "tokenHand",
      "n": 3,
      "card": "tk-gear"
+    },
+    {
+     "kind": "dig",
+     "n": 5,
+     "cond": "gearPaid",
+     "cn": 1
     }
    ],
    "set": "3",
+   "gear": 2,
    "art": "art/x3-crane-9662947f40.webp"
   },
   {
@@ -12474,9 +12583,9 @@
     {
      "kind": "player",
      "n": 1,
+     "when": "turnEnd",
      "act": "heal",
-     "who": "self",
-     "when": "turnEnd"
+     "who": "self"
     }
    ],
    "set": "3",
@@ -12588,13 +12697,15 @@
    "name": "合体潜水機ギアシャーク",
    "world": "mech",
    "type": "char",
-   "cost": 6,
-   "atk": 4,
-   "hp": 4,
+   "cost": 5,
+   "atk": 5,
+   "hp": 5,
    "glyph": "機",
    "limit": 3,
-   "rarity": "ur",
-   "keywords": [],
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
    "effects": [
     {
      "kind": "unit",
@@ -12608,12 +12719,12 @@
      "n": 1,
      "act": "grant",
      "to": "self",
-     "kw": "rush",
+     "kw": "trample",
      "cond": "gearPaid"
     }
    ],
    "set": "3",
-   "gear": 3,
+   "gear": 10,
    "art": "art/x3-gearshark-97ca3b8c3e.webp"
   },
   {
@@ -12628,7 +12739,8 @@
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "dive"
+    "dive",
+    "surf"
    ],
    "effects": [
     {
@@ -12647,20 +12759,22 @@
    "world": "mech",
    "type": "char",
    "cost": 4,
-   "atk": 4,
+   "atk": 3,
    "hp": 3,
    "glyph": "機",
    "limit": 3,
    "rarity": "common",
-   "keywords": [],
+   "keywords": [
+    "rush"
+   ],
    "effects": [
     {
      "kind": "unit",
      "n": 1,
+     "when": "attack",
      "act": "grant",
      "to": "self",
-     "kw": "armor",
-     "when": "attack"
+     "kw": "armor"
     }
    ],
    "set": "3",
@@ -12677,13 +12791,15 @@
    "glyph": "機",
    "limit": 3,
    "rarity": "common",
-   "keywords": [],
+   "keywords": [
+    "rush"
+   ],
    "effects": [
     {
      "kind": "unit",
-     "n": 2,
+     "n": 5,
      "act": "dmg",
-     "to": "ownRand"
+     "to": "anyRand"
     }
    ],
    "set": "3",
@@ -12694,9 +12810,9 @@
    "name": "次元干渉ブイ",
    "world": "mech",
    "type": "char",
-   "cost": 4,
+   "cost": 3,
    "atk": 2,
-   "hp": 4,
+   "hp": 3,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
@@ -12704,10 +12820,10 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 4,
+     "n": 5,
+     "when": "foeBack",
      "act": "dmg",
-     "to": "foe",
-     "when": "foeBack"
+     "to": "foe"
     }
    ],
    "set": "3",
@@ -12718,7 +12834,7 @@
    "name": "分解砲",
    "world": "mech",
    "type": "spell",
-   "cost": 4,
+   "cost": 3,
    "glyph": "機",
    "limit": 3,
    "rarity": "sr",
@@ -12758,8 +12874,14 @@
     {
      "kind": "tokenField",
      "n": 2,
-     "card": "tk-pururu",
-     "when": "death"
+     "when": "death",
+     "card": "tk-pururu"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 2
     }
    ],
    "set": "3",
@@ -12784,8 +12906,8 @@
      "act": "both",
      "to": "self",
      "cond": "tribeGE",
-     "ctribe": "beast",
-     "cn": 2
+     "cn": 2,
+     "ctribe": "beast"
     }
    ],
    "set": "3",
@@ -12799,7 +12921,7 @@
    "type": "char",
    "cost": 3,
    "atk": 2,
-   "hp": 4,
+   "hp": 2,
    "glyph": "幻",
    "limit": 3,
    "rarity": "rare",
@@ -12826,7 +12948,7 @@
    "hp": 4,
    "glyph": "神",
    "limit": 3,
-   "rarity": "rare",
+   "rarity": "common",
    "keywords": [
     "rush"
    ],
@@ -12837,8 +12959,8 @@
      "act": "both",
      "to": "self",
      "cond": "tribeGE",
-     "ctribe": "beast",
-     "cn": 2
+     "cn": 2,
+     "ctribe": "beast"
     }
    ],
    "set": "3",
@@ -12851,23 +12973,16 @@
    "world": "myth",
    "type": "char",
    "cost": 4,
-   "atk": 3,
+   "atk": 2,
    "hp": 6,
    "glyph": "神",
    "limit": 3,
    "rarity": "rare",
    "keywords": [
-    "guard"
+    "guard",
+    "calm"
    ],
-   "effects": [
-    {
-     "kind": "unit",
-     "n": 1,
-     "act": "freeze",
-     "to": "foe",
-     "when": "attacked"
-    }
-   ],
+   "effects": [],
    "set": "3",
    "tribe": "beast",
    "art": "art/m3-umibouzu-3206185ae7.webp"
@@ -12911,8 +13026,8 @@
     "ghost"
    ],
    "effects": [],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-funa-1a74cf0b74.webp"
   },
   {
@@ -12927,7 +13042,8 @@
    "limit": 0,
    "rarity": "common",
    "keywords": [
-    "guard"
+    "guard",
+    "steadfast"
    ],
    "effects": [
     {
@@ -12936,9 +13052,9 @@
      "when": "death"
     }
    ],
+   "token": true,
    "set": "3",
    "tribe": "jelly",
-   "token": true,
    "art": "art/tk-chibi-45f7ba903e.webp"
   },
   {
@@ -12952,7 +13068,9 @@
    "glyph": "幻",
    "limit": 0,
    "rarity": "common",
-   "keywords": [],
+   "keywords": [
+    "guard"
+   ],
    "effects": [
     {
      "kind": "ward",
@@ -12960,8 +13078,8 @@
      "when": "death"
     }
    ],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-awa-f138d9ef2c.webp"
   },
   {
@@ -12976,9 +13094,17 @@
    "limit": 0,
    "rarity": "common",
    "keywords": [],
-   "effects": [],
-   "set": "3",
+   "effects": [
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 1,
+     "when": "death"
+    }
+   ],
    "token": true,
+   "set": "3",
    "art": "art/tk-pururu-f5d265c3d6.webp"
   },
   {
@@ -12989,7 +13115,7 @@
    "cost": 1,
    "glyph": "幻",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "rare",
    "keywords": [],
    "effects": [
     {
@@ -12999,13 +13125,13 @@
      "to": "enemy1"
     }
    ],
+   "token": true,
    "set": "3",
-   "tribe": "jelly",
    "req": {
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true,
+   "tribe": "jelly",
    "art": "art/tk-j-needle-c6b955b67e.webp"
   },
   {
@@ -13016,7 +13142,7 @@
    "cost": 1,
    "glyph": "幻",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "sr",
    "keywords": [],
    "effects": [
     {
@@ -13025,13 +13151,13 @@
      "card": "tk-chibi"
     }
    ],
+   "token": true,
    "set": "3",
-   "tribe": "jelly",
    "req": {
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true,
+   "tribe": "jelly",
    "art": "art/tk-j-cradle-11e782ba7e.webp"
   },
   {
@@ -13042,7 +13168,7 @@
    "cost": 2,
    "glyph": "幻",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "ur",
    "keywords": [],
    "effects": [
     {
@@ -13058,13 +13184,13 @@
      "to": "enemyAll"
     }
    ],
+   "token": true,
    "set": "3",
-   "tribe": "jelly",
    "req": {
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true,
+   "tribe": "jelly",
    "art": "art/tk-j-flash-1b5e555c8f.webp"
   },
   {
@@ -13075,7 +13201,7 @@
    "cost": 4,
    "glyph": "幻",
    "limit": 0,
-   "rarity": "common",
+   "rarity": "legend",
    "keywords": [],
    "effects": [
     {
@@ -13083,13 +13209,13 @@
      "n": 2
     }
    ],
+   "token": true,
    "set": "3",
-   "tribe": "jelly",
    "req": {
     "n": 1,
     "tribe": "jelly"
    },
-   "token": true,
+   "tribe": "jelly",
    "art": "art/tk-j-tide-6e55dbebcf.webp"
   },
   {
@@ -13110,8 +13236,8 @@
      "who": "self"
     }
    ],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-s-gold-51536102f8.webp"
   },
   {
@@ -13132,8 +13258,8 @@
      "to": "enemyRandF"
     }
    ],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-s-doll-3910ee8bc9.webp"
   },
   {
@@ -13153,8 +13279,8 @@
      "ctype": "char"
     }
    ],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-s-map-0656c4cdee.webp"
   },
   {
@@ -13175,8 +13301,8 @@
      "to": "ownRand"
     }
    ],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-s-kit-76c684c3d0.webp"
   },
   {
@@ -13196,8 +13322,8 @@
      "card": "tk-gear"
     }
    ],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-s-parts-abf54919d0.webp"
   },
   {
@@ -13218,31 +13344,9 @@
      "to": "anyRand"
     }
    ],
-   "set": "3",
    "token": true,
+   "set": "3",
    "art": "art/tk-s-dud-b1b6f967a2.webp"
   }
- ],
- "arena": {
-  "on": 1,
-  "start": "21:00",
-  "end": "21:30",
-  "days": [
-   "std",
-   "std",
-   "sen",
-   "set1",
-   "std",
-   "sen",
-   "set1"
-  ],
-  "extra": [
-   {
-    "date": "2026-11-19",
-    "start": "05:00",
-    "end": "06:05",
-    "rule": "std"
-   }
-  ]
- }
+ ]
 }
