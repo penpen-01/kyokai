@@ -55,6 +55,20 @@ const Packs = {
     return pool.length ? pool[Math.floor(Math.random() * pool.length)].id : null;
   },
 
+  /* パラレル：1パックごとに PARA_RATE（0.1%単位）で当たりを引き、当たったら、まだ持っていないパラレルから1つを選ぶ。
+     出せるパラレルがないパックでは引かない。当たると最後の1枚が「元のカード＋別イラスト」になる */
+  paraRate() { return Math.max(0, Math.min(1000, +CONFIG.PARA_RATE || 0)) / 1000; },
+  rollPara(pack, skip) {
+    if (typeof Skins === "undefined" || !this.paraRate()) return null;
+    const cands = Skins.paraCands(this.pool(pack).map(c => c.id), skip);
+    if (!cands.length || Math.random() >= this.paraRate()) return null;
+    return cands[Math.floor(Math.random() * cands.length)];
+  },
+  paraArt(x) { const s = x && x.para && typeof Skins !== "undefined" && Skins.get(x.para); return s && s.art ? s.art : ""; },
+  /* カードの絵（パラレルなら別イラスト）と、パラレルの印 */
+  cardOf(x) { const a = this.paraArt(x); return cardHTML(DEF[x.id], { look: a ? { a } : null, static: true }); },
+  paraTag(x) { return x && x.para ? `<span class="paratag">★パラレル</span>` : ""; },
+
   /* n パックまとめて開ける（10連は n=10）。結果は1パックずつ（rows）にも分けて持つ */
   open(pack, byTicket, n = 1) {
     if (Account.status !== "ready" && Account.status !== "offline") return { ok: false, msg: "アカウントを読み込めていないため、パックを開けられません。" };
@@ -64,40 +78,49 @@ const Packs = {
     if (!byTicket && Account.gold < pack.price * n) return { ok: false, msg: `Gが足りません（あと${pack.price * n - Account.gold}G）` };
     const before = { ...Account.data.cards };
     const seen = {};
-    const rows = [], ids = [];
+    const rows = [], ids = [], paras = new Set();
     for (let k = 0; k < n; k++) {
       const row = [];
+      const para = this.rollPara(pack, paras);
       for (let i = 0; i < pack.size; i++) {
+        const isLast = i === pack.size - 1;
         const last = sr ? { ...pack.odds.last, common: 0, rare: 0 } : pack.odds.last;
-        const id = this.rollCard(pack, i === pack.size - 1 ? last : pack.odds.normal);
+        const id = para && isLast ? para.card : this.rollCard(pack, isLast ? last : pack.odds.normal);   // パラレルは最後の1枚
         if (!id) continue;
         const isNew = !before[id] && !seen[id]; seen[id] = true;
-        row.push({ id, isNew }); ids.push(id);
+        row.push({ id, isNew, ...(para && isLast ? { para: para.id } : {}) }); ids.push(id);
       }
+      if (para) paras.add(para.id);
       rows.push(row);
+    }
+    // パラレル：別イラストを持ち物にして、そのカードの絵にしておく（カードの詳細で元の絵に戻せる）
+    if (paras.size) {
+      Account.data.skins = [...new Set([...(Account.data.skins || []), ...paras])];
+      const alt = { ...(Account.data.alt || {}) }; paras.forEach(pid => { const s = Skins.get(pid); if (s) alt[s.card] = pid; }); Account.data.alt = alt;
+      if (typeof Skins.apply === "function") Skins.apply();
     }
     if (typeof Quest !== "undefined") Quest.add("pack", n);
     if (typeof Titles !== "undefined") Titles.bump("packs", n);
     // 開封の履歴（直近100パック分）。カードと同じ保存で一緒に残す
     const log = Array.isArray(Account.data.packLog) ? Account.data.packLog : [];
     const t = Date.now();
-    rows.forEach(row => log.push({ t, p: pack.id, c: row.map(x => x.id) }));
+    rows.forEach(row => { const pp = row.find(x => x.para); log.push({ t, p: pack.id, c: row.map(x => x.id), ...(pp ? { pp: pp.para } : {}) }); });
     Account.data.packLog = log.slice(-100);
     if (n > 1) {
       if (byTicket) Account.data.tickets -= n; else Account.data.gold -= pack.price * n;
       Account.addCards(ids);
-      this.last = { pack, rows, multi: n, stage: "pack", shown: false, byTicket: !!byTicket, ready: this.preload(ids) };
+      this.last = { pack, rows, multi: n, stage: "pack", shown: false, byTicket: !!byTicket, ready: this.preload(ids, [...paras]) };
       this.detailId = null;
       return { ok: true };
     }
     const cards = rows[0];
     // めくる順番：レア度の低い順（いちばんレアなカードが最後に出る）
-    const rank = x => RARITY_ORDER.indexOf(DEF[x.id].rarity);
+    const rank = x => x.para ? 99 : RARITY_ORDER.indexOf(DEF[x.id].rarity);   // パラレルはいちばん最後
     cards.sort((a, b) => rank(a) - rank(b));
     if (sr) Account.data.srTickets -= 1; else if (byTicket) Account.data.tickets -= 1; else Account.data.gold -= pack.price;
     Account.addCards(cards.map(x => x.id));
     // stage: pack（未開封）→ reveal（1枚ずつ）→ done（一覧）
-    this.last = { pack, cards, stage: "pack", idx: 0, faceUp: false, byTicket: !!byTicket, ready: this.preload(cards.map(x => x.id)) };
+    this.last = { pack, cards, stage: "pack", idx: 0, faceUp: false, byTicket: !!byTicket, ready: this.preload(cards.map(x => x.id), [...paras]) };
     this.detailId = null;
     return { ok: true };
   },
@@ -161,7 +184,15 @@ const Packs = {
       <table><tr><th></th>${RARITY_ORDER.map(r => `<th>${RARITY_SHORT[r]}</th>`).join("")}</tr>
         <tr><td>1〜${p.size - 1}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.normal[r]}%</td>`).join("")}</tr>
         <tr><td>${p.size}枚目</td>${RARITY_ORDER.map(r => `<td>${p.odds.last[r]}%</td>`).join("")}</tr></table>
+      ${this.paraOddsHTML(p)}
       <button type="button" class="btn" data-act="packOddsClose">閉じる</button></div></div>`;
+  },
+  paraOddsHTML(p) {
+    if (typeof Skins === "undefined" || !this.paraRate()) return "";
+    const all = SKINS.filter(s => Skins.isPara(s) && Skins.ready(s) && this.pool(p).some(c => c.id === s.card));
+    if (!all.length) return "";
+    const left = Skins.paraCands(this.pool(p).map(c => c.id)).length;
+    return `<p class="pk-para"><b>★パラレル</b>1パックにつき${+(this.paraRate() * 100).toFixed(2)}%で、最後の1枚が別イラスト付きのカードになります（元のカード1枚＋別イラスト）。持っていないパラレルから選ばれます。<small>このパックのパラレル：まだ持っていない ${left}/${all.length}種${left ? "" : "（全部持っているので、もう出ません）"}</small></p>`;
   },
   /* 横並びのパック：真ん中に来たパックを「選択中」にして、タブと合わせる */
   bindTrack() {
@@ -193,8 +224,8 @@ const Packs = {
   },
 
   /* 当たったカードの絵を先に読み込んでおく（めくったときに絵が遅れて出ないように） */
-  preload(ids) {
-    const arts = [...new Set(ids.map(id => DEF[id] && DEF[id].art).filter(Boolean))];
+  preload(ids, paras = []) {
+    const arts = [...new Set([...ids.map(id => DEF[id] && DEF[id].art), ...paras.map(p => (Skins.get(p) || {}).art)].filter(Boolean))];
     return Promise.all(arts.map(src => { const im = new Image(); im.decoding = "async"; im.src = src; return (im.decode ? im.decode() : Promise.resolve()).catch(() => {}); }));
   },
   whenReady(L, fn) {
@@ -274,9 +305,9 @@ const Packs = {
   /* 1枚ずつめくる */
   showReveal(burst) {
     const L = this.last, x = L.cards[L.idx], c = DEF[x.id];
-    const r = RARITY_ORDER.indexOf(c.rarity);
+    const r = x.para ? 4 : RARITY_ORDER.indexOf(c.rarity);   // パラレルはレジェンドと同じ演出
     // 全部表のまま出す（1枚につき1回のタップか、横に払うだけで次へ）。SR以上が出てきた瞬間は光と音で知らせる（オーナー 11-20）
-    if (!L.faceUp) { L.faceUp = true; burst = r >= 2; Sound.play(r >= 2 ? "rare" : "flip", r); if (r >= 3 && !Motion.reduced && typeof Motion.cutin === "function") Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！"); }
+    if (!L.faceUp) { L.faceUp = true; burst = r >= 2; Sound.play(r >= 2 ? "rare" : "flip", r); if (r >= 3 && !Motion.reduced && typeof Motion.cutin === "function") Motion.cutin(x.id, ME, x.para ? "パラレル 獲得！" : x.isNew ? "NEW 獲得！" : "獲得！", { art: this.paraArt(x) }); }
     const isLast = L.idx === L.cards.length - 1;
     openOverlay(`<div class="openstage">
       <div class="os-top">
@@ -285,9 +316,9 @@ const Packs = {
       <div class="os-slot r-${c.rarity} ${L.faceUp ? "shown" : ""} ${burst ? "burst" : ""}">
         <span class="os-stack" aria-hidden="true">${Array.from({ length: Math.min(4, L.cards.length - L.idx - 1) }, (_, i) => `<i style="--i:${i + 1}"></i>`).join("")}</span>
         ${L.faceUp
-          ? `<button type="button" class="os-card" data-act="packNext" aria-label="次へ">${cardHTML(c, { look: null, static: true })}</button>
+          ? `<button type="button" class="os-card ${x.para ? "para" : ""}" data-act="packNext" aria-label="次へ">${this.cardOf(x)}</button>
              <div class="os-info">
-               <span class="rtag r-${c.rarity}">${RARITY[c.rarity]}</span>${x.isNew ? `<span class="newtag">NEW</span>` : ""}
+               ${this.paraTag(x)}<span class="rtag r-${c.rarity}">${RARITY[c.rarity]}</span>${x.isNew ? `<span class="newtag">NEW</span>` : ""}
                <b>${esc(c.name)}</b>
              </div>`
           : `<button type="button" class="os-back ${r >= 2 ? "glow" : ""} ${isLast && L.cards.length > 1 ? "last" : ""}" data-act="packFlip" aria-label="めくる">
@@ -318,7 +349,7 @@ const Packs = {
     const L = this.last, n = L.cards.length;
     const inPack = {}; L.cards.forEach(x => inPack[x.id] = (inPack[x.id] || 0) + 1);
     const seen = {};
-    const best = L.cards.reduce((a, x) => RARITY_ORDER.indexOf(DEF[x.id].rarity) > RARITY_ORDER.indexOf(DEF[a.id].rarity) ? x : a, L.cards[0]);
+    const best = L.cards.find(x => x.para) || L.cards.reduce((a, x) => RARITY_ORDER.indexOf(DEF[x.id].rarity) > RARITY_ORDER.indexOf(DEF[a.id].rarity) ? x : a, L.cards[0]);
     const newN = L.cards.filter(x => x.isNew).length;
     const card = x => {
       const c = DEF[x.id], now = Account.owned(x.id);
@@ -327,15 +358,15 @@ const Packs = {
       const lim = cardLimit(c, CONFIG), pips = Math.max(1, Math.min(lim, 3));
       const pip = Array.from({ length: pips }, (_, i) => `<i class="${i < after ? "on" : ""} ${i === after - 1 ? "nw" : ""}"></i>`).join("");
       return `<button type="button" class="rs-card r-${c.rarity}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}の効果を見る">
-        <span class="rs-fr">${cardHTML(c, { look: null, static: true })}${x.isNew ? `<span class="rs-new">NEW</span>` : ""}</span>
-        <span class="rs-tag"><i class="rtag r-${c.rarity}">${RARITY_SHORT[c.rarity]}</i></span>
+        <span class="rs-fr ${x.para ? "para" : ""}">${this.cardOf(x)}${x.isNew ? `<span class="rs-new">NEW</span>` : ""}</span>
+        <span class="rs-tag"><i class="rtag r-${c.rarity}">${RARITY_SHORT[c.rarity]}</i>${this.paraTag(x)}</span>
         <span class="rs-own">${x.isNew ? `<em>NEW</em>` : `所持 ${before}<span aria-hidden="true">→</span><b>${after}</b>`}<span class="rs-pip" aria-label="デッキに入れられるのは${lim}枚まで">${pip}</span>${after > CONFIG.COPY_MAX ? `<small>余り${after - CONFIG.COPY_MAX}</small>` : ""}</span>
       </button>`;
     };
     openOverlay(`<div class="panel wide rs">
       <div class="topbar"><button type="button" class="btn sm" data-act="packs">← パック</button><b>開封結果</b>${goldTag(Account.gold)}</div>
       <div class="rs-head"><small>${esc(L.pack.name)}</small>
-        <p>${newN ? `<b class="rs-newn">NEW ${newN}枚</b>` : ""}いちばんの当たり：<i class="rtag r-${DEF[best.id].rarity}">${RARITY_SHORT[DEF[best.id].rarity]}</i>${esc(DEF[best.id].name)}</p></div>
+        <p>${newN ? `<b class="rs-newn">NEW ${newN}枚</b>` : ""}いちばんの当たり：${best.para ? `<b class="rs-para">★パラレル</b>` : ""}<i class="rtag r-${DEF[best.id].rarity}">${RARITY_SHORT[DEF[best.id].rarity]}</i>${esc(DEF[best.id].name)}</p></div>
       <div class="rs-grid n${n}">${L.cards.map(card).join("")}</div>
       <div class="pre-btns rs-btns">
         ${Account.tickets > 0 ? `<button type="button" class="btn primary" data-act="packOpenTicket" data-id="${esc(L.pack.id)}">もう1パック<small>（券 残り${Account.tickets}）</small></button>`
@@ -353,12 +384,12 @@ const Packs = {
     const all = L.rows.flat();
     const cnt = r => all.filter(x => DEF[x.id].rarity === r).length;
     const newN = all.filter(x => x.isNew).length;
-    const best = all.filter(x => RARITY_ORDER.indexOf(DEF[x.id].rarity) >= 2).sort((a, b) => RARITY_ORDER.indexOf(DEF[b.id].rarity) - RARITY_ORDER.indexOf(DEF[a.id].rarity));
+    const best = all.filter(x => x.para || RARITY_ORDER.indexOf(DEF[x.id].rarity) >= 2).sort((a, b) => (b.para ? 9 : 0) - (a.para ? 9 : 0) || RARITY_ORDER.indexOf(DEF[b.id].rarity) - RARITY_ORDER.indexOf(DEF[a.id].rarity));
     const play = anim && !L.shown && !Motion.reduced;
     L.shown = true;
     let k = 0;
     const cell = x => { const c = DEF[x.id];
-      return `<button type="button" class="mslot r-${c.rarity} ${play ? "wait" : ""}" data-n="${k++}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}">${x.isNew ? `<span class="newtag">NEW</span>` : ""}${cardHTML(c, { look: null, static: true })}</button>`; };
+      return `<button type="button" class="mslot r-${c.rarity} ${x.para ? "para" : ""} ${play ? "wait" : ""}" data-n="${k++}" data-act="packDetail" data-id="${esc(c.id)}" aria-label="${esc(c.name)}${x.para ? "（パラレル）" : ""}">${x.isNew ? `<span class="newtag">NEW</span>` : ""}${x.para ? `<span class="newtag para">★</span>` : ""}${this.cardOf(x)}</button>`; };
     const again = L.byTicket
       ? `<button type="button" class="btn primary" data-act="packOpenTicket10" data-id="${esc(L.pack.id)}" ${Account.tickets >= 10 ? "" : "disabled"}>もう10パック（パック券 残り${Account.tickets}枚）</button>`
       : `<button type="button" class="btn primary" data-act="packOpen10" data-id="${esc(L.pack.id)}" ${Account.gold >= L.pack.price * 10 ? "" : "disabled"}>もう10パック（${L.pack.price * 10}G）</button>`;
@@ -367,7 +398,7 @@ const Packs = {
       <div class="ms-grid n${L.pack.size}">${L.rows.map((row, i) => `<div class="ms-row"><span class="ms-no">${i + 1}</span>${row.map(cell).join("")}</div>`).join("")}</div>
       <div class="ms-sum ${play ? "hidden-until" : ""}">
         <div class="ms-counts">${RARITY_ORDER.map(r => `<span class="r-${r}"><i class="rtag r-${r}">${RARITY_SHORT[r]}</i>${cnt(r)}</span>`).join("")}<span class="ms-new">NEW ${newN}</span></div>
-        ${best.length ? `<div class="ms-best"><small>SR以上</small><div>${best.map(x => `<button type="button" class="ms-b r-${DEF[x.id].rarity}" data-act="packDetail" data-id="${esc(x.id)}">${esc(DEF[x.id].name)}</button>`).join("")}</div></div>` : ""}
+        ${best.length ? `<div class="ms-best"><small>SR以上</small><div>${best.map(x => `<button type="button" class="ms-b r-${DEF[x.id].rarity} ${x.para ? "para" : ""}" data-act="packDetail" data-id="${esc(x.id)}">${x.para ? "★" : ""}${esc(DEF[x.id].name)}</button>`).join("")}</div></div>` : ""}
       </div>
       <div class="pre-btns ${play ? "hidden-until" : ""}">${again}<button type="button" class="btn" data-act="packs">パック一覧へ</button></div>
       ${this.detailHTML()}
@@ -393,12 +424,12 @@ const Packs = {
     const step = () => {
       if (stop || this.last !== L) return;
       if (i >= slots.length) { done(); return; }
-      const x = all[i], el = slots[i], c = DEF[x.id], r = RARITY_ORDER.indexOf(c.rarity);
+      const x = all[i], el = slots[i], c = DEF[x.id], r = x.para ? 4 : RARITY_ORDER.indexOf(c.rarity);
       // 行の始めで、めくっている行が画面に入るよう追いかける
       if (i % 5 === 0) follow(el);
       i++;
       const show = () => { el.classList.remove("wait"); el.classList.add("pop"); if (r >= 2) Sound.play("rare", r); t = setTimeout(step, r >= 2 ? 160 : 45); };
-      if (r >= 3) { Motion.cutin(x.id, ME, x.isNew ? "NEW 獲得！" : "獲得！"); t = setTimeout(show, 760); }
+      if (r >= 3) { Motion.cutin(x.id, ME, x.para ? "パラレル 獲得！" : x.isNew ? "NEW 獲得！" : "獲得！", { art: this.paraArt(x) }); t = setTimeout(show, 760); }
       else show();
     };
     step();

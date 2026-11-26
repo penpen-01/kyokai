@@ -396,7 +396,7 @@ const DEFAULT_CONFIG = {
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
-  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, MAKO_U: 3000, MAKO_L: 5000, SEN_ON: 0, SEN_BETA: 1, SEN_FEE: 500, SKIN_ON: 0, LIMITED_ON: 0, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
+  STONE_TICKET: 150, SHOP_FEATURE_OFF: 20, STONE_PER_GOLD: 3, MAKO_U: 3000, MAKO_L: 5000, SEN_ON: 0, SEN_BETA: 1, SEN_FEE: 500, SKIN_ON: 0, PARA_RATE: 10, LIMITED_ON: 0, INFO_HOURS: 24, CHARM_HARD: 3000, CHARM_EX: 5000, CHARM_HP: 20, BCHAL_HARD: 6000, BCHAL_EX: 10000, BCHAL_WEEK: 3,   // CPU戦の連勝ボーナス（%）。2連勝目から1勝ごとに STEP% ずつ、最大 MAX%
   SEASON: "beta", STARTER_DECK: "starter", MAINT_NOTE: "", ADMINS: [],
   SAMPLE_DECKS: true   // ベータ用：所持に関係なく全カードで組める「サンプルデッキ」を許可
 };
@@ -455,6 +455,7 @@ const CONFIG_INFO = {
   SHOP_FEATURE_OFF:  { label: "ショップの今日のおすすめの割引（%）", min: 0, max: 90, group: "eco" },
   STONE_PER_GOLD:    { label: "両替：1Gにするのに必要な魔石（2以下にすると、パック→分解→両替でGが増え続けるので注意）", min: 1, max: 1000, group: "eco" },
   LIMITED_ON:        { label: "ショップの限定カードの売り場を開く（1＝開く、0＝準備中。運営用アカウントはいつでも入れる）", min: 0, max: 1, group: "eco" },
+  PARA_RATE:         { label: "パラレル（別イラスト付きのカード）がパックから出る確率。1パックごと、0.1%単位（10＝1%）。持っていないパラレルがないパックでは出ない", min: 0, max: 1000, group: "eco" },
   SKIN_ON:           { label: "スキンの売り場を開く（1＝開く、0＝準備中。運営用アカウントはいつでも入れる）", min: 0, max: 1, group: "eco" },
   SEN_ON:            { label: "選定戦を開く（1＝開く、0＝準備中。運営用アカウントは入れる）", min: 0, max: 1, group: "eco" },
   SEN_BETA:          { label: "選定戦をβ版にする（1＝入場料・報酬なし、0＝正式）", min: 0, max: 1, group: "eco" },

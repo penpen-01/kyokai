@@ -294,7 +294,7 @@ const Admin = {
             : kind === "art" ? `<label class="fl">カードのID<input class="txt" data-skn="${i}:card" value="${esc(x.card || "")}" style="max-width:160px"></label><label class="fl">絵の場所<input class="txt" data-skn="${i}:art" value="${esc(x.art || "")}" placeholder="ui/alt/xxx.webp"></label>`
             : `<label class="fl">絵の場所<input class="txt" data-skn="${i}:art" value="${esc(x.art || "")}" placeholder="ui/xxx.webp"></label>`}
           <label class="ownchk"><input type="checkbox" data-skn="${i}:default" ${x.default ? "checked" : ""}> 最初から持っている</label>
-          <label class="ownchk"><input type="checkbox" data-skn="${i}:admin" ${x.admin ? "checked" : ""}> 運営のみ（試し置き）</label>
+          <label class="ownchk"><input type="checkbox" data-skn="${i}:admin" ${x.admin ? "checked" : ""}> ${kind === "art" ? "パラレル（売り場に並べず、パックから低い確率で出す）" : "運営のみ（試し置き）"}</label>
           <button type="button" class="btn sm danger" data-act="sknDel" data-i="${i}">消す</button></div>
           <label class="fl">説明<input class="txt" data-skn="${i}:desc" maxlength="80" value="${esc(x.desc || "")}"></label></div>`).join("")}
         <button type="button" class="btn sm" data-act="sknAdd" data-v="${kind}">＋ ${label}を足す</button></div>`).join("")}`;

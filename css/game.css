@@ -3854,3 +3854,17 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .pickp .dig-c{gap:4px}
 .pickp .pick-info{font-size:.72rem;display:block}
 .pickp .pg-title b{font-size:1.25rem}
+
+/* パラレル（パックから低い確率で出る、別イラスト付きのカード） */
+.paratag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.06em;padding:2px 8px;border-radius:99px;color:#2a1600;
+  background:linear-gradient(110deg,#fff3b0,#ffd36e 30%,#ff9bd0 55%,#9fe3ff 80%,#fff3b0);background-size:200% 100%;animation:paraShine 2.4s linear infinite;margin-right:4px}
+@keyframes paraShine{to{background-position:-200% 0}}
+.os-card.para,.rs-fr.para,.mslot.para{box-shadow:0 0 0 2px #fff,0 0 22px 6px rgba(255,211,110,.85),0 0 40px 12px rgba(255,155,208,.45)!important}
+.newtag.para{right:auto;left:-4px;background:linear-gradient(110deg,#ffd36e,#ff9bd0,#9fe3ff);color:#2a1600}
+.ms-b.para{border-color:#ffd36e;color:#ffd36e}
+.rs-para{color:#ffd36e;margin-right:4px}
+.pk-para{margin:10px 0 0;font-size:12px;line-height:1.6}
+.pk-para b{display:inline-block;margin-right:6px;color:#ffd36e}
+.pk-para small{display:block;opacity:.8}
+.cutin.para .ci-text small{background:linear-gradient(110deg,#ffd36e,#ff9bd0,#9fe3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media (prefers-reduced-motion:reduce){.paratag{animation:none}}

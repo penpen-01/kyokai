@@ -94,17 +94,18 @@ const Motion = {
 
   /* ---------- UR・レジェンドのカットイン ----------
      斜めの帯が走り、カードの絵が大きく横切って、名前とレア度が出る。タップで飛ばせる */
-  cutin(id, pi, label) {
-    const d = DEF[id]; if (!d) return;
+  cutin(id, pi, label, o = {}) {
+    let d = DEF[id]; if (!d) return;
+    if (o.art) d = { ...d, art: o.art };   // パラレル：別イラストで出す
     const mine = pi === ME, ms = this.reduced ? 500 : 700;
     const old = document.getElementById("cutin"); if (old) old.remove();
     const w = document.createElement("div");
     w.id = "cutin";
-    w.className = `cutin ${mine ? "mine" : "theirs"} r-${d.rarity} w-${d.world}${this.reduced ? " reduced" : ""}`;
+    w.className = `cutin ${mine ? "mine" : "theirs"} r-${d.rarity} w-${d.world}${o.art ? " para" : ""}${this.reduced ? " reduced" : ""}`;
     const art = d.art ? `url('${esc(new URL(d.art, location.href).href)}')` : "none";
     w.innerHTML = `<div class="ci-band" style="--art:${art}">
         <div class="ci-pic">${d.art ? `<img src="${esc(d.art)}" alt="" draggable="false">` : `<span class="glyph">${esc(d.glyph || "？")}</span>`}</div>
-        <div class="ci-text"><small>${d.rarity === "legend" ? "LEGEND" : "ULTRA RARE"}</small><b>${esc(d.name)}</b><span>${label ? esc(label) : `${esc(S && S.players[pi] ? S.players[pi].name : "")}が${d.type === "char" ? "召喚" : "使用"}`}</span></div>
+        <div class="ci-text"><small>${o.art ? "★ PARALLEL ★" : d.rarity === "legend" ? "LEGEND" : "ULTRA RARE"}</small><b>${esc(d.name)}</b><span>${label ? esc(label) : `${esc(S && S.players[pi] ? S.players[pi].name : "")}が${d.type === "char" ? "召喚" : "使用"}`}</span></div>
       </div>`;
     // タップで飛ばしたときだけ、待っている演出をすぐ進める
     w.addEventListener("click", e => { e.stopPropagation(); if (!w.isConnected) return; w.remove(); clearTimeout(this.timer); this.release(); });

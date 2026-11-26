@@ -16,7 +16,11 @@ const makoKinds = c => !c || c.token || c.boss || !(c.limit > 0) ? [] : ["common
 
 const Skins = {
   kind: "sleeve", ask: null,
-  list(k) { return SKINS.filter(s => s.kind === k && (!s.admin || adminOn())); },   // admin の品は運営用アカウントにだけ並ぶ（試し置き）
+  /* パラレル：別イラスト（art）で admin（工房の「パラレル」）の品。売り場には並ばず、パックから低い確率で、元のカード1枚とセットで出る */
+  isPara(s) { return !!(s && s.kind === "art" && (s.para || s.admin)); },
+  list(k) { return SKINS.filter(s => s.kind === k && !this.isPara(s) && (!s.admin || adminOn())); },
+  /* このパックから出せるパラレル（絵があり、まだ持っておらず、元のカードがこのパックに入っているもの）。skip は今回すでに出たもの */
+  paraCands(cardIds, skip) { const ids = new Set(cardIds); return SKINS.filter(s => this.isPara(s) && this.ready(s) && ids.has(s.card) && !this.owned(s) && !(skip && skip.has(s.id))); },
   get(id) { return SKINS.find(s => s.id === id) || null; },
   /* 絵がまだない品は「準備中」（今の枠など、絵がなくても成り立つ最初の品は除く） */
   ready(s) {
@@ -67,7 +71,7 @@ const Skins = {
       const c = DEF[id]; if (!c || !v || typeof v !== "object") return;
       const o = {};
       if ((v.m === "u" || v.m === "l") && makoKinds(c).includes(v.m)) o.m = v.m;
-      if (typeof v.a === "string" && SKINS.some(s => s.kind === "art" && !s.admin && s.card === id && s.art === v.a)) o.a = v.a;   // 運営のみの絵は相手には見せない
+      if (typeof v.a === "string" && SKINS.some(s => s.kind === "art" && s.card === id && s.art === v.a)) o.a = v.a;   // パラレルも相手に見せる
       if (o.m || o.a) out[id] = o;
     });
     return out;
@@ -80,7 +84,7 @@ const Skins = {
   dAsk: null,
   detailHTML(c) {
     if (!c || !this.on() || typeof Shop === "undefined" || !Shop.usable() || !(Account.owned(c.id) > 0)) return "";
-    const ks = makoKinds(c), arts = this.list("art").filter(s => s.card === c.id && this.ready(s));
+    const ks = makoKinds(c), arts = [...this.list("art"), ...SKINS.filter(s => this.isPara(s) && this.owned(s))].filter(s => s.card === c.id && this.ready(s));   // パラレルは持っているときだけ
     if (!ks.length && !arts.length) return "";
     const st = Account.stones || 0, mk = (Account.data.mako || {})[c.id] || {}, altId = (Account.data.alt || {})[c.id] || "";
     const a = this.dAsk && this.dAsk.card === c.id ? this.dAsk : null;
@@ -101,7 +105,7 @@ const Skins = {
       </div></div>` : "";
     const art = arts.length ? `<div class="mk-row"><span class="mk-h">イラスト</span><div class="mk-opts">
         ${opt(!altId || !arts.some(s => s.id === altId && this.owned(s)), "altSet", `data-id="${esc(c.id)}" data-v=""`, "元の絵", "")}
-        ${arts.map(s => this.owned(s) ? opt(altId === s.id, "altSet", `data-id="${esc(c.id)}" data-v="${esc(s.id)}"`, esc(s.name), altId === s.id ? "使っている" : "持っている")
+        ${arts.map(s => this.owned(s) ? opt(altId === s.id, "altSet", `data-id="${esc(c.id)}" data-v="${esc(s.id)}"`, (this.isPara(s) ? "★" : "") + esc(s.name), (this.isPara(s) ? "パラレル・" : "") + (altId === s.id ? "使っている" : "持っている"))
           : opt(false, "altAsk", `data-id="${esc(c.id)}" data-v="${esc(s.id)}"`, esc(s.name), buy(s.price))).join("")}
       </div></div>` : "";
     return `<div class="mako-box">${mako}${art}<small class="hint">付けた光とイラストは、対戦相手の画面にも出ます。</small></div>`;
@@ -113,7 +117,7 @@ const Skins = {
     if (!c || !Shop.usable() || !(Account.owned(c.id) > 0)) return this.redraw();
     let price, done;
     if (a.kind === "art") {
-      const s = this.get(a.id); if (!s || s.kind !== "art" || s.card !== c.id || this.owned(s) || !this.ready(s)) return this.redraw();
+      const s = this.get(a.id); if (!s || s.kind !== "art" || this.isPara(s) || s.card !== c.id || this.owned(s) || !this.ready(s)) return this.redraw();
       price = s.price; done = () => { Account.data.skins = [...(Account.data.skins || []), s.id]; Account.data.alt = { ...(Account.data.alt || {}), [c.id]: s.id }; };
     } else {
       if (!makoKinds(c).includes(a.kind) || ((Account.data.mako || {})[c.id] || {})[a.kind]) return this.redraw();
