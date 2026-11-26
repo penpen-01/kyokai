@@ -1,5 +1,5 @@
 {
- "version": 250,
+ "version": 251,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -3339,6 +3339,26 @@
    "art": "ui/alt/p3-f3-nocto.webp",
    "admin": true,
    "card": "f3-nocto"
+  },
+  {
+   "id": "p3-f3-shabon",
+   "kind": "art",
+   "name": "空色のシャボン",
+   "desc": "泡沫の歌い手シャボンのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-f3-shabon.webp",
+   "card": "f3-shabon",
+   "admin": true
+  },
+  {
+   "id": "p3-m3-hotaru",
+   "kind": "art",
+   "name": "星送りの夜",
+   "desc": "送り火の巫女ホタルのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-m3-hotaru.webp",
+   "card": "m3-hotaru",
+   "admin": true
   }
  ],
  "sen": {
