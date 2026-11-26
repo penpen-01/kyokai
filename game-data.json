@@ -1,5 +1,5 @@
 {
- "version": 257,
+ "version": 258,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -11666,7 +11666,7 @@
    "world": "fan",
    "type": "char",
    "cost": 5,
-   "atk": 2,
+   "atk": 1,
    "hp": 5,
    "glyph": "幻",
    "limit": 3,
@@ -12366,7 +12366,7 @@
    "world": "mech",
    "type": "char",
    "cost": 2,
-   "atk": 2,
+   "atk": 1,
    "hp": 1,
    "glyph": "機",
    "limit": 3,
@@ -13154,8 +13154,14 @@
    "effects": [
     {
      "kind": "tokenField",
-     "n": 2,
+     "n": 1,
      "card": "tk-chibi"
+    },
+    {
+     "kind": "player",
+     "act": "heal",
+     "who": "self",
+     "n": 1
     }
    ],
    "token": true,
@@ -13205,7 +13211,7 @@
    "name": "満ち潮の夜",
    "world": "fan",
    "type": "spell",
-   "cost": 4,
+   "cost": 5,
    "glyph": "幻",
    "limit": 0,
    "rarity": "legend",
