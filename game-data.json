@@ -1,5 +1,5 @@
 {
- "version": 251,
+ "version": 252,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -3358,6 +3358,16 @@
    "price": 10000,
    "art": "ui/alt/p3-m3-hotaru.webp",
    "card": "m3-hotaru",
+   "admin": true
+  },
+  {
+   "id": "p3-x3-orca",
+   "kind": "art",
+   "name": "蒼天の跳躍",
+   "desc": "蒼鋼の鯱オルカのパラレル（GPT）。",
+   "price": 10000,
+   "art": "ui/alt/p3-x3-orca.webp",
+   "card": "x3-orca",
    "admin": true
   }
  ],
