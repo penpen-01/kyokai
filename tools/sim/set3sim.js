@@ -22,6 +22,7 @@ const ONLY = process.env.ONLY;
   await p.goto('http://localhost:8765/index.html?draft');
   await p.waitForFunction(() => typeof CARDS !== 'undefined' && CARDS.length > 0);
   await p.addScriptTag({ content: fs.readFileSync(__dirname + '/harness.js', 'utf8') });
+  if (process.env.EVAL) await p.evaluate(process.env.EVAL);   // 試し用：カードの数字をその場で書き換える（例 EVAL='DEF["tk-j-tide"].effects[0].max=8'）
   if (process.env.GHASTE) await p.evaluate(() => { window.__haste = 1; });
   if (process.env.GBUFF) await p.evaluate(v => { window.__buff = v.split(',').map(Number); }, process.env.GBUFF);
   const out = await p.evaluate(([D3, n, level, withOld]) => {
