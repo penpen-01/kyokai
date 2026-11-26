@@ -1,5 +1,5 @@
 {
- "version": 249,
+ "version": 250,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -3339,16 +3339,6 @@
    "art": "ui/alt/p3-f3-nocto.webp",
    "admin": true,
    "card": "f3-nocto"
-  },
-  {
-   "id": "p3-m3-leviathan",
-   "kind": "art",
-   "name": "覇王の咆哮",
-   "desc": "海の覇王リヴァイアサンのパラレル（GPT）。",
-   "price": 10000,
-   "art": "ui/alt/p3-m3-leviathan.webp",
-   "admin": true,
-   "card": "m3-leviathan"
   }
  ],
  "sen": {
@@ -11192,7 +11182,8 @@
      "cond": "tribeGE",
      "cn": 1,
      "act": "dmg",
-     "to": "enemyAll"
+     "to": "enemyAll",
+     "ctribe": "beast"
     }
    ],
    "set": "3",

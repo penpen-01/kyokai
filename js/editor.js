@@ -396,7 +396,8 @@ function effCondHTML(e, i) {
     </select></label>
     ${cd && !cd.noN ? `<label class="eff-opt"><span>N</span>${stepper("cnd-" + i, e.cn ?? 1, `効果${i + 1}の条件の数値`)}</label>` : ""}
     ${cd && cd.world ? `<label class="eff-opt"><span>世界</span><select data-eff-opt="${i}" data-opt="cworld" id="ef-cworld-${i}"><option value="">すべて</option>${Object.entries(WORLDS).map(([k, v]) => `<option value="${k}" ${e.cworld === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}
-    ${EFFECTS[e.kind] && !effNoN(EFFECTS[e.kind], e) ? `<label class="eff-opt"><span>数を掛ける</span><select data-eff-per="${i}"><option value="">なし</option><option value="played" ${e.per === "played" ? "selected" : ""}>先に使ったカード1枚につき</option><option value="gear" ${e.per === "gear" ? "selected" : ""}>使った歯車1枚につき</option></select></label>` : ""}
+    ${EFFECTS[e.kind] && !effNoN(EFFECTS[e.kind], e) ? `<label class="eff-opt"><span>数を掛ける</span><select data-eff-per="${i}"><option value="">なし</option><option value="played" ${e.per === "played" ? "selected" : ""}>先に使ったカード1枚につき</option><option value="gear" ${e.per === "gear" ? "selected" : ""}>使った歯車1枚につき</option><option value="tribe" ${e.per === "tribe" ? "selected" : ""}>自分の場のほかの（種族の）キャラ1体につき（3体まで）</option>${e.per === "milledGhost" ? `<option value="milledGhost" selected>墓地へ送った亡霊1体につき</option>` : ""}</select></label>` : ""}
+    ${e.cond === "tribeGE" || e.per === "tribe" ? `<label class="eff-opt"><span>種族</span><select data-eff-opt="${i}" data-opt="ctribe" id="ef-ctribe-${i}"><option value="">選んでください</option>${Object.entries(TRIBES).map(([k, v]) => `<option value="${k}" ${e.ctribe === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>` : ""}
   </div>`;
 }
 function targetWarn(c) {
@@ -409,6 +410,7 @@ function targetWarn(c) {
     if (o.includes("token") && !e.card && !EFFECTS[e.kind].tokenOptional) msgs.push(`効果${i + 1}：出すトークンを選んでください。`);
     if ((o.includes("kw") || (e.kind === "unit" && e.act === "grant")) && !e.kw) msgs.push(`効果${i + 1}：与える能力を選んでください。`);
     if (e.kind === "merge" && (!e.card || !e.into)) msgs.push(`効果${i + 1}：合体の部品と、合体してできるキャラを選んでください。`);
+    if ((e.cond === "tribeGE" || e.per === "tribe") && !TRIBES[e.ctribe]) msgs.push(`効果${i + 1}：種族を選んでください（選ばないと発動しません）。`);
     if (e.kind === "unit" && e.act === "copy" && whenOf(e) !== "play" && e.to === "self") msgs.push(`効果${i + 1}：「このキャラ」を複製すると、同じキャラが増え続けることがあります。`);
   });
   if (c.pay && c.pay.kind === "sacrifice" && sides.includes("ownUnit")) msgs.push("代償でキャラを破壊するカードでは、「自分のキャラを選ぶ効果」は発動しません。");

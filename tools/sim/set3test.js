@@ -56,7 +56,7 @@ const { chromium } = require('playwright');
       ok('不壊：破壊されない', S.players[1].field.includes(sr)); hitUnit(sr, 7); cleanup(); ok('不壊：ダメージでは倒れる', !S.players[1].field.includes(sr));
       // 8. 岩殻
       fresh(); const gt = put(1, 'm3-gantetsu'); play(0, 'm3-trident', { enemy: gt.uid });
-      ok('岩殻：効果ダメージ0', gt.hp === 7); const at = put(0, 'f3-suiryu'); attack(0, at.uid, gt.uid); ok('岩殻：攻撃は通る', gt.hp === 1, gt.hp);
+      ok('岩殻：効果ダメージ0', gt.hp === 7); const at = put(0, 'f3-suiryu'); attack(0, at.uid, gt.uid); ok('岩殻：攻撃は通る', gt.hp === 7 - DEF['f3-suiryu'].atk, gt.hp);
       // 9. クラゲ魔法
       fresh(); let i = hand(0, 'tk-j-needle'); ok('クラゲ魔法：クラゲがいないと使えない', !canPlay(0, i).ok);
       S.players[0].hand = []; play(0, 'f3-komoriuta');
@@ -82,7 +82,7 @@ const { chromium } = require('playwright');
       // 13. 潜航と次元干渉ブイ
       fresh(); const nt = put(0, 'x3-nautilus'); put(1, 'x3-kanshou'); endTurn(0);
       ok('潜航：ターンの終わりに亜空間へ', !S.players[0].field.includes(nt) && voidOf(S.players[0]).length === 1);
-      endTurn(1); ok('戻ってきて、ブイの4ダメージ', S.players[0].field.includes(nt) && nt.hp === 3, nt.hp); ok('戻ったターンも攻撃できる', nt.ready);
+      endTurn(1); ok('戻ってきて、ブイのダメージ', S.players[0].field.includes(nt) && nt.hp === 7 - DEF['x3-kanshou'].effects[0].n, nt.hp); ok('戻ったターンも攻撃できる', nt.ready);
       S.players[1].field = []; endTurn(0); endTurn(1); endTurn(0); ok('潜航：3回目は潜らない', S.players[0].field.includes(nt) && nt.dives === 2, nt.dives);
       // 13b. 幽霊ドック：ターンの始めに亡霊を出して突進
       fresh(); put(0, 'x3-dock'); S.players[0].gy = ['m3-eirei', 'm3-centurion']; endTurn(0); endTurn(1);
@@ -105,8 +105,8 @@ const { chromium } = require('playwright');
       // 17. スカーレット・ボルグ・召喚歌
       fresh(); S.players[1].hand = ['x-gigas']; play(0, 'm3-scarlet');
       const gi = S.players[0].hand.indexOf('x-gigas');
-      ok('スカーレット：奪ってコスト-5', gi >= 0 && effCost(0, DEF['x-gigas'], gi) === Math.max(0, DEF['x-gigas'].cost - 5));
-      fresh(); S.players[1].hand = ['squire']; play(0, 'f3-borg'); ok('ボルグ：相手のカードのコスト+1', effCost(1, DEF.squire, 0) === DEF.squire.cost + 1);
+      ok('スカーレット：奪ってコストを下げる', gi >= 0 && effCost(0, DEF['x-gigas'], gi) === Math.max(0, DEF['x-gigas'].cost - DEF['m3-scarlet'].effects[0].n));
+      fresh(); S.players[1].hand = ['squire']; play(0, 'f3-borg'); ok('ボルグ：相手のカードのコストを上げる', effCost(1, DEF.squire, 0) === DEF.squire.cost + DEF['f3-borg'].effects[0].n);
       fresh(); S.players[0].hand = ['m3-leviathan', 'm3-siren']; put(1, 'squire'); play(0, 'm3-shoukan');
       const lv = S.players[0].field.find(u => u.id === 'm3-leviathan');
       ok('召喚歌：一番重い海獣を出して登場時効果', lv && S.players[1].field.length === 0 && S.players[0].hp === 15 && lv.frozen);
@@ -137,7 +137,7 @@ const { chromium } = require('playwright');
       ok('大行進：墓地の亡霊4体では使えない', !canPlay(0, i).ok); S.players[0].gy.push('x3-kirai'); ok('大行進：亡霊5体なら（亡霊でないキャラが場にいても）使える', canPlay(0, i).ok);
       // 24b. 11-25 の調整
       fresh(); put(0, 'f3-octa'); ok('オクタ：魔法すべて-2（0まで）', effCost(0, DEF['bolt'], 0) === 0 && effCost(0, DEF['m3-trident'], 0) === 1 && effCost(0, DEF['tk-j-tide'], 0) === 2 && effCost(0, DEF['squire'], 0) === DEF['squire'].cost);
-      fresh(); put(0, 'm3-aspido'); ok('アスピドケロン：手札の海獣-1', effCost(0, DEF['m3-leviathan'], 0) === 8 && effCost(0, DEF['m3-trident'], 0) === 3);
+      fresh(); put(0, 'm3-aspido'); ok('アスピドケロン：手札の海獣-1', effCost(0, DEF['m3-leviathan'], 0) === DEF['m3-leviathan'].cost - 1 && effCost(0, DEF['m3-trident'], 0) === DEF['m3-trident'].cost);
       fresh(); put(0, 'm3-kraken'); put(0, 'm3-scylla'); play(0, 'm3-hippo'); const hp = S.players[0].field.find(u => u.id === 'm3-hippo');
       ok('ヒッポ：ほかの海獣2体で+2/+2・突進', hp && hp.atk === 7 && hp.hp === 7 && kw(hp, 'rush'), hp && [hp.atk, hp.hp]);
       fresh(); const chb = put(0, 'tk-chibi'); S.players[0].jellyN = 2; chb.hp = 0; cleanup(); ok('ちびクラゲ：倒されると満ち潮の数+1', S.players[0].jellyN === 3, S.players[0].jellyN);
@@ -149,9 +149,9 @@ const { chromium } = require('playwright');
       fresh(); S.players[0].hand = ['squire', 'm3-eirei', 'garm']; S.players[0].deck = ['pegasus', 'archer', 'dragon']; play(0, 'm3-funauta');
       ok('舟唄：亡霊を選んで捨て、2枚引く', S.players[0].gy.includes('m3-eirei') && S.players[0].hand.length === 4, S.players[0].hand);
       fresh(); S.players[0].hand = ['m3-siren', 'm3-leviathan']; play(0, 'm3-harpoon');
-      ok('銛打ち：重い海獣のコスト-1', effCost(0, DEF['m3-leviathan'], 1) === 8);
+      ok('銛打ち：重い海獣のコスト-1', effCost(0, DEF['m3-leviathan'], 1) === DEF['m3-leviathan'].cost - 1);
       play(0, 'm3-harpoon'); const li = S.players[0].hand.indexOf('m3-leviathan');
-      ok('銛打ち2回目：同じ海獣がさらに-1', li >= 0 && effCost(0, DEF['m3-leviathan'], li) === 7, { hand: S.players[0].hand, cut: S.players[0].handCut });
+      ok('銛打ち2回目：同じ海獣がさらに-1', li >= 0 && effCost(0, DEF['m3-leviathan'], li) === DEF['m3-leviathan'].cost - 2, { hand: S.players[0].hand, cut: S.players[0].handCut });
       // 26. 亡霊に「攻撃されたとき」がない普通の攻撃で、反撃で倒れた亡霊も墓地へ
       fresh(); const gg = put(0, 'm3-centurion'); const big = put(1, 'x-gigas'); attack(0, gg.uid, big.uid);
       ok('亡霊：反撃で倒れても墓地へ（1枚だけ）', S.players[0].gy.filter(x => x === 'm3-centurion').length === 1);
