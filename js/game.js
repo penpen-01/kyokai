@@ -290,7 +290,7 @@ function doDig(i) {
    選ぶまで、その人は何もできない（Dig と同じ） */
 function reviveCands(pi, e) {
   const p = S.players[pi], each = e && e.n > 0 && e.n < 10 ? e.n : 99, tot = (e && e.total) || 99;
-  return gyChars(p).filter(id => isGhostCard(id) && DEF[id].cost <= each && DEF[id].cost <= tot);
+  return gyChars(p).filter(id => (e && e.any ? true : isGhostCard(id)) && (!e || !e.world || DEF[id].world === e.world) && DEF[id].cost <= each && DEF[id].cost <= tot);
 }
 /* 選んだ番号（sel）が決まりを守っているか */
 function pickOK(P, sel) {
@@ -389,7 +389,7 @@ const Pick = {
     const me = S.players[ME];
     const items = P.kind === "revive" ? P.ids.map(id => ({ id })) : P.kind === "hand" ? P.hand.map(x => { const i = me.hand[x.i] === x.id ? x.i : me.hand.indexOf(x.id); return { id: x.id, cost: DEF[x.id] && i >= 0 ? effCost(ME, DEF[x.id], i) : undefined }; }) : P.uids.map(uid => { const u = me.field.find(x => x.uid === uid); return { id: u ? u.id : "", u }; });
     const sum = P.kind === "revive" ? this.sel.reduce((a, i) => a + DEF[P.ids[i]].cost, 0) : 0;
-    const head = P.kind === "hand" ? ({ toss: `捨てるカードを${P.max > 1 ? P.max + "枚" : ""}選ぶ`, cutOne: "コストを下げるカードを選ぶ", cheat: "出すキャラを選ぶ" }[P.act] || "手札から選ぶ") : P.kind === "revive" ? (P.toHand ? `手札に戻すキャラを${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ` : `亡霊を${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ`) : "道連れにするキャラを選ぶ";
+    const head = P.kind === "hand" ? ({ toss: `捨てるカードを${P.max > 1 ? P.max + "枚" : ""}選ぶ`, cutOne: "コストを下げるカードを選ぶ", cheat: "出すキャラを選ぶ" }[P.act] || "手札から選ぶ") : P.kind === "revive" ? (P.toHand ? `手札に戻すキャラを${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ` : `${P.any ? "キャラ" : "亡霊"}を${P.max > 1 ? `${P.max}体まで` : "1体"}選ぶ`) : "道連れにするキャラを選ぶ";
     const sub = P.kind === "hand" ? `手札から${P.max || 1}枚（${this.sel.length} / ${P.max || 1}）` : P.kind === "revive" ? (P.toHand ? `墓地から手札に戻します（${this.sel.length} / ${P.max}体）` : `墓地から場に出します（${P.total ? `合計コスト ${sum} / ${P.total}` : `${this.sel.length} / ${P.max}体`}）`) : `${this.sel.length}体を選択中。同じ数の相手キャラがランダムに破壊されます`;
     this.el.innerHTML = `<div class="mullp-in">
       <div class="pg-title sm"><b>${esc(head)}</b></div>
@@ -780,6 +780,7 @@ function unitTargets(pi, e, targets, self) {
     // 同じカードに「相手キャラか相手プレイヤー」の効果もあると、選んだ対象は enemyF に入る（歯車式カタパルトなど）
     case "enemy1": { const t = targets.enemy != null ? targets.enemy : targets.enemyF; const u = en.field.find(x => x.uid === t && wf(x)); return u ? [u] : []; }
     case "enemy2": { const u = en.field.find(x => x.uid === targets.enemy2 && x.uid !== targets.enemy && wf(x)); return u ? [u] : []; }
+    case "enemyTop": { const L = en.field.filter(x => x.hp > 0 && wf(x)); if (!L.length) return []; const hi = Math.max(...L.map(x => x.atk)); return rnd(L.filter(x => x.atk === hi)); }
     case "enemyLow": { const L = en.field.filter(x => x.hp > 0 && wf(x)); if (!L.length) return []; const lo = Math.min(...L.map(x => DEF[x.id].cost)); return rnd(L.filter(x => DEF[x.id].cost === lo)); }
     case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self && wf(x)); return u ? [u] : []; }
     case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }
@@ -1178,10 +1179,10 @@ function effect(pi, e, targets, self) {
     }
     case "reviveSel": {
       const ids = reviveCands(pi, e), free = CONFIG.FIELD_MAX - me.field.length - voidOf(me).length;
-      if (!ids.length) { log("墓地に出せる亡霊がいなかった。"); break; }
+      if (!ids.length) { log(`墓地に出せる${e.any ? "キャラ" : "亡霊"}がいなかった。`); break; }
       if (free <= 0) { log("場に空いている場所がなく、出せなかった。"); break; }
       if (S.pick) break;
-      S.pick = { pi, kind: "revive", ids, max: Math.min(e.cnt || 1, free), total: e.total || 0, mod: e.mod || "" };
+      S.pick = { pi, kind: "revive", ids, max: Math.min(e.cnt || 1, free), total: e.total || 0, mod: e.mod || "", any: !!e.any };
       if (SIM || digAuto(pi)) resolvePick(pi, pickBest(pi), true);
       else log(`${pname(pi)}は墓地から出すキャラを選んでいる。`);
       break;
@@ -1221,7 +1222,7 @@ function effect(pi, e, targets, self) {
     }
     case "tideUp": { me.jellyN = (me.jellyN || 0) + n; log(`満ち潮の夜で数えるクラゲ魔法が${n}つ増えた（いま${me.jellyN}）。`); break; }
     case "tide": {
-      const k = Math.min(e.max || 15, n * (me.gy || []).filter(id => DEF[id] && DEF[id].tribe === "jelly").length);
+      const k = Math.min(e.max || 15, n * (me.gy || []).filter(id => DEF[id] && DEF[id].type === "char" && DEF[id].tribe === "jelly").length);
       if (!k) { log("墓地にクラゲがいないので、満ち潮は起きなかった。"); break; }
       boltFx(pi, self, [playerSel(opp(pi))]);
       log(`満ち潮！${pname(opp(pi))}に${k}ダメージ。`); hitPlayer(opp(pi), k);

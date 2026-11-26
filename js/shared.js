@@ -184,9 +184,9 @@ const EFFECTS = {
   reviveSel:   { group: "召喚", label: "自分の墓地の亡霊を選んで出す", text: (n, e) => reviveSelText(e) },
   graveHand:   { group: "墓地", label: "自分の墓地のキャラ（決めたカード）を選んで手札に戻す", text: (n, e) => e && e.card && cardRef(e.card) ? `自分の墓地の「${cardRef(e.card).name}」を1枚、手札に戻す。` : `自分の墓地のキャラを${n || 1}体選んで、手札に戻す。` },
   ward:        { group: "プレイヤー", label: "自分に結界を張る", text: () => "自分に【結界】を張る（次に自分が受けるダメージを1回だけ0にする。重ねて張れない）。", noN: true },
-  jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（${JELLY_POOL.map(id => `「${cardRef(id) ? cardRef(id).name : id}」${JELLY_W[id]}%`).join("・")}）。` },
+  jellyHand:   { group: "トークン", label: "クラゲ魔法をランダムに手札に加える", text: n => `「クラゲ魔法」をランダムに${n}枚手札に加える（${JELLY_POOL.map(id => `「${cardRef(id) ? cardRef(id).name : id}」`).join("")}のどれか）。` },
   tideUp:      { group: "トークン", label: "満ち潮の夜で数えるクラゲ魔法の数を増やす", text: n => `「満ち潮の夜」で数える、使ったクラゲ魔法の数を${n}増やす。` },
-  tide:        { group: "ダメージ", label: "満ち潮の夜（墓地のクラゲの数×N）", text: (n, e) => `自分の墓地の【クラゲ】のカード1枚につき${n}、相手プレイヤーにダメージ（最大${(e && e.max) || 15}）。` },
+  tide:        { group: "ダメージ", label: "満ち潮の夜（墓地のクラゲの数×N）", text: (n, e) => `自分の墓地の【クラゲ】のキャラ1体につき${n}、相手プレイヤーにダメージ（最大${(e && e.max) || 15}）。` },
   cutOne:      { group: "エナジー", label: "手札の（種族の）カード1枚のコストを下げる", text: (n, e) => `自分の手札の${e && e.tribe ? `【${TRIBES[e.tribe]}】の` : ""}${ctypeName(e)}を1枚選んで、そのコストを${n}下げる。` },
   handSteal:   { group: "妨害", label: "相手の手札をランダムに1枚奪う（コストを下げる）", text: n => `相手の手札からランダムに1枚を奪って手札に加え、そのカードのコストを${n}下げる。` },
   handTax:     { group: "妨害", label: "相手の手札を1枚見て、コストを上げる", text: n => `相手の手札をランダムに1枚見て、そのカードのコストを${n}上げる。` },
@@ -198,7 +198,7 @@ const EFFECTS = {
 function reviveSelText(e) {
   e = e || {};
   const cnt = e.cnt || 1, each = e.n && e.n < 10 ? `コスト${e.n}以下の` : "", tot = e.total ? `（合計コスト${e.total}以下）` : "";
-  const what = `自分の墓地の${each}【亡霊】のキャラ`;
+  const what = `自分の墓地の${each}${e.any ? (WORLDS[e.world] ? `${WORLDS[e.world]}の` : "") : "【亡霊】の"}キャラ`;
   const mod = e.mod === "rusty" ? "そのキャラは【亡霊】を失い、装甲1を得る。" : e.mod === "rush" ? "出したキャラは「突進」を得る。" : "";
   return `${what}を${cnt > 1 ? `${cnt}体まで` : "1体"}選んで、場に出す（${tot ? tot.slice(1, -1) + "。" : ""}登場時の効果は発動しない）。${mod}`;
 }
@@ -241,7 +241,8 @@ const UTOS = {
   self:      { label: "このキャラ", side: "own", charOnly: true },
   foe:       { label: "攻撃する相手キャラ（「キャラを攻撃するとき」だけ）", side: "enemy", charOnly: true },
   enemy2:    { label: "選んだ2体目の相手キャラ（1体目とちがうキャラ。「2体まで」）", role: "enemy2", side: "enemy" },
-  enemyLow:  { label: "元のコストが一番低い相手キャラ（同じならランダム）", side: "enemy" }
+  enemyLow:  { label: "元のコストが一番低い相手キャラ（同じならランダム）", side: "enemy" },
+  enemyTop:  { label: "攻撃力が一番高い相手キャラ（同じならランダム）", side: "enemy" }
 };
 /* 効果の対象の絞り込み（第3弾）：e.cmax＝元のコストの上限、e.tribe＝種族、e.kwf＝能力（亡霊など） */
 const filtNo = e => `${e && e.cmax != null ? `コスト${e.cmax}以下の` : ""}${worldNo(e)}${e && e.tribe && TRIBES[e.tribe] ? `【${TRIBES[e.tribe]}】の` : ""}${e && e.kwf && KEYWORDS[e.kwf] ? `【${KEYWORDS[e.kwf].label}】の` : ""}`;
@@ -258,7 +259,7 @@ function toPhrase(e, isChar, auto) {
   if (auto && to === "enemyF") return "ランダムな相手キャラ1体か相手プレイヤー";
   return {
     enemy1: w ? `相手の${w}キャラ1体` : "相手キャラ1体", own1: isChar ? `このキャラ以外の自分の${w}キャラ1体` : `自分の${w}キャラ1体`, any1: isChar ? `このキャラ以外の${w}キャラ1体（自分か相手）` : `${w}キャラ1体（自分か相手）`,
-    enemy2: w ? `もう1体の相手の${w}キャラ` : "もう1体の相手キャラ", enemyLow: `元のコストが一番低い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"),
+    enemy2: w ? `もう1体の相手の${w}キャラ` : "もう1体の相手キャラ", enemyLow: `元のコストが一番低い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"), enemyTop: `攻撃力が一番高い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"),
     foe: e.when === "attacked" ? "攻撃してきたキャラ" : e.when === "foeBack" ? "戻ってきたキャラ" : "攻撃する相手キャラ", enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
     enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
   }[to] || "（対象未設定）";
@@ -953,6 +954,7 @@ function normEffect(e, type) {
   if (TRIBES[e.plus]) { out.plus = e.plus; out.plusMax = Math.max(1, Math.min(9, Math.round(+e.plusMax || 2))); }   // 9＝上限なし
   if (e.per === "milledGhost") out.per = e.per;
   if (e.per === "tribe" && TRIBES[e.ctribe]) { out.per = "tribe"; out.ctribe = e.ctribe; out.perMax = Math.max(1, Math.min(9, Math.round(+e.perMax || 3))); }
+  if (e.kind === "reviveSel" && e.any) { out.any = true; if (WORLDS[e.world]) out.world = e.world; }
   if (e.kind === "reviveSel") { out.cnt = Math.max(1, Math.min(4, Math.round(+e.cnt || 1))); if (+e.total > 0) out.total = Math.min(40, Math.round(+e.total)); if (e.mod === "rusty" || e.mod === "rush") out.mod = e.mod; }
   if (e.kind === "dig" && e.rest === "grave") out.rest = "grave";
   if ((e.kind === "tutor" || e.kind === "graveHand") && e.card) out.card = String(e.card);   // 名前を決めて山札から持ってくる（セイレーン）

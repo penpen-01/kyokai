@@ -1,5 +1,5 @@
 {
- "version": 253,
+ "version": 254,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -10797,7 +10797,12 @@
    ],
    "set": "3",
    "tribe": "beast",
-   "art": "art/m3-scylla-4de39adbc7.webp"
+   "art": "art/m3-scylla-4de39adbc7.webp",
+   "aura": {
+    "kind": "stat",
+    "tribe": "beast",
+    "atk": 1
+   }
   },
   {
    "id": "m3-shoukan",
@@ -11256,15 +11261,9 @@
    "keywords": [],
    "effects": [
     {
-     "kind": "mill",
-     "n": 3
-    },
-    {
-     "kind": "player",
-     "n": 1,
-     "act": "draw",
-     "who": "self",
-     "cond": "milledGhost"
+     "kind": "reviveSel",
+     "n": 2,
+     "cnt": 1
     }
    ],
    "set": "3",
@@ -11481,7 +11480,7 @@
    "type": "char",
    "cost": 5,
    "atk": 3,
-   "hp": 4,
+   "hp": 5,
    "glyph": "幻",
    "limit": 3,
    "rarity": "ur",
@@ -11491,7 +11490,8 @@
      "kind": "reviveSel",
      "n": 10,
      "cnt": 2,
-     "total": 5
+     "total": 7,
+     "mod": "rush"
     }
    ],
    "set": "3",
@@ -12086,7 +12086,11 @@
     }
    ],
    "set": "3",
-   "art": "art/x3-haizai-6692a297f1.webp"
+   "art": "art/x3-haizai-6692a297f1.webp",
+   "pay": {
+    "kind": "life",
+    "n": 2
+   }
   },
   {
    "id": "x3-renketsu",
@@ -12215,9 +12219,10 @@
    "effects": [
     {
      "kind": "reviveSel",
-     "n": 10,
-     "cnt": 2,
-     "total": 5
+     "n": 5,
+     "cnt": 1,
+     "any": true,
+     "world": "mech"
     }
    ],
    "pay": {
@@ -12253,7 +12258,7 @@
      "n": 1,
      "when": "revived",
      "act": "destroy",
-     "to": "enemy1"
+     "to": "enemyTop"
     }
    ],
    "set": "3",
@@ -12308,26 +12313,21 @@
    "name": "蓄電クラゲ",
    "world": "mech",
    "type": "char",
-   "cost": 2,
+   "cost": 3,
    "atk": 2,
-   "hp": 2,
+   "hp": 3,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
    "keywords": [],
-   "effects": [
-    {
-     "kind": "unit",
-     "n": 2,
-     "when": "allyDeath",
-     "act": "dmg",
-     "to": "enemyRand",
-     "af": "jelly"
-    }
-   ],
+   "effects": [],
    "set": "3",
    "tribe": "jelly",
-   "art": "art/x3-chikuden-dd63c6ffab.webp"
+   "art": "art/x3-chikuden-dd63c6ffab.webp",
+   "aura": {
+    "kind": "cost",
+    "n": 1
+   }
   },
   {
    "id": "x3-baiyou",
@@ -12905,25 +12905,23 @@
   },
   {
    "id": "m3-gyojin",
-   "name": "魚人の兵",
+   "name": "魚人兵",
    "world": "myth",
    "type": "char",
-   "cost": 2,
-   "atk": 2,
-   "hp": 3,
+   "cost": 1,
+   "atk": 1,
+   "hp": 2,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
    "keywords": [],
    "effects": [
     {
-     "kind": "unit",
-     "n": 1,
-     "act": "both",
-     "to": "self",
-     "cond": "tribeGE",
-     "cn": 2,
-     "ctribe": "beast"
+     "kind": "tutor",
+     "n": 10,
+     "ctype": "char",
+     "tribe": "beast",
+     "when": "death"
     }
    ],
    "set": "3",

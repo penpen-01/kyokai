@@ -392,6 +392,8 @@ function effOptsHTML(e, i) {
   const allCards = (type) => DATA.cards.filter(c => !c.token && (!type || c.type === type)).map(c => [c.id, `${c.name}（${c.cost}）`]);
   if (e.kind === "reviveSel") {
     out.push(num("cnt", "出す体数（まで）", e.cnt || 1), num("total", "合計コストの上限（0＝なし）", e.total || 0));
+    out.push(sel("any", "出せるキャラ", [["", "亡霊だけ"], ["1", "どのキャラでも"]], e.any ? "1" : ""));
+    if (e.any) out.push(sel("world", "世界で絞る", [["", "すべて"], ...Object.entries(WORLDS)], e.world || ""));
     out.push(sel("mod", "出したキャラに", [["", "何もしない"], ["rush", "突進を与える"], ["rusty", "亡霊を消して装甲1"]], e.mod || ""));
   }
   if (e.kind === "tutor") out.push(sel("card", "名前を決める（選ぶと、そのカードだけ）", [["", "決めない"], ...allCards()], e.card || ""));
@@ -681,7 +683,7 @@ document.addEventListener("change", e => {
   }
   if (t.dataset.effOpt != null) {
     const c = curCard(), e = c.effects[+t.dataset.effOpt];
-    if (t.value) e[t.dataset.opt] = ["cap"].includes(t.dataset.opt) ? +t.value : t.value; else delete e[t.dataset.opt];
+    if (t.value) e[t.dataset.opt] = ["cap"].includes(t.dataset.opt) ? +t.value : t.dataset.opt === "any" ? true : t.value; else delete e[t.dataset.opt];
     if (t.dataset.opt === "plus" && t.value && !e.plusMax) e.plusMax = 2;
     if (e.kind === "unit") {
       // 何をするか・対象を変えたら、組み合わせを整える（normEffect と同じきまり）

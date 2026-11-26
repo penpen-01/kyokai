@@ -64,9 +64,9 @@ const { chromium } = require('playwright');
       put(1, 'squire'); S.players[0].hand = [];
       play(0, 'tk-j-cradle'); play(0, 'tk-j-flash');
       ok('使ったクラゲ魔法を数える', S.players[0].jellyN === 2);
-      { const jn = S.players[0].gy.filter(id => DEF[id] && DEF[id].tribe === 'jelly').length; const h0 = S.players[1].hp; play(0, 'tk-j-tide'); ok('満ち潮：墓地のクラゲの数だけダメージ', jn > 0 && h0 - S.players[1].hp === jn, { jn, d: h0 - S.players[1].hp }); }
+      { S.players[0].gy.push('f3-puka', 'tk-chibi'); const jn = S.players[0].gy.filter(id => DEF[id] && DEF[id].type === 'char' && DEF[id].tribe === 'jelly').length; const h0 = S.players[1].hp; play(0, 'tk-j-tide'); ok('満ち潮：墓地のクラゲの数だけダメージ', jn > 0 && h0 - S.players[1].hp === jn, { jn, d: h0 - S.players[1].hp }); }
       // 10. オクタ（コスト-2）・ノクトの力
-      fresh(); put(0, 'm3-aspido'); play(0, 'm3-gyojin'); const gj = S.players[0].field.find(u => u.id === 'm3-gyojin'); ok('魚人の兵：ほかの海獣がいれば+1/+1', gj && gj.atk === 3 && gj.hp === 4);
+      fresh(); S.players[0].deck = ['squire', 'm3-kraken']; const gj = put(0, 'm3-gyojin'); S.players[0].hand = []; gj.hp = 0; cleanup(); ok('魚人兵：倒されると山札から海獣', S.players[0].hand.includes('m3-kraken'), S.players[0].hand);
       fresh(); const ub = put(1, 'm3-umibouzu'); const ua = put(0, 'pegasus'); attack(0, ua.uid, ub.uid); ok('海坊主：攻撃してきたキャラを行動不能', ua.frozen || !S.players[0].field.includes(ua), { frozen: ua.frozen, hp: ua.hp });
       fresh(); put(0, 'f3-octa'); i = hand(0, 'tk-j-tide'); ok('オクタ：満ち潮が4→2', effCost(0, DEF['tk-j-tide'], i) === 2);
       i = hand(0, 'tk-j-needle'); ok('オクタ：0より下がらない', effCost(0, DEF['tk-j-needle'], i) === 0);
@@ -130,8 +130,10 @@ const { chromium } = require('playwright');
       fresh(); const sf = put(0, 'pegasus'); play(0, 'f3-naminori', { own: sf.uid }); attack(0, sf.uid, 'player');
       ok('波乗り：攻撃後に手札へ', !S.players[0].field.includes(sf) && S.players[0].hand.includes('pegasus'));
       // 23. 手招き（墓地へ・亡霊がいれば引く）
-      fresh(); S.players[0].deck = ['squire', 'm3-eirei', 'squire', 'squire']; const hn2 = S.players[0].hand.length; play(0, 'f3-temaneki');
-      ok('手招き：3枚墓地へ・亡霊がいたので1枚', S.players[0].gy.length >= 3 && S.players[0].hand.length === hn2 + 1, S.players[0].gy);
+      fresh(); S.players[0].gy = ['squire', 'm3-eirei', 'm3-suihei']; play(0, 'f3-temaneki');
+      ok('手招き：墓地のコスト2以下の亡霊を出す', S.players[0].field.some(u => u.id === 'm3-eirei') && !S.players[0].field.some(u => u.id === 'm3-suihei'), S.players[0].field.map(u => u.id));
+      fresh(); const sq = put(0, 'squire'); S.players[0].gy = ['m3-eirei', 'x-gigas', 'x3-sabineji']; play(0, 'x3-kinkyu', { sacrifice: sq.uid }); ok('緊急再起動：墓地の機械（コスト5以下）を出す', S.players[0].field.some(u => DEF[u.id].world === 'mech' && DEF[u.id].cost <= 5) && !S.players[0].field.some(u => u.id === 'm3-eirei'), S.players[0].field.map(u => u.id));
+      fresh(); put(1, 'squire'); const bigS = put(1, 'dragon'); S.players[0].gy = ['x3-senkan']; play(0, 'f3-grave'); ok('幽霊戦艦：戻ると攻撃力が一番高い相手を破壊', !S.players[1].field.includes(bigS));
       // 24. 大行進の条件
       fresh(); put(0, 'f3-grave'); S.players[0].gy = ['squire', 'squire', 'squire', 'squire', 'm3-eirei', 'm3-suihei', 'f3-nakimushi', 'x3-sabineji']; i = hand(0, 'f3-daikoushin');
       ok('大行進：墓地の亡霊4体では使えない', !canPlay(0, i).ok); S.players[0].gy.push('x3-kirai'); ok('大行進：亡霊5体なら（亡霊でないキャラが場にいても）使える', canPlay(0, i).ok);
@@ -139,7 +141,7 @@ const { chromium } = require('playwright');
       fresh(); put(0, 'f3-octa'); ok('オクタ：魔法すべて-2（0まで）', effCost(0, DEF['bolt'], 0) === 0 && effCost(0, DEF['m3-trident'], 0) === 1 && effCost(0, DEF['tk-j-tide'], 0) === 2 && effCost(0, DEF['squire'], 0) === DEF['squire'].cost);
       fresh(); put(0, 'm3-aspido'); ok('アスピドケロン：手札の海獣-1', effCost(0, DEF['m3-leviathan'], 0) === DEF['m3-leviathan'].cost - DEF['m3-aspido'].aura.n && effCost(0, DEF['m3-trident'], 0) === DEF['m3-trident'].cost);
       fresh(); put(0, 'm3-kraken'); put(0, 'm3-scylla'); play(0, 'm3-hippo'); const hp = S.players[0].field.find(u => u.id === 'm3-hippo');
-      ok('ヒッポ：ほかの海獣2体で+2/+2・突進', hp && hp.atk === 7 && hp.hp === 7 && kw(hp, 'rush'), hp && [hp.atk, hp.hp]);
+      ok('ヒッポ：ほかの海獣2体で+2/+2（スキュラで攻撃+1）', hp && hp.atk === 8 && hp.hp === 7, hp && [hp.atk, hp.hp]);
       fresh(); const chb = put(0, 'tk-chibi'); chb.hp = 0; cleanup(); ok('ちびクラゲ：倒されると墓地へ（満ち潮で数える）', S.players[0].gy.includes('tk-chibi'));
       fresh(); put(0, 'tk-chibi'); const fz = put(1, 'squire'); fz.hp = 5; play(0, 'tk-j-flash'); ok('青い閃光：全体1ダメージ＋行動不能', fz.hp === 4 && (fz.frozen || fz.ready === false));
       fresh(); S.players[0].gy = ['m3-eirei']; play(0, 'm3-centurion'); ok('百人隊長：登場時に亡霊を出す', S.players[0].field.some(u => u.id === 'm3-eirei'));
