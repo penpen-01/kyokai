@@ -418,10 +418,12 @@ const Decks = {
     this.renderEdit();
   },
 
+  /* 組む画面に並べるカード：サンプルデッキだけ、まだ開放していない第3弾も（sampleShown）。ほかのデッキはこれまでどおり */
+  shownFor(ed) { return ed && ed.free && this.sampleOK() ? sampleShown : cardShown; },
   poolCards() {
     const f = this.filter, q = f.q.trim(), ed = this.editing;
     const unb = this.unbound(ed);
-    return CARDS.filter(c => c.limit > 0 && cardShown(c))
+    return CARDS.filter(c => c.limit > 0 && this.shownFor(ed)(c))
       .filter(c => CardFilter.match(c, f))
       .filter(c => !this.isWorld(ed) || c.world === ed.world)
       .filter(c => !f.owned || unb || this.owned(c.id) > 0)
@@ -516,7 +518,7 @@ const Decks = {
   filterPopHTML() {
     const ed = this.editing, f = this.filter, unb = this.unbound(ed), n = this.poolCards().length;
     return `<input class="otxt dsearch" id="deck-q" type="search" placeholder="名前や効果で検索（例：守護）" value="${esc(f.q)}" autocomplete="off">
-      ${CardFilter.rowsHTML(f, "deckFilter", CARDS.filter(c => c.limit > 0 && cardShown(c)), this.filterSkip())}
+      ${CardFilter.rowsHTML(f, "deckFilter", CARDS.filter(c => c.limit > 0 && this.shownFor(ed)(c)), this.filterSkip())}
       ${unb ? "" : `<label class="ownchk"><input type="checkbox" id="deck-owned" ${f.owned ? "checked" : ""}> 持っているカードだけ</label>`}
       <div class="dfp-foot">
         <button type="button" class="btn sm" data-act="deckFilterReset" ${this.filterCount() ? "" : "disabled"}>解除</button>
