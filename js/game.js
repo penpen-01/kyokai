@@ -449,6 +449,7 @@ function endTurn(pi) {
   if (S.dig && S.dig.pi === pi) resolveDig(pi, digBest(pi, S.dig.ids));   // 時間切れなど：選ばずに終わったら、自動で選ぶ
   if (S.pick && S.pick.pi === pi) resolvePick(pi, S.pick.kind === "revive" ? pickBest(pi) : [], true);
   if (pi === ME) ui = { sel: null, mode: null };
+  S.players[pi].discountT = 0;   // 「このターンだけ」のコスト低下は持ち越さない
   S.players[pi].field.forEach(u => {
     if (kw(u, "regen") && u.hp > 0 && u.hp < u.maxHp) { fx(unitSel(u.uid), "+" + (u.maxHp - u.hp), "heal"); u.hp = u.maxHp; log(`${cname(u.id)}は再生した。`); }
     if (kw(u, "doom")) { if (u.doomArmed) { log(`${cname(u.id)}は死の宣告で破壊された。`); destroyUnit(u); } else u.doomArmed = true; }
@@ -572,7 +573,7 @@ function roleAllows(pi, role, owner, u, d) {
 function handCutAt(p, idx) { return idx == null ? 0 : ((p.handCut || [])[idx] || 0) + ((p.handCutT || [])[idx] || 0); }
 function effCost(pi, d, idx) {
   const p = S.players[pi];
-  return Math.max(0, d.cost - (p.discount || 0) - handCutAt(p, idx) - auraCut(pi, d));
+  return Math.max(0, d.cost - (p.discount || 0) - (p.discountT || 0) - handCutAt(p, idx) - auraCut(pi, d));
 }
 /* 場にいる間コストを下げる力（card.aura.kind="cost"）：tribe＝手札のその種族のキャラ（アスピドケロン）、spell＝魔法すべて、どちらもなし＝クラゲ魔法（オクタ） */
 function auraCut(pi, d) {
@@ -700,7 +701,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   handTake(p, idx);
   p.e -= cost;
   p.played = (p.played || 0) + 1;   // このターンに使ったカードの数（コンボの条件）
-  p.discount = 0;
+  p.discount = 0; p.discountT = 0;
   const tnames = roles.filter(r => !["sacrifice", "push", "pushFx"].includes(r)).map(r => { if (targets[r] === "face") return pname(opp(pi)); const u = findUnit(targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
   log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
   sfx("play");
@@ -740,7 +741,8 @@ function playCard(pi, idx, targetsIn, useGear) {
   trigUnits(pi, "cardPlay", self, { card: id });
   // 手札で小さくなるカード：使ったカードの世界・種類が合えば、手札にある間ずっとコストが下がる
   p.hand.forEach((hid, i) => { const h = DEF[hid], k = h && h.shrink;
-    if (k && (!k.world || k.world === d.world) && (!k.ctype || k.ctype === d.type)) { (p.handCut || (p.handCut = []))[i] = ((p.handCut[i]) || 0) + k.n; }
+    // k.card：そのカード（狐火など）を使ったときだけ
+    if (k && (!k.card || k.card === id) && (!k.world || k.world === d.world) && (!k.ctype || k.ctype === d.type)) { (p.handCut || (p.handCut = []))[i] = ((p.handCut[i]) || 0) + k.n; }
     const g = h && h.grow;
     if (g && (!g.world || g.world === d.world) && (!g.ctype || g.ctype === d.type)) { (p.handGrow || (p.handGrow = []))[i] = ((p.handGrow[i]) || 0) + g.n; } });
   cleanup();
@@ -1184,7 +1186,9 @@ function effect(pi, e, targets, self) {
       log(`${cname(pick.id)}が復活した！`);
       break;
     }
-    case "discount": me.discount = (me.discount || 0) + n; log(`${pname(pi)}の次のカードのコストが${n}下がる。`); break;
+    case "discount":   // e.turn：このターンだけ（使わずにターンを終えると消える。妖精の囁き 2026-11-27 案）
+      if (e.turn) me.discountT = (me.discountT || 0) + n; else me.discount = (me.discount || 0) + n;
+      log(`${pname(pi)}の${e.turn ? "このターンの" : ""}次のカードのコストが${n}下がる。`); break;
     /* ---------- 第3弾 ---------- */
     case "toss": case "cutOne": case "cheat": {   // 自分の手札から1枚選ぶ（捨てる・コストを下げる・無料で出す）
       if (e.kind === "cheat" && fieldFull(me)) { log("場に空いている場所がなかった。"); break; }

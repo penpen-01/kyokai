@@ -153,7 +153,7 @@ const EFFECTS = {
   healUnits:   { legacy: true, group: "回復",   label: "自分のキャラ全体を回復",        text: n => `自分のキャラ全体の体力を${n}回復する。` },
   ramp:        { group: "エナジー", label: "エナジー最大値を増やす",      text: n => `エナジーの最大値を${n}増やす（上限まで）。` },
   energyNow:   { group: "エナジー", label: "このターンのエナジーを増やす", text: n => `このターンだけ、エナジーを${n}得る。` },
-  discount:    { group: "エナジー", label: "次に使うカードのコストを下げる", text: n => `次に使うカード1枚のコストを${n}下げる。` },
+  discount:    { group: "エナジー", label: "次に使うカードのコストを下げる", text: (n, e) => e && e.turn ? `このターン中に次に使うカード1枚のコストを${n}下げる。` : `次に使うカード1枚のコストを${n}下げる。` },
   summon:      { group: "召喚",   label: "山札からキャラを無料で出す",    text: (n, e) => `山札から${costRange(n, e, true)}キャラをランダムに1体、コストを払わずに出す。`, opts: ["cmin"] },
   buffSelfAtk: { legacy: true, group: "このキャラ", label: "このキャラの攻撃力を上げる", text: n => `このキャラの攻撃力を+${n}する。`, self: true },
   buffSelfBoth:{ legacy: true, group: "このキャラ", label: "このキャラを+N/+N",          text: n => `このキャラを+${n}/+${n}する。`, self: true },
@@ -584,7 +584,7 @@ function cardTextLines(card, o = {}) {
     if (card.armor) lines.push(ARMOR_TEXT(card.armor));
   }
   if (card.pay && PAYS[card.pay.kind]) lines.push(PAYS[card.pay.kind].text(card.pay.n));
-  const useWhat = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
+  const useWhat = k => k.card ? `「${(typeof DEF !== "undefined" && DEF[k.card] && DEF[k.card].name) || k.card}」` : `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
   if (card.req) lines.unshift(reqText(card.req) + "。");
   if (card.sway) lines.push(`使ったとき、次のどれかになる（ランダム）：${card.sway.map(id => { const c = cardRef(id); return c ? `「${c.name}」${effectsText(c, null, true)}` : "？"; }).join("／")}`);
   if (card.aura) lines.push(auraText(card.aura));
@@ -626,7 +626,7 @@ function cardText(card) {
 }
 /* 画面に出す説明文（HTML）。出てくるトークンの名前は青い文字にして、タップでトークンの絵と効果を見られる */
 /* 能力（キーワード）の一覧：{ label：札に出す短い名前, text：くわしい説明 } */
-const useWhatOf = k => `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
+const useWhatOf = k => k.card ? `${(typeof DEF !== "undefined" && DEF[k.card] && DEF[k.card].name) || k.card}` : `${k.world ? WORLDS[k.world] + "の" : ""}${k.ctype === "spell" ? "魔法" : k.ctype === "char" ? "キャラ" : "カード"}`;
 function kwItems(card) {
   const out = [];
   if (card.type === "char") {
@@ -969,6 +969,7 @@ function normEffect(e, type) {
   if (e.kind === "tokenHand" && e.free) out.free = true;          // コスト0にして加える（バルバ）
   if (+e.rep > 1) out.rep = Math.min(9, Math.round(+e.rep));   // N回くり返す
   if (e.kind === "tide" && +e.max > 0) out.max = Math.min(40, Math.round(+e.max));
+  if (e.kind === "discount" && e.turn) out.turn = true;   // このターンだけ（妖精の囁き）
   if (e.kind === "cutOne" && TYPES[e.ctype]) out.ctype = e.ctype;
   return out;
 }
@@ -1005,7 +1006,7 @@ function normalizeData(data) {
     ...(Array.isArray(c.sway) && c.sway.length ? { sway: c.sway.filter(x => typeof x === "string" && x).slice(0, 5) } : {}),
     ...(c.grow ? { grow: { n: 1, ...(WORLDS[c.grow.world] ? { world: c.grow.world } : {}), ...(["char", "spell"].includes(c.grow.ctype) ? { ctype: c.grow.ctype } : {}),
       ...(c.grow.stat || c.grow.dmg || c.grow.num ? { stat: !!c.grow.stat, dmg: !!c.grow.dmg, num: !!c.grow.num } : c.type === "spell" ? { stat: false, dmg: true, num: false } : { stat: true, dmg: false, num: false }) } } : {}),
-    ...(c.shrink ? { shrink: { n: 1, ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}) } } : {}),
+    ...(c.shrink ? { shrink: { n: 1, ...(WORLDS[c.shrink.world] ? { world: c.shrink.world } : {}), ...(["char", "spell"].includes(c.shrink.ctype) ? { ctype: c.shrink.ctype } : {}), ...(c.shrink.card ? { card: String(c.shrink.card) } : {}) } } : {}),
     // 歯車を使う：数（使ってもよい枚数）か "all"（すべて使う）
     ...(c.gear === "all" ? { gear: "all" } : +c.gear > 0 ? { gear: Math.min(20, Math.round(+c.gear)) } : {}),
     effects: Array.isArray(c.effects) ? c.effects.filter(e => EFFECTS[e.kind]).map(e => normEffect(e, c.type)) : [],
