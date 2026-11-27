@@ -201,6 +201,35 @@
    "art": "art/tk-foxfire-6c140255e3.webp"
   },
   {
+   "id": "f2-bakefox",
+   "name": "化け狐",
+   "world": "fan",
+   "type": "char",
+   "cost": 2,
+   "atk": 1,
+   "hp": 1,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-leaf",
+     "cond": "playedGE",
+     "cn": 1
+    },
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-foxfire"
+    }
+   ],
+   "set": "2-3",
+   "art": "art/f2-bakefox-a4e371c8ad.webp"
+  },
+  {
    "id": "f2-tamamo",
    "name": "白面九尾タマモ",
    "world": "fan",

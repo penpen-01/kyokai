@@ -26,6 +26,10 @@ const { chromium } = require('playwright'); const fs = require('fs'), path = req
     ok('狐火：相手キャラに当たり、相手プレイヤーには当たらない', S.players[1].hp === h0 && sq.hp === g0 - 1, [S.players[1].hp, sq.hp]);
     fresh(); hand(0, 'f2-tamamo'); i = hand(0, 'tk-foxfire'); const ok1 = canPlay(0, i).ok, hp1 = S.players[1].hp; playCard(0, i, {});
     ok('狐火：相手の場が空でも使えて（当たらない）、化かしは下がる', ok1 && S.players[1].hp === hp1 && effCost(0, DEF['f2-tamamo'], 0) === 11);
+    // 化け狐：化け葉は詠唱1のときだけ
+    fresh(); i = hand(0, 'f2-bakefox'); playCard(0, i, {}); const h1 = S.players[0].hand.slice();
+    fresh(); i = hand(0, 'f-whisper'); playCard(0, i, {}); i = S.players[0].hand.length; hand(0, 'f2-bakefox'); playCard(0, S.players[0].hand.indexOf('f2-bakefox'), {}); const h2 = S.players[0].hand.slice();
+    ok('化け狐：最初の1枚なら狐火だけ、先に1枚使えば化け葉も', h1.includes('tk-foxfire') && !h1.includes('tk-leaf') && h2.includes('tk-foxfire') && h2.includes('tk-leaf'), [h1, h2]);
     // タマモ：登場時のダメージなし
     fresh(); for (let k = 0; k < 3; k++) { const u = addUnit(1, 'squire'); u.born = 0; } S.players[0].played = 5; i = hand(0, 'f2-tamamo'); playCard(0, i, {}); cleanup();
     ok('タマモ：登場時に相手キャラへダメージを与えない', S.players[1].field.length === 3 && S.players[1].field.every(u => u.hp === DEF.squire.hp));

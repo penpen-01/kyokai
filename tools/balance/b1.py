@@ -38,6 +38,9 @@ def main():
     # 狐火：キャラにだけダメージ（相手プレイヤーには当たらない）。化かしは幻想の魔法のまま（11-27 試しで「狐火だけ」はやりすぎ）
     for e in C[FOX]['effects']:
         if e.get('kind') == 'unit' and e.get('act') == 'dmg' and e.get('to') == 'enemyRandF': e['to'] = 'enemyRand'; log.append('狐火：キャラにだけダメージ（相手プレイヤーには当たらない）')
+    # 化け狐：化け葉を持ってくるのは「詠唱1（このカードより先に1枚使っていれば）」のときだけ。狐火はいつも
+    for e in C['f2-bakefox']['effects']:
+        if e.get('kind') == 'tokenHand' and e.get('card') == 'tk-leaf' and e.get('cond') != 'playedGE': e['cond'] = 'playedGE'; e['cn'] = 1; log.append('化け狐：化け葉は詠唱1のときだけ')
     if PREVIEW:
         changed = [c for cid, c in C.items() if json.dumps(c, ensure_ascii=False, sort_keys=True) != orig[cid]]
         open('preview.json', 'w', encoding='utf-8').write(json.dumps({'label': '第1回の調整', 'cards': changed}, ensure_ascii=False, indent=1) + '\n')
