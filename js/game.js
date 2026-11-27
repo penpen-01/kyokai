@@ -781,6 +781,7 @@ function unitTargets(pi, e, targets, self) {
     case "enemy1": { const t = targets.enemy != null ? targets.enemy : targets.enemyF; const u = en.field.find(x => x.uid === t && wf(x)); return u ? [u] : []; }
     case "enemy2": { const u = en.field.find(x => x.uid === targets.enemy2 && x.uid !== targets.enemy && wf(x)); return u ? [u] : []; }
     case "enemyTop": { const L = en.field.filter(x => x.hp > 0 && wf(x)); if (!L.length) return []; const hi = Math.max(...L.map(x => x.atk)); return rnd(L.filter(x => x.atk === hi)); }
+    case "enemyTough": { const L = en.field.filter(x => x.hp > 0 && wf(x)); if (!L.length) return []; const hi = Math.max(...L.map(x => x.hp)); return rnd(L.filter(x => x.hp === hi)); }   // 今の体力が一番高い（オルカ）
     case "enemyLow": { const L = en.field.filter(x => x.hp > 0 && wf(x)); if (!L.length) return []; const lo = Math.min(...L.map(x => DEF[x.id].cost)); return rnd(L.filter(x => DEF[x.id].cost === lo)); }
     case "own1": { const u = me.field.find(x => x.uid === targets.own && x !== self && wf(x)); return u ? [u] : []; }
     case "any1": { const u = findUnit(targets.any); return u && u !== self && wf(u) ? [u] : []; }

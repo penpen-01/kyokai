@@ -1,5 +1,5 @@
 {
- "version": 259,
+ "version": 260,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -12620,7 +12620,7 @@
    "type": "char",
    "cost": 4,
    "atk": 3,
-   "hp": 3,
+   "hp": 2,
    "glyph": "機",
    "limit": 3,
    "rarity": "legend",
@@ -12630,14 +12630,12 @@
      "kind": "unit",
      "n": 1,
      "act": "destroy",
-     "to": "enemy1",
-     "cmax": 4
+     "to": "enemyTough"
     }
    ],
    "set": "3",
    "aura": {
     "kind": "stat",
-    "world": "mech",
     "atk": 1
    },
    "art": "art/x3-orca-fa6998a191.webp"

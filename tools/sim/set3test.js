@@ -96,6 +96,14 @@ const { chromium } = require('playwright');
       fresh(); const a1 = put(0, 'm3-eirei'), a2 = put(0, 'squire'); put(1, 'x-gigas'); put(1, 'garm'); put(1, 'dragon');
       play(0, 'f3-michizure');
       ok('道連れ：選ばずに自分の2体をすべて壊して相手も2体', !S.pick && S.players[0].field.length === 0 && S.players[1].field.length === 1, S.players[1].field.map(u => u.id));
+      // 14b. オルカ：体力が一番高い相手キャラを破壊。場にいる間、ほかの味方の攻撃+1（倒されると消える）
+      fresh(); { const mate = put(0, 'squire'), a0 = mate.atk; const t1 = put(1, 'squire'), t2 = put(1, 'x-gigas'); t2.hp = 3; const t3 = put(1, 'garm');
+        const hiHp = Math.max(t1.hp, t2.hp, t3.hp), want = [t1, t2, t3].filter(u => u.hp === hiHp).map(u => u.uid);
+        play(0, 'x3-orca'); cleanup(); const oc = S.players[0].field.find(u => u.id === 'x3-orca');
+        ok('オルカ：今の体力が一番高い相手を破壊', S.players[1].field.length === 2 && !S.players[1].field.some(u => want.includes(u.uid)), S.players[1].field.map(u => [u.id, u.hp]));
+        ok('オルカ：ほかの味方の攻撃+1（自分は上がらない）', mate.atk === a0 + 1 && oc.atk === DEF['x3-orca'].atk, [mate.atk, oc.atk]);
+        oc.hp = 0; cleanup(); ok('オルカ：倒されると+1が消える', mate.atk === a0, mate.atk);
+        ok('オルカ：文', cardText(DEF['x3-orca']).includes('体力が一番高い相手キャラ'), cardText(DEF['x3-orca'])); }
       // 15. 天秤
       fresh(); put(0, 'squire'); put(0, 'x-gigas'); put(1, 'garm'); put(1, 'squire'); play(0, 'm3-tenbin');
       ok('天秤：両方の一番高いキャラ', !S.players[0].field.some(u => u.id === 'x-gigas') && !S.players[1].field.some(u => u.id === 'garm'));

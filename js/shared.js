@@ -245,7 +245,8 @@ const UTOS = {
   foe:       { label: "攻撃する相手キャラ（「キャラを攻撃するとき」だけ）", side: "enemy", charOnly: true },
   enemy2:    { label: "選んだ2体目の相手キャラ（1体目とちがうキャラ。「2体まで」）", role: "enemy2", side: "enemy" },
   enemyLow:  { label: "元のコストが一番低い相手キャラ（同じならランダム）", side: "enemy" },
-  enemyTop:  { label: "攻撃力が一番高い相手キャラ（同じならランダム）", side: "enemy" }
+  enemyTop:  { label: "攻撃力が一番高い相手キャラ（同じならランダム）", side: "enemy" },
+  enemyTough:{ label: "体力が一番高い相手キャラ（今の体力。同じならランダム）", side: "enemy" }
 };
 /* 効果の対象の絞り込み（第3弾）：e.cmax＝元のコストの上限、e.tribe＝種族、e.kwf＝能力（亡霊など） */
 const filtNo = e => `${e && e.cmax != null ? `コスト${e.cmax}以下の` : ""}${worldNo(e)}${e && e.tribe && TRIBES[e.tribe] ? `【${TRIBES[e.tribe]}】の` : ""}${e && e.kwf && KEYWORDS[e.kwf] ? `【${KEYWORDS[e.kwf].label}】の` : ""}`;
@@ -262,7 +263,7 @@ function toPhrase(e, isChar, auto) {
   if (auto && to === "enemyF") return "ランダムな相手キャラ1体か相手プレイヤー";
   return {
     enemy1: w ? `相手の${w}キャラ1体` : "相手キャラ1体", own1: isChar ? `このキャラ以外の自分の${w}キャラ1体` : `自分の${w}キャラ1体`, any1: isChar ? `このキャラ以外の${w}キャラ1体（自分か相手）` : `${w}キャラ1体（自分か相手）`,
-    enemy2: w ? `もう1体の相手の${w}キャラ` : "もう1体の相手キャラ", enemyLow: `元のコストが一番低い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"), enemyTop: `攻撃力が一番高い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"),
+    enemy2: w ? `もう1体の相手の${w}キャラ` : "もう1体の相手キャラ", enemyLow: `元のコストが一番低い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"), enemyTop: `攻撃力が一番高い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"), enemyTough: `体力が一番高い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"),
     foe: e.when === "attacked" ? "攻撃してきたキャラ" : e.when === "foeBack" ? "戻ってきたキャラ" : "攻撃する相手キャラ", enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
     enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
   }[to] || "（対象未設定）";
