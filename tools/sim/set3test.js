@@ -122,6 +122,8 @@ const { chromium } = require('playwright');
       // 14f. 召喚歌で出したキャラは、非常電源で解除できない
       fresh(); S.players[0].hand = ['m3-leviathan']; play(0, 'm3-shoukan'); { const lv = S.players[0].field.find(u => u.id === 'm3-leviathan'); play(0, 'm2-reboot');
         ok('召喚歌：非常電源で解除できない', lv && lv.frozen && !lv.ready); endTurn(0); endTurn(1); ok('召喚歌：次の自分のターンも攻撃できない', lv && !lv.ready); endTurn(0); endTurn(1); ok('召喚歌：その次のターンから攻撃できる', lv && lv.ready && !lv.noThaw); }
+      // 14g. シーサーペント：自分のターンの始めに攻撃力+2
+      fresh(); { const sp = put(0, 'm3-serpent'); const a0 = sp.atk; endTurn(0); endTurn(1); ok('シーサーペント：ターンの始めに攻撃力+2', sp.atk === a0 + 2, sp.atk); ok('シーサーペント：文', cardText(DEF['m3-serpent']).includes('攻撃力を+2'), cardText(DEF['m3-serpent'])); }
       // 15. 天秤
       fresh(); put(0, 'squire'); put(0, 'x-gigas'); put(1, 'garm'); put(1, 'squire'); play(0, 'm3-tenbin');
       ok('天秤：両方の一番高いキャラ', !S.players[0].field.some(u => u.id === 'x-gigas') && !S.players[1].field.some(u => u.id === 'garm'));

@@ -1,5 +1,5 @@
 {
- "version": 262,
+ "version": 263,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -12968,7 +12968,7 @@
    "type": "char",
    "cost": 7,
    "atk": 7,
-   "hp": 8,
+   "hp": 4,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
@@ -12976,12 +12976,10 @@
    "effects": [
     {
      "kind": "unit",
-     "n": 1,
-     "act": "both",
-     "to": "self",
-     "cond": "tribeGE",
-     "cn": 2,
-     "ctribe": "beast"
+     "n": 2,
+     "when": "turnStart",
+     "act": "atk",
+     "to": "self"
     }
    ],
    "set": "3",
