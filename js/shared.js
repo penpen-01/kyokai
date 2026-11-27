@@ -236,6 +236,7 @@ const UTOS = {
   enemyF:    { label: "選んだ相手（キャラか相手プレイヤー）", role: "enemyF", side: "enemy", faceOnly: true },
   enemyRand: { label: "ランダムな相手キャラ", side: "enemy" },
   enemyRandF:{ label: "ランダムな相手（キャラか相手プレイヤー）", side: "enemy" },
+  enemyRandFC:{ label: "ランダムな相手キャラ（いなければ相手プレイヤー）", side: "enemy" },
   anyRand:   { label: "このキャラ以外のランダムなキャラ（自分か相手）" },
   ownRand:   { label: "ランダムな自分のキャラ", side: "own" },
   enemyAll:  { label: "相手キャラ全体", side: "enemy", world: true },
@@ -264,7 +265,7 @@ function toPhrase(e, isChar, auto) {
   return {
     enemy1: w ? `相手の${w}キャラ1体` : "相手キャラ1体", own1: isChar ? `このキャラ以外の自分の${w}キャラ1体` : `自分の${w}キャラ1体`, any1: isChar ? `このキャラ以外の${w}キャラ1体（自分か相手）` : `${w}キャラ1体（自分か相手）`,
     enemy2: w ? `もう1体の相手の${w}キャラ` : "もう1体の相手キャラ", enemyLow: `元のコストが一番低い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"), enemyTop: `攻撃力が一番高い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"), enemyTough: `体力が一番高い相手の${w}キャラ1体`.replace("相手のキャラ", "相手キャラ"),
-    foe: e.when === "attacked" ? "攻撃してきたキャラ" : e.when === "foeBack" ? "戻ってきたキャラ" : "攻撃する相手キャラ", enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
+    foe: e.when === "attacked" ? "攻撃してきたキャラ" : e.when === "foeBack" ? "戻ってきたキャラ" : "攻撃する相手キャラ", enemyF: "相手キャラ1体か相手プレイヤー", enemyRand: "ランダムな相手キャラ1体", enemyRandF: "ランダムな相手キャラ1体か相手プレイヤー", enemyRandFC: "ランダムな相手キャラ1体（いなければ相手プレイヤー）", anyRand: isChar ? "このキャラ以外のランダムなキャラ1体（自分か相手）" : "ランダムなキャラ1体（自分か相手）", ownRand: isChar ? "このキャラ以外のランダムな自分のキャラ1体" : "ランダムな自分のキャラ1体",
     enemyAll: `相手の${w}キャラ全体`.replace("相手のキャラ全体", "相手キャラ全体"), ownAll: `自分の${w}キャラ全体`, all: w ? `すべての${w}キャラ（自分のキャラも含む）` : "すべてのキャラ（自分のキャラも含む）", self: "このキャラ"
   }[to] || "（対象未設定）";
 }
@@ -617,7 +618,7 @@ function cardTextLines(card, o = {}) {
     if (eff) lines.push(eff);
   }
   // 0コストのトークンの魔法で、相手キャラにしか効かないもの（狐火）は、相手の場が空でも使える（js/game.js の canPlay）。それを文にも出す
-  if (card.type === "spell" && card.token && !card.cost && card.effects.length && card.effects.every(e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0)))
+  if (card.type === "spell" && card.token && !card.cost && card.effects.length && card.effects.every(e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && e.to !== "enemyRandFC" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0)))
     lines.push("相手の場にキャラがいなくても使える（そのときは何も起きない）。");
   if (card.note) lines.push(card.note);
   else if (card.id === "tk-gear") lines.push("手札にためておける。「歯車」を持つカードを出すときに使う（これだけでは使えない）。");

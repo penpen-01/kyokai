@@ -372,7 +372,7 @@ function resolvePick(pi, sel, inline) {
       else if (P.act === "cutOne") { (me.handCut || (me.handCut = []))[i] = (me.handCut[i] || 0) + (P.n || 1); log(`${pname(pi)}の手札のカード1枚のコストが${P.n || 1}下がった。`, { pi, msg: `${cname(me.hand[i])}のコストが${P.n || 1}下がった。` }); }
       else if (P.act === "cheat" && !fieldFull(me)) {
         const id = handTake(me, i), u = addUnit(pi, id);
-        u.frozen = true; u.ready = false;   // 次の自分のターンも攻撃できない
+        u.frozen = true; u.ready = false; u.noThaw = true;   // 次の自分のターンも攻撃できない（非常電源などでも解除できない）
         log(`${cname(id)}がコストを払わずに現れた！（次の自分のターンの終わりまで攻撃できない）`);
         if (!SIM) { fx("cutin", id, "cutin" + pi); fx(unitSel(u.uid), id, "land"); }
         runEffects(pi, DEF[id], autoTargets(pi, u), u);
@@ -517,6 +517,7 @@ function endTurn(pi) {
   if (S.pick && S.pick.pi === pi) resolvePick(pi, S.pick.kind === "revive" ? pickBest(pi) : [], true);
   if (pi === ME) ui = { sel: null, mode: null };
   S.players[pi].discountT = 0;   // 「このターンだけ」のコスト低下は持ち越さない
+  S.players[pi].field.forEach(u => { if (u.noThaw && !u.frozen) delete u.noThaw; });   // 召喚歌の猶予が終わったら、ふつうの行動不能に戻す
   S.players[pi].field.forEach(u => {
     if (kw(u, "regen") && u.hp > 0 && u.hp < u.maxHp) { fx(unitSel(u.uid), "+" + (u.maxHp - u.hp), "heal"); u.hp = u.maxHp; log(`${cname(u.id)}は再生した。`); }
     if (kw(u, "doom")) { if (u.doomArmed) { log(`${cname(u.id)}は死の宣告で破壊された。`); destroyUnit(u); } else u.doomArmed = true; }
@@ -731,7 +732,7 @@ function canPlay(pi, idx) {
   if (d.type === "spell" && !d.pay && d.effects.length && d.effects.every(e => e.kind === "reviveSel") && !reviveCands(pi, d.effects[0]).length) return { ok: false, reason: "墓地に出せる亡霊がいません" };
   if (d.type === "spell" && d.effects.length && d.effects.every(e => e.kind === "merge") && !d.effects.some(e => p.field.filter(u => u.id === e.card).length >= e.n)) return { ok: false, reason: "合体に必要なキャラがそろっていません" };
   // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
-  const enemyOnly = e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0);
+  const enemyOnly = e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && e.to !== "enemyRandFC" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0);
   // ただし0コストのトークンの魔法（狐火）は、相手の場が空でも使える（当たらないだけ。化かしで手札を安くするため。オーナー 11-27）
   if (d.type === "spell" && !(d.token && !d.cost) && d.effects.length && d.effects.every(enemyOnly) && !S.players[opp(pi)].field.length)
     return { ok: false, reason: "相手の場にキャラがいません" };
@@ -903,6 +904,7 @@ function unitTargets(pi, e, targets, self) {
       const r = rnd(pool); if (used && r[0]) used.add(r[0].uid); return r;
     }
     case "enemyRandF": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)), "face"]);
+    case "enemyRandFC": { const L = en.field.filter(x => x.hp > 0 && canRandom(x) && wf(x)); return L.length ? rnd(L) : ["face"]; }   // キャラがいればキャラ、いなければ相手プレイヤー（スキュラ）
     case "anyRand": return rnd([...en.field.filter(x => x.hp > 0 && canRandom(x)), ...me.field.filter(x => x.hp > 0 && x !== self)].filter(wf));
     case "ownRand": return rnd(me.field.filter(x => x.hp > 0 && x !== self && wf(x)));
     case "enemyAll": return en.field.filter(wf);
@@ -933,12 +935,13 @@ function unitEach(pi, e, list, self, me, n) {
     }
     const side = sideOf(u); if (side < 0) return;
     switch (e.act) {
-      case "dmg": if (e.to === "enemyRand" || e.to === "enemyRandF") log(`${cname(u.id)}に${n}ダメージ。`); { const was = u.hp; hitUnit(u, n); if (was > 0 && u.hp <= 0) S.killNow = (S.killNow || 0) + 1; } break;
+      case "dmg": if (e.to === "enemyRand" || e.to === "enemyRandF" || e.to === "enemyRandFC") log(`${cname(u.id)}に${n}ダメージ。`); { const was = u.hp; hitUnit(u, n); if (was > 0 && u.hp <= 0) S.killNow = (S.killNow || 0) + 1; } break;
       case "destroy": fxDestroy(u); break;
       case "bottom": bounce(side, u, "bottom"); break;
       case "freeze": freezeUnit(u); break;
       case "unfreeze": {
         if (!u.frozen && !u.thawed) break;   // 行動不能でないキャラには何もしない
+        if (u.noThaw) { log(`${cname(u.id)}は呼び出されたばかりで、まだ動けない。`); break; }   // 召喚歌で出したキャラ：2ターンの猶予は解除できない（オーナー 11-27）
         u.frozen = false;
         if (u.thawed && S.turn === side && !u.swings && !kw(u, "noattack")) { u.ready = true; u.thawed = false; }
         u.thawed = false;

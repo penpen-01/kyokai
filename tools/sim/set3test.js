@@ -114,6 +114,14 @@ const { chromium } = require('playwright');
         ok('クラゲなし：痺れ針は使える・対象は選ばない', canPlay(0, i).ok && neededRoles(0, DEF['tk-j-needle']).length === 0);
         playCard(0, i, {}); ok('クラゲなし：何も起きない（エナジーは払う）', S.players[1].field[0].hp === h1 && S.players[0].e < e0 && !S.players[0].hand.includes('tk-j-needle')); }
       fresh(); put(0, 'f3-puka'); const tgt = put(1, 'st-golem'); { const i = hand(0, 'tk-j-needle'); ok('クラゲあり：対象を選んで効く', neededRoles(0, DEF['tk-j-needle']).includes('enemy')); playCard(0, i, { enemy: tgt.uid }); cleanup(); ok('クラゲあり：3ダメージ', tgt.hp === DEF['st-golem'].hp - 3 || !S.players[1].field.includes(tgt)); }
+      // 14e. スキュラ：キャラがいればキャラに、いなければ相手プレイヤーに
+      fresh(); { const sc = put(0, 'm3-scylla'); const t = put(1, 'st-golem'); t.hp = 20; t.maxHp = 20; const h0 = S.players[1].hp; attack(0, sc.uid, t.uid); cleanup();
+        ok('スキュラ：キャラがいれば全部キャラへ', S.players[1].hp === h0 && t.hp === 20 - sc.atk - 6, [S.players[1].hp, t.hp]); }
+      fresh(); { const sc = put(0, 'm3-scylla'); const h0 = S.players[1].hp; attack(0, sc.uid, 'player'); cleanup();
+        ok('スキュラ：キャラがいなければ相手プレイヤーへ（最大7）', S.players[1].hp === h0 - DEF['m3-scylla'].atk - 6, h0 - S.players[1].hp); }
+      // 14f. 召喚歌で出したキャラは、非常電源で解除できない
+      fresh(); S.players[0].hand = ['m3-leviathan']; play(0, 'm3-shoukan'); { const lv = S.players[0].field.find(u => u.id === 'm3-leviathan'); play(0, 'm2-reboot');
+        ok('召喚歌：非常電源で解除できない', lv && lv.frozen && !lv.ready); endTurn(0); endTurn(1); ok('召喚歌：次の自分のターンも攻撃できない', lv && !lv.ready); endTurn(0); endTurn(1); ok('召喚歌：その次のターンから攻撃できる', lv && lv.ready && !lv.noThaw); }
       // 15. 天秤
       fresh(); put(0, 'squire'); put(0, 'x-gigas'); put(1, 'garm'); put(1, 'squire'); play(0, 'm3-tenbin');
       ok('天秤：両方の一番高いキャラ', !S.players[0].field.some(u => u.id === 'x-gigas') && !S.players[1].field.some(u => u.id === 'garm'));
@@ -159,7 +167,7 @@ const { chromium } = require('playwright');
       ok('大行進：墓地の亡霊4体では使えない', !canPlay(0, i).ok); S.players[0].gy.push('x3-kirai'); ok('大行進：亡霊5体なら（亡霊でないキャラが場にいても）使える', canPlay(0, i).ok);
       // 24b. 11-25 の調整
       fresh(); put(0, 'f3-octa'); ok('オクタ：魔法すべて-2（0まで）', effCost(0, DEF['bolt'], 0) === 0 && effCost(0, DEF['m3-trident'], 0) === Math.max(0, DEF['m3-trident'].cost - 2) && effCost(0, DEF['tk-j-tide'], 0) === Math.max(0, DEF['tk-j-tide'].cost - 2) && effCost(0, DEF['squire'], 0) === DEF['squire'].cost);
-      fresh(); put(0, 'm3-aspido'); ok('アスピドケロン：手札の海獣-1', effCost(0, DEF['m3-leviathan'], 0) === DEF['m3-leviathan'].cost - DEF['m3-aspido'].aura.n && effCost(0, DEF['m3-trident'], 0) === DEF['m3-trident'].cost);
+      fresh(); { S.players[0].hp = 10; const n0 = S.players[0].hand.length; play(0, 'm3-aspido'); ok('アスピドケロン：1枚引いて体力3回復', S.players[0].hand.length === n0 + 1 && S.players[0].hp === 13, [S.players[0].hand.length - n0, S.players[0].hp]); }
       fresh(); put(0, 'm3-kraken'); put(0, 'm3-scylla'); play(0, 'm3-hippo'); const hp = S.players[0].field.find(u => u.id === 'm3-hippo');
       ok('ヒッポ：ほかの海獣2体で攻撃+2', hp && hp.atk === DEF['m3-hippo'].atk + 2 && hp.hp === DEF['m3-hippo'].hp, hp && [hp.atk, hp.hp]);
       fresh(); const chb = put(0, 'tk-chibi'); chb.hp = 0; cleanup(); ok('ちびクラゲ：倒されると墓地へ（満ち潮で数える）', S.players[0].gy.includes('tk-chibi'));

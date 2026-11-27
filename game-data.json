@@ -1,5 +1,5 @@
 {
- "version": 261,
+ "version": 262,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -10673,23 +10673,31 @@
    "name": "アスピドケロン",
    "world": "myth",
    "type": "char",
-   "cost": 6,
-   "atk": 3,
-   "hp": 7,
+   "cost": 7,
+   "atk": 4,
+   "hp": 10,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
    "keywords": [
     "reef"
    ],
-   "effects": [],
+   "effects": [
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
+    },
+    {
+     "kind": "player",
+     "n": 3,
+     "act": "heal",
+     "who": "self"
+    }
+   ],
    "set": "3",
    "tribe": "beast",
-   "aura": {
-    "kind": "cost",
-    "tribe": "beast",
-    "n": 2
-   },
    "art": "art/m3-aspido-07affe761c.webp"
   },
   {
@@ -10781,7 +10789,7 @@
    "world": "myth",
    "type": "char",
    "cost": 5,
-   "atk": 3,
+   "atk": 1,
    "hp": 5,
    "glyph": "神",
    "limit": 3,
@@ -10795,7 +10803,7 @@
      "n": 1,
      "when": "attack",
      "act": "dmg",
-     "to": "enemyRandF",
+     "to": "enemyRandFC",
      "rep": 6
     }
    ],
@@ -10881,13 +10889,15 @@
    "name": "大海魔クラーケン",
    "world": "myth",
    "type": "char",
-   "cost": 8,
-   "atk": 7,
-   "hp": 8,
+   "cost": 9,
+   "atk": 8,
+   "hp": 10,
    "glyph": "神",
    "limit": 3,
    "rarity": "ur",
-   "keywords": [],
+   "keywords": [
+    "pierce"
+   ],
    "effects": [
     {
      "kind": "unit",
@@ -10906,14 +10916,15 @@
    "name": "海の覇王リヴァイアサン",
    "world": "myth",
    "type": "char",
-   "cost": 9,
-   "atk": 8,
-   "hp": 9,
+   "cost": 10,
+   "atk": 10,
+   "hp": 10,
    "glyph": "神",
    "limit": 3,
    "rarity": "legend",
    "keywords": [
-    "guard"
+    "guard",
+    "elusive"
    ],
    "effects": [
     {
