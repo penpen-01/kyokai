@@ -616,6 +616,9 @@ function cardTextLines(card, o = {}) {
     const eff = effectsText(card);
     if (eff) lines.push(eff);
   }
+  // 0コストのトークンの魔法で、相手キャラにしか効かないもの（狐火）は、相手の場が空でも使える（js/game.js の canPlay）。それを文にも出す
+  if (card.type === "spell" && card.token && !card.cost && card.effects.length && card.effects.every(e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0)))
+    lines.push("相手の場にキャラがいなくても使える（そのときは何も起きない）。");
   if (card.note) lines.push(card.note);
   else if (card.id === "tk-gear") lines.push("手札にためておける。「歯車」を持つカードを出すときに使う（これだけでは使えない）。");
   return lines;

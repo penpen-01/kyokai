@@ -13,7 +13,7 @@ const { chromium } = require('playwright'); const fs = require('fs'), path = req
     function fresh() { MODE = 'sim'; SIM = true; S = { gid: 't', phase: 'play', players: [mkPlayer('A', { name: 'A', cards: filler }), mkPlayer('B', { name: 'B', cards: filler })], rps: { picks: [null, null], round: 1, last: null }, rpsWinner: null, first: 0, mull: [true, true], decks: [], turn: 0, turnNo: 1, over: false, winner: null, log: [], uidN: 0, seq: 0 }; S.players.forEach(pl => { pl.maxE = 10; pl.e = 10; pl.hp = 20; pl.hand = []; pl.gy = []; pl.grave = []; }); }
     const hand = (pi, id) => { S.players[pi].hand.push(id); return S.players[pi].hand.length - 1; };
     // 文
-    ['f-whisper', 'f2-tamamo', 'f-horn', 'x-reboot', 'm2-transfer', 'm2-reboot', 'm2-selfdestruct', 'y2-kensei', 'f2-dancer'].forEach(id => R.push('     ' + DEF[id].name + '（' + DEF[id].cost + '）' + (DEF[id].type === 'char' ? ` ${DEF[id].atk}/${DEF[id].hp}` : '') + '：' + cardText(DEF[id]).replace(/\n/g, ' ／ ')));
+    ['tk-foxfire', 'f2-bakefox', 'f-whisper', 'f2-tamamo', 'f-horn', 'x-reboot', 'm2-transfer', 'm2-reboot', 'm2-selfdestruct', 'y2-kensei', 'f2-dancer'].forEach(id => R.push('     ' + DEF[id].name + '（' + DEF[id].cost + '）' + (DEF[id].type === 'char' ? ` ${DEF[id].atk}/${DEF[id].hp}` : '') + '：' + cardText(DEF[id]).replace(/\n/g, ' ／ ')));
     // 囁き：このターンだけ
     fresh(); let i = hand(0, 'f-whisper'); hand(0, 'pegasus'); playCard(0, i, {});
     const c1 = effCost(0, DEF.pegasus, S.players[0].hand.indexOf('pegasus'));
