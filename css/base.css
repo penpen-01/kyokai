@@ -361,6 +361,48 @@ img{max-width:100%}
 @keyframes holo{0%,100%{background-position:0 0;-webkit-mask-position:100% 100%;mask-position:100% 100%;opacity:.14}50%{background-position:6cqw -8cqw;-webkit-mask-position:0% 0%;mask-position:0% 0%;opacity:.26}}   /* 11-26：細かく描き込んだ絵がちらつくので半分に（前は .3〜.52） */
 @media (prefers-reduced-motion:reduce){.card.rar-legend .art::after{animation:none}}
 /* 別イラスト（パラレル）のレジェンドにも、通常と同じ（弱めた）ホログラムを重ねる。消したいときは .card.rar-legend.alt-art .art::after{display:none} */
+/* レジェンドのきらめき（2026-11-27）：絵の真ん中（キャラ）には模様をかけず、縁だけをホログラムできらめかせる。光の筋は回数を減らして柔らかく */
+.card.rar-legend .art::after{
+  -webkit-mask:radial-gradient(ellipse 72% 66% at 50% 44%,transparent 40%,rgba(0,0,0,.6) 66%,#000 92%),linear-gradient(115deg,rgba(0,0,0,.45) 0%,#000 40%,rgba(0,0,0,.45) 60%,rgba(0,0,0,.45) 100%) 0 0/300% 300%;
+  -webkit-mask-composite:source-in;
+  mask:radial-gradient(ellipse 72% 66% at 50% 44%,transparent 40%,rgba(0,0,0,.6) 66%,#000 92%),linear-gradient(115deg,rgba(0,0,0,.45) 0%,#000 40%,rgba(0,0,0,.45) 60%,rgba(0,0,0,.45) 100%) 0 0/300% 300%;
+  mask-composite:intersect;
+  animation:holo2 4s ease-in-out infinite}
+@keyframes holo2{0%,100%{background-position:0 0;-webkit-mask-position:0 0,100% 100%;mask-position:0 0,100% 100%;opacity:.3}50%{background-position:6cqw -8cqw;-webkit-mask-position:0 0,0% 0%;mask-position:0 0,0% 0%;opacity:.5}}
+.card.rar-legend .shine{background:linear-gradient(115deg,transparent 44%,rgba(255,255,255,.38) 50%,transparent 56%);animation-duration:6s}
+@media (prefers-reduced-motion:reduce){.card.rar-legend .art::after{animation:none}}
+/* ---- レジェンドの枠（2026-11-27 作り直し）----
+   枠：外側の銀の線 → 明るいホログラムの虹の帯（虹が回り、斜めの光の筋が走る）→ 銀の線 → 紺の帯 → 細い銀の線 → 窓。
+   飾り：四隅の翼（左上の絵を反転）・上の翼の宝石・下の宝石（Gemini の部品。ui/lg/）。飾りの形に沿って白い光が流れる。
+   上下の小さなひし形の宝石は、飾りの宝石と重なるのでレジェンドだけ隠す */
+.card.rar-legend{--rw:7cqw;box-shadow:0 0 0 .35cqw #1a1730,0 0 6px rgba(255,150,220,.5),0 0 12px rgba(120,200,255,.35)}
+.card.rar-legend .frame::before{filter:none;border:.9cqw solid transparent;padding:calc(var(--rw) - .9cqw);
+  background:
+    linear-gradient(115deg,transparent 42%,rgba(255,255,255,.9) 49.5%,#fff 50%,rgba(255,255,255,.9) 50.5%,transparent 58%) padding-box 0 0/320% 320% no-repeat,
+    repeating-linear-gradient(118deg,rgba(255,255,255,0) 0 7cqw,rgba(255,255,255,.42) 7.6cqw,rgba(255,255,255,0) 8.6cqw 15cqw) padding-box,
+    linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,0) 50%,rgba(255,255,255,.18)) padding-box,
+    conic-gradient(from var(--lg),#ff5fa8,#ffaa4d,#ffe45c,#5cf09a,#4fc8ff,#8f80ff,#e46cff,#ff5fa8) padding-box,
+    linear-gradient(135deg,#ffffff,#aeb6cc 30%,#ffffff 50%,#8d97b0 75%,#f2f4fa) border-box;
+  animation:lgspin 10s linear infinite,lgglint 4.5s ease-in-out infinite}
+@keyframes lgglint{0%{background-position:100% 100%,0 0,0 0,0 0,0 0}60%,100%{background-position:0% 0%,0 0,0 0,0 0,0 0}}
+.card.rar-legend .frame::after{border-radius:5cqw;
+  box-shadow:0 0 0 .45cqw #eef1f8,0 0 0 .8cqw #2a2f4a,0 0 0 1.7cqw #151a33,0 0 0 2.3cqw #cfd5e6,0 0 0 2.6cqw #2a2f4a,inset 0 0 0 .35cqw #0b0d1c,inset 0 0 5cqw rgba(200,180,255,.22)}
+.card.rar-legend .crest,.card.rar-legend .gem{display:none}
+.card .orn{position:absolute;inset:0;z-index:3;pointer-events:none}
+.card .orn i{position:absolute;background:center/100% 100% no-repeat;filter:drop-shadow(0 .4cqw .6cqw rgba(0,0,0,.55))}
+.card .orn i::after{content:"";position:absolute;inset:0;-webkit-mask:var(--m) center/100% 100% no-repeat;mask:var(--m) center/100% 100% no-repeat;
+  background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.85) 50%,transparent 60%) -150% 0/250% 100% no-repeat;mix-blend-mode:screen;animation:lgorn 5s ease-in-out infinite}
+@keyframes lgorn{0%,55%{background-position:-150% 0}85%,100%{background-position:150% 0}}
+.card .orn .oc{width:21cqw;aspect-ratio:420/423;background-image:url("../ui/lg/corner.webp");--m:url("../ui/lg/corner.webp")}
+.card .orn .tl{top:-.4cqw;left:-.4cqw}
+.card .orn .tr{top:-.4cqw;right:-.4cqw;transform:scaleX(-1)}
+.card .orn .bl{bottom:-.4cqw;left:-.4cqw;transform:scaleY(-1)}
+.card .orn .br{bottom:-.4cqw;right:-.4cqw;transform:scale(-1,-1)}
+.card .orn .ot{width:40cqw;aspect-ratio:800/197;left:50%;top:-.6cqw;transform:translateX(-50%);background-image:url("../ui/lg/top.webp");--m:url("../ui/lg/top.webp")}
+.card .orn .ob{width:27cqw;aspect-ratio:600/198;left:50%;bottom:-.6cqw;transform:translateX(-50%) scaleY(-1);background-image:url("../ui/lg/bottom.webp");--m:url("../ui/lg/bottom.webp")}
+.card .orn .tr::after,.card .orn .br::after{animation-delay:.25s}.card .orn .bl::after,.card .orn .br::after{animation-delay:.5s}.card .orn .ot::after{animation-delay:.1s}.card .orn .ob::after{animation-delay:.6s}
+html.eco .card.rar-legend .frame::before,html.eco .card .orn i::after{animation:none!important}
+@media (prefers-reduced-motion:reduce){.card.rar-legend .frame::before,.card .orn i::after{animation:none}}
 
 /* 特殊勝利の残り回数 */
 .card .wintag{position:absolute;left:50%;top:38%;transform:translateX(-50%);z-index:6;white-space:nowrap;font-size:9cqw;font-weight:900;padding:1cqw 3.5cqw;border-radius:99px;

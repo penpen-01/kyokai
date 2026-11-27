@@ -734,6 +734,8 @@ function lookFor(id, pi) {
   const L = S.players[pi] && S.players[pi].look;
   return (L && L[id]) || null;
 }
+/* レジェンドの飾り（四隅の翼・上の翼の宝石・下の宝石。絵は ui/lg/。光の筋が飾りの形に沿って流れる） */
+const LEGEND_ORN = `<span class="orn" aria-hidden="true"><i class="oc tl"></i><i class="oc tr"></i><i class="oc bl"></i><i class="oc br"></i><i class="ot"></i><i class="ob"></i></span>`;
 function cardHTML(card, o = {}) {
   const u = o.unit;
   const lk = o.hidden ? null : (o.look !== undefined ? o.look : o.pi != null ? lookFor(card.id, o.pi) : CARD_LOOK[card.id]) || null;
@@ -767,7 +769,7 @@ function cardHTML(card, o = {}) {
   const guard = card.type === "char" && kwl.includes("guard");
   return `<${tag} ${o.static ? "" : 'type="button"'} class="card w-${esc(card.world)} rar-${esc(card.rarity || "common")} ${mk ? "mako mk-" + mk : ""} ${lk && lk.a ? "alt-art" : ""} ${card.type} ${card.art && !o.hidden ? "has-art" : ""} ${o.hidden ? "unknown" : ""} ${card.id === "coin" ? "coin" : ""} ${guard ? "guard" : ""} ${u && u.frozen ? "frozen" : ""} ${u && kwl.includes("stealth") ? "stealthy" : ""} ${u && kwl.includes("shield") ? "shieldy" : ""} ${u && u.silenced ? "silenced" : ""} ${o.cls || ""}" ${o.attrs || ""} ${o.hidden || !card.id ? "" : `data-cid="${esc(card.id)}"`} aria-label="${esc(card.name)}">
     <span class="art">${art}</span>
-    <span class="frame" aria-hidden="true"></span><span class="crest" aria-hidden="true"></span><span class="gem" aria-hidden="true"></span>
+    <span class="frame" aria-hidden="true"></span>${card.rarity === "legend" ? LEGEND_ORN : ""}<span class="crest" aria-hidden="true"></span><span class="gem" aria-hidden="true"></span>
     ${["ur", "legend"].includes(card.rarity) || mk ? `<span class="shine" aria-hidden="true"></span>` : ""}
     ${o.showCost === false ? "" : `<span class="cost ${cost < card.cost ? "down" : ""}"><i>${cost}</i></span>`}
     ${marks ? `<span class="marks">${marks}</span>` : ""}
