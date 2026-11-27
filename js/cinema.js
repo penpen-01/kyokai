@@ -144,21 +144,19 @@ const Cinema = {
   /* ---------- 先攻／後攻：紋章が叩きつけられ、後ろで光が回り、光の輪が広がる ---------- */
   order() {
     const meFirst = S.first === ME, k = meFirst ? "first" : "second";
-    // 2026-11-27 作り直し：光が集まる→紋章がたたきつけられる（揺れ・衝撃の輪・火花）→表面を光が流れる。後攻は「境界の欠片」が飛んでくる
+    // 2026-11-27 作り直し：光が集まる→紋章がたたきつけられる（揺れ・衝撃の輪・火花）→表面を光が流れる
     const R = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join("");
     const gather = R(14, i => `<i class="bo-gp" style="--a:${i * 25.7 + Math.random() * 10}deg;--dl:${(Math.random() * 0.12).toFixed(2)}s"></i>`);
     const sparks = R(16, i => `<i class="bo-sk" style="--a:${i * 22.5 + Math.random() * 12}deg;--r:${(38 + Math.random() * 26).toFixed(0)}vmin;--w:${(2 + Math.random() * 2.5).toFixed(1)}px"></i>`);
     const embers = R(18, i => `<i class="bo-ember" style="--x:${(Math.random() * 100).toFixed(0)}%;--dl:${(0.5 + Math.random() * 1.4).toFixed(2)}s;--du:${(1.1 + Math.random() * 0.9).toFixed(2)}s;--s:${(3 + Math.random() * 4).toFixed(1)}px;--sw:${(Math.random() * 40 - 20).toFixed(0)}px"></i>`);
-    const coin = !meFirst && DEF.coin ? `<div class="bo-coin">${cardHTML(DEF.coin, { static: true })}</div>` : "";
     this.layer("order2 order3 " + k, `<i class="bo-rays"></i><div class="bo-gather">${gather}</div><i class="bo-orb"></i>
       <div class="bo-emb"><i class="bi-ring"></i><i class="bi-ring r2"></i><img src="ui/bt/${k}.webp" alt="" draggable="false"><i class="bo-glint" style="--m:url('${esc(new URL(`ui/bt/${k}.webp`, location.href).href)}')"></i></div>
       <i class="bo-burst"></i><div class="bo-sparks">${sparks}</div><div class="bo-embers">${embers}</div>
-      <div class="bo-txt"><span>${meFirst ? "FIRST" : "SECOND"}</span><b data-t="${meFirst ? "先攻" : "後攻"}">${meFirst ? "先攻" : "後攻"}</b><small>${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」を持って始めます"}</small></div>${coin}`);
+      <div class="bo-txt"><span>${meFirst ? "FIRST" : "SECOND"}</span><b data-t="${meFirst ? "先攻" : "後攻"}">${meFirst ? "先攻" : "後攻"}</b><small>${meFirst ? "最初のターンはカードを引きません" : "「境界の欠片」を持って始めます"}</small></div>`);
     if (!Motion.reduced) {
       this.sfx(60, () => Sound.play("wardUp"));
       this.sfx(380, () => { Sound.play("hit"); Sound.play("destroy"); try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} });
       this.sfx(640, () => Sound.play(meFirst ? "rare" : "buff"));
-      if (coin) this.sfx(1150, () => Sound.play("flip"));
     }
     return Motion.reduced ? 1400 : 2300;
   },
