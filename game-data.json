@@ -1,5 +1,5 @@
 {
- "version": 258,
+ "version": 259,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -37,6 +37,7 @@
   "BOSS_EX_HP": 25,
   "SAMPLE_ONLINE_DAY": 5,
   "SAMPLE_CPU": 0,
+  "SAMPLE_SET3": 1,
   "STONE_GET_COMMON": 5,
   "STONE_GET_RARE": 30,
   "STONE_GET_SR": 100,
@@ -10740,7 +10741,7 @@
    "name": "ヒッポカムポス",
    "world": "myth",
    "type": "char",
-   "cost": 5,
+   "cost": 6,
    "atk": 5,
    "hp": 5,
    "glyph": "神",
@@ -10753,7 +10754,7 @@
     {
      "kind": "unit",
      "n": 1,
-     "act": "both",
+     "act": "atk",
      "to": "self",
      "per": "tribe",
      "ctribe": "beast",
@@ -10852,7 +10853,7 @@
    "name": "大渦カリブディス",
    "world": "myth",
    "type": "char",
-   "cost": 6,
+   "cost": 7,
    "atk": 0,
    "hp": 8,
    "glyph": "神",
@@ -10880,9 +10881,9 @@
    "name": "大海魔クラーケン",
    "world": "myth",
    "type": "char",
-   "cost": 7,
-   "atk": 6,
-   "hp": 7,
+   "cost": 8,
+   "atk": 7,
+   "hp": 8,
    "glyph": "神",
    "limit": 3,
    "rarity": "ur",
@@ -12315,7 +12316,7 @@
    "world": "mech",
    "type": "char",
    "cost": 3,
-   "atk": 2,
+   "atk": 1,
    "hp": 3,
    "glyph": "機",
    "limit": 3,
@@ -12956,15 +12957,13 @@
    "name": "シーサーペント",
    "world": "myth",
    "type": "char",
-   "cost": 4,
-   "atk": 4,
-   "hp": 4,
+   "cost": 7,
+   "atk": 7,
+   "hp": 8,
    "glyph": "神",
    "limit": 3,
    "rarity": "common",
-   "keywords": [
-    "rush"
-   ],
+   "keywords": [],
    "effects": [
     {
      "kind": "unit",
@@ -13159,9 +13158,9 @@
     },
     {
      "kind": "player",
+     "n": 1,
      "act": "heal",
-     "who": "self",
-     "n": 1
+     "who": "self"
     }
    ],
    "token": true,
@@ -13251,9 +13250,9 @@
     },
     {
      "kind": "player",
+     "n": 3,
      "act": "heal",
-     "who": "self",
-     "n": 3
+     "who": "self"
     }
    ],
    "token": true,
