@@ -24,7 +24,8 @@ const { chromium } = require('playwright'); const fs = require('fs'), path = req
     ok('タマモ：幻想の魔法（囁き）で下がる', effCost(0, DEF['f2-tamamo'], S.players[0].hand.indexOf('f2-tamamo')) === 12 - 1 - 1);
     fresh(); const sq = addUnit(1, 'st-golem'); i = hand(0, 'tk-foxfire'); const h0 = S.players[1].hp, g0 = sq.hp; playCard(0, i, {}); cleanup();
     ok('狐火：相手キャラに当たり、相手プレイヤーには当たらない', S.players[1].hp === h0 && sq.hp === g0 - 1, [S.players[1].hp, sq.hp]);
-    fresh(); i = hand(0, 'tk-foxfire'); ok('狐火：相手の場にキャラがいなければ使えない', !canPlay(0, i).ok, canPlay(0, i).reason);
+    fresh(); hand(0, 'f2-tamamo'); i = hand(0, 'tk-foxfire'); const ok1 = canPlay(0, i).ok, hp1 = S.players[1].hp; playCard(0, i, {});
+    ok('狐火：相手の場が空でも使えて（当たらない）、化かしは下がる', ok1 && S.players[1].hp === hp1 && effCost(0, DEF['f2-tamamo'], 0) === 11);
     // タマモ：登場時のダメージなし
     fresh(); for (let k = 0; k < 3; k++) { const u = addUnit(1, 'squire'); u.born = 0; } S.players[0].played = 5; i = hand(0, 'f2-tamamo'); playCard(0, i, {}); cleanup();
     ok('タマモ：登場時に相手キャラへダメージを与えない', S.players[1].field.length === 3 && S.players[1].field.every(u => u.hp === DEF.squire.hp));

@@ -696,7 +696,8 @@ function canPlay(pi, idx) {
   if (d.type === "spell" && d.effects.length && d.effects.every(e => e.kind === "merge") && !d.effects.some(e => p.field.filter(u => u.id === e.card).length >= e.n)) return { ok: false, reason: "合体に必要なキャラがそろっていません" };
   // 相手のキャラにしか効かない魔法（天罰の光・吹雪など）は、相手の場が空なら使えない（無駄打ち防止）
   const enemyOnly = e => e.kind === "unit" && sideOfTo(e.to) === "enemy" && e.to !== "enemyF" && e.to !== "enemyRandF" && ["dmg", "destroy", "freeze", "atk"].includes(e.act) && (e.act !== "atk" || e.n < 0);
-  if (d.type === "spell" && d.effects.length && d.effects.every(enemyOnly) && !S.players[opp(pi)].field.length)
+  // ただし0コストのトークンの魔法（狐火）は、相手の場が空でも使える（当たらないだけ。化かしで手札を安くするため。オーナー 11-27）
+  if (d.type === "spell" && !(d.token && !d.cost) && d.effects.length && d.effects.every(enemyOnly) && !S.players[opp(pi)].field.length)
     return { ok: false, reason: "相手の場にキャラがいません" };
   // 魔法は対象がいないと使えない（キャラは対象がいなくても出せる）
   if (d.type === "spell") {
