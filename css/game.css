@@ -3982,3 +3982,7 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .dmodal > .dmodal-in{margin:auto;max-height:calc(100vh - var(--dmt) - var(--dmb));max-height:calc(100dvh - var(--dmt) - var(--dmb));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .dmodal-body > .btn[data-act$="Close"]{position:sticky;bottom:-14px;z-index:3;margin-bottom:-14px;background:var(--panel);box-shadow:0 -14px 14px -2px var(--panel),0 14px 0 var(--panel)}
 .card .perb.tideb{background:linear-gradient(180deg,#3aa0e8,#1d5fae);box-shadow:0 0 8px rgba(90,180,255,.85);font-size:10px;top:26%}   /* 満ち潮の夜：今使ったときのダメージ */
+/* 押し出しを選ぶ画面：決定ボタンは1段目いっぱい、「押し出さない」「やめる」は2段目 */
+.pushp .pick-go{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%}
+.pushp .pick-go .btn{flex:1 1 40%;white-space:nowrap}
+.pushp .pick-go .btn.primary{flex:1 1 100%}

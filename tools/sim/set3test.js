@@ -58,7 +58,7 @@ const { chromium } = require('playwright');
       fresh(); const gt = put(1, 'm3-gantetsu'); play(0, 'm3-trident', { enemy: gt.uid });
       ok('岩殻：効果ダメージ0', gt.hp === 7); const at = put(0, 'f3-suiryu'); attack(0, at.uid, gt.uid); ok('岩殻：攻撃は通る', gt.hp === 7 - DEF['f3-suiryu'].atk, gt.hp);
       // 9. クラゲ魔法
-      fresh(); let i = hand(0, 'tk-j-needle'); ok('クラゲ魔法：クラゲがいないと使えない', !canPlay(0, i).ok);
+      fresh(); let i = hand(0, 'tk-j-needle'); ok('クラゲ魔法：クラゲがいなくても使える（何も起きない）', canPlay(0, i).ok);
       S.players[0].hand = []; play(0, 'f3-komoriuta');
       ok('子守唄：ちびクラゲと魔法1枚', S.players[0].field.some(u => u.id === 'tk-chibi') && S.players[0].hand.some(id => JELLY_POOL.includes(id)), S.players[0].hand);
       put(1, 'squire'); S.players[0].hand = [];
@@ -109,6 +109,11 @@ const { chromium } = require('playwright');
       { const sel = pickBest(0), ids = sel.map(i => S.pick.ids[i]), sum = ids.reduce((a, id) => a + DEF[id].cost, 0);
         ok('CPUの呼び戻し：合計7以下で3体', sel.length === 3 && sum <= 7, ids); }
       S.pick = null;
+      // 14d. クラゲ魔法：場にクラゲがいなくても使える（何も起きない）
+      fresh(); put(1, 'squire'); { const i = hand(0, 'tk-j-needle'); const e0 = S.players[0].e, h1 = S.players[1].field[0].hp;
+        ok('クラゲなし：痺れ針は使える・対象は選ばない', canPlay(0, i).ok && neededRoles(0, DEF['tk-j-needle']).length === 0);
+        playCard(0, i, {}); ok('クラゲなし：何も起きない（エナジーは払う）', S.players[1].field[0].hp === h1 && S.players[0].e < e0 && !S.players[0].hand.includes('tk-j-needle')); }
+      fresh(); put(0, 'f3-puka'); const tgt = put(1, 'st-golem'); { const i = hand(0, 'tk-j-needle'); ok('クラゲあり：対象を選んで効く', neededRoles(0, DEF['tk-j-needle']).includes('enemy')); playCard(0, i, { enemy: tgt.uid }); cleanup(); ok('クラゲあり：3ダメージ', tgt.hp === DEF['st-golem'].hp - 3 || !S.players[1].field.includes(tgt)); }
       // 15. 天秤
       fresh(); put(0, 'squire'); put(0, 'x-gigas'); put(1, 'garm'); put(1, 'squire'); play(0, 'm3-tenbin');
       ok('天秤：両方の一番高いキャラ', !S.players[0].field.some(u => u.id === 'x-gigas') && !S.players[1].field.some(u => u.id === 'garm'));
@@ -122,7 +127,7 @@ const { chromium } = require('playwright');
       fresh(); S.players[1].hand = ['squire']; play(0, 'f3-borg'); ok('ボルグ：相手のカードのコストを上げる', effCost(1, DEF.squire, 0) === DEF.squire.cost + DEF['f3-borg'].effects[0].n);
       fresh(); S.players[0].hand = ['m3-leviathan', 'm3-siren']; put(1, 'squire'); play(0, 'm3-shoukan');
       const lv = S.players[0].field.find(u => u.id === 'm3-leviathan');
-      ok('召喚歌：一番重い海獣を出して登場時効果', lv && S.players[1].field.length === 0 && S.players[0].hp === 15 && lv.frozen);
+      ok('召喚歌：一番重い海獣を出して登場時効果', lv && S.players[1].field.length === 0 && S.players[0].hp === 20 - DEF['m3-shoukan'].pay.n && lv.frozen);
       endTurn(0); endTurn(1); ok('召喚歌：次の自分のターンも攻撃できない', lv && !lv.ready);
       // 18. 分解砲（2体まで）
       fresh(); const e1 = put(1, 'squire'), e2 = put(1, 'pegasus'), e3 = put(1, 'x-gigas');

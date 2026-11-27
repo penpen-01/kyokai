@@ -1,5 +1,5 @@
 {
- "version": 260,
+ "version": 261,
  "updated": "2026-11-27",
  "config": {
   "PLAYER_HP": 20,
@@ -10822,7 +10822,7 @@
    ],
    "pay": {
     "kind": "life",
-    "n": 5
+    "n": 3
    },
    "set": "3",
    "art": "art/m3-shoukan-f0d11bb6fb.webp"
@@ -11601,7 +11601,7 @@
    "type": "char",
    "cost": 5,
    "atk": 3,
-   "hp": 3,
+   "hp": 5,
    "glyph": "幻",
    "limit": 3,
    "rarity": "common",
@@ -12317,7 +12317,7 @@
    "type": "char",
    "cost": 3,
    "atk": 1,
-   "hp": 3,
+   "hp": 4,
    "glyph": "機",
    "limit": 3,
    "rarity": "rare",
@@ -12367,7 +12367,7 @@
    "world": "mech",
    "type": "char",
    "cost": 2,
-   "atk": 1,
+   "atk": 2,
    "hp": 1,
    "glyph": "機",
    "limit": 3,

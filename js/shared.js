@@ -378,7 +378,7 @@ const CONDS = {
 /* 歯車：手札で重なるカード（何枚あっても手札1枠。枚数は p.gears）。これだけでは使えず、「歯車を使う」カードの材料になる */
 const GEAR_ID = "tk-gear";
 /* 使える条件の文 */
-const reqText = r => r.tribe === "jelly" && r.n === 1 && !r.world ? "クラゲ魔法：自分の場に【クラゲ】のキャラがいるときだけ使える" : `使える条件：自分の場に${r.world ? WORLDS[r.world] + "の" : ""}${r.tribe && TRIBES[r.tribe] ? `【${TRIBES[r.tribe]}】の` : ""}キャラが${r.n}体以上いる${r.orEmpty ? "か、自分の場にキャラが1体もいない" : ""}とき`;
+const reqText = r => r.tribe === "jelly" && r.n === 1 && !r.world ? "クラゲ魔法：自分の場に【クラゲ】のキャラがいないときは、使っても何も起きない" : `使える条件：自分の場に${r.world ? WORLDS[r.world] + "の" : ""}${r.tribe && TRIBES[r.tribe] ? `【${TRIBES[r.tribe]}】の` : ""}キャラが${r.n}体以上いる${r.orEmpty ? "か、自分の場にキャラが1体もいない" : ""}とき`;
 /* 場にいる間ずっと働く力（第3弾。card.aura）。
    kind：stat（ほかの味方を強くする。world／tribe で絞る・atk／hp）、self（墓地の亡霊の数だけ自分の攻撃力が上がる）、cost（クラゲ魔法のコストを下げる） */
 function auraText(a) {

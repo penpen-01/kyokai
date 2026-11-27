@@ -447,6 +447,38 @@ const Pick = {
     Sound.play("tap"); this.paint();
   }
 };
+/* 押し出しを選ぶ画面（2026-11-27 オーナー：下の帯ではなく、サーチ効果のときと同じ選ぶ画面で。やめることもできる） */
+const PushPick = {
+  el: null, sel: null, key: "",
+  role() { const r = ui && ui.mode === "target" && ui.sel && ui.sel.kind === "hand" ? curRole() : null; return r === "push" || r === "pushFx" ? r : null; },
+  after() {
+    const r = S && !S.over ? this.role() : null;
+    if (!r) { if (this.el) { this.el.remove(); this.el = null; } this.sel = null; this.key = ""; return; }
+    const key = `${S.gid}|${r}|${ui.sel.idx}|${ui.picked.push || ""}`;
+    if (key !== this.key) { this.sel = null; this.key = key; }
+    if (!this.el) { this.el = document.createElement("div"); this.el.className = "mullp digp pickp pushp in"; document.body.appendChild(this.el); }
+    this.paint();
+  },
+  paint() {
+    const r = this.role(); if (!r || !this.el) return;
+    const d = DEF[S.players[ME].hand[ui.sel.idx]]; if (!d) return;
+    const units = S.players[ME].field.filter(u => u.hp > 0 && u.uid !== ui.picked.push && u.uid !== ui.picked.sacrifice);
+    const sub = r === "push" ? `「${d.name}」を出すために、墓地へ押し出すキャラを選んでください。押し出したキャラは倒された扱いにならず、倒されたときの効果は発動しません。`
+      : `「${d.name}」の効果でキャラを出すなら、墓地へ押し出すキャラを選んでください。押し出さなければ、キャラは出ません（ほかの効果は働きます）。`;
+    this.el.innerHTML = `<div class="mullp-in">
+      <div class="pg-title sm"><b>場がいっぱいです</b></div>
+      <p class="pick-sub">${esc(sub)}</p>
+      <div class="dig-row pick-row">${units.map(u => `<div class="dig-c ${this.sel === u.uid ? "on" : ""}"><button type="button" class="dig-card" data-act="pushT" data-uid="${u.uid}" aria-pressed="${this.sel === u.uid}" aria-label="${esc(DEF[u.id] ? DEF[u.id].name : "")}">${DEF[u.id] ? cardHTML(DEF[u.id], { static: true }) : ""}<span class="pick-st">${u.atk}/${u.hp}</span></button>
+        <button type="button" class="cdlink pick-info" data-tk="${esc(u.id)}">効果を見る</button></div>`).join("")}</div>
+      <div class="pick-go">
+        <button type="button" class="btn primary" data-act="pushGo" ${this.sel == null ? "disabled" : ""}>${this.sel == null ? "押し出すキャラを選んでください" : r === "push" ? "押し出して出す" : "押し出して使う"}</button>
+        ${r === "pushFx" ? `<button type="button" class="btn" data-act="pushSkip">押し出さない</button>` : ""}
+        <button type="button" class="btn" data-act="cancel">やめる</button>
+      </div></div>`;
+  },
+  toggle(uid) { this.sel = this.sel === uid ? null : uid; Sound.play("tap"); this.paint(); },
+  go() { if (this.sel == null || !this.role()) return; const uid = this.sel; this.sel = null; pickTarget(uid); }
+};
 function doPick() {
   if (!S || !S.pick || S.pick.pi !== ME) return;
   const sel = [...Pick.sel];
@@ -664,6 +696,7 @@ function pushOut(pi, uid) {
 }
 /* 実際に選ぶ必要がある対象（キャラで、その側にキャラがいない効果は選ばずに空振り） */
 function neededRoles(pi, d) {
+  if (jellyDud(pi, d)) return [];   // 何も起きないので対象は選ばない
   return [...pushRoles(pi, d), ...cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > (r === "enemy2" ? 1 : 0))];   // 2体目は、2体以上いるときだけ選ぶ
 }
 
@@ -673,11 +706,14 @@ function reqOK(pi, r) {
   const n = f.filter(u => (!r.world || (DEF[u.id] && DEF[u.id].world === r.world)) && (!r.tribe || (DEF[u.id] && DEF[u.id].tribe === r.tribe))).length;
   return n >= (r.n || 0) || (r.orEmpty && f.length === 0);
 }
+/* クラゲ魔法は、場にクラゲがいなくても使える（何も起きない。手札を減らすのに使える。オーナー 11-27） */
+const jellyDud = (pi, d) => !!(d && isJellySpell(d) && d.req && !reqOK(pi, d.req));
 function canPlay(pi, idx) {
   const p = S.players[pi], d = DEF[p.hand[idx]];
   if (!d) return { ok: false, reason: "そのカードはありません" };
   if (d.id === GEAR_ID) return { ok: false, reason: "歯車はこれだけでは使えません" };
-  if (d.req && !reqOK(pi, d.req)) return { ok: false, reason: reqText(d.req) };
+  if (d.req && !reqOK(pi, d.req) && !jellyDud(pi, d)) return { ok: false, reason: reqText(d.req) };
+  if (jellyDud(pi, d)) return S.over || S.phase !== "play" || S.turn !== pi ? { ok: false, reason: "自分のターンではありません" } : effCost(pi, d, idx) > p.e ? { ok: false, reason: "エナジーが足りません" } : { ok: true };
   if (S.over || S.phase !== "play" || S.turn !== pi) return { ok: false, reason: "自分のターンではありません" };
   if (effCost(pi, d, idx) > p.e) return { ok: false, reason: "エナジーが足りません" };
   const sac = d.pay && d.pay.kind === "sacrifice";
@@ -724,6 +760,7 @@ function gearChoice(pi, idx) {
 function playCard(pi, idx, targetsIn, useGear) {
   const p = S.players[pi], id = p.hand[idx], d = DEF[id];
   if (!d || !canPlay(pi, idx).ok) return false;
+  const dud = jellyDud(pi, d);
   const targets = normTargets(pi, d, targetsIn);
   const roles = neededRoles(pi, d);
   for (const r of roles) {
@@ -770,7 +807,8 @@ function playCard(pi, idx, targetsIn, useGear) {
     const opt = d.sway[Math.floor(Math.random() * d.sway.length)];
     if (DEF[opt]) { runD = DEF[opt]; log(`${cname(id)}の中身は「${cname(opt)}」だった！`); fx("reveal", opt, `reveal:${pi}:中身が決まった`); }
   }
-  try { runEffects(pi, runD, runD === d ? targets : {}, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; S.milled = null; }
+  if (dud) log(`場に【クラゲ】がいないので、${cname(id)}は何も起こさなかった。`);
+  else try { runEffects(pi, runD, runD === d ? targets : {}, self); } finally { S.gearSpent = 0; S.dmgBonus = 0; S.numBonus = 0; S.recycled = 0; S.milled = null; }
   if (isJellySpell(d)) p.jellyN = (p.jellyN || 0) + 1;   // この対戦で使ったクラゲ魔法の数（満ち潮の夜）
   stat(pi, d.type === "spell" ? "spell" : "char");
   if (d.type === "spell") { trigUnits(pi, "spell"); (p.used || (p.used = [])).push(id); gyAdd(p, id); }   // 使った魔法（墓地の画面で見せる）
@@ -1989,7 +2027,7 @@ function isTargetable(pi, u) {
   const r = curRole();
   if (r === "enemy2" && ui.picked.enemy === u.uid) return false;
   if (pi === ME && r !== "enemy2" && [ui.picked.push, ui.picked.pushFx, ui.picked.sacrifice].includes(u.uid)) return false;   // 押し出す・代償にするキャラは、ほかの対象に選べない
-  if (r === "push" || r === "pushFx") return pi === ME && u.hp > 0;
+  if (r === "push" || r === "pushFx") return false;   // 押し出しは選ぶ画面で選ぶ
   return !!r && roleAllows(ME, r, pi, u, DEF[S.players[ME].hand[ui.sel.idx]]);
 }
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
@@ -2151,7 +2189,7 @@ function render() {
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;
   // 前と同じ画面なら作り直さない（作り直しはスマホでは重い）
-  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); Mull.after(); Dig.after(); Pick.after(); return; }
+  if (html === lastBoardHTML && app.querySelector(".pbar") && !app.querySelector('[style*="visibility: hidden"]')) { renderSheet(); Mull.after(); Dig.after(); Pick.after(); PushPick.after(); return; }
   lastBoardHTML = html;
   app.innerHTML = html;
   if (oldImgs.size) app.querySelectorAll("img").forEach(im => { const l = oldImgs.get(im.getAttribute("src")); if (l && l.length) { const o = l.pop(); o.className = im.className; im.replaceWith(o); } });
@@ -2161,6 +2199,7 @@ function render() {
   Mull.after();
   Dig.after();
   Pick.after();
+  PushPick.after();
 }
 
 /* ---------- 対戦前の画面（じゃんけん・先攻後攻・マリガン） ---------- */
@@ -2363,15 +2402,14 @@ function detailHTML(id, unit, owner, full) {
 function renderSheet() {
   const el = $("#sheet");
   if (!S || !ui.sel || S.over) { el.hidden = true; return; }
+  if (ui.mode === "target" && PushPick.role()) { el.hidden = true; return; }   // 押し出しは選ぶ画面を出す
   if (ui.mode) {
     let msg;
     if (ui.mode === "target") {
       const d = DEF[S.players[ME].hand[ui.sel.idx]];
       if (!d) { ui = { sel: null, mode: null }; el.hidden = true; return; }
       const r = curRole();
-      msg = r === "push" ? `場がいっぱいです。${esc(d.name)}を出すために、墓地へ押し出す自分のキャラをタップしてください（倒されたときの効果は発動しません）`
-        : r === "pushFx" ? `場がいっぱいです。${esc(d.name)}の効果でキャラを出すなら、墓地へ押し出す自分のキャラをタップしてください`
-        : r === "sacrifice" ? `${esc(d.name)}：代償として破壊する自分のキャラをタップしてください`
+      msg = r === "sacrifice" ? `${esc(d.name)}：代償として破壊する自分のキャラをタップしてください`
         : r === "enemyF" ? `${esc(d.name)}の対象にする相手キャラか、上の相手の顔をタップしてください`
         : r === "any" ? `${esc(d.name)}の対象にするキャラ（自分か相手）をタップしてください`
         : r === "enemy2" ? `${esc(d.name)}：2体目の相手キャラをタップしてください`
@@ -2384,7 +2422,7 @@ function renderSheet() {
         : "攻撃する相手キャラか、上の相手の顔をタップ";
     }
     el.className = "sheet banner";
-    el.innerHTML = `<p>${msg}</p>${ui.mode === "target" && curRole() === "pushFx" ? `<button type="button" class="btn primary" data-act="pushSkip">押し出さない</button>` : ""}<button type="button" class="btn" data-act="cancel">やめる</button>`;
+    el.innerHTML = `<p>${msg}</p><button type="button" class="btn" data-act="cancel">やめる</button>`;
     el.hidden = false;
     return;
   }
@@ -3764,6 +3802,8 @@ function handleAct(act, el) {
     case "dig": doDig(+el.dataset.i); break;
     case "pickT": Pick.toggle(+el.dataset.i); break;
     case "pickGo": doPick(); break;
+    case "pushT": PushPick.toggle(+el.dataset.uid); break;
+    case "pushGo": PushPick.go(); break;
     case "play": case "playGear": {
       if (!ui.sel || ui.sel.kind !== "hand" || !canAct()) return;
       const idx = ui.sel.idx;
