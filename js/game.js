@@ -1257,7 +1257,7 @@ function effect(pi, e, targets, self) {
     }
     case "tideUp": { me.jellyN = (me.jellyN || 0) + n; log(`満ち潮の夜で数えるクラゲ魔法が${n}つ増えた（いま${me.jellyN}）。`); break; }
     case "tide": {
-      const k = Math.min(e.max || 15, n * (me.gy || []).filter(id => DEF[id] && DEF[id].type === "char" && DEF[id].tribe === "jelly").length);
+      const k = tideDmg(pi, e);
       if (!k) { log("墓地にクラゲがいないので、満ち潮は起きなかった。"); break; }
       boltFx(pi, self, [playerSel(opp(pi))]);
       log(`満ち潮！${pname(opp(pi))}に${k}ダメージ。`); hitPlayer(opp(pi), k);
@@ -1371,6 +1371,11 @@ function hitUnit(u, n) {
   fx(unitSel(u.uid), dmg < n ? `-${dmg}（装甲）` : "-" + dmg, "dmg");
   if (dmg > 0 && u.hp > 0) { const pi = S.players.findIndex(p => p.field.includes(u)); if (pi >= 0) queueTrig(pi, "survive", u); }
   return dmg;
+}
+/* 満ち潮の夜：自分の墓地の【クラゲ】のキャラ1体につき n（上限 max）。手札のカードに今のダメージを出すのにも使う */
+function tideDmg(pi, e) {
+  const p = S.players[pi], n = Math.abs(e.n || 1);
+  return Math.min(e.max || 15, n * (p.gy || []).filter(id => DEF[id] && DEF[id].type === "char" && DEF[id].tribe === "jelly").length);
 }
 function hitPlayer(pi, n) {
   if (n > 0 && S.players[pi].ward) { S.players[pi].ward = 0; fx(playerSel(pi), "結界", "wardbreak"); log(`${pname(pi)}の結界がダメージを防いだ。`); return; }
@@ -2101,7 +2106,7 @@ function render() {
       // 自分のターンに使えないカードは色を薄くする（相手のターン中は普通に見せる）
       const dim = !DEF[id] || (id !== GEAR_ID && S.turn === ME && !S.over && !canPlay(ME, i).ok);
       const sel = ui.sel && ui.sel.kind === "hand" && ui.sel.idx === i;
-      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}), ...(S.turn === ME && me.played && DEF[id] && (DEF[id].effects || []).some(e => e.per === "played") ? { perN: me.played } : {}), ...(handGrowAt(me, i) ? { grow: handGrowAt(me, i) } : {}) });
+      return cardHTML(DEF[id], { cost: DEF[id] ? effCost(ME, DEF[id], i) : undefined, cls: `${dim ? "dim" : ""} ${sel ? "sel" : ""} ${id === GEAR_ID ? "gearstack" : ""}`, attrs: `data-hand="${i}"`, ...(id === GEAR_ID ? { count: me.gears || 0, showCost: false } : {}), ...(S.turn === ME && me.played && DEF[id] && (DEF[id].effects || []).some(e => e.per === "played") ? { perN: me.played } : {}), ...(handGrowAt(me, i) ? { grow: handGrowAt(me, i) } : {}), ...(DEF[id] && (DEF[id].effects || []).some(e => e.kind === "tide") ? { tideN: tideDmg(ME, DEF[id].effects.find(e => e.kind === "tide")) } : {}) });
     }).join("")}</div>
     ${pbarHTML(ME)}
     ${typeof Online !== "undefined" && MODE === "online" ? Online.bannerHTML() : ""}`;

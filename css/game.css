@@ -1481,7 +1481,7 @@ html.nofx .card .shine{display:none}
 .trade.ask p small{justify-content:flex-start;color:var(--muted)}
 
 /* ---- 詳細の窓の左右の矢印（前後のカードへ） ---- */
-.dmodal-in:has(.dm-nav){position:relative;overflow:visible}
+.dmodal-in:has(.dm-nav){position:relative}
 .dm-nav{all:unset;box-sizing:border-box;cursor:pointer;position:absolute;top:96px;z-index:2;width:40px;height:56px;display:grid;place-items:center;border-radius:10px;
   background:rgba(12,14,30,.85);box-shadow:0 0 0 1px #8a6a2a,0 4px 10px rgba(0,0,0,.5);color:var(--gold)}
 .dm-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
@@ -3299,17 +3299,8 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .battlebtn > *:not(.bart){position:relative;z-index:1}
 /* パックを開ける画面の背景 */
 .overlay:has(.openstage){background:linear-gradient(rgba(8,9,20,.15),rgba(8,9,20,.45)),url("../ui/bg-open.webp") center 30%/cover no-repeat,#07080f}
-/* カードの詳しい説明が長いとき、小窓ごとスクロールできるように（前は前後の矢印のために、はみ出しを見せる設定で、下の「戻る」に届かなかった） */
-.dmodal:has(.dm-nav){display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.dmodal:has(.dm-nav) .dmodal-in{margin:auto;max-height:none;flex:none}
-/* 矢印のない小窓も同じく小窓ごとスクロールする（2026-11-27：長い説明のカードで、小窓の下の端が下のメニューの裏に入り「閉じる」が押せなかった） */
-.dmodal{display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.dmodal > .dmodal-in{margin:auto;max-height:none;flex:none}
 /* 小窓（確認・カードの説明・「？」など）が出ても、下のメニューは消さない（2026-11-24。前は隠していて「バーが消えた」と見えていた）。
    代わりに小窓をメニューの分だけ上に寄せて、小窓のボタンがメニューに隠れないようにする */
-#overlay:has(.nv-on) .dmodal{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
-#overlay:has(.nv-on) .dmodal:has(.dm-nav){padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
-.helpbox,.kp-swapbox{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 .battlebtn.online .bart{background-image:linear-gradient(180deg,rgba(9,10,20,.15),rgba(9,10,20,.75) 70%),url("../ui/mode-online.webp");background-position:center,72% 25%;background-size:cover,cover}
 
 /* G・魔石の札（どの画面でも同じ形）：細い金の二重線の黒い札。絵は左にはみ出して大きく（2026-11-20） */
@@ -3982,3 +3973,12 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 @keyframes bospan{from{letter-spacing:1.4em;opacity:0}to{letter-spacing:.5em;opacity:1}}
 .cine.reduced.order3 .bo-gather,.cine.reduced.order3 .bo-orb,.cine.reduced.order3 .bo-burst,.cine.reduced.order3 .bo-sparks,.cine.reduced.order3 .bo-embers,.cine.reduced.order3 .bo-glint{display:none}
 .cine.reduced.order3{animation:none}
+
+/* ---- 小窓（カードの詳しい説明・確認など）：2026-11-27 iPhone で「閉じる」が下のメニューの裏に隠れて押せなかった ----
+   小窓の高さを、上の時計の帯（安全領域）と下のメニューの間に必ず収め、中だけをスクロールさせる。
+   カードの説明の「閉じる」は小窓の下に貼り付けて、いつでも見える。小窓の外をタップしても閉じられる */
+.dmodal{--dmt:calc(12px + env(safe-area-inset-top,0px));--dmb:calc(12px + env(safe-area-inset-bottom,0px));padding:var(--dmt) 12px var(--dmb);overflow:hidden}
+#overlay:has(.nv-on) .dmodal,.helpbox,.kp-swapbox{--dmb:calc(92px + env(safe-area-inset-bottom,0px))}
+.dmodal > .dmodal-in{margin:auto;max-height:calc(100vh - var(--dmt) - var(--dmb));max-height:calc(100dvh - var(--dmt) - var(--dmb));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.dmodal-body > .btn[data-act$="Close"]{position:sticky;bottom:-14px;z-index:3;margin-bottom:-14px;background:var(--panel);box-shadow:0 -14px 14px -2px var(--panel),0 14px 0 var(--panel)}
+.card .perb.tideb{background:linear-gradient(180deg,#3aa0e8,#1d5fae);box-shadow:0 0 8px rgba(90,180,255,.85);font-size:10px;top:26%}   /* 満ち潮の夜：今使ったときのダメージ */
