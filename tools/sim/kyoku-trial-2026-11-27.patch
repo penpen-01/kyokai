@@ -1,0 +1,146 @@
+diff --git a/js/game.js b/js/game.js
+index 2fc2fdb..80ee008 100644
+--- a/js/game.js
++++ b/js/game.js
+@@ -1643,10 +1643,15 @@ const TRIG_WEIGHT = { death: 0.8, voidBack: 0.3, allyDeath: 0.6, kill: 0.6, surv
+ function trigValue(d) {
+   return d.effects.filter(e => whenOf(e) !== "play").reduce((a, e) => a + effValue(e) * (TRIG_WEIGHT[whenOf(e)] ?? 1) * (e.cond ? 0.6 : 1), 0);
+ }
++/* 盤面評価の重み。極級だけ別の値を使う（シミュレーションで決めた。ほかの強さはもとの値のまま） */
++const EVAL_W0 = { atk: 1.2, hp: 0.9, unit: 1, gAtk: 0.8, gHp: 0.3, hpMe: 1.0, hpEn: 1.6, fieldEn: 1.1, hand: 0.7, handEn: 0.35, gy: 0.6, maxE: 0.9, reach: 0.4, lethal: 60, kill: 25 };
++const EVAL_WK = { ...EVAL_W0 };
++const evW = () => CPU_LEVEL === "kyoku" ? EVAL_WK : EVAL_W0;
+ function unitValue(u) {
+   const d = DEF[u.id]; if (!d) return 0;
++  const W = evW();
+   // 亡霊は1回攻撃すると消える「使い切り」。場に置いておく価値は低く見て、攻撃に使わせる（墓地に戻れば、また呼び戻せる）
+-  let v = kw(u, "ghost") ? u.atk * 0.8 + Math.max(0, u.hp) * 0.3 : u.atk * 1.2 + Math.max(0, u.hp) * 0.9 + 1;
++  let v = kw(u, "ghost") ? u.atk * W.gAtk + Math.max(0, u.hp) * W.gHp : u.atk * W.atk + Math.max(0, u.hp) * W.hp + W.unit;
+   if (kw(u, "guard")) v += 1.5 + u.hp * 0.2;
+   if (kw(u, "pierce")) v += u.atk * 0.4;
+   if (kw(u, "trample")) v += 0.5;
+@@ -1674,27 +1679,28 @@ function evaluate(st, pi) {
+   const me = st.players[pi], en = st.players[1 - pi];
+   if (en.hp <= 0 && me.hp > 0) return 100000;
+   if (me.hp <= 0) return -100000;
++  const W = evW();
+   let s = 0;
+-  s += me.hp * 1.0 - en.hp * 1.6;
+-  s += me.field.reduce((a, u) => a + unitValue(u), 0) - en.field.reduce((a, u) => a + unitValue(u), 0) * 1.1;
++  s += me.hp * W.hpMe - en.hp * W.hpEn;
++  s += me.field.reduce((a, u) => a + unitValue(u), 0) - en.field.reduce((a, u) => a + unitValue(u), 0) * W.fieldEn;
+   // 亜空間のキャラは、相手に倒されずに戻ってくる（少しだけ割り引いて数える）
+   s += voidOf(me).reduce((a, v) => a + unitValue(v.u) * 0.9, 0) - voidOf(en).reduce((a, v) => a + unitValue(v.u), 0) * 1.0;
+-  s += Math.min(me.hand.length, 7) * 0.7 - en.hand.length * 0.35;
++  s += Math.min(me.hand.length, 7) * W.hand - en.hand.length * W.handEn;
+   s += gearsOf(me) * 0.3 - gearsOf(en) * 0.15;   // 手札の歯車（重なっている分）
+   s += (me.ward ? 2.5 : 0) - (en.ward ? 2.5 : 0);   // 結界
+-  s += Math.min(8, gyChars(me).filter(isGhostCard).length) * 0.6;   // 墓地の亡霊（呼び戻す元手）
++  s += Math.min(8, gyChars(me).filter(isGhostCard).length) * W.gy;   // 墓地の亡霊（呼び戻す元手）
+   s += Math.min(12, (me.jellyN || 0) * 2) * 0.25;   // 使ったクラゲ魔法（満ち潮の夜の元手）
+-  s += me.maxE * 0.9;
++  s += me.maxE * W.maxE;
+   // 相手の次の攻撃で負けそうなら大きく減点
+   // 相手の次のターンに本体へ届きそうなダメージ（守護がいれば防げる）
+   const myGuard = me.field.some(u => kw(u, "guard") && !hidden(u));
+   const reach = en.field.reduce((a, u) => a + ((!myGuard || kw(u, "pierce")) && !u.frozen && !kw(u, "noattack") ? u.atk * (kw(u, "twice") ? 2 : 1) : 0), 0);
+-  if (reach >= me.hp) s -= 60;
+-  else s -= reach * 0.4;
++  if (reach >= me.hp) s -= W.lethal;
++  else s -= reach * W.reach;
+   // 自分の次のターンに届くダメージ（とどめを狙う）
+   const enGuard = en.field.some(u => kw(u, "guard") && !hidden(u));
+   const myReach = me.field.reduce((a, u) => a + ((!enGuard || kw(u, "pierce")) && !kw(u, "noattack") ? u.atk * (kw(u, "twice") ? 2 : 1) : 0), 0);
+-  if (myReach >= en.hp) s += 25;
++  if (myReach >= en.hp) s += W.kill;
+   // 特殊勝利（終刻の大時計など）：場に残るほど負けに近づく。体力を削るほど倒しやすくなるので、残りの体力も重く見る
+   const timer = u => u.winIn != null && !u.silenced && u.hp > 0 ? (u.winIn <= 1 ? 40 : u.winIn === 2 ? 22 : 12) + u.hp * 1.3 : 0;
+   s -= en.field.reduce((a, u) => a + timer(u), 0);
+@@ -1731,9 +1737,87 @@ function applyAction(pi, a) {
+   return a.t === "play" ? playCard(pi, a.idx, a.targets, !!a.gear) : attack(pi, a.uid, a.target);
+ }
+ 
++/* 極級：1ターンの手順をまとめて読み（ビームサーチ）、終わった盤面には「相手の次の攻撃」まで当てて決める。
++   相手の手札・山札は見ない（読むのは場に出ているキャラの攻撃だけ）。CPU を有利にするずるはしない（オーナー 11-27） */
++const KYOKU = { width: 3, depth: 6, acts: 30, final: 8, replySteps: 6, replyW: 1, next: 1 };
++function onState(st, fn) {
++  const real = S, wasSim = SIM; S = st; SIM = true;
++  try { return fn(); } finally { S = real; SIM = wasSim; }
++}
++/* 相手の番を仮に始めて、場のキャラの攻撃だけを相手にとって一番よい順に試す（引く・エナジー・手札は使わない） */
++function replyState(st, pi) {
++  const o = opp(pi);
++  return onState(st, () => simulate(() => {
++    if (S.over) return;
++    S.turn = o; S.q = [];
++    S.players[o].field.forEach(u => { u.swings = 0; u.ready = !u.frozen && !kw(u, "noattack"); });
++    for (let i = 0; i < KYOKU.replySteps && !S.over; i++) {
++      const acts = legalActions(o).filter(a => a.t === "attack");
++      if (!acts.length) break;
++      const base = evaluate(S, o);
++      let best = null, bv = base + 0.05;
++      acts.forEach(a => { const st2 = simulate(() => applyAction(o, a)); const v = evaluate(st2, o); if (v > bv) { bv = v; best = a; } });
++      if (!best) break;
++      applyAction(o, best);
++    }
++  }));
++}
++/* 相手の攻撃のあと、自分の次のターン（エナジー+1・1枚引く）を上級の考え方で打ってみた盤面 */
++function myNextState(st, pi) {
++  return onState(st, () => simulate(() => {
++    if (S.over) return;
++    const lv = CPU_LEVEL; CPU_LEVEL = "hard";
++    try {
++      S.turn = pi; S.q = [];
++      const p = S.players[pi];
++      p.maxE = Math.min(CONFIG.ENERGY_MAX, p.maxE + 1); p.e = p.maxE; p.played = 0;
++      p.field.forEach(u => { u.swings = 0; u.ready = !u.frozen && !kw(u, "noattack"); });
++      if (p.deck.length && p.hand.length < CONFIG.HAND_MAX) p.hand.push(p.deck.shift());
++      for (let i = 0; i < 8 && !S.over; i++) { const a = cpuChoose(pi); if (!a || !applyAction(pi, a)) break; }
++    } finally { CPU_LEVEL = lv; }
++  }));
++}
++function kyokuChoose(pi) {
++  const root = S, base = evaluate(root, pi);
++  if (!legalActions(pi).length) return null;
++  const sig = st => JSON.stringify([st.players.map(p => [p.hp, p.e, p.hand.length, p.field.map(u => [u.id, u.atk, u.hp, u.ready ? 1 : 0])]), st.over]);
++  let beam = [{ st: root, first: null, v: base }];
++  const all = [];
++  for (let d = 0; d < KYOKU.depth && beam.length; d++) {
++    const next = [], seen = new Set();
++    beam.forEach(node => {
++      if (node.st.over) return;
++      const acts = onState(node.st, () => legalActions(pi)).slice(0, KYOKU.acts);
++      acts.forEach(a => {
++        const st2 = onState(node.st, () => simulate(() => applyAction(pi, a)));
++        const k = sig(st2); if (seen.has(k)) return; seen.add(k);
++        const bonus = a.t === "play" && DEF[a.id] ? playEffects(DEF[a.id]).filter(e => e.kind === "tutor").length * 0.9 : 0;
++        next.push({ st: st2, first: node.first || a, v: evaluate(st2, pi) + bonus + (node.bonus || 0), bonus: bonus + (node.bonus || 0) });
++      });
++    });
++    next.sort((x, y) => y.v - x.v);
++    beam = next.slice(0, KYOKU.width);
++    all.push(...next.slice(0, KYOKU.final));
++  }
++  if (!all.length) return null;
++  // 候補の盤面（と「ここで終える」）に、相手の攻撃を当てて比べる
++  const score = n => {
++    if (n.st.over) return n.v;
++    const r = replyState(n.st, pi);
++    const v = KYOKU.next && !r.over ? evaluate(myNextState(r, pi), pi) : evaluate(r, pi);
++    return n.v * (1 - KYOKU.replyW) + (v + (n.bonus || 0)) * KYOKU.replyW;
++  };
++  const stay = score({ st: root, v: base });
++  const cands = all.sort((x, y) => y.v - x.v).slice(0, KYOKU.final);
++  let best = null, bv = stay + 0.05;
++  cands.forEach(n => { const v = score(n); if (v > bv) { bv = v; best = n; } });
++  return best ? best.first : null;
++}
++
+ function cpuChoose(pi) {
+   const acts = legalActions(pi);
+   if (!acts.length) return null;
++  if (CPU_LEVEL === "kyoku") return kyokuChoose(pi);
+   // 初級：手の良し悪しはざっくり見るが、得になる手の上位3つからでたらめに選ぶ（2026-11-02：前の「完全にでたらめ」は弱すぎた）
+   const easy = CPU_LEVEL === "easy";
+   const base = evaluate(S, pi);
