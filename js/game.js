@@ -1191,9 +1191,9 @@ function effect(pi, e, targets, self) {
     case "pact": {
       const L = me.field.filter(u => u.hp > 0);
       if (!L.length || S.pick) break;
+      // 自分のキャラをすべて破壊し、壊れた数だけ相手キャラをランダムに破壊（選ばない。オーナー 11-27）
       S.pick = { pi, kind: "pact", uids: L.map(u => u.uid), max: L.length };
-      if (SIM || digAuto(pi)) resolvePick(pi, pickBest(pi), true);
-      else log(`${pname(pi)}は破壊する自分のキャラを選んでいる。`);
+      resolvePick(pi, L.map((_, i) => i), true);
       break;
     }
     case "graveHand": {

@@ -68,7 +68,7 @@ const { chromium } = require('playwright');
       // 10. オクタ（コスト-2）・ノクトの力
       fresh(); S.players[0].deck = ['squire', 'm3-kraken']; const gj = put(0, 'm3-gyojin'); S.players[0].hand = []; gj.hp = 0; cleanup(); ok('魚人兵：倒されると山札から海獣', S.players[0].hand.includes('m3-kraken'), S.players[0].hand);
       fresh(); const ub = put(1, 'm3-umibouzu'); const ua = put(0, 'pegasus'); attack(0, ua.uid, ub.uid); ok('海坊主：攻撃してきたキャラを行動不能', ua.frozen || !S.players[0].field.includes(ua), { frozen: ua.frozen, hp: ua.hp });
-      fresh(); put(0, 'f3-octa'); i = hand(0, 'tk-j-tide'); ok('オクタ：満ち潮が4→2', effCost(0, DEF['tk-j-tide'], i) === 2);
+      fresh(); put(0, 'f3-octa'); i = hand(0, 'tk-j-tide'); ok('オクタ：満ち潮が-2', effCost(0, DEF['tk-j-tide'], i) === Math.max(0, DEF['tk-j-tide'].cost - 2), effCost(0, DEF['tk-j-tide'], i));
       i = hand(0, 'tk-j-needle'); ok('オクタ：0より下がらない', effCost(0, DEF['tk-j-needle'], i) === 0);
       fresh(); const ch = put(0, 'tk-chibi'); play(0, 'f3-nocto'); ok('ノクト：ほかのクラゲ+1', ch.atk === 2);
       const nc = S.players[0].field.find(u => u.id === 'f3-nocto'); destroyUnit(nc); cleanup(); ok('ノクトが去ると戻る', ch.atk === 1);
@@ -94,8 +94,8 @@ const { chromium } = require('playwright');
       ok('魂呼び：3体・合計7以下・5コストは出ない', tf.length === 3 && tf.reduce((a, u) => a + DEF[u.id].cost, 0) <= 7 && !tf.some(u => u.id === 'm3-centurion'), tf.map(u => u.id));
       // 14. 道連れ
       fresh(); const a1 = put(0, 'm3-eirei'), a2 = put(0, 'squire'); put(1, 'x-gigas'); put(1, 'garm'); put(1, 'dragon');
-      S.pick = { pi: 0, kind: 'pact', uids: [a1.uid, a2.uid], max: 2 }; resolvePick(0, [0, 1]);
-      ok('道連れ：2体壊して相手も2体', S.players[0].field.length === 0 && S.players[1].field.length === 1, S.players[1].field.map(u => u.id));
+      play(0, 'f3-michizure');
+      ok('道連れ：選ばずに自分の2体をすべて壊して相手も2体', !S.pick && S.players[0].field.length === 0 && S.players[1].field.length === 1, S.players[1].field.map(u => u.id));
       // 15. 天秤
       fresh(); put(0, 'squire'); put(0, 'x-gigas'); put(1, 'garm'); put(1, 'squire'); play(0, 'm3-tenbin');
       ok('天秤：両方の一番高いキャラ', !S.players[0].field.some(u => u.id === 'x-gigas') && !S.players[1].field.some(u => u.id === 'garm'));
@@ -131,18 +131,19 @@ const { chromium } = require('playwright');
       ok('波乗り：攻撃後に手札へ', !S.players[0].field.includes(sf) && S.players[0].hand.includes('pegasus'));
       // 23. 手招き（墓地へ・亡霊がいれば引く）
       fresh(); { const sc = put(0, 'm3-scylla'); sc.ready = true; sc.sick = false; const a1 = put(1, 'squire'), a2 = put(1, 'squire'); const h0 = S.players[1].hp, t0 = a1.hp + a2.hp; attack(0, sc.uid, 'player'); const dealt = (h0 - S.players[1].hp - sc.atk) + (t0 - a1.hp - a2.hp); ok('スキュラ：攻撃で1ダメージを6回', dealt >= 4, { dealt, hp: S.players[1].hp }); }
-      fresh(); S.players[0].gy = ['squire', 'm3-eirei', 'm3-suihei']; play(0, 'f3-temaneki');
-      ok('手招き：墓地のコスト2以下の亡霊を出す', S.players[0].field.some(u => u.id === 'm3-eirei') && !S.players[0].field.some(u => u.id === 'm3-suihei'), S.players[0].field.map(u => u.id));
+      fresh(); S.players[0].gy = ['squire', 'm3-eirei', 'm3-suihei', 'm3-centurion']; play(0, 'f3-temaneki');
+      { const cm = DEF['f3-temaneki'].effects[0].n, tf = S.players[0].field.filter(u => !DEF[u.id].token);
+        ok(`手招き：墓地のコスト${cm}以下の亡霊を1体出す`, tf.length === 1 && isGhostCard(tf[0].id) && DEF[tf[0].id].cost <= cm, tf.map(u => u.id)); }
       fresh(); const sq = put(0, 'squire'); S.players[0].gy = ['m3-eirei', 'x-gigas', 'x3-sabineji']; play(0, 'x3-kinkyu', { sacrifice: sq.uid }); ok('緊急再起動：墓地の機械（コスト5以下）を出す', S.players[0].field.some(u => DEF[u.id].world === 'mech' && DEF[u.id].cost <= 5) && !S.players[0].field.some(u => u.id === 'm3-eirei'), S.players[0].field.map(u => u.id));
       fresh(); put(1, 'squire'); const bigS = put(1, 'dragon'); S.players[0].gy = ['x3-senkan']; play(0, 'f3-grave'); ok('幽霊戦艦：戻ると攻撃力が一番高い相手を破壊', !S.players[1].field.includes(bigS));
       // 24. 大行進の条件
       fresh(); put(0, 'f3-grave'); S.players[0].gy = ['squire', 'squire', 'squire', 'squire', 'm3-eirei', 'm3-suihei', 'f3-nakimushi', 'x3-sabineji']; i = hand(0, 'f3-daikoushin');
       ok('大行進：墓地の亡霊4体では使えない', !canPlay(0, i).ok); S.players[0].gy.push('x3-kirai'); ok('大行進：亡霊5体なら（亡霊でないキャラが場にいても）使える', canPlay(0, i).ok);
       // 24b. 11-25 の調整
-      fresh(); put(0, 'f3-octa'); ok('オクタ：魔法すべて-2（0まで）', effCost(0, DEF['bolt'], 0) === 0 && effCost(0, DEF['m3-trident'], 0) === 1 && effCost(0, DEF['tk-j-tide'], 0) === 2 && effCost(0, DEF['squire'], 0) === DEF['squire'].cost);
+      fresh(); put(0, 'f3-octa'); ok('オクタ：魔法すべて-2（0まで）', effCost(0, DEF['bolt'], 0) === 0 && effCost(0, DEF['m3-trident'], 0) === Math.max(0, DEF['m3-trident'].cost - 2) && effCost(0, DEF['tk-j-tide'], 0) === Math.max(0, DEF['tk-j-tide'].cost - 2) && effCost(0, DEF['squire'], 0) === DEF['squire'].cost);
       fresh(); put(0, 'm3-aspido'); ok('アスピドケロン：手札の海獣-1', effCost(0, DEF['m3-leviathan'], 0) === DEF['m3-leviathan'].cost - DEF['m3-aspido'].aura.n && effCost(0, DEF['m3-trident'], 0) === DEF['m3-trident'].cost);
       fresh(); put(0, 'm3-kraken'); put(0, 'm3-scylla'); play(0, 'm3-hippo'); const hp = S.players[0].field.find(u => u.id === 'm3-hippo');
-      ok('ヒッポ：ほかの海獣2体で+2/+2', hp && hp.atk === 7 && hp.hp === 7, hp && [hp.atk, hp.hp]);
+      ok('ヒッポ：ほかの海獣2体で攻撃+2', hp && hp.atk === DEF['m3-hippo'].atk + 2 && hp.hp === DEF['m3-hippo'].hp, hp && [hp.atk, hp.hp]);
       fresh(); const chb = put(0, 'tk-chibi'); chb.hp = 0; cleanup(); ok('ちびクラゲ：倒されると墓地へ（満ち潮で数える）', S.players[0].gy.includes('tk-chibi'));
       fresh(); put(0, 'tk-chibi'); const fz = put(1, 'squire'); fz.hp = 5; play(0, 'tk-j-flash'); ok('青い閃光：全体1ダメージ＋行動不能', fz.hp === 4 && (fz.frozen || fz.ready === false));
       fresh(); S.players[0].gy = ['m3-eirei']; play(0, 'm3-centurion'); ok('百人隊長：登場時に亡霊を出す', S.players[0].field.some(u => u.id === 'm3-eirei'));
