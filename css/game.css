@@ -3302,6 +3302,9 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 /* カードの詳しい説明が長いとき、小窓ごとスクロールできるように（前は前後の矢印のために、はみ出しを見せる設定で、下の「戻る」に届かなかった） */
 .dmodal:has(.dm-nav){display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .dmodal:has(.dm-nav) .dmodal-in{margin:auto;max-height:none;flex:none}
+/* 矢印のない小窓も同じく小窓ごとスクロールする（2026-11-27：長い説明のカードで、小窓の下の端が下のメニューの裏に入り「閉じる」が押せなかった） */
+.dmodal{display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.dmodal > .dmodal-in{margin:auto;max-height:none;flex:none}
 /* 小窓（確認・カードの説明・「？」など）が出ても、下のメニューは消さない（2026-11-24。前は隠していて「バーが消えた」と見えていた）。
    代わりに小窓をメニューの分だけ上に寄せて、小窓のボタンがメニューに隠れないようにする */
 #overlay:has(.nv-on) .dmodal{padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
@@ -3918,3 +3921,67 @@ html:has(#app.sdmode),body:has(#app.sdmode){overflow:hidden;overscroll-behavior:
 .pk-para small{display:block;opacity:.8}
 .cutin.para .ci-text small{background:linear-gradient(110deg,#ffd36e,#ff9bd0,#9fe3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 @media (prefers-reduced-motion:reduce){.paratag{animation:none}}
+
+/* ---- じゃんけんを短く・シンプルに（2026-11-27 オーナー：1タップで決定、結果は約1.5秒）---- */
+.br-card.op{animation-duration:.3s}
+.br-card.me{animation-duration:.3s;animation-delay:.03s}
+.br-in{animation:brflip2 .36s .18s ease-in-out both}
+.br-card.me .br-in{animation-delay:.22s}
+.br-back{animation:brbackoff .36s .18s both}
+.br-card.me .br-back{animation-delay:.22s}
+.br-card.won{animation-duration:.3s,.4s;animation-delay:0s,.58s}
+.br-card.won .br-front{animation:brglow .4s .58s both}
+.br-card.lost .br-in{animation:brflip2 .36s .18s ease-in-out both,brlost .4s .62s ease-in forwards}
+.br-card.me.lost .br-in{animation-delay:.22s,.62s}
+.br-card.tie .br-in{animation:brflip2 .36s .18s ease-in-out both,brtie .35s .62s ease-in-out}
+.br-card.me.tie .br-in{animation-delay:.22s,.62s}
+.br-verdict{animation-duration:.32s;animation-delay:.56s}
+/* カードの長押しで、画像のプレビューや選択の影が出ないように（iPhone・Android） */
+.rk,.rk *,.br-card,.br-card *,.pg-opt,.pg-opt *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.rk-front,.rk-back,.pg-oemb,.br-front{pointer-events:none;-webkit-user-drag:none}
+.rk-card:active .rk-in{scale:.95}
+.pre.pg .rk .rk-card.thrown{animation-duration:.28s}
+.pre.pg .rk.shuf .rk-card:nth-child(1),.pre.pg .rk.shuf .rk-card:nth-child(2),.pre.pg .rk.shuf .rk-card:nth-child(3){animation-duration:.45s;animation-delay:.08s}
+.rk-card.back .rk-in,.rk-card.pick .rk-in{animation-duration:.2s}
+
+/* ---- 先攻／後攻（2026-11-27 作り直し・2.3秒）：光が集まる→紋章がたたきつけられる（揺れ・衝撃の輪・火花）→表面を光が流れる ---- */
+.cine.order3{--c1:255,214,120;--c2:255,170,60;animation:boshake .42s .36s linear both}
+.cine.order3.second{--c1:170,215,255;--c2:110,170,255}
+.cine.order3::after{inset:auto;left:50%;top:40%;width:120vmin;height:120vmin;margin:-60vmin 0 0 -60vmin;border-radius:50%;background:radial-gradient(circle,rgba(255,250,230,.95),rgba(var(--c1),.55) 22%,transparent 60%);animation:boflash .55s .36s ease-out both}
+.order3 .bo-rays{animation:borays .4s .38s ease-out forwards,bospin 14s linear infinite}
+.order3 .bo-gather{position:absolute;left:50%;top:40%;width:0;height:0}
+.bo-gp{position:absolute;left:0;top:0;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:#fff;box-shadow:0 0 8px rgb(var(--c1)),0 0 3px #fff;opacity:0;animation:bogp .36s var(--dl) ease-in both}
+.bo-orb{position:absolute;left:50%;top:40%;width:40vmin;height:40vmin;margin:-20vmin 0 0 -20vmin;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.9),rgba(var(--c1),.5) 30%,transparent 65%);opacity:0;animation:boorb .42s ease-in both}
+.order3 .bo-emb{animation:boemb3 .28s .1s cubic-bezier(.55,0,.85,.35) both,bofloat 2.4s 1s ease-in-out infinite}
+.order3 .bo-emb .bi-ring{animation-delay:.38s;border-color:rgba(var(--c1),.95);box-shadow:0 0 24px rgba(var(--c1),.7),inset 0 0 24px rgba(var(--c1),.5)}
+.order3 .bo-emb .bi-ring.r2{animation-delay:.5s}
+.bo-glint{position:absolute;inset:0;z-index:3;pointer-events:none;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.85) 47%,rgba(255,255,255,.15) 53%,transparent 62%) -160% 0/250% 100% no-repeat;animation:boglint .7s .9s ease-in-out both}
+.bo-burst{position:absolute;left:50%;top:40%;width:70vmin;height:70vmin;margin:-35vmin 0 0 -35vmin;border-radius:50%;
+  background:repeating-conic-gradient(rgba(255,255,255,.9) 0 1.2deg,transparent 1.2deg 12deg);-webkit-mask:radial-gradient(circle,transparent 18%,#000 30%,transparent 70%);mask:radial-gradient(circle,transparent 18%,#000 30%,transparent 70%);opacity:0;animation:boburst .5s .37s ease-out both}
+.bo-sparks{position:absolute;left:50%;top:40%;width:0;height:0}
+.bo-sk{position:absolute;left:0;top:0;width:var(--w);height:18px;margin-left:calc(var(--w) / -2);border-radius:2px;background:linear-gradient(#fff,rgb(var(--c1)) 50%,transparent);box-shadow:0 0 6px rgb(var(--c2));transform-origin:50% 0;opacity:0;animation:bosk .6s .37s cubic-bezier(.1,.7,.3,1) both}
+.bo-embers{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.bo-ember{position:absolute;left:var(--x);bottom:-10px;width:var(--s);height:var(--s);border-radius:50%;background:radial-gradient(circle,#fff,rgb(var(--c1)) 45%,rgba(var(--c2),0) 75%);opacity:0;animation:boember var(--du) var(--dl) ease-out infinite}
+.order3 .bo-txt{animation:botxt3 .4s .55s cubic-bezier(.2,1.3,.4,1) both}
+.order3 .bo-txt span{animation:bospan .5s .55s ease-out both}
+.order3 .bo-txt b{position:relative}
+.order3 .bo-txt b::after{content:attr(data-t);position:absolute;inset:0;padding-left:.2em;background:linear-gradient(110deg,transparent 40%,rgba(255,255,255,.95) 50%,transparent 60%) -150% 0/250% 100% no-repeat;-webkit-background-clip:text;background-clip:text;color:transparent;filter:none;animation:boglint .6s 1.05s ease-in-out both}
+.order3 .bo-txt small{animation:botxt3 .35s .8s ease-out both}
+.bo-coin{position:absolute;left:50%;bottom:calc(5% + env(safe-area-inset-bottom,0px));width:min(22vw,92px);z-index:4;animation:bocoin .55s 1.05s cubic-bezier(.2,1.3,.4,1) both}
+.bo-coin .card{width:100%;box-shadow:0 0 0 2px rgba(170,215,255,.8),0 0 22px rgba(120,190,255,.8)}
+@keyframes boshake{0%,100%{translate:0 0}15%{translate:-7px 5px}30%{translate:6px -6px}45%{translate:-4px 3px}60%{translate:3px -2px}80%{translate:-1px 1px}}
+@keyframes boflash{0%{opacity:0;transform:scale(.4)}20%{opacity:1}100%{opacity:0;transform:scale(1.5)}}
+@keyframes bogp{0%{opacity:0;transform:rotate(var(--a)) translateY(-46vmin)}30%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(-4vmin)}}
+@keyframes boorb{0%{opacity:0;transform:scale(.2)}80%{opacity:1;transform:scale(.8)}100%{opacity:0;transform:scale(1.2)}}
+@keyframes boemb3{0%{opacity:0;transform:translate(-50%,-50%) scale(2.6) rotate(-18deg);filter:blur(6px)}60%{opacity:1;filter:blur(1px)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0);filter:blur(0)}}
+@keyframes bofloat{50%{translate:0 -6px}}
+@keyframes boglint{0%{background-position:-160% 0}100%{background-position:160% 0}}
+@keyframes boburst{0%{opacity:0;transform:scale(.5) rotate(0)}1%{opacity:1}100%{opacity:0;transform:scale(1.6) rotate(12deg)}}
+@keyframes bosk{0%{opacity:0;transform:rotate(var(--a)) translateY(4vmin) scaleY(.4)}1%{opacity:1}40%{opacity:1;transform:rotate(var(--a)) translateY(calc(var(--r) * .7)) scaleY(1.6)}100%{opacity:0;transform:rotate(var(--a)) translateY(var(--r)) scaleY(.6)}}
+@keyframes boember{0%{opacity:0;transform:translate(0,0)}15%{opacity:1}100%{opacity:0;transform:translate(var(--sw),-70vh)}}
+@keyframes botxt3{from{opacity:0;transform:translateY(24px) scale(1.25)}to{opacity:1;transform:none}}
+@keyframes bospan{from{letter-spacing:1.4em;opacity:0}to{letter-spacing:.5em;opacity:1}}
+@keyframes bocoin{0%{opacity:0;transform:translate(-50%,120%) rotate(-25deg) scale(.6)}100%{opacity:1;transform:translate(-50%,0) rotate(-6deg) scale(1)}}
+.cine.reduced.order3 .bo-gather,.cine.reduced.order3 .bo-orb,.cine.reduced.order3 .bo-burst,.cine.reduced.order3 .bo-sparks,.cine.reduced.order3 .bo-embers,.cine.reduced.order3 .bo-glint{display:none}
+.cine.reduced.order3{animation:none}

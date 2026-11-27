@@ -2097,12 +2097,9 @@ function sleeveOf(pi) {
   return "ui/card-back.webp";
 }
 
-/* ---------- じゃんけんのカードの選び方（2026-11-24）----------
-   ・左右になぞる：指の下のカードが前に出る（手札と同じ）
-   ・タップ：前に出す。前に出ているカードをもう一度タップすると決定
-   ・上にはじく：そのカードで決定（投げる）
-   ・「これで勝負！」：前に出ているカードで決定
-   ・「おまかせ」：3枚を裏返して混ぜ、1枚がめくれて決定 */
+/* ---------- じゃんけんのカードの選び方（2026-11-27 オーナー：シンプルに）----------
+   ・タップ：そのカードで決定（投げる）
+   ・「おまかせ」：3枚を裏返して短く混ぜ、1枚がめくれて決定 */
 const RK = {
   f: 1, busy: false, pend: false, key: "", st: null,
   root() { return document.getElementById("rk"); },
@@ -2115,7 +2112,7 @@ const RK = {
     if (!quiet) { Sound.play("flip"); try { navigator.vibrate && navigator.vibrate(6); } catch (e) {} }
   },
   done(v) {
-    setTimeout(() => { this.busy = false; const p = this.pend; this.pend = false; if (S && S.phase === "rps" && !S.rps.picks[ME]) doRps(v); else if (p) render(); }, Motion.reduced ? 60 : 420);
+    setTimeout(() => { this.busy = false; const p = this.pend; this.pend = false; if (S && S.phase === "rps" && !S.rps.picks[ME]) doRps(v); else if (p) render(); }, Motion.reduced ? 60 : 220);
   },
   go(i) {
     const r = this.root(); if (!r || this.busy || r.classList.contains("off")) return;
@@ -2136,43 +2133,35 @@ const RK = {
     r.classList.add("shuf", "sent"); cards.forEach(b => b.classList.remove("on"));
     const t = Motion.reduced ? 0 : 1;
     Sound.play("flip");
-    setTimeout(() => { cards.forEach(b => b.classList.add("back")); }, 150 * t);
-    [380, 560, 740, 920].forEach(ms => setTimeout(() => Sound.play("flip"), ms * t));
-    setTimeout(() => { r.classList.remove("shuf"); cards[i].classList.add("on", "pick"); }, 1100 * t);
-    setTimeout(() => { cards[i].classList.remove("back"); Sound.play("rare"); }, 1300 * t);
-    setTimeout(() => { this.f = i; cards.forEach((b, k) => b.classList.toggle("gone", k !== i)); cards[i].classList.add("thrown"); r.classList.add("sent"); Sound.play("swing"); this.done(cards[i].dataset.v); }, 1850 * t);
+    setTimeout(() => { cards.forEach(b => b.classList.add("back")); }, 60 * t);
+    [200, 380].forEach(ms => setTimeout(() => Sound.play("flip"), ms * t));
+    setTimeout(() => { r.classList.remove("shuf"); cards[i].classList.add("on", "pick"); }, 560 * t);
+    setTimeout(() => { cards[i].classList.remove("back"); Sound.play("rare"); }, 660 * t);
+    setTimeout(() => { this.f = i; cards.forEach((b, k) => b.classList.toggle("gone", k !== i)); cards[i].classList.add("thrown"); r.classList.add("sent"); Sound.play("swing"); this.done(cards[i].dataset.v); }, 900 * t);
   },
   /* 指の動き */
   down(e) {
     const r = this.root(), c = e.target.closest && e.target.closest(".rk-card");
     if (!r || !c || this.busy || c.disabled || r.classList.contains("off")) return;
-    this.st = { x: e.clientX, y: e.clientY, t: performance.now(), i: +c.dataset.rk, was: this.f, moved: false, id: e.pointerId };
-    this.focus(+c.dataset.rk, true);
+    this.st = { x: e.clientX, y: e.clientY, i: +c.dataset.rk, moved: false, id: e.pointerId };
   },
   move(e) {
     const st = this.st; if (!st || e.pointerId !== st.id) return;
     const dx = e.clientX - st.x, dy = e.clientY - st.y;
-    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) st.moved = true;
-    // 上にはじいた
-    if (dy < -46 && Math.abs(dy) > Math.abs(dx) * 1.1) { this.st = null; this.go(this.f); return; }
-    // 横になぞった：指の下のカード
-    const el = document.elementFromPoint(e.clientX, Math.min(e.clientY, st.y + 20));
-    const c = el && el.closest && el.closest(".rk-card");
-    if (c && this.root() && this.root().contains(c) && +c.dataset.rk !== this.f) this.focus(+c.dataset.rk);
+    if (Math.abs(dx) > 14 || Math.abs(dy) > 14) st.moved = true;   // 指が大きく動いたら、押すのをやめたとみなす
   },
   up(e) {
     const st = this.st; if (!st || e.pointerId !== st.id) return;
     this.st = null;
     if (st.moved) return;
-    // タップ：前に出ていたカードをもう一度押したら決定
-    if (st.was === st.i) this.go(st.i);
-    else { Sound.play("flip"); try { navigator.vibrate && navigator.vibrate(6); } catch (e) {} }
+    this.go(st.i);   // タップ1回で決定
   }
 };
 document.addEventListener("pointerdown", e => RK.down(e));
 document.addEventListener("pointermove", e => RK.move(e), { passive: true });
 document.addEventListener("pointerup", e => RK.up(e));
 document.addEventListener("pointercancel", () => { RK.st = null; });
+document.addEventListener("contextmenu", e => { if (e.target.closest && e.target.closest(".rk, .br-card, .pg-opt")) e.preventDefault(); });   // 長押しのメニューを出さない
 document.addEventListener("click", e => { const c = e.target.closest && e.target.closest(".rk-card"); if (c && e.detail === 0) RK.go(+c.dataset.rk); });   // キーボードで押したとき
 
 /* じゃんけんの手（Gemini の絵を切り分けたもの：ui/rps-g/c/p.webp） */
@@ -2196,9 +2185,9 @@ function pregameHTML(still) {
     body = `<div class="pg-title"><b>${last ? "あいこ！" : "じゃんけん"}</b><small>${last ? "もう一度" : "勝てば先攻・後攻を選べる"}</small></div>
       ${mine ? `<div class="pg-chosen"><span class="rk-in"><img class="rk-front" src="ui/bt/rps-${mine}.webp" alt="" draggable="false"></span><span>${RPS[mine]}</span></div><p class="pg-wait">相手を待っています${dots}</p>`
         : `<div class="rk ${wait ? "off" : ""}" id="rk">
-          <div class="rk-fan">${["g", "c", "p"].map((k, i) => `<button type="button" class="rk-card ${RK.f === i ? "on" : ""}" style="--i:${i}" data-rk="${i}" data-v="${k}" ${wait ? "disabled" : ""} aria-label="${RPS[k]}を出す"><span class="rk-in"><img class="rk-front" src="ui/bt/rps-${k}.webp" alt="" draggable="false"><i class="rk-back" style="background-image:url('${sl}')"></i></span><b>${RPS[k]}</b></button>`).join("")}</div>
-          <div class="rk-ctl"><button type="button" class="rk-rand" data-act="rkRand" ${wait ? "disabled" : ""}><i style="background-image:url('${sl}')"></i>おまかせ</button><button type="button" class="btn primary rk-go" data-act="rkGo" ${wait ? "disabled" : ""}>これで勝負！</button></div>
-          <p class="rk-hint">なぞって選ぶ ・ 上にはじくと決定</p></div>`}`;
+          <div class="rk-fan">${["g", "c", "p"].map((k, i) => `<button type="button" class="rk-card" style="--i:${i}" data-rk="${i}" data-v="${k}" ${wait ? "disabled" : ""} aria-label="${RPS[k]}を出す"><span class="rk-in"><img class="rk-front" src="ui/bt/rps-${k}.webp" alt="" draggable="false"><i class="rk-back" style="background-image:url('${sl}')"></i></span><b>${RPS[k]}</b></button>`).join("")}</div>
+          <div class="rk-ctl"><button type="button" class="rk-rand" data-act="rkRand" ${wait ? "disabled" : ""}><i style="background-image:url('${sl}')"></i>おまかせ</button></div>
+          <p class="rk-hint">出す手をタップ</p></div>`}`;
   } else if (ph === "choose") {
     const win = S.rpsWinner === ME;
     body = S.sen ? `<div class="pg-title ${win ? "win" : ""}"><b>デッキ完成！</b><small>${win ? "じゃんけんに負けたあなたが、先攻か後攻かを選べます" : "じゃんけんに負けた相手が、先攻・後攻を選びます"}</small></div>`
