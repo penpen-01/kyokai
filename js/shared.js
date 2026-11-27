@@ -399,7 +399,7 @@ const DEFAULT_CONFIG = {
   // ここから下はゲームの裏側（報酬・配布）
   STARTING_GOLD: 100, REWARD_EASY: 30, REWARD_NORMAL: 60, REWARD_HARD: 120, REWARD_EX: 450, REWARD_ONLINE: 300, REWARD_ONLINE_LOSE: 100, ONLINE_MIN_TURNS: 6, ONLINE_DAY_MAX: 10,
   STREAK_STEP: 10, STREAK_MAX: 50,
-  BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, MAINT: 0, BOSS_EX_ON: 0, BOSS_EX_RATE: 5, BOSS_EX_PITY: 20, BOSS_EX_HP: 30, SAMPLE_ONLINE_DAY: 3, SAMPLE_CPU: 1, SAMPLE_SET3: 1,
+  BOSS_RATE: 5, BOSS_PITY: 20, BOSS_HP: 25, MAINT: 0, BOSS_EX_ON: 0, BOSS_EX_RATE: 5, BOSS_EX_PITY: 20, BOSS_EX_HP: 30, SAMPLE_ONLINE_DAY: 3, SAMPLE_CPU: 1, SAMPLE_SET3: 1, PUSH_OUT: 0,
   // ショップ：上限を超えたカードを分解したときの魔石と、交換に必要な魔石（レア度ごと）・パック券
   STONE_GET_COMMON: 5, STONE_GET_RARE: 20, STONE_GET_SR: 50, STONE_GET_UR: 150, STONE_GET_LEGEND: 400,
   STONE_COST_COMMON: 40, STONE_COST_RARE: 100, STONE_COST_SR: 400, STONE_COST_UR: 1000, STONE_COST_LEGEND: 3000,
@@ -448,6 +448,7 @@ const CONFIG_INFO = {
   BOSS_EX_HP:    { label: "超級の隠しボス：ボスの体力", min: 1, max: 99, group: "eco" },
   SAMPLE_ONLINE_DAY: { label: "サンプルデッキ：友達との対戦で1日に使える回数", min: 0, max: 99, group: "eco" },
   SAMPLE_CPU:    { label: "サンプルデッキ：CPU戦でも使える（1＝使える・0＝使えない。正式リリースで0に）", min: 0, max: 1, group: "eco" },
+  PUSH_OUT:      { label: "押し出し：場がいっぱいのとき、自分のキャラ1体を墓地へ押し出してキャラを出せる（1＝使える・0＝使えない。お知らせと同時に1に。運営用アカウントはCPU戦で先に試せる）", min: 0, max: 1, group: "eco" },
   SAMPLE_SET3:   { label: "サンプルデッキ：まだ開放していない第3弾のカードも組める（一時的。1＝組める・0＝ふつう）", min: 0, max: 1, group: "eco" },
   STONE_GET_COMMON:  { label: "分解でもらえる魔石：コモン", min: 0, max: 100000, group: "eco" },
   STONE_GET_RARE:    { label: "分解でもらえる魔石：レア", min: 0, max: 100000, group: "eco" },

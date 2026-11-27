@@ -555,6 +555,7 @@ function targetables(pi, role, d) {
 }
 /* その役割で選べるもの（uid の並び。「相手（キャラかプレイヤー）」は "face" も選べる） */
 function targetOpts(pi, role, d) {
+  if (role === "push" || role === "pushFx") { const u = S.players[pi].field.filter(x => x.hp > 0).map(x => x.uid); return role === "pushFx" ? [...u, "skip"] : u; }
   const u = targetables(pi, role, d).map(x => x.uid);
   return role === "enemyF" ? [...u, "face"] : u;
 }
@@ -596,9 +597,38 @@ const handGrowAt = (p, idx) => (p.handGrow || [])[idx] || 0;
 
 /* 対象を選ぶ役割ごとに、どちらのプレイヤーのキャラから選ぶか（any は両方） */
 function roleSide(pi, role) { return isEnemyRole(role) ? opp(pi) : pi; }
+/* ---------- 押し出し（2026-11-27 オーナー。CONFIG.PUSH_OUT が 1 のときだけ）----------
+   場がいっぱいのとき、自分のキャラ1体を墓地へ押し出して、手札のキャラを出せる（push。必ず選ぶ）。
+   カードを使ったときに働く「キャラを出す効果」（トークン・墓地から出す・複製・奪うなど）は、押し出すか選べる（pushFx。「押し出さない」も選べる）。
+   押し出したキャラは墓地へ行くが、倒された扱いではない（倒されたとき・味方が倒されたときの効果は発動しない）。
+   倒されたとき・ターンの始めなど自動で働く効果は、これまでどおり場がいっぱいなら出ない。
+   運営用アカウントは、CPU戦などで先に試せる（対人戦は両方の画面でルールがそろわないので、PUSH_OUT が 1 になってから） */
+const pushOn = () => !!(CONFIG.PUSH_OUT) || (adminOn() && MODE !== "online");
+const SUMMON_KINDS = new Set(["tokenField", "revive", "reviveSel", "cheat", "summon", "callCard", "mendCard"]);
+const summonsByEffect = d => playEffects(d).some(e => SUMMON_KINDS.has(e.kind) || (e.kind === "unit" && (e.act === "copy" || e.act === "steal")));
+function pushRoles(pi, d) {
+  if (!d || !pushOn() || !S || !S.players[pi]) return [];
+  const p = S.players[pi], sac = d.pay && d.pay.kind === "sacrifice" ? 1 : 0, out = [];
+  let used = p.field.length + voidOf(p).length - sac, can = p.field.length - sac;   // can：押し出せる自分のキャラの数
+  if (d.type === "char" && used >= CONFIG.FIELD_MAX) { if (can <= 0) return []; out.push("push"); used--; can--; }
+  if (d.type === "char") used++;
+  if (summonsByEffect(d) && used >= CONFIG.FIELD_MAX && can > 0) out.push("pushFx");
+  return out;
+}
+/* 押し出す：墓地へ。倒された扱いにしない（効果・数え上げなし） */
+function pushOut(pi, uid) {
+  const p = S.players[pi], u = p.field.find(x => x.uid === uid);
+  if (!u) return false;
+  p.field = p.field.filter(x => x !== u);
+  const owner = S.players[u.owner != null ? u.owner : pi];   // 奪ったキャラは元の持ち主の墓地へ
+  (owner.grave || (owner.grave = [])).push(u.id); gyAdd(owner, u.id);
+  log(`${pname(pi)}は${cname(u.id)}を墓地へ押し出した。`);
+  fx(unitSel(u.uid), "押し出し", "trig"); fx(unitSel(u.uid), "", "die");
+  return true;
+}
 /* 実際に選ぶ必要がある対象（キャラで、その側にキャラがいない効果は選ばずに空振り） */
 function neededRoles(pi, d) {
-  return cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > (r === "enemy2" ? 1 : 0));   // 2体目は、2体以上いるときだけ選ぶ
+  return [...pushRoles(pi, d), ...cardTargetRoles(d).filter(r => targetOpts(pi, r, d).length > (r === "enemy2" ? 1 : 0))];   // 2体目は、2体以上いるときだけ選ぶ
 }
 
 /* 使える条件（card.req）：自分の場に（世界の）キャラが N 体以上、または（orEmpty）自分の場が空 */
@@ -617,11 +647,11 @@ function canPlay(pi, idx) {
   const sac = d.pay && d.pay.kind === "sacrifice";
   if (sac && !p.field.length) return { ok: false, reason: "代償にする自分のキャラがいません" };
   if (d.pay && d.pay.kind === "life" && p.hp <= d.pay.n) return { ok: false, reason: "代償の体力が足りません" };
-  if (d.type === "char" && fieldFull(p) && !sac) return { ok: false, reason: voidOf(p).length ? "空いている場所がありません（亜空間のキャラが戻る場所です）" : "場がいっぱいです" };
+  if (d.type === "char" && fieldFull(p) && !sac && !(pushOn() && p.field.length)) return { ok: false, reason: voidOf(p).length ? "空いている場所がありません（亜空間のキャラが戻る場所です）" : "場がいっぱいです" };
   if (d.type === "spell" && d.effects.some(e => e.kind === "banishOwn") && d.effects.every(e => e.kind === "banishOwn") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
   // 第3弾
   if (d.effects.some(e => e.kind === "cheat") && !p.hand.some((id, i) => i !== idx && DEF[id] && DEF[id].type === "char" && (!d.effects.find(e => e.kind === "cheat").tribe || DEF[id].tribe === d.effects.find(e => e.kind === "cheat").tribe))) return { ok: false, reason: "手札に出せる海獣がいません" };
-  if (d.effects.some(e => e.kind === "cheat") && fieldFull(p)) return { ok: false, reason: "場がいっぱいです" };
+  if (d.effects.some(e => e.kind === "cheat") && fieldFull(p) && !(pushOn() && p.field.length)) return { ok: false, reason: "場がいっぱいです" };
   if (d.type === "spell" && d.effects.some(e => e.kind === "pact") && !p.field.length) return { ok: false, reason: "自分の場にキャラがいません" };
   { const t = d.effects.find(e => e.kind === "toss"); if (t && p.hand.filter((id, i) => i !== idx && id !== GEAR_ID && DEF[id] && (!t.ctype || DEF[id].type === t.ctype)).length < (t.n || 1)) return { ok: false, reason: `捨てる${t.ctype === "char" ? "キャラ" : "カード"}が手札に${t.n > 1 ? t.n + "枚" : ""}ありません` }; }
   if (d.type === "spell" && d.effects.some(e => e.kind === "scales") && !S.players.every(q => q.field.some(u => u.hp > 0))) return { ok: false, reason: "おたがいの場にキャラが1体以上いるときだけ使えます" };
@@ -663,6 +693,7 @@ function playCard(pi, idx, targetsIn, useGear) {
     if (!targetOpts(pi, r, d).includes(targets[r])) return false;
   }
   if (targets.enemy2 != null && targets.enemy2 === targets.enemy) return false;   // 2体目は1体目とちがうキャラ
+  if (targets.push != null && targets.push === targets.pushFx) return false;   // 押し出すのは別々のキャラ
   const cost = effCost(pi, d, idx);
   const grow = handGrowAt(p, idx);
   const spend = d.gear === "all" ? gearsOf(p) : useGear && gearChoice(pi, idx) ? d.gear : 0;
@@ -670,7 +701,7 @@ function playCard(pi, idx, targetsIn, useGear) {
   p.e -= cost;
   p.played = (p.played || 0) + 1;   // このターンに使ったカードの数（コンボの条件）
   p.discount = 0;
-  const tnames = roles.filter(r => r !== "sacrifice").map(r => { if (targets[r] === "face") return pname(opp(pi)); const u = findUnit(targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
+  const tnames = roles.filter(r => !["sacrifice", "push", "pushFx"].includes(r)).map(r => { if (targets[r] === "face") return pname(opp(pi)); const u = findUnit(targets[r]); return u ? cname(u.id) : ""; }).filter(Boolean);
   log(`${pname(pi)}：${cname(id)}を${d.type === "char" ? "召喚" : "使用"}${tnames.length ? `（対象：${tnames.join("・")}）` : ""}。`);
   sfx("play");
   if (["ur", "legend"].includes(d.rarity) && !d.token) fx("cutin", id, "cutin" + pi);   // UR・レジェンドはカットイン
@@ -681,6 +712,8 @@ function playCard(pi, idx, targetsIn, useGear) {
     const u = p.field.find(x => x.uid === targets.sacrifice);
     if (u) { log(`代償として${cname(u.id)}を破壊した。`); u.hp = 0; u.destroyed = true; fx(unitSel(u.uid), "破壊", "dmg"); p.field = p.field.filter(x => x !== u); onDeath(pi, u); }
   }
+  // 押し出し：場を空けてから出す（倒された扱いではない）
+  [targets.push, targets.pushFx].forEach(t => { if (t != null && t !== "skip") pushOut(pi, t); });
   if (spend) { spendGears(p, spend); log(`歯車を${spend}枚使った。`); fx(playerSel(pi), `歯車-${spend}`, "gear"); stat(pi, "gear", spend); }
   else if (d.gear === "all") log("使える歯車がなかった。");
   let self = null;
@@ -1910,6 +1943,8 @@ function isTargetable(pi, u) {
   if (ui.mode === "attack") return pi === OP && canAttackUnit(ME, u, selectedUnit());
   const r = curRole();
   if (r === "enemy2" && ui.picked.enemy === u.uid) return false;
+  if (pi === ME && r !== "enemy2" && [ui.picked.push, ui.picked.pushFx, ui.picked.sacrifice].includes(u.uid)) return false;   // 押し出す・代償にするキャラは、ほかの対象に選べない
+  if (r === "push" || r === "pushFx") return pi === ME && u.hp > 0;
   return !!r && roleAllows(ME, r, pi, u, DEF[S.players[ME].hand[ui.sel.idx]]);
 }
 /* 手札のカードを使う操作を始める（対象が要るなら選択モードへ） */
@@ -2289,7 +2324,9 @@ function renderSheet() {
       const d = DEF[S.players[ME].hand[ui.sel.idx]];
       if (!d) { ui = { sel: null, mode: null }; el.hidden = true; return; }
       const r = curRole();
-      msg = r === "sacrifice" ? `${esc(d.name)}：代償として破壊する自分のキャラをタップしてください`
+      msg = r === "push" ? `場がいっぱいです。${esc(d.name)}を出すために、墓地へ押し出す自分のキャラをタップしてください（倒されたときの効果は発動しません）`
+        : r === "pushFx" ? `場がいっぱいです。${esc(d.name)}の効果でキャラを出すなら、墓地へ押し出す自分のキャラをタップしてください`
+        : r === "sacrifice" ? `${esc(d.name)}：代償として破壊する自分のキャラをタップしてください`
         : r === "enemyF" ? `${esc(d.name)}の対象にする相手キャラか、上の相手の顔をタップしてください`
         : r === "any" ? `${esc(d.name)}の対象にするキャラ（自分か相手）をタップしてください`
         : r === "enemy2" ? `${esc(d.name)}：2体目の相手キャラをタップしてください`
@@ -2302,7 +2339,7 @@ function renderSheet() {
         : "攻撃する相手キャラか、上の相手の顔をタップ";
     }
     el.className = "sheet banner";
-    el.innerHTML = `<p>${msg}</p><button type="button" class="btn" data-act="cancel">やめる</button>`;
+    el.innerHTML = `<p>${msg}</p>${ui.mode === "target" && curRole() === "pushFx" ? `<button type="button" class="btn primary" data-act="pushSkip">押し出さない</button>` : ""}<button type="button" class="btn" data-act="cancel">やめる</button>`;
     el.hidden = false;
     return;
   }
@@ -2556,7 +2593,7 @@ function dropAction(x, y) {
       const uid = +unitEl.dataset.uid, tu = S.players[z.units].field.find(x => x.uid === uid);
       if (z.role === "enemy" && tu && !canTarget(tu)) return () => toast(hidden(tu) ? "隠密のキャラは対象に選べません" : "呪文耐性のキャラは対象に選べません");
       if (tu && !roleOK(tu, d, z.role)) return () => toast(roleNg(d, z.role));
-      return () => gearChoice(ME, idx) ? beginPlay(idx) : doPlay(idx, { [z.role]: uid });
+      return () => gearChoice(ME, idx) || pushRoles(ME, d).length ? beginPlay(idx) : doPlay(idx, { [z.role]: uid });   // 押し出しが要るときは選ぶ画面へ
     }
     if (!fieldEl || +fieldEl.dataset.zone !== ME) return null;
     if (!chk.ok) return () => toast(chk.reason);
@@ -2659,7 +2696,7 @@ const RULES_HTML = () => `
     </ul>
     <h3>キャラクター</h3>
     <ul>
-      <li>場に置けるのは${CONFIG.FIELD_MAX}体まで</li>
+      <li>場に置けるのは${CONFIG.FIELD_MAX}体まで${pushOn() ? "。いっぱいのときは、自分のキャラ1体を墓地へ押し出して、手札のキャラを出せる（押し出したキャラは倒された扱いにならず、倒されたときの効果は発動しない）" : ""}</li>
       <li>出したターンは攻撃できない（速攻を除く）。効果で複製したキャラは、速攻や突進を持っていても、出たターンは攻撃できない</li>
       <li>攻撃すると、お互いの攻撃力ぶんのダメージを与え合う</li>
       <li>攻撃先は、相手のキャラか相手プレイヤー（本体）を選べる</li>
@@ -3671,6 +3708,7 @@ function handleAct(act, el) {
     case "closeOverlay": $("#overlay").hidden = true; break;
     case "showResult": if (S && S.over) showResult(myResult()); break;
     case "cancel": ui = { sel: null, mode: null }; render(); break;
+    case "pushSkip": if (ui.mode === "target" && curRole() === "pushFx") pickTarget("skip"); break;
     case "end": doEnd(); break;
     case "rps": if (S && el) doRps(el.dataset.v); break;
     case "rkGo": RK.go(); break;
