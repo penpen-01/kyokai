@@ -11,7 +11,6 @@ DRY = '--dry-run' in sys.argv
 PREVIEW = '--preview' in sys.argv
 GD, NT = 'game-data.json', 'notice.json'
 FOX = 'tk-foxfire'
-SHRINK = ['f2-tamamo', 'f2-dancer', 'f2-kohaku', 'f2-susuki', 'f2-kamikakushi']   # 化かし：狐火を使ったときだけコストが下がる
 
 def main():
     d = json.loads(open(GD, encoding='utf-8').read())
@@ -36,11 +35,9 @@ def main():
     t = C['f2-tamamo']; before = len(t['effects'])
     t['effects'] = [e for e in t['effects'] if not (e.get('kind') == 'unit' and e.get('per') == 'played' and e.get('act') == 'dmg')]
     if len(t['effects']) != before: log.append('白面九尾タマモ：登場時のダメージをなくす')
-    # 化かし：狐火だけ
-    for cid in SHRINK:
-        s = C[cid].get('shrink')
-        if s and s.get('card') != FOX:
-            C[cid]['shrink'] = {'n': 1, 'card': FOX}; log.append(f'{C[cid]["name"]}：化かしは「狐火」を使ったときだけ')
+    # 狐火：キャラにだけダメージ（相手プレイヤーには当たらない）。化かしは幻想の魔法のまま（11-27 試しで「狐火だけ」はやりすぎ）
+    for e in C[FOX]['effects']:
+        if e.get('kind') == 'unit' and e.get('act') == 'dmg' and e.get('to') == 'enemyRandF': e['to'] = 'enemyRand'; log.append('狐火：キャラにだけダメージ（相手プレイヤーには当たらない）')
     if PREVIEW:
         changed = [c for cid, c in C.items() if json.dumps(c, ensure_ascii=False, sort_keys=True) != orig[cid]]
         open('preview.json', 'w', encoding='utf-8').write(json.dumps({'label': '第1回の調整', 'cards': changed}, ensure_ascii=False, indent=1) + '\n')

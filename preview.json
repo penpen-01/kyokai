@@ -179,110 +179,26 @@
    "art": "art/y2-kensei-56a58d9cae.webp"
   },
   {
-   "id": "f2-susuki",
-   "name": "すすき野の狐",
-   "world": "fan",
-   "type": "char",
-   "cost": 5,
-   "atk": 3,
-   "hp": 3,
-   "glyph": "幻",
-   "limit": 3,
-   "rarity": "common",
-   "keywords": [],
-   "effects": [],
-   "set": "2-3",
-   "shrink": {
-    "n": 1,
-    "card": "tk-foxfire"
-   },
-   "art": "art/f2-susuki-123bc1b4a0.webp"
-  },
-  {
-   "id": "f2-dancer",
-   "name": "狐の舞い手",
-   "world": "fan",
-   "type": "char",
-   "cost": 5,
-   "atk": 2,
-   "hp": 2,
-   "glyph": "幻",
-   "limit": 3,
-   "rarity": "rare",
-   "keywords": [
-    "rush"
-   ],
-   "effects": [
-    {
-     "kind": "tokenHand",
-     "n": 1,
-     "card": "tk-foxfire"
-    }
-   ],
-   "set": "2-3",
-   "shrink": {
-    "n": 1,
-    "card": "tk-foxfire"
-   },
-   "art": "art/f2-dancer-b694bf56ac.webp"
-  },
-  {
-   "id": "f2-kamikakushi",
-   "name": "神隠し",
+   "id": "tk-foxfire",
+   "name": "狐火",
    "world": "fan",
    "type": "spell",
-   "cost": 8,
+   "cost": 0,
    "glyph": "幻",
-   "limit": 3,
+   "limit": 0,
    "rarity": "rare",
    "keywords": [],
    "effects": [
     {
      "kind": "unit",
      "n": 1,
-     "act": "bounce",
-     "to": "enemy1"
-    }
-   ],
-   "set": "2-3",
-   "shrink": {
-    "n": 1,
-    "card": "tk-foxfire"
-   },
-   "art": "art/f2-kamikakushi-98870d9c20.webp"
-  },
-  {
-   "id": "f2-kohaku",
-   "name": "妖狐の姫コハク",
-   "world": "fan",
-   "type": "char",
-   "cost": 6,
-   "atk": 4,
-   "hp": 4,
-   "glyph": "幻",
-   "limit": 3,
-   "rarity": "sr",
-   "keywords": [],
-   "effects": [
-    {
-     "kind": "unit",
-     "n": 3,
-     "when": "attack",
      "act": "dmg",
      "to": "enemyRand"
-    },
-    {
-     "kind": "tokenHand",
-     "n": 2,
-     "card": "tk-foxfire"
     }
    ],
+   "token": true,
    "set": "2-3",
-   "shrink": {
-    "n": 1,
-    "card": "tk-foxfire"
-   },
-   "art": "art/f2-kohaku-3d1564ae91.webp"
+   "art": "art/tk-foxfire-6c140255e3.webp"
   },
   {
    "id": "f2-tamamo",
@@ -309,7 +225,8 @@
    "set": "2-3",
    "shrink": {
     "n": 1,
-    "card": "tk-foxfire"
+    "world": "fan",
+    "ctype": "spell"
    },
    "art": "art/f2-tamamo-ee81d102c4.webp"
   }

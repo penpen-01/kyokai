@@ -19,14 +19,12 @@ const { chromium } = require('playwright'); const fs = require('fs'), path = req
     const c1 = effCost(0, DEF.pegasus, S.players[0].hand.indexOf('pegasus'));
     endTurn(0); endTurn(1); const c2 = effCost(0, DEF.pegasus, S.players[0].hand.indexOf('pegasus'));
     ok('囁き：そのターンは-1、次のターンには残らない', c1 === DEF.pegasus.cost - 1 && c2 === DEF.pegasus.cost, [c1, c2]);
-    // 化かし：狐火だけ
+    // 化かしは幻想の魔法のまま。狐火はキャラにだけ
     fresh(); hand(0, 'f2-tamamo'); i = hand(0, 'f-whisper'); playCard(0, i, {});
-    const t1 = effCost(0, DEF['f2-tamamo'], S.players[0].hand.indexOf('f2-tamamo'));
-    i = hand(0, 'tk-foxfire'); playCard(0, i, {}); const t2 = effCost(0, DEF['f2-tamamo'], S.players[0].hand.indexOf('f2-tamamo'));
-    ok('タマモ：囁きでは下がらず（囁きの-1は次の1枚に効く）、狐火で下がる', t1 === 12 - 1 && t2 === 12 - 1, [t1, t2]);
-    fresh(); hand(0, 'f2-tamamo'); i = hand(0, 'tk-foxfire'); playCard(0, i, {}); i = hand(0, 'tk-foxfire'); playCard(0, i, {});
-    ok('タマモ：狐火2枚で-2', effCost(0, DEF['f2-tamamo'], 0) === 10, effCost(0, DEF['f2-tamamo'], 0));
-    fresh(); hand(0, 'f2-tamamo'); i = hand(0, 'f2-walpurgis'); if (DEF['f2-walpurgis']) { S.players[0].e = 10; i = hand(0, 'f-blizzard'); }
+    ok('タマモ：幻想の魔法（囁き）で下がる', effCost(0, DEF['f2-tamamo'], S.players[0].hand.indexOf('f2-tamamo')) === 12 - 1 - 1);
+    fresh(); const sq = addUnit(1, 'st-golem'); i = hand(0, 'tk-foxfire'); const h0 = S.players[1].hp, g0 = sq.hp; playCard(0, i, {}); cleanup();
+    ok('狐火：相手キャラに当たり、相手プレイヤーには当たらない', S.players[1].hp === h0 && sq.hp === g0 - 1, [S.players[1].hp, sq.hp]);
+    fresh(); i = hand(0, 'tk-foxfire'); ok('狐火：相手の場にキャラがいなければ使えない', !canPlay(0, i).ok, canPlay(0, i).reason);
     // タマモ：登場時のダメージなし
     fresh(); for (let k = 0; k < 3; k++) { const u = addUnit(1, 'squire'); u.born = 0; } S.players[0].played = 5; i = hand(0, 'f2-tamamo'); playCard(0, i, {}); cleanup();
     ok('タマモ：登場時に相手キャラへダメージを与えない', S.players[1].field.length === 3 && S.players[1].field.every(u => u.hp === DEF.squire.hp));
