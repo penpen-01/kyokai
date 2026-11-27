@@ -1214,7 +1214,7 @@ function effect(pi, e, targets, self) {
     }
     case "ward":
       if (me.ward) { log(`${pname(pi)}にはもう結界がある。`); break; }
-      me.ward = 1; log(`${pname(pi)}は結界を張った（次のダメージを1回だけ防ぐ）。`); fx(playerSel(pi), "結界", "heal"); break;
+      me.ward = 1; log(`${pname(pi)}は結界を張った（次のダメージを1回だけ防ぐ）。`); fx(playerSel(pi), "結界", "wardup"); break;
     case "jellyHand": {
       let k = 0;
       for (let i = 0; i < n && me.hand.length < CONFIG.HAND_MAX; i++) { const id = jellyPick(); if (!DEF[id]) break; me.hand.push(id); k++; }
@@ -1340,7 +1340,7 @@ function hitUnit(u, n) {
   return dmg;
 }
 function hitPlayer(pi, n) {
-  if (n > 0 && S.players[pi].ward) { S.players[pi].ward = 0; fx(playerSel(pi), "結界", "heal"); log(`${pname(pi)}の結界がダメージを防いだ。`); return; }
+  if (n > 0 && S.players[pi].ward) { S.players[pi].ward = 0; fx(playerSel(pi), "結界", "wardbreak"); log(`${pname(pi)}の結界がダメージを防いだ。`); return; }
   S.players[pi].hp -= n; fx(playerSel(pi), "-" + n, "dmg"); if (n > 0) { stat(opp(pi), "face", n); statMax(opp(pi), "maxHit", n); } }
 /* 一番大きかった値を残す（称号の「一度に大きなダメージ」） */
 function statMax(pi, k, n) { if (!S || pi == null || pi < 0) return; const st = S.stats || (S.stats = [{}, {}]); if (n > (st[pi][k] || 0)) st[pi][k] = n; }
@@ -1885,12 +1885,23 @@ function pbarHTML(pi) {
     <button type="button" class="avatar ${tgt ? "tgt" : ""} ${S.over && resultShown && S.winner !== "draw" && S.winner !== pi ? "fin-broken" : ""}" data-player="${pi}" aria-label="${esc(p.name)}の体力 ${hp}">
       ${p.frame ? `<img class="frame-skin" src="${esc(p.frame)}" alt="" aria-hidden="true">` : `<span class="halo" aria-hidden="true"></span>`}
       <span class="face">${art ? iconImgHTML(icon) : `<span class="glyph">召</span>`}</span>
-      ${p.ward ? `<span class="ward-ring" aria-hidden="true"></span>` : ""}${hp <= 5 ? `<span class="hpglow" aria-hidden="true"></span>` : ""}<span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
+      ${wardHTML(pi, p.ward)}${hp <= 5 ? `<span class="hpglow" aria-hidden="true"></span>` : ""}<span class="hpgem ${hp <= 5 ? "low" : ""}"><b class="hpv">${hp}</b></span>
     </button>
     <div class="pl-right">
       <div class="pname"><b>${esc(p.name)}</b>${p.title && pi !== ME ? `<small class="ptitle">${esc(p.title)}</small>` : ""}${S.phase === "play" && S.turn === pi && !S.over ? `<span class="acting">行動中</span>` : ""}${status}</div>
       <div class="energy" aria-label="エナジー ${p.e}/${p.maxE}"><span class="pips">${pips}</span><span class="etext">${p.e}<small>/${p.maxE}</small></span></div>
     </div></div>`;
+}
+
+/* 結界（次のダメージを1回防ぐ）：アイコンを六角形の光のドームで包む。
+   描き直しても動きが最初に戻らないよう、張った時刻からの経過をアニメの遅れ（負の値）にする */
+const WardSince = {};
+function wardHTML(pi, on) {
+  if (!on) { delete WardSince[pi]; return ""; }
+  const now = performance.now(); if (WardSince[pi] == null) WardSince[pi] = now;
+  const t = -((now - WardSince[pi]) / 1000).toFixed(3);
+  return `<span class="ward-dome" style="--wt:${t}s" aria-hidden="true">${WARD_HEX}<i class="ward-rune"></i><i class="ward-arc"></i><i class="ward-sheen"></i></span>`
+    + `<span class="ward-badge" style="--wt:${t}s" title="結界：次のダメージを1回防ぐ" aria-hidden="true">${WARD_BADGE}</span>`;
 }
 
 /* 対象選択中の「今選んでいる役割」 */
@@ -2598,7 +2609,7 @@ function playFx(sel, text, cls) {
   runFx(sel, text, cls);
 }
 function runFx(sel, text, cls) {
-  if (/^(bolt|freeze|silence|poof|tohand|todeck|void|voidback|pierce|poison|guard|gear|reveal|peek|wait)(:|$)/.test(cls || "")) { Vfx.run(sel, text, cls); return; }
+  if (/^(bolt|freeze|silence|poof|tohand|todeck|void|voidback|pierce|poison|guard|gear|reveal|peek|wait|wardup|wardbreak)(:|$)/.test(cls || "")) { Vfx.run(sel, text, cls); return; }
   if (sel === "sfx") { Sound.play(text); return; }
   if (cls === "lunge") { Motion.lunge(sel, text); return; }
   if (sel === "cast") { Motion.cast(text, +cls.slice(4)); return; }

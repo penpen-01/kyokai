@@ -9,6 +9,20 @@
    ・peek:pi         … 相手の手札を見た（見た人の画面だけ）
    ========================================================= */
 const WORLD_COLOR = { myth: "#ffd86b", fan: "#7fe3c0", mech: "#6fc6ff" };
+/* 結界のドームの六角形の網目（100×100 の中の円に入る分だけ）。--d は下から組み上がる順の遅れ */
+const WARD_HEX = (() => {
+  const r = 7.2, w = Math.sqrt(3) * r, out = [];
+  for (let row = -8; row <= 8; row++) for (let col = -8; col <= 8; col++) {
+    const x = 50 + col * w + (row & 1 ? w / 2 : 0), y = 50 + row * r * 1.5;
+    if (Math.hypot(x - 50, y - 50) > 49) continue;
+    const pts = Array.from({ length: 6 }, (_, i) => { const a = Math.PI / 180 * (60 * i - 30); return `${(x + r * 0.92 * Math.cos(a)).toFixed(1)},${(y + r * 0.92 * Math.sin(a)).toFixed(1)}`; }).join(" ");
+    const d = ((100 - y) / 100 * 0.45 + Math.random() * 0.08).toFixed(2), tw = Math.random() < 0.22 ? " tw" : "";
+    out.push(`<polygon class="wh${tw}" points="${pts}" style="--d:${d}s;--k:${(Math.random() * 4).toFixed(2)}s"/>`);
+  }
+  return `<svg class="ward-hex" viewBox="0 0 100 100">${out.join("")}</svg>`;
+})();
+const WARD_BADGE = `<svg viewBox="0 0 40 46"><defs><linearGradient id="wbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9fbff"/><stop offset=".5" stop-color="#6fd3ff"/><stop offset="1" stop-color="#1b6fa8"/></linearGradient></defs><path d="M20 2 37 8v14c0 11-8 18-17 22C11 40 3 33 3 22V8z" fill="url(#wbg)" stroke="#e9fbff" stroke-width="2"/><path d="M20 12l7 4v8l-7 4-7-4v-8z" fill="none" stroke="#0d3e66" stroke-width="2.2"/></svg>`;
+
 const Vfx = {
   layer() { return document.getElementById("fx"); },
   el(sel) { return sel ? document.querySelector("#app " + sel) || document.querySelector(sel) : null; },
@@ -110,6 +124,26 @@ const Vfx = {
         d.style.width = r.width + "px"; d.style.height = r.height + "px";
         this.later(d, 900); 
         snd("hit"); hold(260); return;
+      }
+      case "wardup": {   // 結界を張った：光の輪が広がり、粒が集まる（ドームそのものは盤面の描画が組み上げる）
+        const W = r.width + 22;
+        const d = this.add("v-wardup", c.x, c.y, `<i class="ring"></i><i class="ring b"></i>${Array.from({ length: 12 }, (_, i) => `<b style="--a:${i * 30 + Math.random() * 14}deg;--dl:${(Math.random() * 0.18).toFixed(2)}s"></b>`).join("")}`);
+        d.style.width = d.style.height = W + "px";
+        this.later(d, 1200); Sound.play("wardUp"); hold(500); return;
+      }
+      case "wardbreak": {   // 結界が防いだ：ひびが入って光り、ドームが破片になって飛び散る
+        const W = r.width + 20;
+        const shards = Array.from({ length: 16 }, (_, i) => {
+          const a = i * 22.5 + Math.random() * 12, dist = (0.8 + Math.random() * 0.6) * W, sz = 14 + Math.random() * 14;
+          return `<i style="--a:${a}deg;--r:${dist.toFixed(0)}px;--s:${sz.toFixed(0)}px;--rot:${(Math.random() * 540 - 270).toFixed(0)}deg;--p:${["polygon(50% 0,100% 38%,70% 100%,8% 80%)", "polygon(0 0,100% 20%,45% 100%)", "polygon(25% 0,100% 50%,25% 100%,0 50%)"][i % 3]}"></i>`;
+        }).join("");
+        const cracks = `<svg class="crk" viewBox="0 0 100 100"><path d="M50 50 L30 18 L22 6 M50 50 L78 26 L92 20 M50 50 L86 64 M50 50 L60 88 L64 97 M50 50 L18 70 L6 76 M30 18 L40 12 M78 26 L74 12 M18 70 L22 84"/></svg>`;
+        const d = this.add("v-wardbreak", c.x, c.y, `<span class="dome">${WARD_HEX}</span>${cracks}<i class="flash"></i><i class="wave"></i>${shards}`);
+        d.style.width = d.style.height = W + "px";
+        this.later(d, 1300); Sound.play("wardBreak"); hold(700);
+        e.querySelectorAll(".ward-dome,.ward-badge").forEach(x => x.classList.add("gone"));   // 盤面の描き直しを待たずに、元のドームはすぐ消す
+        if (!R) { e.classList.remove("ward-hit"); void e.offsetWidth; e.classList.add("ward-hit"); setTimeout(() => e.classList.remove("ward-hit"), 500); }
+        return;
       }
       case "guard": {
         const d = this.add("v-guard", c.x, c.y, `<svg viewBox="0 0 40 46"><path d="M20 2 37 8v14c0 11-8 18-17 22C11 40 3 33 3 22V8z" fill="rgba(140,190,255,.25)" stroke="#bcd8ff" stroke-width="2.4"/></svg>`);

@@ -102,6 +102,8 @@ const Sound = {
         case "face": this.noise(0, 0.25, 0.6, 250); this.tone(110, 0, 0.3, "sawtooth", 0.22, 50); break;
         case "heal": [523, 659, 784].forEach((f, i) => this.tone(f, i * 0.06, 0.25, "sine", 0.25)); break;
         case "buff": this.tone(440, 0, 0.15, "triangle", 0.25, 880); break;
+        case "wardUp": [660, 880, 1175, 1568].forEach((f, i) => this.tone(f, i * 0.05, 0.4, "sine", 0.16)); this.sweep(0, 0.45, 0.12, 1800, 6400, 4); break;   // 結界：澄んだ音が上へ重なる
+        case "wardBreak": this.noise(0, 0.08, 0.5, 5200); for (let i = 0; i < 4; i++) this.sweep(0.02 + i * 0.03, 0.12, 0.28, 7000 - i * 700, 2600, 5); [1568, 1175, 880].forEach((f, i) => this.tone(f, 0.04 + i * 0.05, 0.3, "triangle", 0.14, f * 0.7)); break;   // ガラスが割れる
         case "destroy": this.noise(0, 0.35, 0.6, 180); this.tone(200, 0, 0.35, "sawtooth", 0.2, 40); break;
         case "turn": this.tone(587, 0, 0.18, "sine", 0.3); this.tone(880, 0.12, 0.25, "sine", 0.3); break;
         case "win": [523, 659, 784, 1047].forEach((f, i) => this.tone(f, i * 0.12, 0.35, "triangle", 0.3)); break;
