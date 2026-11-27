@@ -104,6 +104,11 @@ const { chromium } = require('playwright');
         ok('オルカ：ほかの味方の攻撃+1（自分は上がらない）', mate.atk === a0 + 1 && oc.atk === DEF['x3-orca'].atk, [mate.atk, oc.atk]);
         oc.hp = 0; cleanup(); ok('オルカ：倒されると+1が消える', mate.atk === a0, mate.atk);
         ok('オルカ：文', cardText(DEF['x3-orca']).includes('体力が一番高い相手キャラ'), cardText(DEF['x3-orca'])); }
+      // 14c. CPU の呼び戻し：合計の上限の中で一番強い組み合わせ（高い順だと 5＋2 の2体で終わっていた）
+      fresh(); S.pick = { pi: 0, kind: 'revive', ids: ['m3-centurion', 'f3-gaikotsu', 'm3-suihei', 'm3-eirei', 'f3-nakimushi'], max: 3, total: 7 };
+      { const sel = pickBest(0), ids = sel.map(i => S.pick.ids[i]), sum = ids.reduce((a, id) => a + DEF[id].cost, 0);
+        ok('CPUの呼び戻し：合計7以下で3体', sel.length === 3 && sum <= 7, ids); }
+      S.pick = null;
       // 15. 天秤
       fresh(); put(0, 'squire'); put(0, 'x-gigas'); put(1, 'garm'); put(1, 'squire'); play(0, 'm3-tenbin');
       ok('天秤：両方の一番高いキャラ', !S.players[0].field.some(u => u.id === 'x-gigas') && !S.players[1].field.some(u => u.id === 'garm'));

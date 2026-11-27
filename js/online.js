@@ -372,7 +372,7 @@ const Online = {
   startGame() {
     if (!this.guestDeck || this.guestDeck.by !== this.room.guest || !this.myDeck) return;
     if (this.room.rule === "sen" && typeof SenDraft !== "undefined") { this.logSent = null; return SenDraft.begin(); }   // 選定戦：取り合いから
-    MODE = "online"; setPerspective(0);
+    MODE = "online"; if (typeof Preview !== "undefined") Preview.revert(); setPerspective(0);
     $("#overlay").hidden = true;
     this.logSent = null;
     newGame([this.room.hostName || "部屋主", this.room.guestName || "参加者"], [this.myDeck, this.guestDeck]);
@@ -520,7 +520,7 @@ const Online = {
     if (typeof p.now === "number") this.skew = Date.now() - p.now;   // ホストの時計とのずれ（持ち時間の表示に使う）
     S = p.S;
     if (p.lg) S.log = prevLog.slice(0, p.lg.base).concat(p.lg.add || []);   // ログは増えた分だけ届く
-    MODE = "online"; setPerspective(1);
+    MODE = "online"; if (typeof Preview !== "undefined") Preview.revert(); setPerspective(1);
     this.pending = false;
     clearTimeout(this.pendingTimer);
     if (isNewGame || (S && S.gid !== this.lastGid)) { this.oppDeckChanged = false; Motion.reset(); Finale.reset(); Mull.close(); ui = { sel: null, mode: null }; resultShown = false; $("#overlay").hidden = true; lastBoardHTML = ""; }   // 前の対戦の「負けで灰色」を残さない
@@ -665,7 +665,7 @@ const Online = {
         try { S = JSON.parse(room.state).S; } catch { S = null; }
       }
       if (S) {
-        MODE = "online"; setPerspective(0);
+        MODE = "online"; if (typeof Preview !== "undefined") Preview.revert(); setPerspective(0);
         $("#overlay").hidden = true;
         busy = false; resultShown = false;
       }

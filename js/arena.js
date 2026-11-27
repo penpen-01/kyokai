@@ -193,7 +193,7 @@ const Arena = {
     const sid = this.sid, rule = this.rule, deck = this.deck, me = `arena/q/${sid}/${this.uid}`;
     this.stop();
     Net.remove(me).catch(() => {}); setTimeout(() => Net.remove(me).catch(() => {}), 3000);   // 並んでいた欄を消す（途中の書き込みと重なっても残らないように、少しあとにもう一度）
-    MODE = "online";
+    MODE = "online"; if (typeof Preview !== "undefined") Preview.revert();
     if (host) Online.create({ arena: sid, rule, deck, code });
     else Online.join(code, { arena: true, deck });
   },

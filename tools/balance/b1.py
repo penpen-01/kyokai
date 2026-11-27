@@ -2,11 +2,13 @@
 """第1回の強さの調整（2026-11-27 オーナー決定）。お知らせのメールと同じ日に、1回だけ流す。
    python3 tools/balance/b1.py --dry-run   … 何が変わるかだけ見る（ファイルは変えない）
    python3 tools/balance/b1.py             … game-data.json と notice.json を書き換える（version +1）
+   python3 tools/balance/b1.py --preview   … 調整後のカードを preview.json に書くだけ（運営用アカウントの CPU 戦・練習で先に試す。プレイヤーには影響しない）
 流す前に git fetch → rebase で最新にし、オーナーが工房で編集中でないことを確かめる。流したあとオーナーに「工房をリロードして」と伝える。
 """
 import json, sys, datetime
 
 DRY = '--dry-run' in sys.argv
+PREVIEW = '--preview' in sys.argv
 GD, NT = 'game-data.json', 'notice.json'
 FOX = 'tk-foxfire'
 SHRINK = ['f2-tamamo', 'f2-dancer', 'f2-kohaku', 'f2-susuki', 'f2-kamikakushi']   # 化かし：狐火を使ったときだけコストが下がる
@@ -14,6 +16,7 @@ SHRINK = ['f2-tamamo', 'f2-dancer', 'f2-kohaku', 'f2-susuki', 'f2-kamikakushi'] 
 def main():
     d = json.loads(open(GD, encoding='utf-8').read())
     C = {c['id']: c for c in d['cards']}
+    orig = {cid: json.dumps(c, ensure_ascii=False, sort_keys=True) for cid, c in C.items()}
     log = []
     def setv(cid, key, val):
         c = C[cid]; old = c.get(key)
@@ -38,6 +41,10 @@ def main():
         s = C[cid].get('shrink')
         if s and s.get('card') != FOX:
             C[cid]['shrink'] = {'n': 1, 'card': FOX}; log.append(f'{C[cid]["name"]}：化かしは「狐火」を使ったときだけ')
+    if PREVIEW:
+        changed = [c for cid, c in C.items() if json.dumps(c, ensure_ascii=False, sort_keys=True) != orig[cid]]
+        open('preview.json', 'w', encoding='utf-8').write(json.dumps({'label': '第1回の調整', 'cards': changed}, ensure_ascii=False, indent=1) + '\n')
+        print('\n'.join(log)); print(f'\npreview.json に {len(changed)} 枚を書きました（game-data.json は変えていません）'); return
     # 押し出しを有効に
     if not d['config'].get('PUSH_OUT'): d['config']['PUSH_OUT'] = 1; log.append('押し出し（PUSH_OUT）を有効に')
     if not log: print('変更なし（もう流してある）'); return

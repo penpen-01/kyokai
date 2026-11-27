@@ -1,0 +1,317 @@
+{
+ "label": "第1回の調整",
+ "cards": [
+  {
+   "id": "f-whisper",
+   "name": "妖精の囁き",
+   "world": "fan",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "囁",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "discount",
+     "n": 1,
+     "turn": true
+    },
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
+    }
+   ],
+   "art": "art/f-whisper-41a9b2e402.webp"
+  },
+  {
+   "id": "f-horn",
+   "name": "召喚の角笛",
+   "world": "fan",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "笛",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "summon",
+     "n": 5
+    }
+   ],
+   "art": "art/f-horn-678d14d7db.webp",
+   "pay": {
+    "kind": "life",
+    "n": 2
+   }
+  },
+  {
+   "id": "x-reboot",
+   "name": "再起動プロトコル",
+   "world": "mech",
+   "type": "spell",
+   "cost": 1,
+   "glyph": "再",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "refresh",
+     "n": 0
+    }
+   ],
+   "art": "art/x-reboot-cd6ac934c6.webp"
+  },
+  {
+   "id": "m2-transfer",
+   "name": "個人転送",
+   "world": "mech",
+   "type": "spell",
+   "cost": 3,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "banish",
+     "to": "own1"
+    },
+    {
+     "kind": "player",
+     "n": 1,
+     "act": "draw",
+     "who": "self"
+    }
+   ],
+   "set": "2-1",
+   "art": "art/m2-transfer-9ad836e2b4.webp"
+  },
+  {
+   "id": "m2-selfdestruct",
+   "name": "自壊のコード",
+   "world": "mech",
+   "type": "spell",
+   "cost": 5,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "enemyAll",
+     "kw": "doom"
+    }
+   ],
+   "set": "2-1",
+   "art": "art/m2-selfdestruct-5420614d29.webp"
+  },
+  {
+   "id": "m2-reboot",
+   "name": "非常電源",
+   "world": "mech",
+   "type": "spell",
+   "cost": 4,
+   "glyph": "機",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 2,
+     "act": "unfreeze",
+     "to": "ownAll"
+    }
+   ],
+   "set": "2-1",
+   "art": "art/m2-reboot-df75f9f66a.webp"
+  },
+  {
+   "id": "y2-kensei",
+   "name": "剣聖ヴァルトール",
+   "world": "myth",
+   "type": "char",
+   "cost": 6,
+   "atk": 6,
+   "hp": 6,
+   "glyph": "神",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "readySelf",
+     "n": 1,
+     "when": "kill"
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "twice",
+     "cond": "maxEGE",
+     "cn": 8
+    },
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "grant",
+     "to": "self",
+     "kw": "shield",
+     "cond": "maxEGE",
+     "cn": 10
+    }
+   ],
+   "set": "2-2",
+   "art": "art/y2-kensei-56a58d9cae.webp"
+  },
+  {
+   "id": "f2-susuki",
+   "name": "すすき野の狐",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 3,
+   "hp": 3,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "common",
+   "keywords": [],
+   "effects": [],
+   "set": "2-3",
+   "shrink": {
+    "n": 1,
+    "card": "tk-foxfire"
+   },
+   "art": "art/f2-susuki-123bc1b4a0.webp"
+  },
+  {
+   "id": "f2-dancer",
+   "name": "狐の舞い手",
+   "world": "fan",
+   "type": "char",
+   "cost": 5,
+   "atk": 2,
+   "hp": 2,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [
+    "rush"
+   ],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "card": "tk-foxfire"
+    }
+   ],
+   "set": "2-3",
+   "shrink": {
+    "n": 1,
+    "card": "tk-foxfire"
+   },
+   "art": "art/f2-dancer-b694bf56ac.webp"
+  },
+  {
+   "id": "f2-kamikakushi",
+   "name": "神隠し",
+   "world": "fan",
+   "type": "spell",
+   "cost": 8,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "rare",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 1,
+     "act": "bounce",
+     "to": "enemy1"
+    }
+   ],
+   "set": "2-3",
+   "shrink": {
+    "n": 1,
+    "card": "tk-foxfire"
+   },
+   "art": "art/f2-kamikakushi-98870d9c20.webp"
+  },
+  {
+   "id": "f2-kohaku",
+   "name": "妖狐の姫コハク",
+   "world": "fan",
+   "type": "char",
+   "cost": 6,
+   "atk": 4,
+   "hp": 4,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "sr",
+   "keywords": [],
+   "effects": [
+    {
+     "kind": "unit",
+     "n": 3,
+     "when": "attack",
+     "act": "dmg",
+     "to": "enemyRand"
+    },
+    {
+     "kind": "tokenHand",
+     "n": 2,
+     "card": "tk-foxfire"
+    }
+   ],
+   "set": "2-3",
+   "shrink": {
+    "n": 1,
+    "card": "tk-foxfire"
+   },
+   "art": "art/f2-kohaku-3d1564ae91.webp"
+  },
+  {
+   "id": "f2-tamamo",
+   "name": "白面九尾タマモ",
+   "world": "fan",
+   "type": "char",
+   "cost": 12,
+   "atk": 7,
+   "hp": 5,
+   "glyph": "幻",
+   "limit": 3,
+   "rarity": "legend",
+   "keywords": [
+    "stealth"
+   ],
+   "effects": [
+    {
+     "kind": "tokenHand",
+     "n": 1,
+     "when": "turnEnd",
+     "card": "tk-foxfire"
+    }
+   ],
+   "set": "2-3",
+   "shrink": {
+    "n": 1,
+    "card": "tk-foxfire"
+   },
+   "art": "art/f2-tamamo-ee81d102c4.webp"
+  }
+ ]
+}

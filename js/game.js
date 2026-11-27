@@ -43,6 +43,7 @@ async function loadCardData() {
   }
   if (!raw) raw = await fetchPublished();
   const data = normalizeData(raw);
+  Preview.load();   // 運営の試し（なければ何もしない）
   CONFIG = data.config;
   CARDS = data.cards;
   DEF = Object.fromEntries(CARDS.map(c => [c.id, c]));
@@ -73,7 +74,31 @@ function buildPile(deck) {
 
 /* ---------- ゲーム進行（ここから下の処理は、CPU戦とホストだけが実行する） ----------
    流れ：じゃんけん（rps）→ 勝った人が先攻・後攻を選ぶ（choose）→ マリガン（mulligan）→ 対戦（play） */
+/* ---------- 運営の試し（preview.json）----------
+   お知らせ前の調整を、運営用アカウントの CPU 戦・練習だけで先に試す（2026-11-27 オーナー）。
+   preview.json の cards（調整後のカード）を、対戦を始めるときだけ DEF に重ねる。対人戦に入るとき・対戦から戻るときは元に戻す */
+const Preview = {
+  data: null, orig: null,
+  async load() { try { const r = await fetch(`preview.json?t=${Date.now()}`, { cache: "no-store" }); if (r.ok) this.data = await r.json(); } catch {} },
+  usable() { return !!(this.data && Array.isArray(this.data.cards) && this.data.cards.length && typeof adminOn === "function" && adminOn()); },
+  apply() {
+    if (this.orig || !this.usable()) return false;
+    this.orig = {};
+    normalizeData({ cards: this.data.cards }).cards.forEach(c => {
+      const cur = DEF[c.id]; if (!cur) return;
+      this.orig[c.id] = JSON.parse(JSON.stringify(cur));
+      Object.keys(cur).forEach(k => delete cur[k]); Object.assign(cur, this.orig[c.id], c, { art: c.art || this.orig[c.id].art });
+    });
+    return true;
+  },
+  revert() {
+    if (!this.orig) return;
+    Object.entries(this.orig).forEach(([id, o]) => { const cur = DEF[id]; if (!cur) return; Object.keys(cur).forEach(k => delete cur[k]); Object.assign(cur, o); });
+    this.orig = null;
+  }
+};
 function newGame(names, decks) {
+  if (!SIM) { if (MODE === "online") Preview.revert(); else if (Preview.apply()) setTimeout(() => toast(`運営の試し：${(Preview.data && Preview.data.label) || "調整後のカード"}を当てています（運営用アカウントのCPU戦・練習だけ）`), 600); }
   if (!SIM && typeof Motion !== "undefined") Motion.reset();
   if (!SIM && typeof Finale !== "undefined") Finale.reset();   // 前の対戦の「負けで灰色」を残さない
   if (!SIM) preloadArts(decks.flatMap(d => Object.keys(d.cards || {})).concat(["tk-gear", "tk-foxfire", "tk-leaf", "tk-frog", "coin"]));
@@ -305,10 +330,20 @@ function pickOK(P, sel) {
 function pickBest(pi) {
   const P = S.pick; if (!P) return [];
   if (P.kind === "revive") {
-    const order = P.ids.map((id, i) => i).sort((a, b) => DEF[P.ids[b]].cost - DEF[P.ids[a]].cost || unitValue({ id: P.ids[b], atk: DEF[P.ids[b]].atk, hp: DEF[P.ids[b]].hp, maxHp: DEF[P.ids[b]].hp }) - unitValue({ id: P.ids[a], atk: DEF[P.ids[a]].atk, hp: DEF[P.ids[a]].hp, maxHp: DEF[P.ids[a]].hp }));
-    const out = []; let sum = 0;
-    order.forEach(i => { if (out.length >= P.max) return; const c = DEF[P.ids[i]].cost; if (P.total && sum + c > P.total) return; out.push(i); sum += c; });
-    return out;
+    // 体数・合計コストの上限の中で、盤面が一番強くなる組み合わせを選ぶ（2026-11-27。前は「コストの高い順」で、合計の上限があると体数が減っていた）
+    // 価値＝キャラそのもの＋墓地から出たときの効果
+    const val = id => { const c = DEF[id]; if (!c) return -99; const u = { id, atk: c.atk || 0, hp: c.hp || 1, maxHp: c.hp || 1, kws: [] };
+      return unitValue(u) + (c.effects || []).filter(e => whenOf(e) === "revived").reduce((a, e) => a + effValue(e), 0) + (P.mod === "rush" ? 0.6 : 0); };
+    let idx = P.ids.map((id, i) => ({ i, v: val(id), c: DEF[id] ? DEF[id].cost : 99 })).sort((a, b) => b.v - a.v).slice(0, 14);
+    const max = Math.max(1, P.max || 1);
+    let best = [], bv = 0;
+    const walk = (k, pick, sum, v) => {
+      if (pick.length && (v > bv + 1e-9 || (Math.abs(v - bv) < 1e-9 && pick.length > best.length))) { bv = v; best = pick.slice(); }
+      if (pick.length >= max) return;
+      for (let t = k; t < idx.length; t++) { const x = idx[t]; if (P.total && sum + x.c > P.total) continue; if (x.v <= 0 && pick.length) continue; pick.push(x.i); walk(t + 1, pick, sum + x.c, v + x.v); pick.pop(); }
+    };
+    walk(0, [], 0, 0);
+    return best;
   }
   if (P.kind === "hand") {   // 捨てる：亡霊か一番安いキャラ／出す・下げる：一番重いキャラ
     const sc = x => { const c = DEF[x.id]; return P.act === "toss" ? (isGhostCard(x.id) ? 100 : 0) - c.cost - RARITY_ORDER.indexOf(c.rarity) : c.cost * 10 + RARITY_ORDER.indexOf(c.rarity); };
@@ -3251,6 +3286,7 @@ function toTitle() {
   else if (MODE === "cpu" && S && !S.mySample) Account.streakAbandon();
   MODE = "cpu"; setPerspective(0);
   S = null; busy = false; ui = { sel: null, mode: null };
+  Preview.revert();
   Motion.reset();
   Finale.reset();
   Mull.close();
